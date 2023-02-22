@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "common.proto";
+import "google/protobuf/struct.proto";
+
+service Isolate {
+    // Run the given function on the specified environment. Streams logs
+    // and the result originating from that function.
+    rpc Run (BoundFunction) returns (stream PartialRunResult) {}
+}
+
+message BoundFunction {
+    repeated EnvironmentDefinition environments = 1;
+    SerializedObject function = 2;
+    optional SerializedObject setup_func = 3;
+}
+
+message EnvironmentDefinition {
+    // Kind of the isolate environment.
+    string kind = 1;
+    // A free-form definition of environment properties.
+    google.protobuf.Struct configuration = 2;
+    // Whether to force-create this environment or not.
+    bool force = 3;
+}
