@@ -11,7 +11,7 @@ import {
   StatementStructures,
   StructureKind,
 } from 'ts-morph';
-import { IsolateFunctionMetadata, IsolateFunctionParameter } from './types';
+import { IsolateFunctionMetadata, IsolateFunctionParameter } from '../types';
 
 const CORE_TYPES = {
   str: 'string',
@@ -25,7 +25,7 @@ function generateProperty(
     name: param.name,
     isReadonly: true,
     type: CORE_TYPES[param.type],
-    hasQuestionToken: !param.isRequired,
+    hasQuestionToken: !param.is_required,
   };
 }
 
@@ -47,44 +47,49 @@ export function generateFunction(metadata: IsolateFunctionMetadata): string {
   } as ImportDeclarationStructure);
 
   const inputTypename = `${typename}Input`;
-  const inputType = {
-    name: inputTypename,
-    properties: metadata.parameters.map(generateProperty),
-  } as InterfaceDeclarationStructure;
-  members.push(inputType);
+  const parameters: ParameterDeclarationStructure[] = [];
+
+  if (metadata.parameters && metadata.parameters.length > 0) {
+    const inputType = {
+      kind: StructureKind.Interface,
+      name: inputTypename,
+      properties: metadata.parameters.map(generateProperty),
+    } as InterfaceDeclarationStructure;
+    members.push(inputType);
+    parameters.push({
+      kind: StructureKind.Parameter,
+      name: 'input',
+      type: inputTypename,
+    });
+  }
 
   const onData: ParameterDeclarationStructure = {
     kind: StructureKind.Parameter,
     name: 'onData',
     type: '(data: string) => void',
   };
+  parameters.push(onData);
   const isolatedFunction: FunctionDeclarationStructure = {
     kind: StructureKind.Function,
     isExported: true,
     name: identifier,
-    parameters: [
-      {
-        name: 'input',
-        type: inputTypename,
-      },
-      onData,
-    ],
-    returnType: metadata.returnType
-      ? CORE_TYPES[metadata.returnType]
-      : undefined,
+    parameters: parameters,
+    // returnType: metadata.return_type
+    //   ? CORE_TYPES[metadata.return_type]
+    //   : undefined,
     statements: (writer) => {
       writer.write('return run(').block(() => {
         writer.writeLine(`host: '${metadata.config.host}'`);
         writer.writeLine('credentials');
         writer.writeLine(
-          `environmentKind: '${metadata.config.environmentKind}'`
+          `environmentKind: '${metadata.config.env_kind}'`
         );
         writer.writeLine(
           `requirements: ${JSON.stringify(metadata.config.requirements)}`
         );
         writer.writeLine(`definition: '${metadata.definition}'`);
       });
-      writer.writeLine(');');
+      writer.writeLine(', onData);');
     },
   };
   members.push(isolatedFunction);

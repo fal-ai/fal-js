@@ -1,1 +1,1 @@
-export * from './generate';
+export { run } from '@oclif/core';

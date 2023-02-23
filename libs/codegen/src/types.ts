@@ -1,19 +1,19 @@
 export type IsolateFunctionConfig = {
-  environmentKind: string;
+  env_kind: string;
   requirements: string[];
   host: string;
 };
 
 export type IsolateFunctionParameter = {
   name: string;
-  isRequired: boolean;
+  is_required: boolean;
   type: string;
 };
 
 export type IsolateFunctionMetadata = {
   name: string;
   parameters: IsolateFunctionParameter[];
-  returnType: string;
+  return_type: string;
   definition: string;
   config: IsolateFunctionConfig;
 };

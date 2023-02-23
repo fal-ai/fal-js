@@ -1,4 +1,27 @@
 {
   "name": "@fal-ai/koldstart-codegen",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "bin": {
+    "ksjs": "./bin/run"
+  },
+  "files": [
+    "/bin",
+    "/dist",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "oclif": {
+    "bin": "ksjs",
+    "dirname": "ksjs",
+    "commands": "./src/commands",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "topicSeparator": ":",
+    "topics": {
+      "generate": {
+        "description": "Command used to generate source files based on Koldstart metadata."
+      }
+    }
+  }
 }
