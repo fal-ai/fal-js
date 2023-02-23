@@ -4,7 +4,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import * as jspb from "google-protobuf";
+import * as jspb from 'google-protobuf';
 
 export class SerializedObject extends jspb.Message {
   getMethod(): string;

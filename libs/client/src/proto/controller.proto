@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+import "common.proto";
+import "server.proto";
+import "google/protobuf/timestamp.proto";
+
+package controller;
+
+service IsolateController {
+    // Run the given function on the specified environment. Streams logs
+    // and the result originating from that function.
+    rpc Run (HostedRun) returns (stream HostedRunResult) {}
+    // Run the given function in parallel with the given inputs
+    rpc Map (HostedMap) returns (stream HostedRunResult) {}
+    // Schedule the given function to be run with the specified cron.
+    rpc Schedule (HostedRunCron) returns (ScheduleInfo) {}
+    // List scheduled runs.
+    rpc ListScheduledRuns (ListScheduledRunsRequest) returns (ListScheduledRunsResponse) {}
+    // Cancel a scheduled run.
+    rpc CancelScheduledRun (CancelScheduledRunRequest) returns (CancelScheduledRunResponse) {}
+    // List all the activations of one scheduled run.
+    rpc ListScheduledRunActivations (ListScheduledRunActivationsRequest) returns (ListScheduledRunActivationsResponse) {}
+    // Get logs from a particular activation of a scheduled run.
+    rpc GetScheduledActivationLogs (GetScheduledActivationLogsRequest) returns (GetScheduledActivationLogsResponse) {}
+    // Creates an authentication key for a user
+    rpc CreateUserKey (CreateUserKeyRequest) returns (CreateUserKeyResponse) {}
+    // Lists the user's authentication keys
+    rpc ListUserKeys (ListUserKeysRequest) returns (ListUserKeysResponse) {}
+    // Revokes an authentication key for a user
+    rpc RevokeUserKey (RevokeUserKeyRequest) returns (RevokeUserKeyResponse) {}
+}
+
+message HostedMap {
+    // Environment definitions.
+    repeated EnvironmentDefinition environments = 1;
+    // Machine requirements
+    optional MachineRequirements machine_requirements = 2;
+    // Function to run.
+    SerializedObject function = 3;
+    // Inputs to the function
+    repeated SerializedObject inputs = 4;
+}
+
+message HostedRun {
+    // Environment definitions.
+    repeated EnvironmentDefinition environments = 1;
+    // Machine requirements
+    optional MachineRequirements machine_requirements = 2;
+    // Function to run.
+    SerializedObject function = 3;
+    // Optional setup function to pass as the first argument to the function.
+    optional SerializedObject setup_func = 4;
+}
+
+message HostedRunCron {
+    // Environment definitions.
+    repeated EnvironmentDefinition environments = 1;
+    // Machine requirements
+    optional MachineRequirements machine_requirements = 2;
+    // Function to run.
+    SerializedObject function = 3;
+    // cron string to represent the run schedule
+    string cron = 4;
+}
+
+message CancelScheduledRunRequest {
+    // The id of the scheduled run to cancel.
+    string run_id = 1;
+}
+
+message CancelScheduledRunResponse {
+    // Empty. For future use.
+}
+
+message ListScheduledRunsRequest {
+    // Empty. For future use.
+}
+
+message ListScheduledRunActivationsRequest {
+    // The id of the scheduled run to list activations for.
+    string run_id = 1;
+}
+
+message ListScheduledRunActivationsResponse {
+    // The list of activations (which correspond to timestamps)
+    repeated string activation_ids = 1;
+}
+
+message ListScheduledRunsResponse {
+    repeated ScheduleInfo scheduled_runs = 1;
+}
+
+message GetScheduledActivationLogsRequest {
+    // The id of the scheduled run to get.
+    string run_id = 1;
+
+    // The id of the activation to get logs for.
+    string activation_id = 2;
+}
+
+message GetScheduledActivationLogsResponse {
+    // All the logs from this activation (the format is TBD, currently raw strings).
+    bytes raw_logs = 1;
+}
+
+message CreateUserKeyRequest {
+    // Empty. For future use.
+}
+
+message CreateUserKeyResponse {
+    string key_secret = 1;
+    string key_id = 2;
+    optional string description = 3;
+}
+
+message ListUserKeysRequest {
+    // Empty. For future use.
+}
+
+message ListUserKeysResponse {
+    repeated UserKeyInfo user_keys = 1;
+}
+
+message RevokeUserKeyRequest {
+    string key_id = 1;
+}
+
+message RevokeUserKeyResponse {
+    // Empty. For future use.
+}
+
+message UserKeyInfo {
+    string key_id = 1;
+    google.protobuf.Timestamp created_at = 2;
+}
+
+message ScheduleInfo {
+    // Unique run id / token.
+    string run_id = 1;
+
+    enum State {
+        // The run has been scheduled.
+        SCHEDULED = 0;
+        // The run has failed because of isolate.
+        INTERNAL_FAILURE = 1;
+        // The run has been cancelled.
+        CANCELLED = 2;
+    }
+
+    // The state of the run.
+    State state = 2;
+
+    // Cron string to represent the run schedule.
+    string cron = 3;
+}
+
+message HostedRunResult {
+    // Unique run id / token.
+    string run_id = 1;
+
+    // Optionally the status of the current run (in terms of
+    // fal cloud).
+    optional HostedRunStatus status = 2;
+
+    // The most recent logs from the run.
+    repeated Log logs = 3;
+
+    // The result of the run, if it is complete (indicated by
+    // status.is_complete).
+    optional SerializedObject return_value = 4;
+}
+
+message HostedRunStatus {
+    enum State {
+        // The run is in progress.
+        IN_PROGRESS = 0;
+        // The run has completed successfully.
+        SUCCESS = 1;
+        // The run has failed because of isolate.
+        INTERNAL_FAILURE = 2;
+        // TODO: probably QUEUED, etc.
+    }
+
+    // The state of the run.
+    State state = 1;
+
+    // TODO: probably a free form struct for more detailed
+    // information (how it crashed, position in queue, etc).
+}
+
+message MachineRequirements {
+    // Machine type. It is not an enum because we want to be able
+    // to dynamically add new machine types without regenerating
+    // both the client and the server. Validation is done at the
+    // server side.
+    string machine_type = 1;
+    optional int32 keep_alive = 2;
+}

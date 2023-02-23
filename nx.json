@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "koldstart-js",
+  "npmScope": "@fal-ai/koldstart",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",

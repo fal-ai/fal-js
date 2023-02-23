@@ -4,10 +4,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import * as jspb from "google-protobuf";
-import * as google_protobuf_timestamp_pb from "google-protobuf/google/protobuf/timestamp_pb";
-import * as common_pb from "./common_pb";
-import * as server_pb from "./server_pb";
+import * as jspb from 'google-protobuf';
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
+import * as common_pb from './common_pb';
+import * as server_pb from './server_pb';
 
 export class HostedMap extends jspb.Message {
   clearEnvironmentsList(): void;

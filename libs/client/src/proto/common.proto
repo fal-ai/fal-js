@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+message SerializedObject {
+    // The serialization method used to serialize the the raw_object. Must be
+    // present in the environment that is running the agent itself.
+    string method = 1;
+    // The Python object serialized with the method above.
+    bytes definition = 2;
+    // A flag indicating whether the given object was raised (e.g. an exception
+    // that was captured) or not.
+    bool was_it_raised = 3;
+    // The stringized version of the traceback, if it was raised.
+    optional string stringized_traceback = 4;
+}
+
+message PartialRunResult {
+    // A flag indicating whether the run has completed.
+    bool is_complete = 1;
+    // A list of logs collected during this partial execution. It does
+    // not include old logs.
+    repeated Log logs = 2;
+    // The result of the run, if it is complete.
+    optional SerializedObject result = 3;
+}
+
+message Log {
+    string message = 1;
+    LogSource source = 2;
+    LogLevel level = 3;
+}
+
+enum LogSource {
+    BUILDER = 0;
+    BRIDGE = 1;
+    USER = 2;
+}
+
+enum LogLevel {
+    TRACE = 0;
+    DEBUG = 1;
+    INFO = 2;
+    WARNING = 3;
+    ERROR = 4;
+    STDOUT = 5;
+    STDERR = 6;
+}

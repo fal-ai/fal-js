@@ -4,8 +4,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import * as grpc from "@grpc/grpc-js";
-import * as controller_pb from "./controller_pb";
+import * as grpc from '@grpc/grpc-js';
+import * as controller_pb from './controller_pb';
 
 interface IIsolateControllerService
   extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
@@ -26,7 +26,7 @@ interface IIsolateControllerService_IRun
     controller_pb.HostedRun,
     controller_pb.HostedRunResult
   > {
-  path: "/controller.IsolateController/Run";
+  path: '/controller.IsolateController/Run';
   requestStream: false;
   responseStream: true;
   requestSerialize: grpc.serialize<controller_pb.HostedRun>;
@@ -39,7 +39,7 @@ interface IIsolateControllerService_IMap
     controller_pb.HostedMap,
     controller_pb.HostedRunResult
   > {
-  path: "/controller.IsolateController/Map";
+  path: '/controller.IsolateController/Map';
   requestStream: false;
   responseStream: true;
   requestSerialize: grpc.serialize<controller_pb.HostedMap>;
@@ -52,7 +52,7 @@ interface IIsolateControllerService_ISchedule
     controller_pb.HostedRunCron,
     controller_pb.ScheduleInfo
   > {
-  path: "/controller.IsolateController/Schedule";
+  path: '/controller.IsolateController/Schedule';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.HostedRunCron>;
@@ -65,7 +65,7 @@ interface IIsolateControllerService_IListScheduledRuns
     controller_pb.ListScheduledRunsRequest,
     controller_pb.ListScheduledRunsResponse
   > {
-  path: "/controller.IsolateController/ListScheduledRuns";
+  path: '/controller.IsolateController/ListScheduledRuns';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.ListScheduledRunsRequest>;
@@ -78,7 +78,7 @@ interface IIsolateControllerService_ICancelScheduledRun
     controller_pb.CancelScheduledRunRequest,
     controller_pb.CancelScheduledRunResponse
   > {
-  path: "/controller.IsolateController/CancelScheduledRun";
+  path: '/controller.IsolateController/CancelScheduledRun';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.CancelScheduledRunRequest>;
@@ -91,7 +91,7 @@ interface IIsolateControllerService_IListScheduledRunActivations
     controller_pb.ListScheduledRunActivationsRequest,
     controller_pb.ListScheduledRunActivationsResponse
   > {
-  path: "/controller.IsolateController/ListScheduledRunActivations";
+  path: '/controller.IsolateController/ListScheduledRunActivations';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.ListScheduledRunActivationsRequest>;
@@ -104,7 +104,7 @@ interface IIsolateControllerService_IGetScheduledActivationLogs
     controller_pb.GetScheduledActivationLogsRequest,
     controller_pb.GetScheduledActivationLogsResponse
   > {
-  path: "/controller.IsolateController/GetScheduledActivationLogs";
+  path: '/controller.IsolateController/GetScheduledActivationLogs';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.GetScheduledActivationLogsRequest>;
@@ -117,7 +117,7 @@ interface IIsolateControllerService_ICreateUserKey
     controller_pb.CreateUserKeyRequest,
     controller_pb.CreateUserKeyResponse
   > {
-  path: "/controller.IsolateController/CreateUserKey";
+  path: '/controller.IsolateController/CreateUserKey';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.CreateUserKeyRequest>;
@@ -130,7 +130,7 @@ interface IIsolateControllerService_IListUserKeys
     controller_pb.ListUserKeysRequest,
     controller_pb.ListUserKeysResponse
   > {
-  path: "/controller.IsolateController/ListUserKeys";
+  path: '/controller.IsolateController/ListUserKeys';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.ListUserKeysRequest>;
@@ -143,7 +143,7 @@ interface IIsolateControllerService_IRevokeUserKey
     controller_pb.RevokeUserKeyRequest,
     controller_pb.RevokeUserKeyResponse
   > {
-  path: "/controller.IsolateController/RevokeUserKey";
+  path: '/controller.IsolateController/RevokeUserKey';
   requestStream: false;
   responseStream: false;
   requestSerialize: grpc.serialize<controller_pb.RevokeUserKeyRequest>;

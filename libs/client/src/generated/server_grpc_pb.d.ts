@@ -4,9 +4,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import * as grpc from "@grpc/grpc-js";
-import * as common_pb from "./common_pb";
-import * as server_pb from "./server_pb";
+import * as grpc from '@grpc/grpc-js';
+import * as common_pb from './common_pb';
+import * as server_pb from './server_pb';
 
 interface IIsolateService
   extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
@@ -18,7 +18,7 @@ interface IIsolateService_IRun
     server_pb.BoundFunction,
     common_pb.PartialRunResult
   > {
-  path: "/Isolate/Run";
+  path: '/Isolate/Run';
   requestStream: false;
   responseStream: true;
   requestSerialize: grpc.serialize<server_pb.BoundFunction>;

@@ -4,9 +4,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import * as jspb from "google-protobuf";
-import * as google_protobuf_struct_pb from "google-protobuf/google/protobuf/struct_pb";
-import * as common_pb from "./common_pb";
+import * as jspb from 'google-protobuf';
+import * as google_protobuf_struct_pb from 'google-protobuf/google/protobuf/struct_pb';
+import * as common_pb from './common_pb';
 
 export class BoundFunction extends jspb.Message {
   clearEnvironmentsList(): void;
