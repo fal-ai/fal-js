@@ -1,4 +1,7 @@
 {
   "name": "@fal-ai/koldstart-client",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "files": [
+    "src/generated/server_pb.js"
+  ]
 }
