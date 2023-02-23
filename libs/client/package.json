@@ -1,3 +1,4 @@
 {
-    "name": "@fal-ai/koldstart-client"
+  "name": "@fal-ai/koldstart-client",
+  "version": "0.0.1"
 }
