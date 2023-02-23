@@ -1,7 +1,7 @@
 import { Command, Flags } from '@oclif/core';
-import { execSync } from 'child_process';
 import { camelCase } from 'change-case';
-import { watch as watchFiles } from "chokidar";
+import { execSync } from 'child_process';
+import { watch as watchFiles } from 'chokidar';
 import * as glob from 'fast-glob';
 import { ensureDir, readJSONSync, writeFileSync } from 'fs-extra';
 import * as path from 'path';
@@ -59,10 +59,9 @@ export default class GenerateFunctionCommand extends Command {
       });
     };
 
-
     const generateFiles = async () => {
       // NOTE: this can be improved, a lot!
-      console.log("Generating files...");
+      console.log('Generating files...');
       const metadataFiles = await glob(`${tmp}/**/*.json`);
 
       for (const metadataFile of metadataFiles) {
@@ -78,7 +77,7 @@ export default class GenerateFunctionCommand extends Command {
     executeKoldstart();
     if (watch) {
       const watcher = watchFiles(include);
-      watcher.on("all", async () => {
+      watcher.on('all', async () => {
         // TODO update only changed files
         executeKoldstart();
         await generateFiles();
@@ -86,7 +85,6 @@ export default class GenerateFunctionCommand extends Command {
     } else {
       await generateFiles();
     }
-
 
     return;
   }

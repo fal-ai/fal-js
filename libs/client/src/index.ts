@@ -1,6 +1,6 @@
 import * as grpc from '@grpc/grpc-js';
 import { Struct } from 'google-protobuf/google/protobuf/struct_pb';
-import { decode as decodeBase64 } from 'js-base64';
+// import { decode as decodeBase64 } from 'js-base64';
 import { SerializedObject } from './generated/common_pb';
 import { IsolateControllerClient } from './generated/controller_grpc_pb';
 import { HostedRun } from './generated/controller_pb';
@@ -39,7 +39,8 @@ export function run(input: RunInput, onData: OnData) {
   const serObj = new SerializedObject();
 
   serObj.setMethod('dill');
-  serObj.setDefinition(decodeBase64(input.definition));
+  // serObj.setDefinition(decodeBase64(input.definition));
+  serObj.setDefinition(input.definition);
   serObj.setWasItRaised(false);
   serObj.setStringizedTraceback('');
 

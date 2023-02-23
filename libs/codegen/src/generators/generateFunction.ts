@@ -81,9 +81,7 @@ export function generateFunction(metadata: IsolateFunctionMetadata): string {
       writer.write('return run(').block(() => {
         writer.writeLine(`host: '${metadata.config.host}'`);
         writer.writeLine('credentials');
-        writer.writeLine(
-          `environmentKind: '${metadata.config.env_kind}'`
-        );
+        writer.writeLine(`environmentKind: '${metadata.config.env_kind}'`);
         writer.writeLine(
           `requirements: ${JSON.stringify(metadata.config.requirements)}`
         );
