@@ -46,11 +46,11 @@ export function run(input: RunInput, onData: OnData) {
 
   const environment = new EnvironmentDefinition();
   environment.setKind(input.environmentKind);
-  environment.setConfiguration(
-    Struct.fromJavaScript({
-      requirements: input.requirements,
-    })
-  );
+  // environment.setConfiguration(
+  //   Struct.fromJavaScript({
+  //     requirements: input.requirements,
+  //   })
+  // );
 
   req.setFunction(serObj);
   req.setEnvironmentsList([environment]);

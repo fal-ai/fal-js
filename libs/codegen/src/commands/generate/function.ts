@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { camelCase } from 'change-case';
+import { camelCase, paramCase } from 'change-case';
 import { execSync } from 'child_process';
 import { watch as watchFiles } from 'chokidar';
 import * as glob from 'fast-glob';
@@ -68,9 +68,11 @@ export default class GenerateFunctionCommand extends Command {
         const metadata = readJSONSync(metadataFile) as IsolateFunctionMetadata;
         const sourceCode = generateFunction(metadata);
 
+        const folder = paramCase(path.parse(path.relative(tmp, metadataFile)).dir);
         const filename = `${camelCase(metadata.name)}.ts`;
-        const outputPath = path.join(out, filename);
-        writeFileSync(outputPath, sourceCode);
+        const outputPath = path.join(out, folder);
+        await ensureDir(outputPath);
+        writeFileSync(path.join(outputPath, filename), sourceCode);
       }
     };
 

@@ -43,7 +43,7 @@ export function generateFunction(metadata: IsolateFunctionMetadata): string {
   members.push({
     kind: StructureKind.ImportDeclaration,
     namedImports: ['credentials'],
-    moduleSpecifier: '../credentials',
+    moduleSpecifier: '../../credentials',
   } as ImportDeclarationStructure);
 
   const inputTypename = `${typename}Input`;
