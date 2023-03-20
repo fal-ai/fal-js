@@ -6,6 +6,8 @@ import { IsolateControllerClient } from './generated/controller_grpc_pb';
 import { HostedRun } from './generated/controller_pb';
 import { EnvironmentDefinition } from './generated/server_pb';
 
+import { koldstart } from '@fal-ai/koldstart-core';
+
 export type Credentials = {
   id: string;
   key: string;
@@ -22,6 +24,7 @@ export type RunInput = {
 export type OnData = (data: string) => void;
 
 export function run(input: RunInput, onData: OnData) {
+  // koldstart("stable-diffusion/getImage").run()
   const credentials: grpc.ChannelCredentials =
     grpc.credentials.combineChannelCredentials(
       grpc.credentials.createSsl(),

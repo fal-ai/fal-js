@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@fal-ai/koldstart-client": ["libs/client/src/index.ts"],
-      "@fal-ai/koldstart-codegen": ["libs/codegen/src/index.ts"]
+      "@fal-ai/koldstart-codegen": ["libs/codegen/src/index.ts"],
+      "@fal-ai/koldstart-core": ["libs/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
