@@ -106,6 +106,7 @@ export function koldstart<Id extends string, Input, Output>(
           ? new URLSearchParams(options.input ?? {}).toString()
           : '';
       const userAgent = isBrowser ? {} : { 'User-Agent': getUserAgent() };
+      console.log(`${host}/trigger/${id}${params}`);
       const response = await fetch(`${host}/trigger/${id}${params}`, {
         method,
         headers: {
@@ -115,6 +116,7 @@ export function koldstart<Id extends string, Input, Output>(
           'Content-Type': 'application/json',
           ...userAgent,
         },
+        mode: 'cors',
         body:
           method !== 'get' && options.input
             ? JSON.stringify(options.input)

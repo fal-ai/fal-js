@@ -3,8 +3,8 @@ import { koldstart, config } from '@fal-ai/koldstart-core';
 
 config({
   credentials: {
-    keyId: '',
-    keySecret: '',
+    keyId: '8cee2d6e-9d78-47f0-a5a5-2b971e5695b0',
+    keySecret: '5afdf76502d0958ac0036929bd982f3a',
   },
 });
 
