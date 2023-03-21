@@ -9,8 +9,8 @@ type ImageDataUri = `data:image/${ImageType};base64,${string}`;
 
 config({
   credentials: {
-    keyId: '',
-    keySecret: '',
+    keyId: 'b61344f3-2b7f-4457-8a1d-0d1240ed2ce9',
+    keySecret: '4d02abd458294831cd98837fcb6fe99c',
   },
 });
 
