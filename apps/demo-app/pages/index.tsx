@@ -1,22 +1,38 @@
 import styles from './index.module.css';
-import { generateImage } from '../services/koldstart/functions/stable-diffusion/generateImage';
-import { getPyjokesVersion } from '../services/koldstart/functions/demo-script/getPyjokesVersion';
+import { koldstart, config } from '@fal-ai/koldstart-core';
 
-// import { stableDiffusion } from "@fal-ai/koldstart-icekubes";
+config({
+  credentials: {
+    keyId: '',
+    keySecret: '',
+  },
+});
 
 export async function getServerSideProps(context) {
-  generateImage({ prompt: '' }, (data) => {
-    console.log(JSON.stringify(data, null, 2));
+  console.log('About to call a Koldstart function from NodeJS');
+  const result = await koldstart(
+    'github|47358913/e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add'
+  ).run({
+    input: {
+      joke: 'Koldstart is cool, so the joke is on you!',
+    },
   });
-  // getPyjokesVersion({ arg: "" }, (data) => {
-  //   console.log(data);
-  // });
+  console.log(result);
+  const random = await koldstart(
+    'github|47358913/e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/get'
+  ).run({
+    method: 'get',
+  });
+  console.log(random);
   return {
-    props: {}, // will be passed to the page component as props
+    props: {
+      random,
+      result,
+    },
   };
 }
 
-export function Index() {
+export function Index(props) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-4xl font-bold mb-8">
@@ -24,6 +40,13 @@ export function Index() {
       </h1>
       <p className="text-lg">
         This page can access koldstart functions when it's rendering.
+      </p>
+      <p>
+        Koldstart added joke with success?{' '}
+        <strong>{props.result.success.toString()}</strong>
+      </p>
+      <p>
+        Koldstart joke <strong>{props.random.joke}</strong>
       </p>
     </div>
   );

@@ -1,4 +1,5 @@
 import fetch from 'cross-fetch';
+import { getConfig } from './config';
 
 /**
  * An event contract for progress updates from the server function.
@@ -66,20 +67,60 @@ export interface FunctionExecution<T> {
 }
 
 type RunOptions<Input> = {
-  readonly input: Input;
+  readonly input?: Input;
+  readonly method?: 'get' | 'post' | 'put' | 'delete';
 };
 
 export interface FunctionReference<Input, Output> {
-  run(options: RunOptions<Input>): FunctionExecution<Output>;
+  run(options: RunOptions<Input>): Promise<Output>;
 }
 
+// TODO: move to some utility file/module
+function isBrowser(): boolean {
+  return (
+    typeof window !== 'undefined' && typeof window.document !== 'undefined'
+  );
+}
+
+function getUserAgent(): string {
+  // TODO: move this elsewhere and generate it with system values
+  return '@fal-ai/koldstart-client/0.0.1 linux-x64 node-v18.12.1';
+}
+
+/**
+ * Gets a reference to a Koldstart function.
+ * TODO: expand the documentation with implementation details and example.
+ *
+ * @param id
+ * @returns
+ */
 export function koldstart<Id extends string, Input, Output>(
   id: Id
 ): FunctionReference<Input, Output> {
+  const { credentials, host } = getConfig();
   const ref = {
-    run(options) {
-      // fetch()
-      throw 'TODO: implement me';
+    async run(options) {
+      const method = (options.method ?? 'post').toLowerCase();
+      const params =
+        method === 'get'
+          ? new URLSearchParams(options.input ?? {}).toString()
+          : '';
+      const userAgent = isBrowser ? {} : { 'User-Agent': getUserAgent() };
+      const response = await fetch(`${host}/trigger/${id}${params}`, {
+        method,
+        headers: {
+          'X-Koldstart-Key-Id': credentials.keyId,
+          'X-Koldstart-Key-Secret': credentials.keySecret,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          ...userAgent,
+        },
+        body:
+          method !== 'get' && options.input
+            ? JSON.stringify(options.input)
+            : null,
+      });
+      return await response.json();
     },
   } satisfies FunctionReference<Input, Output>;
   return ref;
