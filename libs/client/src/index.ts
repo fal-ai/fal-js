@@ -1,7 +1,2 @@
 export { config, Credentials } from './config';
-export {
-  FunctionExecution,
-  FunctionReference,
-  ProgressEvent,
-  resolveFunction,
-} from './function';
+export { FunctionExecution, ProgressEvent, run } from './function';
