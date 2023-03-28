@@ -1,4 +1,4 @@
-import { config, koldstart } from '@fal-ai/koldstart-core';
+import { config, koldstart } from '@fal-ai/koldstart-client';
 
 export type GenerateImageInput = {
   prompt: string;

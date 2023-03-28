@@ -1,5 +1,5 @@
 import styles from './index.module.css';
-import { koldstart, config } from '@fal-ai/koldstart-core';
+import { koldstart, config } from '@fal-ai/koldstart-client';
 
 config({
   credentials: {
