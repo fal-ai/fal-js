@@ -1,5 +1,5 @@
 import styles from './index.module.css';
-import { koldstart, config } from '@fal-ai/koldstart-client';
+import { koldstart, config } from '@fal/serverless-client';
 
 config({
   credentials: {
@@ -40,7 +40,7 @@ export function Index(props) {
         Hello <code>koldstart-js</code>
       </h1>
       <p className="text-lg">
-        This page can access koldstart functions when it's rendering.
+        This page can access koldstart functions when it&apos;s rendering.
       </p>
       <p>
         Koldstart added joke with success?{' '}

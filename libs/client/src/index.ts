@@ -1,2 +1,2 @@
-export { config } from './config';
+export { Credentials, config } from './config';
 export { koldstart } from './koldstart';

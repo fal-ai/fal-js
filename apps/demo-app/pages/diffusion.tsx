@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 
-import { generateImage } from '../services/koldstart/generateImage';
+import { generateImage } from '../services/generateImage';
 
 const IMG_PLACEHOLDER = '/placeholder@2x.jpg';
 
@@ -34,11 +34,13 @@ export default function Diffusion() {
   return (
     <div className="min-h-screen dark:bg-gray-900 dark:text-white bg-white text-black">
       <Head>
-        <title>Koldstart Diffusion</title>
+        <title>fal-serverless diffusion</title>
       </Head>
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 py-10">
-        <h1 className="text-4xl font-semibold mb-10">🧊 koldstart diffusion</h1>
+        <h1 className="text-4xl font-semibold mb-10">
+          fal-serverless diffusion
+        </h1>
         <h3 className="text-2xl">Enter a prompt to generate the image</h3>
         <form onSubmit={handleSubmit} className="flex flex-col mt-8 w-full">
           <input

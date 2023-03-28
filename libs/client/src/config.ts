@@ -1,10 +1,10 @@
-type Credentials = {
+export type Credentials = {
   keyId: string;
   keySecret: string;
   userId: string;
 };
 
-type Config = {
+export type Config = {
   credentials: Credentials;
   host?: string;
 };
