@@ -10,6 +10,60 @@ export interface ProgressEvent<T> {
   readonly partialData: T | undefined;
 }
 
+type RunOptions<Input> = {
+  readonly input?: Input;
+  readonly method?: 'get' | 'post' | 'put' | 'delete';
+};
+
+/**
+ * Gets a reference to a fal serverless function.
+ * TODO: expand the documentation with implementation details and example.
+ *
+ * @param id
+ * @returns
+ */
+export async function run<Input, Output>(
+  id: string,
+  options?: RunOptions<Input>
+): Promise<Output> {
+  const { credentials, host } = getConfig();
+  const method = (options.method ?? 'post').toLowerCase();
+  const params =
+    method === 'get' ? new URLSearchParams(options.input ?? {}).toString() : '';
+  const userAgent = isBrowser ? {} : { 'User-Agent': getUserAgent() };
+  const response = await fetch(
+    `${host}/trigger/${credentials.userId}/${id}${params}`,
+    {
+      method,
+      headers: {
+        'X-Koldstart-Key-Id': credentials.keyId,
+        'X-Koldstart-Key-Secret': credentials.keySecret,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...userAgent,
+      },
+      mode: 'cors',
+      body:
+        method !== 'get' && options.input
+          ? JSON.stringify(options.input)
+          : null,
+    }
+  );
+  // TODO move this elsewhere so it can be reused by websocket impl too
+  const contentType = response.headers.get('Content-Type');
+  if (contentType?.includes('application/json')) {
+    return response.json();
+  }
+  if (contentType?.includes('text/html')) {
+    return response.text() as Promise<Output>;
+  }
+  if (contentType?.includes('application/octet-stream')) {
+    return response.arrayBuffer() as Promise<Output>;
+  }
+  // TODO convert to either number or bool automatically
+  return response.text() as Promise<Output>;
+}
+
 /**
  * Represents a result of a remote Koldstart function call.
  *
@@ -67,56 +121,19 @@ export interface FunctionExecution<T> {
   result(): Promise<T>;
 }
 
-type RunOptions<Input> = {
+type ListenOptions<Input> = {
   readonly input?: Input;
-  readonly method?: 'get' | 'post' | 'put' | 'delete';
 };
 
 /**
- * Gets a reference to a fal serverless function.
- * TODO: expand the documentation with implementation details and example.
+ * TODO: document me
  *
  * @param id
- * @returns
+ * @param options
  */
-export async function run<Input, Output>(
+export function listen<Input, Output>(
   id: string,
-  options?: RunOptions<Input>
-): Promise<Output> {
-  const { credentials, host } = getConfig();
-  const method = (options.method ?? 'post').toLowerCase();
-  const params =
-    method === 'get' ? new URLSearchParams(options.input ?? {}).toString() : '';
-  const userAgent = isBrowser ? {} : { 'User-Agent': getUserAgent() };
-  const response = await fetch(
-    `${host}/trigger/${credentials.userId}/${id}${params}`,
-    {
-      method,
-      headers: {
-        'X-Koldstart-Key-Id': credentials.keyId,
-        'X-Koldstart-Key-Secret': credentials.keySecret,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        ...userAgent,
-      },
-      mode: 'cors',
-      body:
-        method !== 'get' && options.input
-          ? JSON.stringify(options.input)
-          : null,
-    }
-  );
-  // TODO move this elsewhere so it can be reused by websocket impl too
-  const contentType = response.headers.get('Content-Type');
-  if (contentType?.includes('application/json')) {
-    return response.json();
-  }
-  if (contentType?.includes('text/html')) {
-    return response.text() as Promise<Output>;
-  }
-  if (contentType?.includes('application/octet-stream')) {
-    return response.arrayBuffer() as Promise<Output>;
-  }
-  // TODO convert to either number or bool automatically
-  return response.text() as Promise<Output>;
+  options: ListenOptions<Input>
+): FunctionExecution<Output> {
+  throw 'TODO: implement me!';
 }
