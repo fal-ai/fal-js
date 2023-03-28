@@ -3,6 +3,7 @@ import { koldstart, config } from '@fal-ai/koldstart-core';
 
 config({
   credentials: {
+    userId: '',
     keyId: '',
     keySecret: '',
   },
@@ -11,7 +12,7 @@ config({
 export async function getServerSideProps(context) {
   console.log('About to call a Koldstart function from NodeJS');
   const result = await koldstart(
-    'github|47358913/e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add'
+    'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add'
   ).run({
     input: {
       joke: 'Koldstart is cool, so the joke is on you!',
@@ -19,7 +20,7 @@ export async function getServerSideProps(context) {
   });
   console.log(result);
   const random = await koldstart(
-    'github|47358913/e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/get'
+    'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/get'
   ).run({
     method: 'get',
   });

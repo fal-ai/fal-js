@@ -106,22 +106,24 @@ export function koldstart<Id extends string, Input, Output>(
           ? new URLSearchParams(options.input ?? {}).toString()
           : '';
       const userAgent = isBrowser ? {} : { 'User-Agent': getUserAgent() };
-      console.log(`${host}/trigger/${id}${params}`);
-      const response = await fetch(`${host}/trigger/${id}${params}`, {
-        method,
-        headers: {
-          'X-Koldstart-Key-Id': credentials.keyId,
-          'X-Koldstart-Key-Secret': credentials.keySecret,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          ...userAgent,
-        },
-        mode: 'cors',
-        body:
-          method !== 'get' && options.input
-            ? JSON.stringify(options.input)
-            : null,
-      });
+      const response = await fetch(
+        `${host}/trigger/${credentials.userId}/${id}${params}`,
+        {
+          method,
+          headers: {
+            'X-Koldstart-Key-Id': credentials.keyId,
+            'X-Koldstart-Key-Secret': credentials.keySecret,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            ...userAgent,
+          },
+          mode: 'cors',
+          body:
+            method !== 'get' && options.input
+              ? JSON.stringify(options.input)
+              : null,
+        }
+      );
       return await response.json();
     },
   } satisfies FunctionReference<Input, Output>;

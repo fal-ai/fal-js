@@ -1,6 +1,7 @@
 type Credentials = {
   keyId: string;
   keySecret: string;
+  userId: string;
 };
 
 type Config = {

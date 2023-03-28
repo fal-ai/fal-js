@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 
-// import { generateImage } from "../services/koldstart/generateImage";
+import { generateImage } from '../services/koldstart/generateImage';
 
 const IMG_PLACEHOLDER = '/placeholder@2x.jpg';
 
@@ -17,15 +17,18 @@ export default function Diffusion() {
   const handleSubmit = async (e) => {
     // TODO replace this with direct koldstart call once cors is solved
     e.preventDefault();
-    const response = await fetch('/api/generateImage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt }),
-    });
-    const data = await response.json();
-    setImageUrl(data.imageUrl);
+    // const response = await fetch('/api/generateImage', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({ prompt }),
+    // });
+    // const data = await response.json();
+    // setImageUrl(data.imageUrl);
+
+    const result = await generateImage({ prompt });
+    setImageUrl(result);
   };
 
   return (
