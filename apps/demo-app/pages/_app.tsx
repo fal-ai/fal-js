@@ -8,7 +8,7 @@ function CustomApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>Welcome to demo-app!</title>
       </Head>
-      <main className="app">
+      <main className="app dark">
         <Component {...pageProps} />
       </main>
     </>

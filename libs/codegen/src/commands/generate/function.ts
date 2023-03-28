@@ -68,7 +68,9 @@ export default class GenerateFunctionCommand extends Command {
         const metadata = readJSONSync(metadataFile) as IsolateFunctionMetadata;
         const sourceCode = generateFunction(metadata);
 
-        const folder = paramCase(path.parse(path.relative(tmp, metadataFile)).dir);
+        const folder = paramCase(
+          path.parse(path.relative(tmp, metadataFile)).dir
+        );
         const filename = `${camelCase(metadata.name)}.ts`;
         const outputPath = path.join(out, folder);
         await ensureDir(outputPath);
