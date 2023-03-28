@@ -1,5 +1,6 @@
 import fetch from 'cross-fetch';
 import { getConfig } from './config';
+import { getUserAgent, isBrowser } from './runtime';
 
 /**
  * An event contract for progress updates from the server function.
@@ -75,26 +76,14 @@ export interface FunctionReference<Input, Output> {
   run(options: RunOptions<Input>): Promise<Output>;
 }
 
-// TODO: move to some utility file/module
-function isBrowser(): boolean {
-  return (
-    typeof window !== 'undefined' && typeof window.document !== 'undefined'
-  );
-}
-
-function getUserAgent(): string {
-  // TODO: move this elsewhere and generate it with system values
-  return '@fal-ai/koldstart-client/0.0.1 linux-x64 node-v18.12.1';
-}
-
 /**
- * Gets a reference to a Koldstart function.
+ * Gets a reference to a fal serverless function.
  * TODO: expand the documentation with implementation details and example.
  *
  * @param id
  * @returns
  */
-export function koldstart<Id extends string, Input, Output>(
+export function resolveFunction<Id extends string, Input, Output>(
   id: Id
 ): FunctionReference<Input, Output> {
   const { credentials, host } = getConfig();

@@ -1,2 +1,7 @@
-export { Credentials, config } from './config';
-export { koldstart } from './koldstart';
+export { config, Credentials } from './config';
+export {
+  FunctionExecution,
+  FunctionReference,
+  ProgressEvent,
+  resolveFunction,
+} from './function';

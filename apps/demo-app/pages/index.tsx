@@ -1,7 +1,7 @@
 import styles from './index.module.css';
-import { koldstart, config } from '@fal/serverless-client';
+import * as fal from '@fal/serverless-client';
 
-config({
+fal.config({
   credentials: {
     userId: '',
     keyId: '',
@@ -11,19 +11,19 @@ config({
 
 export async function getServerSideProps(context) {
   console.log('About to call a Koldstart function from NodeJS');
-  const result = await koldstart(
-    'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add'
-  ).run({
-    input: {
-      joke: 'Koldstart is cool, so the joke is on you!',
-    },
-  });
+  const result = await fal
+    .resolveFunction('e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add')
+    .run({
+      input: {
+        joke: 'Koldstart is cool, so the joke is on you!',
+      },
+    });
   console.log(result);
-  const random = await koldstart(
-    'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/get'
-  ).run({
-    method: 'get',
-  });
+  const random = await fal
+    .resolveFunction('e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/get')
+    .run({
+      method: 'get',
+    });
   console.log(random);
   return {
     props: {
