@@ -19,7 +19,7 @@ The serverless-js library is a client for the fal serverless Python functions. C
 
 The client library is build as a thin layer on top of the platform standards.
 
-> **Note:**
+> **Note**
 > Make sure you followed the [fal-serverless getting started] so you get your credentials and register your functions. 
 
 1. First you need to configure your credentials:
