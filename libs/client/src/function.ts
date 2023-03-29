@@ -16,11 +16,11 @@ type RunOptions<Input> = {
 };
 
 /**
- * Gets a reference to a fal serverless function.
- * TODO: expand the documentation with implementation details and example.
+ * Runs a fal serverless function identified by its `id`.
+ * TODO: expand documentation and provide examples
  *
- * @param id
- * @returns
+ * @param id the registered function id
+ * @returns the remote function output
  */
 export async function run<Input, Output>(
   id: string,
