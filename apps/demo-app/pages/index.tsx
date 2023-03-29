@@ -10,12 +10,12 @@ fal.config({
 });
 
 export async function getServerSideProps(context) {
-  console.log('About to call a Koldstart function from NodeJS');
+  console.log('About to call a fal serverless function from NodeJS');
   const result = await fal.run(
     'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add',
     {
       input: {
-        joke: 'Koldstart is cool, so the joke is on you!',
+        joke: 'fal serverless is cool, so the joke is on you!',
       },
     }
   );
@@ -39,17 +39,18 @@ export function Index(props) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-4xl font-bold mb-8">
-        Hello <code>koldstart-js</code>
+        Hello <code>fal serverless</code>
       </h1>
       <p className="text-lg">
-        This page can access koldstart functions when it&apos;s rendering.
+        This page can access <strong>fal serverless</strong> functions when
+        it&apos;s rendering.
       </p>
       <p>
-        Koldstart added joke with success?{' '}
+        Added joke with success?{' '}
         <strong>{props.result.success.toString()}</strong>
       </p>
       <p>
-        Koldstart joke <strong>{props.random.joke}</strong>
+        Joke <strong>{props.random.joke}</strong>
       </p>
     </div>
   );

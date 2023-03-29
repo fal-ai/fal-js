@@ -10,7 +10,7 @@ import { IsolateFunctionMetadata } from '../../types';
 
 export default class GenerateFunctionCommand extends Command {
   static description =
-    'Generate Koldstart functions from a path containing Python files';
+    'Generate fal serverless functions from a path containing Python files';
 
   // static examples = ['$ ksjs generate:functions'];
 
@@ -47,13 +47,13 @@ export default class GenerateFunctionCommand extends Command {
       commands.push('source ' + python + '/bin/activate');
     }
 
-    const tmp = 'tmp/.koldstart/generated';
+    const tmp = 'tmp/.fal/serverless/generated';
     await ensureDir(tmp);
     commands.push(
       `koldstart generate metadata --include="${include}" --out="${tmp}"`
     );
 
-    const executeKoldstart = () => {
+    const executeCommand = () => {
       execSync(commands.join(' && '), {
         shell: 'bash',
       });
@@ -78,12 +78,12 @@ export default class GenerateFunctionCommand extends Command {
       }
     };
 
-    executeKoldstart();
+    executeCommand();
     if (watch) {
       const watcher = watchFiles(include);
       watcher.on('all', async () => {
         // TODO update only changed files
-        executeKoldstart();
+        executeCommand();
         await generateFiles();
       });
     } else {

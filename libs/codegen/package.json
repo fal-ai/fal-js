@@ -1,5 +1,5 @@
 {
-  "name": "@fal-ai/koldstart-codegen",
+  "name": "@fal/serverless-codegen",
   "version": "0.0.1",
   "bin": {
     "ksjs": "./bin/run"
@@ -20,7 +20,7 @@
     "topicSeparator": ":",
     "topics": {
       "generate": {
-        "description": "Command used to generate source files based on Koldstart metadata."
+        "description": "Command used to generate source files based on fal serverless metadata."
       }
     }
   }

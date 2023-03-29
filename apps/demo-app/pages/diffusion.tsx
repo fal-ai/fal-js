@@ -15,8 +15,8 @@ export default function Diffusion() {
   };
 
   const handleSubmit = async (e) => {
-    // TODO replace this with direct koldstart call once cors is solved
     e.preventDefault();
+    // TODO replace this with direct serverless call once cors is solved
     // const response = await fetch('/api/generateImage', {
     //   method: 'POST',
     //   headers: {

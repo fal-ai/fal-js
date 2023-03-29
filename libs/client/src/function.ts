@@ -65,7 +65,7 @@ export async function run<Input, Output>(
 }
 
 /**
- * Represents a result of a remote Koldstart function call.
+ * Represents a result of a remote fal serverless function call.
  *
  * The contract allows developers to not only get the function
  * result, but also track its progress and logs through event

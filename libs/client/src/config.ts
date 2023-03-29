@@ -23,7 +23,7 @@ export function config(config: Config) {
 
 export function getConfig(): RequiredConfig {
   if (typeof configuration === 'undefined') {
-    throw new Error('You must configure koldstart first.');
+    throw new Error('You must configure fal serverless first.');
   }
   return configuration;
 }
