@@ -64,7 +64,6 @@ export async function run<Input, Output>(
   return response.text() as Promise<Output>;
 }
 
-
 /**
  * An event contract for progress updates from the server function.
  */

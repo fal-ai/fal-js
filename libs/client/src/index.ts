@@ -1,2 +1,4 @@
-export { config, Credentials } from './config';
-export { FunctionExecution, ProgressEvent, run } from './function';
+export type { Credentials } from './config';
+export { config } from './config';
+export type { FunctionExecution, ProgressEvent } from './function';
+export { run } from './function';

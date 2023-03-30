@@ -4,7 +4,6 @@
 ![License](https://img.shields.io/github/license/fal-ai/serverless-js)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build)
 
-
 ## About the project
 
 This project aims to provide a seamless and idiomatic way to run your fal serverless functions from JavaScript.
@@ -21,26 +20,26 @@ The client library is build as a thin layer on top of the platform standards.
 
 > **Note**
 >
-> Make sure you followed the [fal-serverless getting started] so you get your credentials and register your functions. 
+> Make sure you followed the [fal-serverless getting started] so you get your credentials and register your functions.
 
 1. First you need to configure your credentials:
 
 ```ts
-import * as fal from "@fal/serverless-js";
+import * as fal from '@fal/serverless-js';
 
 fal.config({
   credentials: {
-    userId: "USER_ID",
-    keyId: "KEY_ID",
-    keySecret: "KEY_SECRET"
-  }
+    userId: 'USER_ID',
+    keyId: 'KEY_ID',
+    keySecret: 'KEY_SECRET',
+  },
 });
 ```
 
 2. Get your function id and run it:
 
 ```ts
-const result = await fal.run("my-function-alias");
+const result = await fal.run('my-function-alias');
 ```
 
 ## Roadmap
