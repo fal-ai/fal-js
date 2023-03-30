@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Format
-        run: npx nx affected:format --base=${{ github.base_ref }}
+        run: npx nx affected --target=format --base=${{ github.base_ref }}
       - name: Lint
-        run: npx nx affected:lint --base=${{ github.base_ref }}
+        run: npx nx affected --target=lint --base=${{ github.base_ref }}
       - name: Build
-        run: npx nx affected:build --prod --base=${{ github.base_ref }}
+        run: npx nx affected --target=build --prod --base=${{ github.base_ref }}
