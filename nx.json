@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "@fal/serverless",
+  "npmScope": "@fal-ai/serverless",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",

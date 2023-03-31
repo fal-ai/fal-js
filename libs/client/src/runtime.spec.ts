@@ -14,6 +14,6 @@ describe('the runtime test suite', () => {
   });
 
   it('should create the correct user agent identifier', () => {
-    expect(getUserAgent()).toMatch(/@fal\/serverless-client/);
+    expect(getUserAgent()).toMatch(/@fal-ai\/serverless-client/);
   });
 });

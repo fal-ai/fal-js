@@ -1,4 +1,4 @@
-import * as fal from '@fal/serverless-client';
+import * as fal from '@fal-ai/serverless-client';
 
 export type GenerateImageInput = {
   prompt: string;
