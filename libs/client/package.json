@@ -1,9 +1,17 @@
 {
   "name": "@fal/serverless-client",
-  "version": "0.0.1",
+  "description": "The fal serverless JS/TS client",
+  "version": "0.0.0-semantic-release",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fal-ai/serverless-js",
+    "url": "https://github.com/fal-ai/serverless-js.git",
     "directory": "libs/client"
-  }
+  },
+  "keywords": [
+    "fal",
+    "serverless",
+    "client",
+    "ai",
+    "ml"
+  ]
 }

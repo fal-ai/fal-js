@@ -9,24 +9,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '18.x'
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
+      - name: Format check
+        run: npx nx affected --target=format --base=remotes/origin/${{ github.base_ref }}
+      - name: Lint
+        run: npx nx affected --target=lint --base=remotes/origin/${{ github.base_ref }}
       - name: Build
-        uses: mansagroup/nrwl-nx-action@v3
-        with:
-          affected: 'true'
-          parallel: 1
-          targets: format,lint,build
+        run: npx nx affected --target=build --prod --base=remotes/origin/${{ github.base_ref }}

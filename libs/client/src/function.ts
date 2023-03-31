@@ -3,15 +3,15 @@ import { getConfig } from './config';
 import { getUserAgent, isBrowser } from './runtime';
 
 /**
- * An event contract for progress updates from the server function.
+ * The function input and other configuration when running
+ * the function, such as the HTTP method to use.
  */
-export interface ProgressEvent<T> {
-  readonly progress: number;
-  readonly partialData: T | undefined;
-}
-
 type RunOptions<Input> = {
   readonly input?: Input;
+
+  /**
+   * The HTTP method, defaults to `post`;
+   */
   readonly method?: 'get' | 'post' | 'put' | 'delete';
 };
 
@@ -36,8 +36,8 @@ export async function run<Input, Output>(
     {
       method,
       headers: {
-        'X-Koldstart-Key-Id': credentials.keyId,
-        'X-Koldstart-Key-Secret': credentials.keySecret,
+        'X-Fal-Key-Id': credentials.keyId,
+        'X-Fal-Key-Secret': credentials.keySecret,
         Accept: 'application/json',
         'Content-Type': 'application/json',
         ...userAgent,
@@ -62,6 +62,14 @@ export async function run<Input, Output>(
   }
   // TODO convert to either number or bool automatically
   return response.text() as Promise<Output>;
+}
+
+/**
+ * An event contract for progress updates from the server function.
+ */
+export interface ProgressEvent<T> {
+  readonly progress: number;
+  readonly partialData: T | undefined;
 }
 
 /**

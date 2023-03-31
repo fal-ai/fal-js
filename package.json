@@ -5,7 +5,8 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test"
+    "test": "nx test",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -26,6 +27,8 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
     "@nrwl/cli": "15.7.2",
     "@nrwl/cypress": "15.7.2",
     "@nrwl/eslint-plugin-nx": "15.7.2",
@@ -38,6 +41,7 @@
     "@nrwl/web": "15.7.2",
     "@nrwl/workspace": "15.7.2",
     "@testing-library/react": "13.4.0",
+    "@theunderscorer/nx-semantic-release": "^2.2.1",
     "@types/google-protobuf": "^3.15.6",
     "@types/jest": "28.1.1",
     "@types/node": "16.11.7",
@@ -57,6 +61,7 @@
     "eslint-plugin-react": "^7.31.8",
     "eslint-plugin-react-hooks": "^4.6.0",
     "fs-extra": "^11.1.0",
+    "husky": "^8.0.0",
     "jest": "28.1.1",
     "jest-environment-jsdom": "28.1.1",
     "nx": "15.7.2",
