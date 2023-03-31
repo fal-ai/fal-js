@@ -9,7 +9,7 @@ export type Config = {
   host?: string;
 };
 
-type RequiredConfig = Required<Config>;
+export type RequiredConfig = Required<Config>;
 
 const DEFAULT_CONFIG: Partial<Config> = {
   host: 'https://gateway.shark.fal.ai',
@@ -17,10 +17,20 @@ const DEFAULT_CONFIG: Partial<Config> = {
 
 let configuration: RequiredConfig | undefined = undefined;
 
+/**
+ * Configures the fal serverless client.
+ *
+ * @param config the new configuration.
+ */
 export function config(config: Config) {
-  configuration = { ...config, ...DEFAULT_CONFIG } as RequiredConfig;
+  configuration = { ...DEFAULT_CONFIG, ...config } as RequiredConfig;
 }
 
+/**
+ * Get the current fal serverless client configuration.
+ *
+ * @returns the current client configuration.
+ */
 export function getConfig(): RequiredConfig {
   if (typeof configuration === 'undefined') {
     throw new Error('You must configure fal serverless first.');
