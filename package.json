@@ -38,6 +38,7 @@
     "@nrwl/web": "15.7.2",
     "@nrwl/workspace": "15.7.2",
     "@testing-library/react": "13.4.0",
+    "@theunderscorer/nx-semantic-release": "^2.2.1",
     "@types/google-protobuf": "^3.15.6",
     "@types/jest": "28.1.1",
     "@types/node": "16.11.7",
