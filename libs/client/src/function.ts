@@ -36,8 +36,8 @@ export async function run<Input, Output>(
     {
       method,
       headers: {
-        'X-Koldstart-Key-Id': credentials.keyId,
-        'X-Koldstart-Key-Secret': credentials.keySecret,
+        'X-Fal-Key-Id': credentials.keyId,
+        'X-Fal-Key-Secret': credentials.keySecret,
         Accept: 'application/json',
         'Content-Type': 'application/json',
         ...userAgent,
