@@ -1,6 +1,6 @@
 # The fal-serverless JS Client
 
-![NPM](https://img.shields.io/npm/v/@fal/serverless-js)
+![NPM](https://img.shields.io/npm/v/@fal-ai/serverless-js)
 ![License](https://img.shields.io/github/license/fal-ai/serverless-js)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build)
 
@@ -27,7 +27,7 @@ It also handle platform differences, so it work seamlessly across different JS r
 1. First you need to configure your credentials:
 
 ```ts
-import * as fal from '@fal/serverless-js';
+import * as fal from '@fal-ai/serverless-js';
 
 fal.config({
   credentials: {

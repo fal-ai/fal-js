@@ -15,8 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@fal/serverless-client": ["libs/client/src/index.ts"],
-      "@fal/serverless-codegen": ["libs/codegen/src/index.ts"]
+      "@fal-ai/serverless-client": ["libs/client/src/index.ts"],
+      "@fal-ai/serverless-codegen": ["libs/codegen/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

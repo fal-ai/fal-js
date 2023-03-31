@@ -1,5 +1,5 @@
 {
-  "name": "@fal/serverless-codegen",
+  "name": "@fal-ai/serverless-codegen",
   "version": "0.0.1",
   "bin": {
     "ksjs": "./bin/run"

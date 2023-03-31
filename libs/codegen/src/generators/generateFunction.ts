@@ -38,7 +38,7 @@ export function generateFunction(metadata: IsolateFunctionMetadata): string {
   members.push({
     kind: StructureKind.ImportDeclaration,
     namedImports: ['run'],
-    moduleSpecifier: '@fal/serverless-client',
+    moduleSpecifier: '@fal-ai/serverless-client',
   } as ImportDeclarationStructure);
   members.push({
     kind: StructureKind.ImportDeclaration,
