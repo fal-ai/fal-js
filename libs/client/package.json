@@ -7,5 +7,11 @@
     "url": "https://github.com/fal-ai/serverless-js.git",
     "directory": "libs/client"
   },
-  "keywords": ["fal", "serverless", "client", "ai", "ml"]
+  "keywords": [
+    "fal",
+    "serverless",
+    "client",
+    "ai",
+    "ml"
+  ]
 }

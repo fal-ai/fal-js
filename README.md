@@ -20,7 +20,6 @@ The client library is designed as a lightweight layer on top of the platform sta
 
 It also handle platform differences, so it work seamlessly across different JS runtimes.
 
-
 > **Note**
 >
 > Make sure you followed the [fal-serverless getting started]() so you get your credentials and register your functions.
