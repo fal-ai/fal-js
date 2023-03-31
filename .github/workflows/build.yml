@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
   build:
@@ -25,5 +24,7 @@ jobs:
         run: npx nx affected --target=format --base=remotes/origin/${{ github.base_ref }}
       - name: Lint
         run: npx nx affected --target=lint --base=remotes/origin/${{ github.base_ref }}
+      - name: Test
+        run: npx nx affected --target=test --base=remotes/origin/${{ github.base_ref }}
       - name: Build
         run: npx nx affected --target=build --prod --base=remotes/origin/${{ github.base_ref }}
