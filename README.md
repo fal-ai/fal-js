@@ -1,14 +1,14 @@
 # The fal-serverless JS Client
 
-![NPM](https://img.shields.io/npm/v/@fal-ai/serverless-js)
+![NPM client](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=purple&label=client)
+![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build.yml)
 ![License](https://img.shields.io/github/license/fal-ai/serverless-js)
-![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build)
 
 ## About the project
 
 The fal-serverless JS/TS Client is a powerful and easy-to-use JavaScript and TypeScript library that allows you to effortlessly integrate and run your fal serverless functions in your Web, Node.js and React Native applications.
 
-The project is written in TypeScript, so developers get type-safety out of the box.
+The project is written in TypeScript, so developers get type-safety out-of-the-box.
 
 ## Getting Started
 
@@ -44,7 +44,7 @@ fal.config({
 const result = await fal.run('my-function-id');
 ```
 
-The result type depends on the result of your Python function
+The result type depends on the result of your Python function, types are mapped to their equivalent types in JS.
 
 ## Roadmap
 
