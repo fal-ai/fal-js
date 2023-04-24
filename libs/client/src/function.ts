@@ -1,12 +1,22 @@
 import fetch from 'cross-fetch';
 import { getConfig } from './config';
 import { getUserAgent, isBrowser } from './runtime';
+import { isUUIDv4 } from './utils';
 
 /**
  * The function input and other configuration when running
  * the function, such as the HTTP method to use.
  */
 type RunOptions<Input> = {
+  /**
+   * The path to the function, if any. Defaults to `/`.
+   */
+  readonly path?: string;
+
+  /**
+   * The function input. It will be submitted either as query params
+   * or the body payload, depending on the `method`.
+   */
   readonly input?: Input;
 
   /**
@@ -14,6 +24,35 @@ type RunOptions<Input> = {
    */
   readonly method?: 'get' | 'post' | 'put' | 'delete';
 };
+
+/**
+ * Builds the final url to run the function based on its `id` or alias and
+ * a the options from `RunOptions<Input>`.
+ *
+ * @private
+ * @param id the function id or alias
+ * @param options the run options
+ * @returns the final url to run the function
+ */
+export function buildUrl<Input>(
+  id: string,
+  options: RunOptions<Input> = {}
+): string {
+  const { credentials, host } = getConfig();
+  const method = (options.method ?? 'post').toLowerCase();
+  const path = options.path ?? '';
+  const params =
+    method === 'get' ? new URLSearchParams(options.input ?? {}) : undefined;
+  let queryParams = '';
+  if (params) {
+    queryParams = `?${params.toString()}`;
+  }
+  if (isUUIDv4(id)) {
+    return `https://${host}/trigger/${credentials.userId}/${id}/${path}${queryParams}`;
+  }
+  const userId = credentials.userId.replace(/github|/g, '');
+  return `https://${userId}-${id}.${host}/${path}${queryParams}`;
+}
 
 /**
  * Runs a fal serverless function identified by its `id`.
@@ -24,31 +63,32 @@ type RunOptions<Input> = {
  */
 export async function run<Input, Output>(
   id: string,
-  options?: RunOptions<Input>
+  options: RunOptions<Input> = {}
 ): Promise<Output> {
-  const { credentials, host } = getConfig();
+  const { credentials } = getConfig();
   const method = (options.method ?? 'post').toLowerCase();
-  const params =
-    method === 'get' ? new URLSearchParams(options.input ?? {}).toString() : '';
   const userAgent = isBrowser ? {} : { 'User-Agent': getUserAgent() };
-  const response = await fetch(
-    `${host}/trigger/${credentials.userId}/${id}${params}`,
-    {
-      method,
-      headers: {
-        'X-Fal-Key-Id': credentials.keyId,
-        'X-Fal-Key-Secret': credentials.keySecret,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        ...userAgent,
-      },
-      mode: 'cors',
-      body:
-        method !== 'get' && options.input
-          ? JSON.stringify(options.input)
-          : null,
-    }
-  );
+  const response = await fetch(buildUrl(id, options), {
+    method,
+    headers: {
+      'X-Fal-Key-Id': credentials.keyId,
+      'X-Fal-Key-Secret': credentials.keySecret,
+      'Content-Type': 'application/json',
+      ...userAgent,
+    },
+    mode: 'cors',
+    body:
+      method !== 'get' && options.input
+        ? JSON.stringify(options.input)
+        : undefined,
+  });
+
+  const { status, statusText } = response;
+  if (status < 200 || status >= 300) {
+    // TODO better error type so handlers can differentiate
+    throw new Error(statusText);
+  }
+
   // TODO move this elsewhere so it can be reused by websocket impl too
   const contentType = response.headers.get('Content-Type');
   if (contentType?.includes('application/json')) {

@@ -1,57 +1,70 @@
-import styles from './index.module.css';
-import * as fal from '@fal-ai/serverless-client';
-
-fal.config({
-  credentials: {
-    userId: '',
-    keyId: '',
-    keySecret: '',
-  },
-});
+import { getJoke } from '../services/getJoke';
 
 export async function getServerSideProps(context) {
-  console.log('About to call a fal serverless function from NodeJS');
-  const result = await fal.run(
-    'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/add',
-    {
-      input: {
-        joke: 'fal serverless is cool, so the joke is on you!',
+  let response: any = {};
+  try {
+    response = await getJoke();
+  } catch (error) {
+    return {
+      props: {
+        error: error.message,
       },
-    }
-  );
-  console.log(result);
-  const random = await fal.run(
-    'e300f60b-4a7c-44cd-871d-bea588ef43d6/jokes/get',
-    {
-      method: 'get',
-    }
-  );
-  console.log(random);
+    };
+  }
   return {
     props: {
-      random,
-      result,
+      joke: response.joke,
     },
   };
 }
 
-export function Index(props) {
+function Error(props) {
+  if (!props.error) {
+    return null;
+  }
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-4xl font-bold mb-8">
-        Hello <code>fal serverless</code>
-      </h1>
-      <p className="text-lg">
-        This page can access <strong>fal serverless</strong> functions when
-        it&apos;s rendering.
-      </p>
-      <p>
-        Added joke with success?{' '}
-        <strong>{props.result.success.toString()}</strong>
-      </p>
-      <p>
-        Joke <strong>{props.random.joke}</strong>
-      </p>
+    <div
+      className="p-4 mb-4 text-sm text-red-800 rounded bg-red-50 dark:bg-gray-800 dark:text-red-400"
+      role="alert"
+    >
+      <span className="font-medium">Error</span> {props.error}
+    </div>
+  );
+}
+
+export function Index(props) {
+  const handleClick = async (e) => {
+    e.preventDefault();
+    try {
+      const joke = await getJoke();
+      console.log(joke);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  return (
+    <div className="min-h-screen dark:bg-gray-900 dark:text-white bg-white text-black">
+      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 py-10">
+        <h1 className="text-4xl font-bold mb-8">
+          Hello <code>fal-serverless</code>
+        </h1>
+        <p className="text-lg mb-10">
+          This page can access <strong>fal-serverless</strong> functions when
+          it&apos;s rendering.
+        </p>
+        <Error error={props.error} />
+
+        <button
+          onClick={handleClick}
+          className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold text-xl py-4 px-8 mx-auto rounded focus:outline-none focus:shadow-outline"
+        >
+          Get Joke
+        </button>
+
+        <p className="mt-10">
+          Here&apos;s a joke: <strong>{props.joke}</strong>
+        </p>
+      </main>
     </div>
   );
 }
