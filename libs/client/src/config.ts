@@ -27,12 +27,38 @@ export function config(config: Config) {
 }
 
 /**
+ * Checks if the required FAL environment variables are set.
+ *
+ * @returns `true` if the required environment variables are set,
+ * `false` otherwise.
+ */
+function hasEnvVariables(): boolean {
+  return (
+    process &&
+    process.env &&
+    typeof process.env.FAL_KEY_ID !== 'undefined' &&
+    typeof process.env.FAL_KEY_SECRET !== 'undefined' &&
+    typeof process.env.FAL_USER_ID !== 'undefined'
+  );
+}
+
+/**
  * Get the current fal serverless client configuration.
  *
  * @returns the current client configuration.
  */
 export function getConfig(): RequiredConfig {
-  if (typeof configuration === 'undefined') {
+  const hasConfig = typeof configuration !== 'undefined';
+  if (!hasConfig && hasEnvVariables()) {
+    config({
+      credentials: {
+        keyId: process.env.FAL_KEY_ID,
+        keySecret: process.env.FAL_KEY_SECRET,
+        userId: process.env.FAL_USER_ID,
+      },
+    });
+  }
+  if (!hasConfig || configuration.credentials.keySecret === undefined) {
     throw new Error('You must configure fal serverless first.');
   }
   return configuration;
