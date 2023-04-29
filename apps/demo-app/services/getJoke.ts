@@ -3,12 +3,16 @@ import * as fal from '@fal-ai/serverless-client';
 fal.config({
   host: 'gateway.alpha.fal.ai',
   credentials: {
-    userId: '',
-    keyId: '',
-    keySecret: '',
+    userId: process.env.FAL_USER_ID || '',
+    keyId: process.env.FAL_KEY_ID || '',
+    keySecret: process.env.FAL_KEY_SECRET || '',
   },
 });
 
-export function getJoke(): Promise<{ joke: string }> {
-  return fal.run('944a4d1c-e4b2-4a38-8499-1e9a8a544854');
+export type GetJokeInput = {
+  language?: string;
+};
+
+export function getJoke(input?: GetJokeInput): Promise<{ joke: string }> {
+  return fal.run('fastapi_get_joke', { input });
 }

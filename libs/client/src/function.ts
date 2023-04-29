@@ -50,7 +50,7 @@ export function buildUrl<Input>(
   if (isUUIDv4(id)) {
     return `https://${host}/trigger/${credentials.userId}/${id}/${path}${queryParams}`;
   }
-  const userId = credentials.userId.replace(/github|/g, '');
+  const userId = credentials.userId.replace(/github\|/g, '');
   return `https://${userId}-${id}.${host}/${path}${queryParams}`;
 }
 

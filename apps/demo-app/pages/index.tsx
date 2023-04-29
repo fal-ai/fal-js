@@ -1,9 +1,13 @@
 import { getJoke } from '../services/getJoke';
 
 export async function getServerSideProps(context) {
-  let response: any = {};
   try {
-    response = await getJoke();
+    const result = await getJoke();
+    return {
+      props: {
+        ...result,
+      },
+    };
   } catch (error) {
     return {
       props: {
@@ -11,11 +15,6 @@ export async function getServerSideProps(context) {
       },
     };
   }
-  return {
-    props: {
-      joke: response.joke,
-    },
-  };
 }
 
 function Error(props) {
