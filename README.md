@@ -1,6 +1,6 @@
 # The fal-serverless JS Client
 
-![NPM client](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=purple&label=client)
+![NPM client](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build.yml)
 ![License](https://img.shields.io/github/license/fal-ai/serverless-js)
 
@@ -22,7 +22,7 @@ It also handle platform differences, so it work seamlessly across different JS r
 
 > **Note**
 >
-> Make sure you followed the [fal-serverless getting started]() so you get your credentials and register your functions.
+> Make sure you followed the [fal-serverless getting started](https://docs.fal.ai/fal-serverless/quickstart) so you get your credentials and register your functions.
 
 1. First you need to configure your credentials:
 
