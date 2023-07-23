@@ -13,8 +13,6 @@ export function getJoke(
   input: GetJokeInput = { language: 'en' }
 ): Promise<GetJokeOutput> {
   return fal.run('319413-fal-fastapi-getjoke', {
-    input: {
-      language: 'es',
-    },
+    input,
   });
 }
