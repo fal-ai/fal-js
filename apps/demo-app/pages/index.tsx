@@ -1,11 +1,19 @@
+import { useState } from 'react';
+import * as fal from '@fal-ai/serverless-client';
+import { withNextProxy } from '@fal-ai/serverless-nextjs';
 import { getJoke } from '../services/getJoke';
+
+fal.config({
+  host: 'gateway.shark.fal.ai',
+  requestMiddleware: withNextProxy(),
+});
 
 export async function getServerSideProps(context) {
   try {
-    const result = await getJoke();
+    const { joke } = await getJoke();
     return {
       props: {
-        ...result,
+        joke,
       },
     };
   } catch (error) {
@@ -32,13 +40,14 @@ function Error(props) {
 }
 
 export function Index(props) {
+  const [joke, setJoke] = useState<string>(props.joke);
   const handleClick = async (e) => {
     e.preventDefault();
     try {
-      const joke = await getJoke();
-      console.log(joke);
+      const { joke } = await getJoke();
+      setJoke(joke);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   };
   return (
@@ -61,7 +70,7 @@ export function Index(props) {
         </button>
 
         <p className="mt-10">
-          Here&apos;s a joke: <strong>{props.joke}</strong>
+          Here&apos;s a joke: <strong>{joke}</strong>
         </p>
       </main>
     </div>

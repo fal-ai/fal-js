@@ -7,14 +7,6 @@ export type GenerateImageInput = {
 type ImageType = 'gif' | 'png' | 'jpg' | 'jpeg';
 type ImageDataUri = `data:image/${ImageType};base64,${string}`;
 
-fal.config({
-  credentials: {
-    userId: '',
-    keyId: '',
-    keySecret: '',
-  },
-});
-
 export async function generateImage(
   input: GenerateImageInput
 ): Promise<ImageDataUri> {

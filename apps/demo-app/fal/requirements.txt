@@ -1,0 +1,9 @@
+transformers
+sentencepiece
+accelerate
+fal_serverless
+torch==2.0
+numpy
+tokenizers>=0.12.1
+fastapi
+black

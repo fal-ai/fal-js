@@ -1,30 +1,23 @@
+import type { RequestMiddleware } from './middleware';
+import type { ResponseHandler } from './response';
+import { defaultResponseHandler } from './response';
+
 export type Credentials = {
   keyId: string;
   keySecret: string;
-  userId: string;
 };
 
+export type CredentialsResolver = () => Credentials;
+
 export type Config = {
-  credentials: Credentials;
+  credentials?: Credentials | CredentialsResolver;
   host?: string;
+  requestMiddleware?: RequestMiddleware;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  responseHandler?: ResponseHandler<any>;
 };
 
 export type RequiredConfig = Required<Config>;
-
-const DEFAULT_CONFIG: Partial<Config> = {
-  host: 'gateway.shark.fal.ai',
-};
-
-let configuration: RequiredConfig | undefined = undefined;
-
-/**
- * Configures the fal serverless client.
- *
- * @param config the new configuration.
- */
-export function config(config: Config) {
-  configuration = { ...DEFAULT_CONFIG, ...config } as RequiredConfig;
-}
 
 /**
  * Checks if the required FAL environment variables are set.
@@ -37,9 +30,60 @@ function hasEnvVariables(): boolean {
     process &&
     process.env &&
     typeof process.env.FAL_KEY_ID !== 'undefined' &&
-    typeof process.env.FAL_KEY_SECRET !== 'undefined' &&
-    typeof process.env.FAL_USER_ID !== 'undefined'
+    typeof process.env.FAL_KEY_SECRET !== 'undefined'
   );
+}
+
+export const credentialsFromEnv: CredentialsResolver = () => {
+  if (!hasEnvVariables()) {
+    return {
+      keyId: '',
+      keySecret: '',
+    };
+  }
+  if (typeof window !== 'undefined') {
+    console.warn(
+      "The fal credentials are exposed in the browser's environment. " +
+        "That's not recommended for production use cases."
+    );
+  }
+
+  return {
+    keyId: process.env.FAL_KEY_ID || '',
+    keySecret: process.env.FAL_KEY_SECRET || '',
+  };
+};
+
+/**
+ * Get the default host for the fal-serverless gateway endpoint.
+ * @private
+ * @returns the default host. Depending on the platform it can default to
+ * the environment variable `FAL_HOST`.
+ */
+function getDefaultHost(): string {
+  const host = 'gateway.shark.fal.ai';
+  if (process && process.env) {
+    return process.env.FAL_HOST || host;
+  }
+  return host;
+}
+
+const DEFAULT_CONFIG: Partial<Config> = {
+  host: getDefaultHost(),
+  credentials: credentialsFromEnv,
+  requestMiddleware: (request) => Promise.resolve(request),
+  responseHandler: defaultResponseHandler,
+};
+
+let configuration: RequiredConfig;
+
+/**
+ * Configures the fal serverless client.
+ *
+ * @param config the new configuration.
+ */
+export function config(config: Config) {
+  configuration = { ...DEFAULT_CONFIG, ...config } as RequiredConfig;
 }
 
 /**
@@ -48,18 +92,8 @@ function hasEnvVariables(): boolean {
  * @returns the current client configuration.
  */
 export function getConfig(): RequiredConfig {
-  const hasConfig = typeof configuration !== 'undefined';
-  if (!hasConfig && hasEnvVariables()) {
-    config({
-      credentials: {
-        keyId: process.env.FAL_KEY_ID,
-        keySecret: process.env.FAL_KEY_SECRET,
-        userId: process.env.FAL_USER_ID,
-      },
-    });
-  }
-  if (!hasConfig || configuration.credentials.keySecret === undefined) {
-    throw new Error('You must configure fal serverless first.');
+  if (!configuration) {
+    console.info('Using default configuration for the fal client');
   }
   return configuration;
 }
