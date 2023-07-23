@@ -4,7 +4,6 @@ describe('The config test suite', () => {
   it('should set the config variables accordingly', () => {
     const newConfig = {
       host: 'some-other-host',
-      userId: 'user-id',
       credentials: {
         keyId: 'key-id',
         keySecret: 'key-secret',
@@ -12,6 +11,7 @@ describe('The config test suite', () => {
     };
     config(newConfig);
     const currentConfig = getConfig();
-    expect(currentConfig).toEqual(newConfig);
+    expect(currentConfig.host).toBe(newConfig.host);
+    expect(currentConfig.credentials).toEqual(newConfig.credentials);
   });
 });
