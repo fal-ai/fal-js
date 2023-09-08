@@ -6,3 +6,12 @@ export function isUUIDv4(id: string): boolean {
     ['8', '9', 'a', 'b'].includes(id[19])
   );
 }
+
+export function isValidUrl(url: string) {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.hostname.endsWith('fal.ai');
+  } catch (_) {
+    return false;
+  }
+}

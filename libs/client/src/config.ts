@@ -13,7 +13,6 @@ export type Config = {
   credentials?: Credentials | CredentialsResolver;
   host?: string;
   requestMiddleware?: RequestMiddleware;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responseHandler?: ResponseHandler<any>;
 };
 

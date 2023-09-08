@@ -1,17 +1,39 @@
 export type ResponseHandler<Output> = (response: Response) => Promise<Output>;
 
-export function defaultResponseHandler<Output>(
+type ApiErrorArgs = {
+  message: string;
+  status: number;
+  body?: any;
+};
+
+export class ApiError extends Error {
+  public readonly status: number;
+  public readonly body?: any;
+  constructor({ message, status, body }: ApiErrorArgs) {
+    super(message);
+    this.status = status;
+    this.body = body;
+  }
+}
+
+export async function defaultResponseHandler<Output>(
   response: Response
 ): Promise<Output> {
   const { status, statusText } = response;
-  if (status < 200 || status >= 300) {
-    // TODO better error type so handlers can handle accordingly
-    throw new Error(statusText);
-  }
-
   const contentType = response.headers.get('Content-Type');
+  if (!response.ok) {
+    if (contentType?.includes('application/json')) {
+      const body = await response.json();
+      throw new ApiError({
+        message: body.message || statusText,
+        status,
+        body,
+      });
+    }
+    throw new Error(`HTTP ${status}: ${statusText}`);
+  }
   if (contentType?.includes('application/json')) {
-    return response.json();
+    return response.json() as Promise<Output>;
   }
   if (contentType?.includes('text/html')) {
     return response.text() as Promise<Output>;
