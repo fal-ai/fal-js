@@ -60,7 +60,7 @@ export const credentialsFromEnv: CredentialsResolver = () => {
  * the environment variable `FAL_HOST`.
  */
 function getDefaultHost(): string {
-  const host = 'gateway.shark.fal.ai';
+  const host = 'gateway.alpha.fal.ai';
   if (process && process.env) {
     return process.env.FAL_HOST || host;
   }

@@ -1,4 +1,3 @@
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import type { NextApiHandler, NextApiRequest, PageConfig } from 'next';
 import { TARGET_URL_HEADER } from './config';
 
@@ -49,41 +48,46 @@ export const handler: NextApiHandler = async (request, response) => {
     response.status(400).send(`Missing the ${TARGET_URL_HEADER} header`);
     return;
   }
+  if (targetUrl.indexOf('fal.ai') === -1) {
+    response.status(412).send(`Invalid ${TARGET_URL_HEADER} header`);
+    return;
+  }
+
   cleanUpHeaders(request);
 
   const authHeader =
     FAL_KEY_ID && FAL_KEY_SECRET
-      ? { authorization: `Basic ${FAL_KEY_ID}:${FAL_KEY_SECRET}` }
+      ? { authorization: `Key ${FAL_KEY_ID}:${FAL_KEY_SECRET}` }
       : {};
-  const proxyHandler = createProxyMiddleware({
-    target: targetUrl,
-    changeOrigin: true,
-    pathRewrite: {
-      '^/api/_fal/proxy': '',
-    },
+
+  const res = await fetch(targetUrl, {
+    method: request.method,
     headers: {
       ...authHeader,
+      accept: 'application/json',
+      'content-type': 'application/json',
       'x-fal-client-proxy': '@fal-ai/serverless-nextjs',
     },
+    body:
+      request.method?.toUpperCase() === 'GET'
+        ? undefined
+        : JSON.stringify(request.body),
   });
-  return new Promise((resolve, reject) => {
-    // According to the Next.js recipe https://github.com/chimurai/http-proxy-middleware/blob/master/recipes/servers.md#nextjs
-    // the proxy middleware should be called with the `req` and `res` objects from Next.js
-    // However the types are not compatible, so we need to cast them to `any`
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    proxyHandler(request as any, response as any, (result: unknown) => {
-      if (result instanceof Error) {
-        reject(result);
-      }
-      resolve(result);
-    });
+  // copy headers from res to response
+  res.headers.forEach((value, key) => {
+    response.setHeader(key, value);
   });
+
+  if (res.headers.get('content-type') === 'application/json') {
+    const data = await res.json();
+    response.status(res.status).json(data);
+    return;
+  }
+  const data = await res.text();
+  response.status(res.status).send(data);
 };
 
 export const config: PageConfig = {
-  api: {
-    bodyParser: false,
-    externalResolver: true,
-  },
+  api: {},
 };

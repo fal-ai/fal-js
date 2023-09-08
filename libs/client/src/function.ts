@@ -44,7 +44,7 @@ export function buildUrl<Input>(
   const params =
     method === 'get' ? new URLSearchParams(options.input ?? {}) : undefined;
   // TODO: change to params.size once it's officially supported
-  const queryParams = params && params["size"] ? `?${params.toString()}` : '';
+  const queryParams = params && params['size'] ? `?${params.toString()}` : '';
   const parts = id.split('/');
 
   // if a fal.ai url is passed, just use it
