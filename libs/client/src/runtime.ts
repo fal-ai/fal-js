@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 export function isBrowser(): boolean {
   return (
     typeof window !== 'undefined' && typeof window.document !== 'undefined'
