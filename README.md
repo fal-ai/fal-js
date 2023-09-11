@@ -1,8 +1,9 @@
 # The fal-serverless JS Client
 
-![NPM client](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client)
-![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build.yml)
-![License](https://img.shields.io/github/license/fal-ai/serverless-js)
+![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client&style=flat-square)
+![@fal-ai/serverless-nextjs npm package](https://img.shields.io/npm/v/@fal-ai/serverless-nextjs?color=%237527D7&label=nextjs-proxy&style=flat-square)
+![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build.yml?style=flat-square)
+![License](https://img.shields.io/github/license/fal-ai/serverless-js?style=flat-square)
 
 ## About the project
 

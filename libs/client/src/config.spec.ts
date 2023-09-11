@@ -7,11 +7,11 @@ describe('The config test suite', () => {
       credentials: {
         keyId: 'key-id',
         keySecret: 'key-secret',
-        userId: 'user-id',
       },
     };
     config(newConfig);
     const currentConfig = getConfig();
-    expect(currentConfig).toEqual(newConfig);
+    expect(currentConfig.host).toBe(newConfig.host);
+    expect(currentConfig.credentials).toEqual(newConfig.credentials);
   });
 });
