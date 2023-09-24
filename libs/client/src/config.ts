@@ -2,15 +2,10 @@ import type { RequestMiddleware } from './middleware';
 import type { ResponseHandler } from './response';
 import { defaultResponseHandler } from './response';
 
-export type Credentials = {
-  keyId: string;
-  keySecret: string;
-};
-
-export type CredentialsResolver = () => Credentials;
+export type CredentialsResolver = () => string | undefined;
 
 export type Config = {
-  credentials?: Credentials | CredentialsResolver;
+  credentials?: undefined | string | CredentialsResolver;
   host?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
@@ -28,29 +23,22 @@ function hasEnvVariables(): boolean {
   return (
     process &&
     process.env &&
-    typeof process.env.FAL_KEY_ID !== 'undefined' &&
-    typeof process.env.FAL_KEY_SECRET !== 'undefined'
+    (typeof process.env.FAL_KEY !== 'undefined' ||
+      (typeof process.env.FAL_KEY_ID !== 'undefined' &&
+        typeof process.env.FAL_KEY_SECRET !== 'undefined'))
   );
 }
 
 export const credentialsFromEnv: CredentialsResolver = () => {
   if (!hasEnvVariables()) {
-    return {
-      keyId: '',
-      keySecret: '',
-    };
-  }
-  if (typeof window !== 'undefined') {
-    console.warn(
-      "The fal credentials are exposed in the browser's environment. " +
-        "That's not recommended for production use cases."
-    );
+    return undefined;
   }
 
-  return {
-    keyId: process.env.FAL_KEY_ID || '',
-    keySecret: process.env.FAL_KEY_SECRET || '',
-  };
+  if (typeof process.env.FAL_KEY !== 'undefined') {
+    return process.env.FAL_KEY;
+  }
+
+  return `${process.env.FAL_KEY_ID}:${process.env.FAL_KEY_SECRET}`;
 };
 
 /**

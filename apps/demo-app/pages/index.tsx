@@ -33,10 +33,11 @@ function Error(props) {
   );
 }
 
-const DEFAULT_PROMPT = "a city landscape of a cyberpunk metropolis, raining, purple, pink and teal neon lights, highly detailed, uhd";
+const DEFAULT_PROMPT =
+  'a city landscape of a cyberpunk metropolis, raining, purple, pink and teal neon lights, highly detailed, uhd';
 
 export function Index() {
-  // @snippet:start(client.ui.state)
+  // @snippet:start("client.ui.state")
   // Input state
   const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
   // Result state
@@ -64,7 +65,7 @@ export function Index() {
   const handleOnClick = async (e) => {
     e.preventDefault();
     reset();
-    // @snippet:start(client.queue.subscribe)
+    // @snippet:start("client.queue.subscribe")
     setLoading(true);
     const start = Date.now();
     try {
@@ -74,10 +75,13 @@ export function Index() {
           model_name: 'stabilityai/stable-diffusion-xl-base-1.0',
           image_size: 'square_hd',
         },
-        onQueueUpdate(status) {
+        onQueueUpdate(update) {
           setElapsedTime(Date.now() - start);
-          if (status.status === 'IN_PROGRESS') {
-            setLogs(status.logs.map((log) => log.message));
+          if (
+            update.status === 'IN_PROGRESS' ||
+            update.status === 'COMPLETED'
+          ) {
+            setLogs(update.logs.map((log) => log.message));
           }
         },
       });
@@ -91,8 +95,8 @@ export function Index() {
     // @snippet:end
   };
   return (
-    <div className="min-h-screen dark:bg-gray-800 dark:text-gray-50 bg-gray-100 text-gray-800">
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 py-10 space-y-8">
+    <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
+      <main className="container dark:text-gray-50 text-gray-900 flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
         <h1 className="text-4xl font-bold mb-8">
           Hello <code className="font-light text-pink-600">fal</code>
         </h1>
@@ -134,7 +138,7 @@ export function Index() {
             <p className="text-sm text-current/80">
               {`Elapsed Time (seconds): ${(elapsedTime / 1000).toFixed(2)}`}
             </p>
-            <pre className="text-sm bg-black/80 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
+            <pre className="text-sm bg-black/70 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
               {result
                 ? JSON.stringify(result, null, 2)
                 : '// result pending...'}
@@ -143,7 +147,7 @@ export function Index() {
 
           <div className="space-y-2">
             <h3 className="text-xl font-light">Logs</h3>
-            <pre className="text-sm bg-black/80 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
+            <pre className="text-sm bg-black/70 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
               {logs.filter(Boolean).join('\n')}
             </pre>
           </div>

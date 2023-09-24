@@ -1,5 +1,4 @@
 export { config, getConfig } from './config';
-export type { Credentials } from './config';
 export { queue, run } from './function';
 export { withMiddleware } from './middleware';
 export type { RequestMiddleware } from './middleware';
