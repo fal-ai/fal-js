@@ -1,6 +1,7 @@
 import type { NextApiHandler, NextApiRequest, PageConfig } from 'next';
 import { TARGET_URL_HEADER } from './config';
 
+const FAL_KEY = process.env.FAL_KEY || process.env.NEXT_PUBLIC_FAL_KEY;
 const FAL_KEY_ID = process.env.FAL_KEY_ID || process.env.NEXT_PUBLIC_FAL_KEY_ID;
 const FAL_KEY_SECRET =
   process.env.FAL_KEY_SECRET || process.env.NEXT_PUBLIC_FAL_KEY_SECRET;
@@ -28,8 +29,17 @@ function getHeader(request: NextApiRequest, key: string): string | undefined {
 function cleanUpHeaders(request: NextApiRequest) {
   delete request.headers['origin'];
   delete request.headers['referer'];
-  // delete request.headers['transfer-encoding'];
   delete request.headers[TARGET_URL_HEADER];
+}
+
+function getFalKey(): string | undefined {
+  if (FAL_KEY) {
+    return FAL_KEY;
+  }
+  if (FAL_KEY_ID && FAL_KEY_SECRET) {
+    return `${FAL_KEY_ID}:${FAL_KEY_SECRET}`;
+  }
+  return undefined;
 }
 
 /**
@@ -55,15 +65,16 @@ export const handler: NextApiHandler = async (request, response) => {
 
   cleanUpHeaders(request);
 
-  const authHeader =
-    FAL_KEY_ID && FAL_KEY_SECRET
-      ? { authorization: `Key ${FAL_KEY_ID}:${FAL_KEY_SECRET}` }
-      : {};
+  const falKey = getFalKey();
+  if (!falKey) {
+    response.status(401).send('Missing fal.ai credentials');
+    return;
+  }
 
   const res = await fetch(targetUrl, {
     method: request.method,
     headers: {
-      ...authHeader,
+      authorization: `Key ${falKey}`,
       accept: 'application/json',
       'content-type': 'application/json',
       'x-fal-client-proxy': '@fal-ai/serverless-nextjs',

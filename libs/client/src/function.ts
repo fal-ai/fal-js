@@ -70,17 +70,28 @@ export async function run<Input, Output>(
   id: string,
   options: RunOptions<Input> = {}
 ): Promise<Output> {
-  const { credentials, requestMiddleware, responseHandler } = getConfig();
+  const {
+    credentials: credentialsValue,
+    requestMiddleware,
+    responseHandler,
+  } = getConfig();
   const method = (options.method ?? 'post').toLowerCase();
   const userAgent = isBrowser() ? {} : { 'User-Agent': getUserAgent() };
-  const { keyId, keySecret } =
-    typeof credentials === 'function' ? credentials() : credentials;
+  const credentials =
+    typeof credentialsValue === 'function'
+      ? credentialsValue()
+      : credentialsValue;
 
   const { url, headers } = await requestMiddleware({
     url: buildUrl(id, options),
   });
-  const authHeader =
-    keyId && keySecret ? { Authorization: `Key ${keyId}:${keySecret}` } : {};
+  const authHeader = credentials ? { Authorization: `Key ${credentials}` } : {};
+  if (typeof window !== 'undefined' && credentials) {
+    console.warn(
+      "The fal credentials are exposed in the browser's environment. " +
+        "That's not recommended for production use cases."
+    );
+  }
   const requestHeaders = {
     ...authHeader,
     Accept: 'application/json',

@@ -4,10 +4,7 @@ describe('The config test suite', () => {
   it('should set the config variables accordingly', () => {
     const newConfig = {
       host: 'some-other-host',
-      credentials: {
-        keyId: 'key-id',
-        keySecret: 'key-secret',
-      },
+      credentials: 'key-id:key-secret',
     };
     config(newConfig);
     const currentConfig = getConfig();
