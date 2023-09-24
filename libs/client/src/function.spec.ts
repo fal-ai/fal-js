@@ -1,14 +1,6 @@
 import { randomUUID } from 'crypto';
-import { config, getConfig } from './config';
+import { getConfig } from './config';
 import { buildUrl } from './function';
-
-config({
-  host: 'gateway.alpha.fal.ai',
-  credentials: {
-    keyId: 'a91ff3ca-71bc-4c8c-b400-859f6cbe804d',
-    keySecret: '0123456789abcdfeghijklmnopqrstuv',
-  },
-});
 
 describe('The function test suite', () => {
   it('should build the URL with a function UUIDv4', () => {

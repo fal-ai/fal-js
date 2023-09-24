@@ -81,6 +81,7 @@ export function config(config: Config) {
 export function getConfig(): RequiredConfig {
   if (!configuration) {
     console.info('Using default configuration for the fal client');
+    return { ...DEFAULT_CONFIG } as RequiredConfig;
   }
   return configuration;
 }
