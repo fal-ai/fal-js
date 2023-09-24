@@ -112,16 +112,68 @@ export async function run<Input, Output>(
   return await responseHandler(response);
 }
 
+/**
+ * Options for subscribing to the request queue.
+ */
 type QueueSubscribeOptions = {
+  /**
+   * The interval (in milliseconds) at which to poll for updates.
+   * If not provided, a default value of `1000` will be used.
+   */
   pollInterval?: number;
+
+  /**
+   * Callback function that is called when a request is enqueued.
+   * @param requestId - The unique identifier for the enqueued request.
+   */
   onEnqueue?: (requestId: string) => void;
+
+  /**
+   * Callback function that is called when the status of the queue changes.
+   * @param status - The current status of the queue.
+   */
   onQueueUpdate?: (status: QueueStatus) => void;
 };
 
+/**
+ * Represents a request queue with methods for submitting requests,
+ * checking their status, retrieving results, and subscribing to updates.
+ */
 interface Queue {
+  /**
+   * Submits a request to the queue.
+   *
+   * @param id - The ID or URL of the function web endpoint.
+   * @param options - Options to configure how the request is run.
+   * @returns A promise that resolves to the result of enqueuing the request.
+   */
   submit<Input>(id: string, options: RunOptions<Input>): Promise<EnqueueResult>;
+
+  /**
+   * Retrieves the status of a specific request in the queue.
+   *
+   * @param id - The ID or URL of the function web endpoint.
+   * @param requestId - The unique identifier for the enqueued request.
+   * @returns A promise that resolves to the status of the request.
+   */
   status(id: string, requestId: string): Promise<QueueStatus>;
+
+  /**
+   * Retrieves the result of a specific request from the queue.
+   *
+   * @param id - The ID or URL of the function web endpoint.
+   * @param requestId - The unique identifier for the enqueued request.
+   * @returns A promise that resolves to the result of the request.
+   */
   result<Output>(id: string, requestId: string): Promise<Output>;
+
+  /**
+   * Subscribes to updates for a specific request in the queue.
+   *
+   * @param id - The ID or URL of the function web endpoint.
+   * @param options - Options to configure how the request is run and how updates are received.
+   * @returns A promise that resolves to the result of the request once it's completed.
+   */
   subscribe<Input, Output>(
     id: string,
     options: RunOptions<Input> & QueueSubscribeOptions
@@ -185,7 +237,7 @@ export const queue: Queue = {
           reject(error);
         }
       };
-      timeoutId = setTimeout(poll, pollInterval);
+      poll().catch(reject);
     });
   },
 };
