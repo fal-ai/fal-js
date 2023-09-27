@@ -71,9 +71,18 @@ export const handler: NextApiHandler = async (request, response) => {
     return;
   }
 
+  // pass over headers prefixed with x-fal-*
+  const headers: Record<string, string | string[] | undefined> = {};
+  Object.keys(request.headers).forEach((key) => {
+    if (key.toLowerCase().startsWith('x-fal-')) {
+      headers[key.toLowerCase()] = request.headers[key];
+    }
+  });
+
   const res = await fetch(targetUrl, {
     method: request.method,
     headers: {
+      ...headers,
       authorization: `Key ${falKey}`,
       accept: 'application/json',
       'content-type': 'application/json',
