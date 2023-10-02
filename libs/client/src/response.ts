@@ -11,6 +11,7 @@ export class ApiError extends Error {
   public readonly body?: any;
   constructor({ message, status, body }: ApiErrorArgs) {
     super(message);
+    this.name = 'ApiError';
     this.status = status;
     this.body = body;
   }

@@ -83,7 +83,7 @@ export const handler: NextApiHandler = async (request, response) => {
     method: request.method,
     headers: {
       ...headers,
-      authorization: `Key ${falKey}`,
+      authorization: getHeader(request, 'authorization') ?? `Key ${falKey}`,
       accept: 'application/json',
       'content-type': 'application/json',
       'x-fal-client-proxy': '@fal-ai/serverless-nextjs',
