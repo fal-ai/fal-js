@@ -13,7 +13,7 @@ The project is written in TypeScript, so developers get type-safety out-of-the-b
 
 ## Getting Started
 
-The serverless-js library is a client for the fal serverless Python functions. Check the [quickstart guide](https://docs.fal.ai/fal-serverless/quickstart) in order to create your functions.
+The serverless-js library is a client for the fal serverless Python functions. Check the [quickstart guide](https://fal.ai/docs) in order to create your functions.
 
 ### Library
 
@@ -23,7 +23,7 @@ It also handle platform differences, so it work seamlessly across different JS r
 
 > **Note**
 >
-> Make sure you followed the [fal-serverless getting started](https://docs.fal.ai/fal-serverless/quickstart) so you get your credentials and register your functions.
+> Make sure you followed the [fal-serverless getting started](https://fal.ai/docs) so you get your credentials and register your functions.
 
 1. First you need to configure your credentials:
 
@@ -31,11 +31,8 @@ It also handle platform differences, so it work seamlessly across different JS r
 import * as fal from '@fal-ai/serverless-js';
 
 fal.config({
-  credentials: {
-    userId: 'USER_ID',
-    keyId: 'KEY_ID',
-    keySecret: 'KEY_SECRET',
-  },
+  // can also be auto-configured using environment variables
+  credentials: "FAL_KEY_ID:FAL_KEY_SECRET",
 });
 ```
 
@@ -46,6 +43,20 @@ const result = await fal.run('my-function-id');
 ```
 
 The result type depends on the result of your Python function, types are mapped to their equivalent types in JS.
+
+### The example Next.js app
+
+You can find a minimal Next.js + fal application examples in [apps/demo-app/](https://github.com/fal-ai/serverless-js/tree/main/apps/demo-app).
+
+1. Run `npm install` on the repository root.
+2. Run `npx nx serve demo-app` to start the Next.js app.
+
+#### The Next.js fal proxy
+
+The Next.js + fal integration provides you with a proxy that allows you to run your functions directly from the browser without exposing your fal credentials.
+
+1. Instal it with `npm install --save @fal-ai/serverless-nextjs`
+2. Add the proxy as an API endpoint of your app, see an example here in [apps/demo-app/pages/api/_fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-app/pages/api/_fal/proxy.ts)
 
 ## Roadmap
 
