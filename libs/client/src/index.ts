@@ -1,5 +1,5 @@
 export { config, getConfig } from './config';
-export { queue, run } from './function';
+export { queue, run, subscribe } from './function';
 export { withMiddleware } from './middleware';
 export { ApiError, ValidationError } from './response';
 export type { RequestMiddleware } from './middleware';

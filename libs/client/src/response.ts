@@ -42,7 +42,7 @@ export async function defaultResponseHandler<Output>(
         body,
       });
     }
-    throw new Error(`HTTP ${status}: ${statusText}`);
+    throw new ApiError({ message: `HTTP ${status}: ${statusText}`, status });
   }
   if (contentType?.includes('application/json')) {
     return response.json() as Promise<Output>;
