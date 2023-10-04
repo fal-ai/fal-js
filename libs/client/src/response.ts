@@ -1,19 +1,29 @@
+import { ValidationErrorInfo } from './types';
+
 export type ResponseHandler<Output> = (response: Response) => Promise<Output>;
 
 type ApiErrorArgs = {
   message: string;
   status: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
 };
 
-export class ApiError extends Error {
+export class ApiError<Body> extends Error {
   public readonly status: number;
-  public readonly body?: any;
+  public readonly body: Body;
   constructor({ message, status, body }: ApiErrorArgs) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.body = body;
+  }
+}
+
+export class ValidationError extends ApiError<ValidationErrorInfo[]> {
+  constructor(args: ApiErrorArgs) {
+    super(args);
+    this.name = 'ValidationError';
   }
 }
 
@@ -25,7 +35,8 @@ export async function defaultResponseHandler<Output>(
   if (!response.ok) {
     if (contentType?.includes('application/json')) {
       const body = await response.json();
-      throw new ApiError({
+      const ErrorType = status === 422 ? ValidationError : ApiError;
+      throw new ErrorType({
         message: body.message || statusText,
         status,
         body,
