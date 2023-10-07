@@ -113,6 +113,50 @@ export async function run<Input, Output>(
 }
 
 /**
+ * Subscribes to updates for a specific request in the queue.
+ *
+ * @param id - The ID or URL of the function web endpoint.
+ * @param options - Options to configure how the request is run and how updates are received.
+ * @returns A promise that resolves to the result of the request once it's completed.
+ */
+export async function subscribe<Input, Output>(
+  id: string,
+  options: RunOptions<Input> & QueueSubscribeOptions = {}
+): Promise<Output> {
+  const { request_id: requestId } = await queue.submit(id, options);
+  if (options.onEnqueue) {
+    options.onEnqueue(requestId);
+  }
+  return new Promise<Output>((resolve, reject) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const pollInterval = options.pollInterval ?? 1000;
+    const poll = async () => {
+      try {
+        const requestStatus = await queue.status(id, requestId);
+        if (options.onQueueUpdate) {
+          options.onQueueUpdate(requestStatus);
+        }
+        if (requestStatus.status === 'COMPLETED') {
+          clearTimeout(timeoutId);
+          try {
+            const result = await queue.result<Output>(id, requestId);
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+          return;
+        }
+        timeoutId = setTimeout(poll, pollInterval);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    };
+    poll().catch(reject);
+  });
+}
+
+/**
  * Options for subscribing to the request queue.
  */
 type QueueSubscribeOptions = {
@@ -168,11 +212,7 @@ interface Queue {
   result<Output>(id: string, requestId: string): Promise<Output>;
 
   /**
-   * Subscribes to updates for a specific request in the queue.
-   *
-   * @param id - The ID or URL of the function web endpoint.
-   * @param options - Options to configure how the request is run and how updates are received.
-   * @returns A promise that resolves to the result of the request once it's completed.
+   * @deprecated Use `fal.subscribe` instead.
    */
   subscribe<Input, Output>(
     id: string,
@@ -204,40 +244,5 @@ export const queue: Queue = {
       path: `/fal/queue/requests/${requestId}/response`,
     });
   },
-  async subscribe<Input, Output>(
-    id: string,
-    options: RunOptions<Input> & QueueSubscribeOptions = {}
-  ): Promise<Output> {
-    const { request_id: requestId } = await queue.submit(id, options);
-    if (options.onEnqueue) {
-      options.onEnqueue(requestId);
-    }
-    return new Promise<Output>((resolve, reject) => {
-      let timeoutId: ReturnType<typeof setTimeout>;
-      const pollInterval = options.pollInterval ?? 1000;
-      const poll = async () => {
-        try {
-          const requestStatus = await queue.status(id, requestId);
-          if (options.onQueueUpdate) {
-            options.onQueueUpdate(requestStatus);
-          }
-          if (requestStatus.status === 'COMPLETED') {
-            clearTimeout(timeoutId);
-            try {
-              const result = await queue.result<Output>(id, requestId);
-              resolve(result);
-            } catch (error) {
-              reject(error);
-            }
-            return;
-          }
-          timeoutId = setTimeout(poll, pollInterval);
-        } catch (error) {
-          clearTimeout(timeoutId);
-          reject(error);
-        }
-      };
-      poll().catch(reject);
-    });
-  },
+  subscribe,
 };

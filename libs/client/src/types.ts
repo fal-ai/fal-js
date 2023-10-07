@@ -33,3 +33,9 @@ export type QueueStatus =
 export function isQueueStatus(obj: any): obj is QueueStatus {
   return obj && obj.status && obj.response_url;
 }
+
+export type ValidationErrorInfo = {
+  msg: string;
+  loc: Array<string | number>;
+  type: string;
+};
