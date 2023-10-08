@@ -50,5 +50,5 @@
       }
     }
   },
-  "defaultProject": "demo-app"
+  "defaultProject": "demo-nextjs-app"
 }
