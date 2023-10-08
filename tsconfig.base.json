@@ -16,7 +16,6 @@
     "baseUrl": ".",
     "paths": {
       "@fal-ai/serverless-client": ["libs/client/src/index.ts"],
-      "@fal-ai/serverless-codegen": ["libs/codegen/src/index.ts"],
       "@fal-ai/serverless-nextjs": ["libs/nextjs/src/index.ts"],
       "@fal-ai/serverless-proxy": ["libs/proxy/src/index.ts"],
       "@fal-ai/serverless-proxy/express": ["libs/proxy/src/express.ts"],
