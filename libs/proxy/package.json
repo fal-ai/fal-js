@@ -1,6 +1,6 @@
 {
   "name": "@fal-ai/serverless-proxy",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -21,6 +21,18 @@
     "./express": "./src/express.js",
     "./nextjs": "./src/nextjs.js"
   },
+  "typesVersions": {
+    "*": {
+      "express": [
+        "src/express.d.ts"
+      ],
+      "nextjs": [
+        "src/nextjs.d.ts"
+      ]
+    }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "peerDependencies": {
     "express": "^4.0.0",
     "next": "^13.0.0",

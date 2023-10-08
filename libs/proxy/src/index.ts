@@ -7,6 +7,10 @@ const FAL_KEY_ID = process.env.FAL_KEY_ID || process.env.NEXT_PUBLIC_FAL_KEY_ID;
 const FAL_KEY_SECRET =
   process.env.FAL_KEY_SECRET || process.env.NEXT_PUBLIC_FAL_KEY_SECRET;
 
+/**
+ * The proxy behavior that is passed to the proxy handler. This is a subset of
+ * request objects that are used by different frameworks, like Express and NextJS.
+ */
 export interface ProxyBehavior {
   id: string;
   method: string;
@@ -59,13 +63,12 @@ function getFalKey(): string | undefined {
 }
 
 /**
- * A Next request handler that proxies the request to the fal-serverless
+ * A request handler that proxies the request to the fal-serverless
  * endpoint. This is useful so client-side calls to the fal-serverless endpoint
  * can be made without CORS issues and the correct credentials can be added
  * effortlessly.
  *
- * @param request the Next request object.
- * @param response the Next response object.
+ * @param behavior the request proxy behavior.
  * @returns Promise<any> the promise that will be resolved once the request is done.
  */
 export const handleRequest = async (behavior: ProxyBehavior) => {
