@@ -1,15 +1,15 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "@fal-ai/serverless",
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
+      "runner": "nx-cloud",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"],
-        "accessToken": "NmRkNDcxMzQtZWMxNi00OTk1LTkzOTItOGI0OGZkOTQyMDM0fHJlYWQtd3JpdGU="
+        "accessToken": ""
       }
     }
   },
+  "neverConnectToCloud": true,
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
@@ -32,22 +32,23 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json"
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/src/test-setup.[jt]s"
     ],
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
   },
   "generators": {
-    "@nrwl/react": {
-      "application": {
-        "babel": true
-      }
-    },
-    "@nrwl/next": {
+    "@nx/next": {
       "application": {
         "style": "css",
         "linter": "eslint"
       }
+    },
+    "@nx/react": {
+      "application": {
+        "babel": true
+      }
     }
   },
-  "defaultProject": "demo-app"
+  "defaultProject": "demo-nextjs-app"
 }

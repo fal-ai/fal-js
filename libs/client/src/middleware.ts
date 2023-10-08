@@ -32,3 +32,25 @@ export function withMiddleware(
       Promise.resolve(config)
     );
 }
+
+export type RequestProxyConfig = {
+  targetUrl: string;
+};
+
+export const TARGET_URL_HEADER = 'x-fal-target-url';
+
+export function withProxy(config: RequestProxyConfig): RequestMiddleware {
+  // when running on the server, we don't need to proxy the request
+  if (typeof window === 'undefined') {
+    return (requestConfig) => Promise.resolve(requestConfig);
+  }
+  return (requestConfig) =>
+    Promise.resolve({
+      ...requestConfig,
+      url: config.targetUrl,
+      headers: {
+        ...(requestConfig.headers || {}),
+        [TARGET_URL_HEADER]: requestConfig.url,
+      },
+    });
+}

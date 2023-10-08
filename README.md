@@ -1,62 +1,76 @@
-# The fal-serverless JS Client
+# The fal.ai JS client
 
 ![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client&style=flat-square)
-![@fal-ai/serverless-nextjs npm package](https://img.shields.io/npm/v/@fal-ai/serverless-nextjs?color=%237527D7&label=nextjs-proxy&style=flat-square)
+![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=proxy&style=flat-square)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build.yml?style=flat-square)
 ![License](https://img.shields.io/github/license/fal-ai/serverless-js?style=flat-square)
 
-## About the project
+## About the Project
 
-The fal-serverless JS/TS Client is a powerful and easy-to-use JavaScript and TypeScript library that allows you to effortlessly integrate and run your fal serverless functions in your Web, Node.js and React Native applications.
-
-The project is written in TypeScript, so developers get type-safety out-of-the-box.
+The fal-serverless JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal serverless functions in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
 
 ## Getting Started
 
-The serverless-js library is a client for the fal serverless Python functions. Check the [quickstart guide](https://fal.ai/docs) in order to create your functions.
+The `serverless-js` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
 
-### Library
+### Client Library
 
-The client library is designed as a lightweight layer on top of the platform standards, such as `fetch` and `WebSocket`, ensuring smooth integration with your existing codebase.
+This client library is crafted as a lightweight layer atop platform standards like `fetch`. This ensures a hassle-free integration into your existing codebase. Moreover, it addresses platform disparities, guaranteeing flawless operation across various JavaScript runtimes.
 
-It also handle platform differences, so it work seamlessly across different JS runtimes.
+> **Note:**
+> Ensure you've reviewed the [fal-serverless getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions.
 
-> **Note**
->
-> Make sure you followed the [fal-serverless getting started](https://fal.ai/docs) so you get your credentials and register your functions.
-
-1. First you need to configure your credentials:
+1. Start by configuring your credentials:
 
 ```ts
 import * as fal from '@fal-ai/serverless-js';
 
 fal.config({
-  // can also be auto-configured using environment variables
-  credentials: "FAL_KEY_ID:FAL_KEY_SECRET",
+  // Can also be auto-configured using environment variables:
+  // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
+  credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
 });
 ```
 
-2. Get your function id and run it:
+2. Retrieve your function id and execute it:
 
 ```ts
 const result = await fal.run('my-function-id');
 ```
 
-The result type depends on the result of your Python function, types are mapped to their equivalent types in JS.
+The result's type is contingent upon your Python function's output. Types in Python are mapped to their corresponding types in JavaScript.
+
+### The fal client proxy
+
+Although the fal client is designed to work in any JS environment, including client-side, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/framrworks.
+
+For example, if you are using Next.js, you can:
+
+1. Instal the proxy library `npm install --save @fal-ai/serverless-proxy`
+2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/\_fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-nextjs-app/pages/api/_fal/proxy.ts)
+   ```ts
+   export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
+   ```
+3. Configure the client to use the proxy:
+   ```ts
+   import * as fal from '@fal-ai/serverless-js';
+   fal.config({
+     requestMiddleware: fal.withProxy({
+       targetUrl: '/api/_fal/proxy',
+     }),
+   });
+   ```
+4. Make sure your server has `FAL_KEY` as environment variable with a valid API Key. That's it! Now your client calls will route through your server proxy, so your credentials are protected.
+
+See [libs/proxy](./libs/proxy/) for more details.
 
 ### The example Next.js app
 
-You can find a minimal Next.js + fal application examples in [apps/demo-app/](https://github.com/fal-ai/serverless-js/tree/main/apps/demo-app).
+You can find a minimal Next.js + fal application examples in [apps/demo-nextjs-app/](https://github.com/fal-ai/serverless-js/tree/main/apps/demo-nextjs-app).
 
 1. Run `npm install` on the repository root.
-2. Run `npx nx serve demo-app` to start the Next.js app.
-
-#### The Next.js fal proxy
-
-The Next.js + fal integration provides you with a proxy that allows you to run your functions directly from the browser without exposing your fal credentials.
-
-1. Instal it with `npm install --save @fal-ai/serverless-nextjs`
-2. Add the proxy as an API endpoint of your app, see an example here in [apps/demo-app/pages/api/_fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-app/pages/api/_fal/proxy.ts)
+2. Create a `.env.local` file and add your API Key as `FAL_KEY` environment variable (or export it any other way your prefer).
+3. Run `npx nx serve demo-nextjs-app` to start the Next.js app.
 
 ## Roadmap
 

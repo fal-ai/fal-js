@@ -1,11 +1,3 @@
-# nextjs
+# @fal-ai/serverless-nextjs
 
-This library was generated with [Nx](https://nx.dev).
-
-## Running unit tests
-
-Run `nx test nextjs` to execute the unit tests via [Jest](https://jestjs.io).
-
-## Running lint
-
-Run `nx lint nextjs` to execute the lint via [ESLint](https://eslint.org/).
+This package is not longer maintained. Check out the [@fal-ai/serverless-proxy](../proxy/)package, which supports Next.js and other Express-based frameworks.

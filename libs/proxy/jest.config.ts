@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'nextjs',
+  displayName: 'proxy',
   preset: '../../jest.preset.js',
   globals: {},
   testEnvironment: 'node',
@@ -13,5 +13,5 @@ export default {
     ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/nextjs',
+  coverageDirectory: '../../coverage/libs/proxy',
 };
