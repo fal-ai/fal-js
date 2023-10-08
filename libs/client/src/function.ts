@@ -102,8 +102,7 @@ export async function run<Input, Output>(
   const response = await fetch(url, {
     method,
     headers: requestHeaders,
-    mode: 'same-origin',
-    credentials: 'same-origin',
+    mode: 'cors',
     body:
       method !== 'get' && options.input
         ? JSON.stringify(options.input)

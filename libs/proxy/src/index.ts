@@ -1,5 +1,3 @@
-import type { Request, Response } from 'express';
-
 export const TARGET_URL_HEADER = 'x-fal-target-url';
 
 export const DEFAULT_PROXY_ROUTE = '/api/_fal/proxy';
@@ -9,30 +7,45 @@ const FAL_KEY_ID = process.env.FAL_KEY_ID || process.env.NEXT_PUBLIC_FAL_KEY_ID;
 const FAL_KEY_SECRET =
   process.env.FAL_KEY_SECRET || process.env.NEXT_PUBLIC_FAL_KEY_SECRET;
 
+export interface ProxyBehavior {
+  id: string;
+  method: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  respondWith(status: number, data: string | any): void;
+  getHeaders(): Record<string, string | string[] | undefined>;
+  getHeader(name: string): string | string[] | undefined;
+  removeHeader(name: string): void;
+  sendHeader(name: string, value: string): void;
+  getBody(): string | undefined;
+}
+
 /**
  * Utility to get a header value as `string` from a Headers object.
  *
  * @private
- * @param request the Next request object.
- * @param key the header key.
+ * @param request the header value.
  * @returns the header value as `string` or `undefined` if the header is not set.
  */
-function getHeader(request: Request, key: string): string | undefined {
-  const headerValue = request.headers[key.toLowerCase()];
-  if (Array.isArray(headerValue)) {
-    return headerValue[0];
+function singleHeaderValue(
+  value: string | string[] | undefined
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
   }
-  return headerValue;
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
 }
 
 /**
  * Clean up headers that should not be forwarded to the proxy.
- * @param request the Next request object.
+ * @param behavior The proxy implementation.
  */
-function cleanUpHeaders(request: Request) {
-  delete request.headers['origin'];
-  delete request.headers['referer'];
-  delete request.headers[TARGET_URL_HEADER];
+function cleanUpHeaders(behavior: ProxyBehavior) {
+  behavior.removeHeader('origin');
+  behavior.removeHeader('referer');
+  behavior.removeHeader(TARGET_URL_HEADER);
 }
 
 function getFalKey(): string | undefined {
@@ -55,58 +68,58 @@ function getFalKey(): string | undefined {
  * @param response the Next response object.
  * @returns Promise<any> the promise that will be resolved once the request is done.
  */
-export const handleRequest = async (request: Request, response: Response) => {
-  const targetUrl = getHeader(request, TARGET_URL_HEADER);
+export const handleRequest = async (behavior: ProxyBehavior) => {
+  const targetUrl = singleHeaderValue(behavior.getHeader(TARGET_URL_HEADER));
   if (!targetUrl) {
-    response.status(400).send(`Missing the ${TARGET_URL_HEADER} header`);
+    behavior.respondWith(400, `Missing the ${TARGET_URL_HEADER} header`);
     return;
   }
   if (targetUrl.indexOf('fal.ai') === -1) {
-    response.status(412).send(`Invalid ${TARGET_URL_HEADER} header`);
+    behavior.respondWith(412, `Invalid ${TARGET_URL_HEADER} header`);
     return;
   }
 
-  cleanUpHeaders(request);
+  cleanUpHeaders(behavior);
 
   const falKey = getFalKey();
   if (!falKey) {
-    response.status(401).send('Missing fal.ai credentials');
+    behavior.respondWith(401, 'Missing fal.ai credentials');
     return;
   }
 
   // pass over headers prefixed with x-fal-*
   const headers: Record<string, string | string[] | undefined> = {};
-  Object.keys(request.headers).forEach((key) => {
+  Object.keys(behavior.getHeaders()).forEach((key) => {
     if (key.toLowerCase().startsWith('x-fal-')) {
-      headers[key.toLowerCase()] = request.headers[key];
+      headers[key.toLowerCase()] = behavior.getHeader(key);
     }
   });
 
   const res = await fetch(targetUrl, {
-    method: request.method,
+    method: behavior.method,
     headers: {
       ...headers,
-      authorization: getHeader(request, 'authorization') ?? `Key ${falKey}`,
+      authorization:
+        singleHeaderValue(behavior.getHeader('authorization')) ??
+        `Key ${falKey}`,
       accept: 'application/json',
       'content-type': 'application/json',
-      'x-fal-client-proxy': '@fal-ai/serverless-nextjs',
+      'x-fal-client-proxy': `@fal-ai/serverless-proxy/${behavior.id}`,
     },
     body:
-      request.method?.toUpperCase() === 'GET'
-        ? undefined
-        : JSON.stringify(request.body),
+      behavior.method?.toUpperCase() === 'GET' ? undefined : behavior.getBody(),
   });
 
   // copy headers from res to response
   res.headers.forEach((value, key) => {
-    response.setHeader(key, value);
+    behavior.sendHeader(key, value);
   });
 
   if (res.headers.get('content-type') === 'application/json') {
     const data = await res.json();
-    response.status(res.status).json(data);
+    behavior.respondWith(res.status, data);
     return;
   }
   const data = await res.text();
-  response.status(res.status).send(data);
+  behavior.respondWith(res.status, data);
 };

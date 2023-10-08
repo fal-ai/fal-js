@@ -1,20 +1,30 @@
 import type { NextApiHandler } from 'next/types';
 import { DEFAULT_PROXY_ROUTE, handleRequest } from './index';
 
+/**
+ * The default Next API route for the fal.ai client proxy.
+ */
 export const PROXY_ROUTE = DEFAULT_PROXY_ROUTE;
 
 /**
+ * The Next API route handler for the fal.ai client proxy.
  *
- * @param request
- * @param response
- * @returns
+ * @param request the Next API request object.
+ * @param response the Next API response object.
+ * @returns a promise that resolves when the request is handled.
  */
 export const handler: NextApiHandler = async (request, response) => {
-  // TODO: right now we know the handleRequest function is relies on
-  // properties that are common to both NextApiRequest and Request
-  // but we should make sure that is the case by creating our own
-  // interface as a contract for the minimal request/response properties
-  // that handleRequest needs.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return handleRequest(request as any, response as any);
+  return handleRequest({
+    id: 'nextjs',
+    method: request.method,
+    respondWith: (status, data) =>
+      typeof data === 'string'
+        ? response.status(status).send(data)
+        : response.status(status).json(data),
+    getHeaders: () => request.headers,
+    getHeader: (name) => request.headers[name],
+    removeHeader: (name) => response.removeHeader(name),
+    sendHeader: (name, value) => response.setHeader(name, value),
+    getBody: () => JSON.stringify(request.body),
+  });
 };

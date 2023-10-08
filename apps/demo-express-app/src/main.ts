@@ -5,11 +5,22 @@
 
 import express from 'express';
 import * as path from 'path';
+import * as falProxy from '@fal-ai/serverless-proxy/express';
+import { configDotenv } from 'dotenv';
+import cors from 'cors';
+
+configDotenv({ path: './env.local' });
 
 const app = express();
 
+// Middlewares
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use(express.json());
 
+// fal.ai client proxy
+app.all(falProxy.route, cors(), falProxy.handler);
+
+// Your API endpoints
 app.get('/api', (req, res) => {
   res.send({ message: 'Welcome to demo-express-app!' });
 });
