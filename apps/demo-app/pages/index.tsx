@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 // @snippet:start(client.config)
 fal.config({
   requestMiddleware: fal.withProxy({
-    targetUrl: "/api/_fal/proxy"
+    targetUrl: '/api/_fal/proxy',
   }),
 });
 // @snippet:end

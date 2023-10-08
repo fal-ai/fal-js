@@ -5,25 +5,26 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/proxy",
         "tsConfig": "libs/proxy/tsconfig.lib.json",
         "packageJson": "libs/proxy/package.json",
         "main": "libs/proxy/src/index.ts",
-        "assets": ["libs/proxy/*.md", "express.js", "nextjs.js"]
+        "assets": ["libs/proxy/*.md", "express.js", "nextjs.js"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/proxy/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/proxy/jest.config.ts",
