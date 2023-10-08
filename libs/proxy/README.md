@@ -29,7 +29,7 @@ For Express applications:
    ```ts
    app.use(express.json());
    ```
-2. Add the proxy route and its handler. Note that if your client lives outside of the express app (i.e. the express app is solely used as an external API for other clients), your will need to allow CORS on the proxy route:
+2. Add the proxy route and its handler. Note that if your client lives outside of the express app (i.e. the express app is solely used as an external API for other clients), you will need to allow CORS on the proxy route:
 
    ```ts
    import * as falProxy from '@fal-ai/serverless-proxy/express';
