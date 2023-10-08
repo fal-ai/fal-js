@@ -12,7 +12,7 @@
         "tsConfig": "libs/proxy/tsconfig.lib.json",
         "packageJson": "libs/proxy/package.json",
         "main": "libs/proxy/src/index.ts",
-        "assets": ["libs/proxy/*.md", "express.js", "nextjs.js"],
+        "assets": ["LICENSE", "CODE_OF_CONDUCT.md", "libs/proxy/README.md"],
         "updateBuildableProjectDepsInPackageJson": true
       }
     },

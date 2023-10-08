@@ -1,5 +1,7 @@
 # fal.ai proxy library
 
+![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=%40fal-ai%2Fserverless-proxy&style=flat-square)
+
 ## Introduction
 
 The `@fal-ai/serverless-proxy` library enables you to route client requests through your own server, therefore safeguarding sensitive credentials. With built-in support for popular frameworks like Next.js and Express, setting up the proxy becomes a breeze.
@@ -28,6 +30,7 @@ For Express applications:
    app.use(express.json());
    ```
 2. Add the proxy route and its handler. Note that if your client lives outside of the express app (i.e. the express app is solely used as an external API for other clients), your will need to allow CORS on the proxy route:
+
    ```ts
    import * as falProxy from '@fal-ai/serverless-proxy/express';
 
@@ -37,6 +40,7 @@ For Express applications:
      falProxy.handler
    );
    ```
+
 3. Ensure you've set the `FAL_KEY` as an environment variable in your server, containing a valid API Key.
 
 ## Client configuration

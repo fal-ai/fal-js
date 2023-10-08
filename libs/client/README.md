@@ -1,5 +1,7 @@
 # fal.ai JavaScript/TypeScript client library
 
+![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=%40fal-ai%2Fserverless-client&style=flat-square)
+
 ## Introduction
 
 The `fal.ai` JavaScript Client Library provides a seamless way to interact with `fal` serverless functions from your JavaScript or TypeScript applications. With built-in support for various platforms, it ensures consistent behavior across web, Node.js, and React Native environments.
