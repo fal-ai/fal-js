@@ -1,2 +1,1 @@
-export * from './config';
-export * from './handler';
+export * from '@fal-ai/serverless-proxy/nextjs';

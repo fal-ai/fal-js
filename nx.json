@@ -1,15 +1,15 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "@fal-ai/serverless",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"],
-        "accessToken": "NmRkNDcxMzQtZWMxNi00OTk1LTkzOTItOGI0OGZkOTQyMDM0fHJlYWQtd3JpdGU="
+        "accessToken": ""
       }
     }
   },
+  "neverConnectToCloud": true,
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],

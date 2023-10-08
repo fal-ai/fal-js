@@ -3,11 +3,11 @@
  * This is only a minimal backend to get started.
  */
 
+import * as falProxy from '@fal-ai/serverless-proxy/express';
+import cors from 'cors';
+import { configDotenv } from 'dotenv';
 import express from 'express';
 import * as path from 'path';
-import * as falProxy from '@fal-ai/serverless-proxy/express';
-import { configDotenv } from 'dotenv';
-import cors from 'cors';
 
 configDotenv({ path: './env.local' });
 

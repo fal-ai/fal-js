@@ -22,5 +22,5 @@
       "@fal-ai/serverless-proxy/nextjs": ["libs/proxy/src/nextjs.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": ["node_modules/**", "tmp/**", "dist/**"]
 }
