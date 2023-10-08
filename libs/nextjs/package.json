@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/serverless-nextjs",
   "description": "The fal-serverless Next.js integration",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "MIT",
   "repository": {
     "type": "git",
