@@ -1,0 +1,44 @@
+{
+  "name": "@fal-ai/serverless-proxy",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fal-ai/serverless-js.git",
+    "directory": "libs/proxy"
+  },
+  "keywords": [
+    "fal",
+    "serverless",
+    "client",
+    "next",
+    "nextjs",
+    "express",
+    "proxy"
+  ],
+  "exports": {
+    ".": "./src/index.js",
+    "./express": "./src/express.js",
+    "./nextjs": "./src/nextjs.js"
+  },
+  "peerDependencies": {
+    "express": "^4.0.0",
+    "next": "^13.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  }
+}

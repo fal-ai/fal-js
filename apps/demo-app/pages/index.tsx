@@ -1,10 +1,11 @@
 import * as fal from '@fal-ai/serverless-client';
-import { withNextProxy } from '@fal-ai/serverless-nextjs';
 import { useMemo, useState } from 'react';
 
 // @snippet:start(client.config)
 fal.config({
-  requestMiddleware: withNextProxy(),
+  requestMiddleware: fal.withProxy({
+    targetUrl: "/api/_fal/proxy"
+  }),
 });
 // @snippet:end
 
