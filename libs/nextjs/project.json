@@ -12,8 +12,7 @@
         "tsConfig": "libs/nextjs/tsconfig.lib.json",
         "packageJson": "libs/nextjs/package.json",
         "main": "libs/nextjs/src/index.ts",
-        "assets": ["LICENSE", "CODE_OF_CONDUCT.md", "libs/nextjs/README.md"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["LICENSE", "CODE_OF_CONDUCT.md", "libs/nextjs/README.md"]
       }
     },
     "lint": {
