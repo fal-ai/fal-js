@@ -43,6 +43,8 @@
     "@nx/react": "16.10.0",
     "@nx/web": "16.10.0",
     "@nx/workspace": "16.10.0",
+    "@swc-node/core": "^1.10.6",
+    "@swc-node/register": "^1.6.8",
     "@testing-library/react": "14.0.0",
     "@theunderscorer/nx-semantic-release": "^2.2.1",
     "@types/jest": "29.4.4",
