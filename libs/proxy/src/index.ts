@@ -18,7 +18,6 @@ export interface ProxyBehavior {
   respondWith(status: number, data: string | any): void;
   getHeaders(): Record<string, string | string[] | undefined>;
   getHeader(name: string): string | string[] | undefined;
-  removeHeader(name: string): void;
   sendHeader(name: string, value: string): void;
   getBody(): string | undefined;
 }
@@ -40,16 +39,6 @@ function singleHeaderValue(
     return value[0];
   }
   return value;
-}
-
-/**
- * Clean up headers that should not be forwarded to the proxy.
- * @param behavior The proxy implementation.
- */
-function cleanUpHeaders(behavior: ProxyBehavior) {
-  behavior.removeHeader('origin');
-  behavior.removeHeader('referer');
-  behavior.removeHeader(TARGET_URL_HEADER);
 }
 
 function getFalKey(): string | undefined {
@@ -81,8 +70,6 @@ export const handleRequest = async (behavior: ProxyBehavior) => {
     behavior.respondWith(412, `Invalid ${TARGET_URL_HEADER} header`);
     return;
   }
-
-  cleanUpHeaders(behavior);
 
   const falKey = getFalKey();
   if (!falKey) {
@@ -118,7 +105,7 @@ export const handleRequest = async (behavior: ProxyBehavior) => {
     behavior.sendHeader(key, value);
   });
 
-  if (res.headers.get('content-type') === 'application/json') {
+  if (res.headers.get('content-type').includes('application/json')) {
     const data = await res.json();
     behavior.respondWith(res.status, data);
     return;
