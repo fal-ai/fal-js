@@ -4,4 +4,4 @@ export { withMiddleware, withProxy } from './middleware';
 export type { RequestMiddleware } from './middleware';
 export { ApiError, ValidationError } from './response';
 export type { ResponseHandler } from './response';
-export type { QueueStatus } from './types';
+export type { QueueStatus, ValidationErrorInfo } from './types';

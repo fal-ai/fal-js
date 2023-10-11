@@ -19,7 +19,7 @@ export const handler: RequestHandler = async (request, response, next) => {
     method: request.method,
     respondWith: (status, data) =>
       typeof data === 'string'
-        ? response.status(status).json({ details: data })
+        ? response.status(status).json({ detail: data })
         : response.status(status).json(data),
     getHeaders: () => request.headers,
     getHeader: (name) => request.headers[name],
