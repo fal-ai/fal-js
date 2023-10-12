@@ -1,4 +1,5 @@
 import { getConfig } from './config';
+import { fileSupport } from './file';
 import { getUserAgent, isBrowser } from './runtime';
 import { EnqueueResult, QueueStatus } from './types';
 import { isUUIDv4, isValidUrl } from './utils';
@@ -23,6 +24,11 @@ type RunOptions<Input> = {
    * The HTTP method, defaults to `post`;
    */
   readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
+
+  /**
+   * Whether to auto-upload files in the input. Defaults to `true`.
+   */
+  readonly uploadFiles?: boolean;
 };
 
 /**
@@ -99,14 +105,15 @@ export async function run<Input, Output>(
     ...userAgent,
     ...(headers ?? {}),
   } as HeadersInit;
+  const input =
+    options.input && options.uploadFiles !== false
+      ? await fileSupport.transformInput(options.input)
+      : options.input;
   const response = await fetch(url, {
     method,
     headers: requestHeaders,
     mode: 'cors',
-    body:
-      method !== 'get' && options.input
-        ? JSON.stringify(options.input)
-        : undefined,
+    body: method !== 'get' && input ? JSON.stringify(input) : undefined,
   });
   return await responseHandler(response);
 }
