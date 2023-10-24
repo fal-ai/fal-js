@@ -81,6 +81,7 @@ export const storageImpl: StorageSupport = {
         headers: {
           Accept: 'application/json',
           Authorization: `Signature ${signature}`,
+          ContentType: 'multipart/form-data',
         },
         body: formData,
       }
