@@ -131,7 +131,7 @@ export async function subscribe<Input, Output>(
     const pollInterval = options.pollInterval ?? 1000;
     const poll = async () => {
       try {
-        const requestStatus = await queue.status(id, requestId);
+        const requestStatus = await queue.status(id, requestId, true);
         if (options.onQueueUpdate) {
           options.onQueueUpdate(requestStatus);
         }
@@ -197,9 +197,10 @@ interface Queue {
    *
    * @param id - The ID or URL of the function web endpoint.
    * @param requestId - The unique identifier for the enqueued request.
+   * @param logs - If `true`, the response will include the logs for the request.
    * @returns A promise that resolves to the status of the request.
    */
-  status(id: string, requestId: string): Promise<QueueStatus>;
+  status(id: string, requestId: string, logs: boolean): Promise<QueueStatus>;
 
   /**
    * Retrieves the result of a specific request from the queue.
@@ -231,10 +232,10 @@ export const queue: Queue = {
   ): Promise<EnqueueResult> {
     return run(id, { ...options, method: 'post', path: '/fal/queue/submit/' });
   },
-  async status(id: string, requestId: string): Promise<QueueStatus> {
+  async status(id: string, requestId: string, logs: boolean = true): Promise<QueueStatus> {
     return run(id, {
       method: 'get',
-      path: `/fal/queue/requests/${requestId}/status`,
+      path: `/fal/queue/requests/${requestId}/status?logs=${logs ? '1' : '0'}`,
     });
   },
   async result<Output>(id: string, requestId: string): Promise<Output> {
