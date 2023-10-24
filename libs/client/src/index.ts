@@ -1,6 +1,6 @@
 export { config, getConfig } from './config';
-export { fileSupport as file } from './file';
-export type { UploadOptions } from './file';
+export { storageImpl as storage } from './storage';
+export type { UploadOptions } from './storage';
 export { queue, run, subscribe } from './function';
 export { withMiddleware, withProxy } from './middleware';
 export type { RequestMiddleware } from './middleware';

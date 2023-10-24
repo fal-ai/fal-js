@@ -1,3 +1,6 @@
+import { getConfig } from './config';
+import { dispatchRequest } from './request';
+
 export type UploadOptions = {
   filename?: string;
 };
@@ -7,7 +10,7 @@ export type UploadOptions = {
  * uploading files to the server and transforming the input to replace file
  * objects with URLs.
  */
-export interface FileSupport {
+export interface StorageSupport {
   /**
    * Upload a file to the server. Returns the URL of the uploaded file.
    * @param file the file to upload
@@ -41,20 +44,49 @@ function isDataUri(uri: string): boolean {
   }
 }
 
+type UploadSignatureResponse = {
+  signature: string;
+};
+
+type UploadSignatureData = {
+  file_name: string;
+  file_size: number;
+};
+
+async function createUploadSignature(file: Blob): Promise<string> {
+  const { signature } = await dispatchRequest<
+    UploadSignatureData,
+    UploadSignatureResponse
+  >('POST', 'https://rest.alpha.fal.ai/storage/upload/signature', {
+    file_name: file.name,
+    file_size: file.size,
+  });
+  return signature;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type KeyValuePair = [string, any];
 
-export const fileSupport: FileSupport = {
+export const storageImpl: StorageSupport = {
   upload: async (file: Blob, options?: UploadOptions) => {
+    const signature = await createUploadSignature(file);
+
     const { filename } = options || {};
     const formData = new FormData();
     formData.append('file', file, filename ?? file.name);
-
-    const response = await fetch('https://rest.alpha.fal.ai/storage/upload', {
-      method: 'POST',
-      body: formData,
-    });
-    const { url } = await response.json();
+    const response = await fetch(
+      'https://rest.alpha.fal.ai/storage/upload/signed',
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Signature ${signature}`,
+        },
+        body: formData,
+      }
+    );
+    const { responseHandler } = getConfig();
+    const { url } = await responseHandler(response);
     return url;
   },
 
@@ -70,7 +102,7 @@ export const fileSupport: FileSupport = {
           const response = await fetch(value);
           blob = await response.blob();
         }
-        const url = await fileSupport.upload(blob as Blob);
+        const url = await storageImpl.upload(blob as Blob);
         return [key, url];
       }
       return [key, value] as KeyValuePair;

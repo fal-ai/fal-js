@@ -1,6 +1,6 @@
 import { getConfig } from './config';
-import { fileSupport } from './file';
-import { getUserAgent, isBrowser } from './runtime';
+import { storageImpl } from './storage';
+import { dispatchRequest } from './request';
 import { EnqueueResult, QueueStatus } from './types';
 import { isUUIDv4, isValidUrl } from './utils';
 
@@ -24,11 +24,6 @@ type RunOptions<Input> = {
    * The HTTP method, defaults to `post`;
    */
   readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
-
-  /**
-   * Whether to auto-upload files in the input. Defaults to `true`.
-   */
-  readonly uploadFiles?: boolean;
 };
 
 /**
@@ -67,7 +62,6 @@ export function buildUrl<Input>(
 
 /**
  * Runs a fal serverless function identified by its `id`.
- * TODO: expand documentation and provide examples
  *
  * @param id the registered function revision id or alias.
  * @returns the remote function output
@@ -76,46 +70,14 @@ export async function run<Input, Output>(
   id: string,
   options: RunOptions<Input> = {}
 ): Promise<Output> {
-  const {
-    credentials: credentialsValue,
-    requestMiddleware,
-    responseHandler,
-  } = getConfig();
-  const method = (options.method ?? 'post').toLowerCase();
-  const userAgent = isBrowser() ? {} : { 'User-Agent': getUserAgent() };
-  const credentials =
-    typeof credentialsValue === 'function'
-      ? credentialsValue()
-      : credentialsValue;
-
-  const { url, headers } = await requestMiddleware({
-    url: buildUrl(id, options),
-  });
-  const authHeader = credentials ? { Authorization: `Key ${credentials}` } : {};
-  if (typeof window !== 'undefined' && credentials) {
-    console.warn(
-      "The fal credentials are exposed in the browser's environment. " +
-        "That's not recommended for production use cases."
-    );
-  }
-  const requestHeaders = {
-    ...authHeader,
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-    ...userAgent,
-    ...(headers ?? {}),
-  } as HeadersInit;
-  const input =
-    options.input && options.uploadFiles !== false
-      ? await fileSupport.transformInput(options.input)
-      : options.input;
-  const response = await fetch(url, {
-    method,
-    headers: requestHeaders,
-    mode: 'cors',
-    body: method !== 'get' && input ? JSON.stringify(input) : undefined,
-  });
-  return await responseHandler(response);
+  const input = options.input
+    ? await storageImpl.transformInput(options.input)
+    : options.input;
+  return dispatchRequest<Input, Output>(
+    options.method ?? 'post',
+    buildUrl(id, options),
+    input as Input
+  );
 }
 
 /**
