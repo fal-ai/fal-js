@@ -235,7 +235,10 @@ export const queue: Queue = {
   async status(id: string, requestId: string, logs: boolean = true): Promise<QueueStatus> {
     return run(id, {
       method: 'get',
-      path: `/fal/queue/requests/${requestId}/status?logs=${logs ? '1' : '0'}`,
+      path: `/fal/queue/requests/${requestId}/status`,
+      input: {
+        logs: logs ? '1' : '0',
+      },
     });
   },
   async result<Output>(id: string, requestId: string): Promise<Output> {
