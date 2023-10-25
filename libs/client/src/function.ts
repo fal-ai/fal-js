@@ -131,7 +131,7 @@ export async function subscribe<Input, Output>(
     const pollInterval = options.pollInterval ?? 1000;
     const poll = async () => {
       try {
-        const requestStatus = await queue.status(id, requestId, true);
+        const requestStatus = await queue.status(id, requestId, options.logs ?? true);
         if (options.onQueueUpdate) {
           options.onQueueUpdate(requestStatus);
         }
@@ -176,6 +176,11 @@ type QueueSubscribeOptions = {
    * @param status - The current status of the queue.
    */
   onQueueUpdate?: (status: QueueStatus) => void;
+
+  /**
+   * If `true`, the response will include the logs for the request.
+   */
+  logs?: boolean;
 };
 
 /**

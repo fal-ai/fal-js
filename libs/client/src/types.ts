@@ -6,11 +6,6 @@ export type EnqueueResult = {
   request_id: string;
 };
 
-// export type QueueStatus = {
-//   status: "IN_PROGRESS" | "COMPLETED";
-//   queue: number;
-// };
-
 export type RequestLog = {
   message: string;
   level: 'STDERR' | 'STDOUT' | 'ERROR' | 'INFO' | 'WARN' | 'DEBUG';
@@ -22,7 +17,7 @@ export type QueueStatus =
   | {
       status: 'IN_PROGRESS' | 'COMPLETED';
       response_url: string;
-      logs: RequestLog[];
+      logs: null | RequestLog[];
     }
   | {
       status: 'IN_QUEUE';
