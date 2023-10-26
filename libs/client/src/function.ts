@@ -131,7 +131,7 @@ export async function subscribe<Input, Output>(
     const pollInterval = options.pollInterval ?? 1000;
     const poll = async () => {
       try {
-        const requestStatus = await queue.status(id, requestId, options.logs ?? true);
+        const requestStatus = await queue.status(id, requestId, options.logs ?? false);
         if (options.onQueueUpdate) {
           options.onQueueUpdate(requestStatus);
         }
@@ -237,7 +237,7 @@ export const queue: Queue = {
   ): Promise<EnqueueResult> {
     return run(id, { ...options, method: 'post', path: '/fal/queue/submit/' });
   },
-  async status(id: string, requestId: string, logs: boolean = true): Promise<QueueStatus> {
+  async status(id: string, requestId: string, logs: boolean = false): Promise<QueueStatus> {
     return run(id, {
       method: 'get',
       path: `/fal/queue/requests/${requestId}/status`,
