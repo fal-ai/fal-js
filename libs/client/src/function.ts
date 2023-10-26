@@ -237,7 +237,7 @@ export const queue: Queue = {
   ): Promise<EnqueueResult> {
     return run(id, { ...options, method: 'post', path: '/fal/queue/submit/' });
   },
-  async status(id: string, requestId: string, logs: boolean = false): Promise<QueueStatus> {
+  async status(id: string, requestId: string, logs = false): Promise<QueueStatus> {
     return run(id, {
       method: 'get',
       path: `/fal/queue/requests/${requestId}/status`,
