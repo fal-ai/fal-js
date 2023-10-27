@@ -126,7 +126,6 @@ export async function subscribe<Input, Output>(
   if (options.onEnqueue) {
     options.onEnqueue(requestId);
   }
-  const path = options.path ?? '';
   return new Promise<Output>((resolve, reject) => {
     let timeoutId: ReturnType<typeof setTimeout>;
     const pollInterval = options.pollInterval ?? 1000;
@@ -135,7 +134,6 @@ export async function subscribe<Input, Output>(
         const requestStatus = await queue.status(id, {
           requestId,
           logs: options.logs ?? false,
-          path,
         });
         if (options.onQueueUpdate) {
           options.onQueueUpdate(requestStatus);
@@ -143,7 +141,7 @@ export async function subscribe<Input, Output>(
         if (requestStatus.status === 'COMPLETED') {
           clearTimeout(timeoutId);
           try {
-            const result = await queue.result<Output>(id, { requestId, path });
+            const result = await queue.result<Output>(id, { requestId });
             resolve(result);
           } catch (error) {
             reject(error);
@@ -194,10 +192,6 @@ type BaseQueueOptions = {
    * The unique identifier for the enqueued request.
    */
   requestId: string;
-  /**
-   * The path to the function, if any. Defaults to ``.
-   */
-  path?: string;
 };
 
 type QueueStatusOptions = BaseQueueOptions & {
@@ -268,11 +262,11 @@ export const queue: Queue = {
   },
   async status(
     id: string,
-    { requestId, logs = false, path = '' }: QueueStatusOptions
+    { requestId, logs = false }: QueueStatusOptions
   ): Promise<QueueStatus> {
     return run(id, {
       method: 'get',
-      path: `/fal/queue/requests/${requestId}/status${path}`,
+      path: `/fal/queue/requests/${requestId}/status`,
       input: {
         logs: logs ? '1' : '0',
       },
@@ -280,11 +274,11 @@ export const queue: Queue = {
   },
   async result<Output>(
     id: string,
-    { requestId, path = '' }: BaseQueueOptions
+    { requestId }: BaseQueueOptions
   ): Promise<Output> {
     return run(id, {
       method: 'get',
-      path: `/fal/queue/requests/${requestId}/response${path}`,
+      path: `/fal/queue/requests/${requestId}/response`,
     });
   },
   subscribe,
