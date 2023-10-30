@@ -47,6 +47,7 @@ function fromHeaders(headers: Headers): Record<string, string | string[]> {
  * @returns a promise that resolves when the request is handled.
  */
 async function routeHandler(request: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const responseHeaders: Record<string, any> = {};
   return await handleRequest({
     id: 'nextjs-app-router',
