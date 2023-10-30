@@ -50,5 +50,5 @@
       }
     }
   },
-  "defaultProject": "demo-nextjs-app"
+  "defaultProject": "demo-nextjs-page-router"
 }
