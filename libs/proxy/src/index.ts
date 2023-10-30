@@ -7,6 +7,8 @@ const FAL_KEY_ID = process.env.FAL_KEY_ID || process.env.NEXT_PUBLIC_FAL_KEY_ID;
 const FAL_KEY_SECRET =
   process.env.FAL_KEY_SECRET || process.env.NEXT_PUBLIC_FAL_KEY_SECRET;
 
+export type HeaderValue = string | string[] | undefined | null;
+
 /**
  * The proxy behavior that is passed to the proxy handler. This is a subset of
  * request objects that are used by different frameworks, like Express and NextJS.
@@ -16,8 +18,8 @@ export interface ProxyBehavior<ResponseType> {
   method: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   respondWith(status: number, data: string | any): ResponseType;
-  getHeaders(): Record<string, string | string[] | undefined>;
-  getHeader(name: string): string | string[] | undefined;
+  getHeaders(): Record<string, HeaderValue>;
+  getHeader(name: string): HeaderValue;
   sendHeader(name: string, value: string): void;
   getBody(): Promise<string | undefined>;
 }
@@ -29,10 +31,8 @@ export interface ProxyBehavior<ResponseType> {
  * @param request the header value.
  * @returns the header value as `string` or `undefined` if the header is not set.
  */
-function singleHeaderValue(
-  value: string | string[] | undefined
-): string | undefined {
-  if (value === undefined) {
+function singleHeaderValue(value: HeaderValue): string | undefined {
+  if (!value) {
     return undefined;
   }
   if (Array.isArray(value)) {
@@ -79,7 +79,7 @@ export async function handleRequest<ResponseType>(
   }
 
   // pass over headers prefixed with x-fal-*
-  const headers: Record<string, string | string[] | undefined> = {};
+  const headers: Record<string, HeaderValue> = {};
   Object.keys(behavior.getHeaders()).forEach((key) => {
     if (key.toLowerCase().startsWith('x-fal-')) {
       headers[key.toLowerCase()] = behavior.getHeader(key);
@@ -99,7 +99,7 @@ export async function handleRequest<ResponseType>(
       'content-type': 'application/json',
       'user-agent': userAgent,
       'x-fal-client-proxy': proxyUserAgent,
-    },
+    } as HeadersInit,
     body:
       behavior.method?.toUpperCase() === 'GET'
         ? undefined
@@ -113,7 +113,7 @@ export async function handleRequest<ResponseType>(
     }
   });
 
-  if (res.headers.get('content-type').includes('application/json')) {
+  if (res.headers.get('content-type')?.includes('application/json')) {
     const data = await res.json();
     return behavior.respondWith(res.status, data);
   }

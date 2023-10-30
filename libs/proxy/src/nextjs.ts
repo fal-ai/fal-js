@@ -18,7 +18,7 @@ export const PROXY_ROUTE = DEFAULT_PROXY_ROUTE;
 export const handler: NextApiHandler = async (request, response) => {
   return handleRequest({
     id: 'nextjs-page-router',
-    method: request.method,
+    method: request.method || 'POST',
     respondWith: (status, data) =>
       typeof data === 'string'
         ? response.status(status).json({ detail: data })
@@ -47,7 +47,7 @@ function fromHeaders(headers: Headers): Record<string, string | string[]> {
  * @returns a promise that resolves when the request is handled.
  */
 async function routeHandler(request: NextRequest) {
-  const responseHeaders = {};
+  const responseHeaders: Record<string, any> = {};
   return await handleRequest({
     id: 'nextjs-app-router',
     method: request.method,
