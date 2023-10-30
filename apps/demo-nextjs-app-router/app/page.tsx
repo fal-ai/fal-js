@@ -1,10 +1,12 @@
+'use client';
+
 import * as fal from '@fal-ai/serverless-client';
 import { useMemo, useState } from 'react';
 
 // @snippet:start(client.config)
 fal.config({
   requestMiddleware: fal.withProxy({
-    targetUrl: '/api/_fal/proxy', // the built-int nextjs proxy
+    targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
     // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
   }),
 });
@@ -21,7 +23,11 @@ type Result = {
 };
 // @snippet:end
 
-function Error(props) {
+type ErrorProps = {
+  error: any;
+};
+
+function Error(props: ErrorProps) {
   if (!props.error) {
     return null;
   }
@@ -38,7 +44,7 @@ function Error(props) {
 const DEFAULT_PROMPT =
   'a city landscape of a cyberpunk metropolis, raining, purple, pink and teal neon lights, highly detailed, uhd';
 
-export function Index() {
+export default function Home() {
   // @snippet:start("client.ui.state")
   // Input state
   const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
@@ -64,8 +70,7 @@ export function Index() {
     setElapsedTime(0);
   };
 
-  const handleOnClick = async (e) => {
-    e.preventDefault();
+  const generateImage = async () => {
     reset();
     // @snippet:start("client.queue.subscribe")
     setLoading(true);
@@ -85,12 +90,12 @@ export function Index() {
             update.status === 'IN_PROGRESS' ||
             update.status === 'COMPLETED'
           ) {
-            setLogs(update.logs.map((log) => log.message));
+            setLogs((update.logs || []).map((log) => log.message));
           }
         },
       });
       setResult(result);
-    } catch (error) {
+    } catch (error: any) {
       setError(error);
     } finally {
       setLoading(false);
@@ -121,7 +126,10 @@ export function Index() {
         </div>
 
         <button
-          onClick={handleOnClick}
+          onClick={(e) => {
+            e.preventDefault();
+            generateImage();
+          }}
           className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline"
           disabled={loading}
         >
@@ -160,5 +168,3 @@ export function Index() {
     </div>
   );
 }
-
-export default Index;

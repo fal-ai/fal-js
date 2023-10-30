@@ -41,10 +41,11 @@ export function buildUrl<Input>(
   const { host } = getConfig();
   const method = (options.method ?? 'post').toLowerCase();
   const path = (options.path ?? '').replace(/^\//, '').replace(/\/{2,}/, '/');
+  const input = options.input;
   const params =
-    method === 'get' ? new URLSearchParams(options.input ?? {}) : undefined;
-  // TODO: change to params.size once it's officially supported
-  const queryParams = params && params['size'] ? `?${params.toString()}` : '';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    method === 'get' && input ? new URLSearchParams(input as any) : undefined;
+  const queryParams = params ? `?${params.toString()}` : '';
   const parts = id.split('/');
 
   // if a fal.ai url is passed, just use it
