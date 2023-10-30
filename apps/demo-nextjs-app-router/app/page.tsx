@@ -44,7 +44,7 @@ function Error(props: ErrorProps) {
 const DEFAULT_PROMPT =
   'a city landscape of a cyberpunk metropolis, raining, purple, pink and teal neon lights, highly detailed, uhd';
 
-export function Index() {
+export default function Home() {
   // @snippet:start("client.ui.state")
   // Input state
   const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
@@ -168,5 +168,3 @@ export function Index() {
     </div>
   );
 }
-
-export default Index;
