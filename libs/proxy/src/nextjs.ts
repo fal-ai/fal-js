@@ -17,7 +17,7 @@ export const PROXY_ROUTE = DEFAULT_PROXY_ROUTE;
  */
 export const handler: NextApiHandler = async (request, response) => {
   return handleRequest({
-    id: 'nextjs',
+    id: 'nextjs-page-router',
     method: request.method,
     respondWith: (status, data) =>
       typeof data === 'string'
@@ -26,7 +26,7 @@ export const handler: NextApiHandler = async (request, response) => {
     getHeaders: () => request.headers,
     getHeader: (name) => request.headers[name],
     sendHeader: (name, value) => response.setHeader(name, value),
-    getBody: () => JSON.stringify(request.body),
+    getBody: async () => JSON.stringify(request.body),
   });
 };
 
@@ -41,14 +41,15 @@ function fromHeaders(headers: Headers): Record<string, string | string[]> {
 }
 
 /**
+ * The Next API route handler for the fal.ai client proxy on App Router apps.
  *
- * @param request
- * @returns
+ * @param request the Next API request object.
+ * @returns a promise that resolves when the request is handled.
  */
 async function routeHandler(request: NextRequest) {
   const responseHeaders = {};
-  return handleRequest({
-    id: 'nextjs-router',
+  return await handleRequest({
+    id: 'nextjs-app-router',
     method: request.method,
     respondWith: (status, data) =>
       NextResponse.json(typeof data === 'string' ? { detail: data } : data, {
@@ -58,7 +59,7 @@ async function routeHandler(request: NextRequest) {
     getHeaders: () => fromHeaders(request.headers),
     getHeader: (name) => request.headers.get(name),
     sendHeader: (name, value) => (responseHeaders[name] = value),
-    getBody: () => JSON.stringify(request.body),
+    getBody: async () => request.text(),
   });
 }
 
@@ -66,7 +67,4 @@ export const route = {
   handler: routeHandler,
   GET: routeHandler,
   POST: routeHandler,
-  PUT: routeHandler,
-  DELETE: routeHandler,
-  OPTION: routeHandler,
 };

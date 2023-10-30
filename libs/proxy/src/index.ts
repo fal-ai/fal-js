@@ -1,6 +1,3 @@
-import formidable, { type File } from 'formidable';
-import { type IncomingMessage } from 'http';
-
 export const TARGET_URL_HEADER = 'x-fal-target-url';
 
 export const DEFAULT_PROXY_ROUTE = '/api/_fal/proxy';
@@ -22,7 +19,7 @@ export interface ProxyBehavior<ResponseType> {
   getHeaders(): Record<string, string | string[] | undefined>;
   getHeader(name: string): string | string[] | undefined;
   sendHeader(name: string, value: string): void;
-  getBody(): string | undefined;
+  getBody(): Promise<string | undefined>;
 }
 
 /**
@@ -54,21 +51,7 @@ function getFalKey(): string | undefined {
   return undefined;
 }
 
-export async function handleFileUpload<ResponseType>(request: IncomingMessage) {
-  const form = formidable({
-    multiples: false,
-  });
-  const parseForm = new Promise<File>((resolve, reject) => {
-    form.parse(request, (error, _, files) => {
-      if (error) {
-        reject(error);
-      }
-      const firstFile = Object.values(files)[0];
-      const file = firstFile[0];
-      resolve(file);
-    });
-  });
-}
+const EXCLUDED_HEADERS = ['content-length'];
 
 /**
  * A request handler that proxies the request to the fal-serverless
@@ -103,6 +86,8 @@ export async function handleRequest<ResponseType>(
     }
   });
 
+  const proxyUserAgent = `@fal-ai/serverless-proxy/${behavior.id}`;
+  const userAgent = singleHeaderValue(behavior.getHeader('user-agent'));
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
@@ -112,15 +97,20 @@ export async function handleRequest<ResponseType>(
         `Key ${falKey}`,
       accept: 'application/json',
       'content-type': 'application/json',
-      'x-fal-client-proxy': `@fal-ai/serverless-proxy/${behavior.id}`,
+      'user-agent': userAgent,
+      'x-fal-client-proxy': proxyUserAgent,
     },
     body:
-      behavior.method?.toUpperCase() === 'GET' ? undefined : behavior.getBody(),
+      behavior.method?.toUpperCase() === 'GET'
+        ? undefined
+        : await behavior.getBody(),
   });
 
-  // copy headers from res to response
+  // copy headers from fal to the proxied response
   res.headers.forEach((value, key) => {
-    behavior.sendHeader(key, value);
+    if (!EXCLUDED_HEADERS.includes(key.toLowerCase())) {
+      behavior.sendHeader(key, value);
+    }
   });
 
   if (res.headers.get('content-type').includes('application/json')) {
