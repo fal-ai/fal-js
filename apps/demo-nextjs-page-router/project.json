@@ -1,7 +1,7 @@
 {
-  "name": "demo-nextjs-app",
+  "name": "demo-nextjs-page-router",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/demo-nextjs-app",
+  "sourceRoot": "apps/demo-nextjs-page-router",
   "projectType": "application",
   "targets": {
     "build": {
@@ -9,11 +9,11 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/demo-nextjs-app"
+        "outputPath": "dist/apps/demo-nextjs-page-router"
       },
       "configurations": {
         "development": {
-          "outputPath": "apps/demo-nextjs-app"
+          "outputPath": "apps/demo-nextjs-page-router"
         },
         "production": {}
       }
@@ -22,16 +22,16 @@
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "demo-nextjs-app:build",
+        "buildTarget": "demo-nextjs-page-router:build",
         "dev": true
       },
       "configurations": {
         "development": {
-          "buildTarget": "demo-nextjs-app:build:development",
+          "buildTarget": "demo-nextjs-page-router:build:development",
           "dev": true
         },
         "production": {
-          "buildTarget": "demo-nextjs-app:build:production",
+          "buildTarget": "demo-nextjs-page-router:build:production",
           "dev": false
         }
       }
@@ -39,14 +39,14 @@
     "export": {
       "executor": "@nx/next:export",
       "options": {
-        "buildTarget": "demo-nextjs-app:build:production"
+        "buildTarget": "demo-nextjs-page-router:build:production"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/demo-nextjs-app/jest.config.ts",
+        "jestConfig": "apps/demo-nextjs-page-router/jest.config.ts",
         "passWithNoTests": true
       }
     },
@@ -54,7 +54,9 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/demo-nextjs-app/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": [
+          "apps/demo-nextjs-page-router/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   },

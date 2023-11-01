@@ -10,7 +10,7 @@ import { isUUIDv4, isValidUrl } from './utils';
  */
 type RunOptions<Input> = {
   /**
-   * The path to the function, if any. Defaults to `/`.
+   * The path to the function, if any. Defaults to ``.
    */
   readonly path?: string;
 
@@ -42,10 +42,11 @@ export function buildUrl<Input>(
   const { host } = getConfig();
   const method = (options.method ?? 'post').toLowerCase();
   const path = (options.path ?? '').replace(/^\//, '').replace(/\/{2,}/, '/');
+  const input = options.input;
   const params =
-    method === 'get' ? new URLSearchParams(options.input ?? {}) : undefined;
-  // TODO: change to params.size once it's officially supported
-  const queryParams = params && params['size'] ? `?${params.toString()}` : '';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    method === 'get' && input ? new URLSearchParams(input as any) : undefined;
+  const queryParams = params ? `?${params.toString()}` : '';
   const parts = id.split('/');
 
   // if a fal.ai url is passed, just use it
@@ -100,14 +101,17 @@ export async function subscribe<Input, Output>(
     const pollInterval = options.pollInterval ?? 1000;
     const poll = async () => {
       try {
-        const requestStatus = await queue.status(id, requestId);
+        const requestStatus = await queue.status(id, {
+          requestId,
+          logs: options.logs ?? false,
+        });
         if (options.onQueueUpdate) {
           options.onQueueUpdate(requestStatus);
         }
         if (requestStatus.status === 'COMPLETED') {
           clearTimeout(timeoutId);
           try {
-            const result = await queue.result<Output>(id, requestId);
+            const result = await queue.result<Output>(id, { requestId });
             resolve(result);
           } catch (error) {
             reject(error);
@@ -145,6 +149,27 @@ type QueueSubscribeOptions = {
    * @param status - The current status of the queue.
    */
   onQueueUpdate?: (status: QueueStatus) => void;
+
+  /**
+   * If `true`, the response will include the logs for the request.
+   * Defaults to `false`.
+   */
+  logs?: boolean;
+};
+
+type BaseQueueOptions = {
+  /**
+   * The unique identifier for the enqueued request.
+   */
+  requestId: string;
+};
+
+type QueueStatusOptions = BaseQueueOptions & {
+  /**
+   * If `true`, the response will include the logs for the request.
+   * Defaults to `false`.
+   */
+  logs?: boolean;
 };
 
 /**
@@ -165,19 +190,19 @@ interface Queue {
    * Retrieves the status of a specific request in the queue.
    *
    * @param id - The ID or URL of the function web endpoint.
-   * @param requestId - The unique identifier for the enqueued request.
+   * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the status of the request.
    */
-  status(id: string, requestId: string): Promise<QueueStatus>;
+  status(id: string, options: QueueStatusOptions): Promise<QueueStatus>;
 
   /**
    * Retrieves the result of a specific request from the queue.
    *
    * @param id - The ID or URL of the function web endpoint.
-   * @param requestId - The unique identifier for the enqueued request.
+   * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of the request.
    */
-  result<Output>(id: string, requestId: string): Promise<Output>;
+  result<Output>(id: string, options: BaseQueueOptions): Promise<Output>;
 
   /**
    * @deprecated Use `fal.subscribe` instead.
@@ -198,15 +223,29 @@ export const queue: Queue = {
     id: string,
     options: RunOptions<Input>
   ): Promise<EnqueueResult> {
-    return run(id, { ...options, method: 'post', path: '/fal/queue/submit/' });
+    const path = options.path ?? '';
+    return run(id, {
+      ...options,
+      method: 'post',
+      path: '/fal/queue/submit' + path,
+    });
   },
-  async status(id: string, requestId: string): Promise<QueueStatus> {
+  async status(
+    id: string,
+    { requestId, logs = false }: QueueStatusOptions
+  ): Promise<QueueStatus> {
     return run(id, {
       method: 'get',
       path: `/fal/queue/requests/${requestId}/status`,
+      input: {
+        logs: logs ? '1' : '0',
+      },
     });
   },
-  async result<Output>(id: string, requestId: string): Promise<Output> {
+  async result<Output>(
+    id: string,
+    { requestId }: BaseQueueOptions
+  ): Promise<Output> {
     return run(id, {
       method: 'get',
       path: `/fal/queue/requests/${requestId}/response`,

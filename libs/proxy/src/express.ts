@@ -24,7 +24,7 @@ export const handler: RequestHandler = async (request, response, next) => {
     getHeaders: () => request.headers,
     getHeader: (name) => request.headers[name],
     sendHeader: (name, value) => response.setHeader(name, value),
-    getBody: () => JSON.stringify(request.body),
+    getBody: async () => JSON.stringify(request.body),
   });
   next();
 };
