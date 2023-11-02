@@ -1,9 +1,6 @@
 import { getConfig } from './config';
 import { dispatchRequest } from './request';
 
-export type UploadOptions = {
-  filename?: string;
-};
 
 /**
  * File support for the client. This interface establishes the contract for
@@ -17,7 +14,7 @@ export interface StorageSupport {
    * @param options optional parameters, such as custom file name
    * @returns the URL of the uploaded file
    */
-  upload: (file: Blob, options?: UploadOptions) => Promise<string>;
+  upload: (file: Blob) => Promise<string>;
 
   /**
    * Transform the input to replace file objects with URLs. This is used
@@ -44,49 +41,39 @@ function isDataUri(uri: string): boolean {
   }
 }
 
-type UploadSignatureResponse = {
-  signature: string;
+type InitiateUploadResult = {
+  file_url: string;
+  upload_url: string;
 };
 
-type UploadSignatureData = {
+type InitiateUploadData = {
   file_name: string;
-  file_size: number;
+  content_type: string | null;
 };
 
-async function createUploadSignature(file: Blob): Promise<string> {
-  const { signature } = await dispatchRequest<
-    UploadSignatureData,
-    UploadSignatureResponse
-  >('POST', 'https://rest.daniel.shark.fal.ai/storage/upload/signature', {
-    file_name: file.name,
-    file_size: file.size,
-  });
-  return signature;
+async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
+  return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
+    'POST',
+    'https://rest.daniel.shark.fal.ai/storage/upload/initiate',
+    { file_name: file.name, content_type: file.type || 'application/octet-stream' }
+  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type KeyValuePair = [string, any];
 
 export const storageImpl: StorageSupport = {
-  upload: async (file: Blob, options?: UploadOptions) => {
-    const signature = await createUploadSignature(file);
-
-    const { filename } = options || {};
-    const formData = new FormData();
-    formData.append('file', file, filename ?? file.name);
-    const response = await fetch(
-      'https://rest.daniel.shark.fal.ai/storage/upload/signed',
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Signature ${signature}`,
-        },
-        body: formData,
+  upload: async (file: Blob) => {
+    const { upload_url: uploadUrl, file_url: url } = await initiateUpload(file);
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
       }
-    );
+    });
     const { responseHandler } = getConfig();
-    const { url } = await responseHandler(response);
+    await responseHandler(response);
     return url;
   },
 
