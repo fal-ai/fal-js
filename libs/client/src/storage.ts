@@ -50,10 +50,15 @@ type InitiateUploadData = {
   content_type: string | null;
 };
 
+function getRestApiUrl(): string {
+  const { host } = getConfig();
+  return host.replace('gateway', 'rest');
+}
+
 async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
     'POST',
-    'https://rest.daniel.shark.fal.ai/storage/upload/initiate',
+    `https://${getRestApiUrl()}/storage/upload/initiate`,
     {
       file_name: file.name,
       content_type: file.type || 'application/octet-stream',
