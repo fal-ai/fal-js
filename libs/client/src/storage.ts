@@ -1,7 +1,6 @@
 import { getConfig } from './config';
 import { dispatchRequest } from './request';
 
-
 /**
  * File support for the client. This interface establishes the contract for
  * uploading files to the server and transforming the input to replace file
@@ -55,7 +54,10 @@ async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
     'POST',
     'https://rest.daniel.shark.fal.ai/storage/upload/initiate',
-    { file_name: file.name, content_type: file.type || 'application/octet-stream' }
+    {
+      file_name: file.name,
+      content_type: file.type || 'application/octet-stream',
+    }
   );
 }
 
@@ -70,7 +72,7 @@ export const storageImpl: StorageSupport = {
       body: file,
       headers: {
         'Content-Type': file.type || 'application/octet-stream',
-      }
+      },
     });
     const { responseHandler } = getConfig();
     await responseHandler(response);
