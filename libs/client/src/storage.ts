@@ -57,7 +57,7 @@ async function createUploadSignature(file: Blob): Promise<string> {
   const { signature } = await dispatchRequest<
     UploadSignatureData,
     UploadSignatureResponse
-  >('POST', 'https://rest.alpha.fal.ai/storage/upload/signature', {
+  >('POST', 'https://rest.daniel.shark.fal.ai/storage/upload/signature', {
     file_name: file.name,
     file_size: file.size,
   });
@@ -75,13 +75,12 @@ export const storageImpl: StorageSupport = {
     const formData = new FormData();
     formData.append('file', file, filename ?? file.name);
     const response = await fetch(
-      'https://rest.alpha.fal.ai/storage/upload/signed',
+      'https://rest.daniel.shark.fal.ai/storage/upload/signed',
       {
         method: 'POST',
         headers: {
           Accept: 'application/json',
           Authorization: `Signature ${signature}`,
-          ContentType: 'multipart/form-data',
         },
         body: formData,
       }
