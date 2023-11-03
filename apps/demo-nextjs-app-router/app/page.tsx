@@ -19,7 +19,7 @@ type Image = {
   file_size: number;
 };
 type Result = {
-  images: Image[];
+  image: Image;
 };
 // @snippet:end
 
@@ -42,12 +42,13 @@ function Error(props: ErrorProps) {
 }
 
 const DEFAULT_PROMPT =
-  'a city landscape of a cyberpunk metropolis, raining, purple, pink and teal neon lights, highly detailed, uhd';
+  '(masterpiece:1.4), (best quality), (detailed), Medieval village scene with busy streets and castle in the distance';
 
 export default function Home() {
   // @snippet:start("client.ui.state")
   // Input state
   const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -59,7 +60,10 @@ export default function Home() {
     if (!result) {
       return null;
     }
-    return result.images[0];
+    if (result.image) {
+      return result.image;
+    }
+    return null;
   }, [result]);
 
   const reset = () => {
@@ -76,24 +80,27 @@ export default function Home() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('110602490-lora', {
-        input: {
-          prompt,
-          model_name: 'stabilityai/stable-diffusion-xl-base-1.0',
-          image_size: 'square_hd',
-        },
-        pollInterval: 5000, // Default is 1000 (every 1s)
-        logs: true,
-        onQueueUpdate(update) {
-          setElapsedTime(Date.now() - start);
-          if (
-            update.status === 'IN_PROGRESS' ||
-            update.status === 'COMPLETED'
-          ) {
-            setLogs((update.logs || []).map((log) => log.message));
-          }
-        },
-      });
+      const result: Result = await fal.subscribe(
+        '54285744-illusion-diffusion',
+        {
+          input: {
+            prompt,
+            image_url: imageFile,
+            image_size: 'square_hd',
+          },
+          pollInterval: 5000, // Default is 1000 (every 1s)
+          logs: true,
+          onQueueUpdate(update) {
+            setElapsedTime(Date.now() - start);
+            if (
+              update.status === 'IN_PROGRESS' ||
+              update.status === 'COMPLETED'
+            ) {
+              setLogs((update.logs || []).map((log) => log.message));
+            }
+          },
+        }
+      );
       setResult(result);
     } catch (error: any) {
       setError(error);
@@ -109,6 +116,20 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8">
           Hello <code className="font-light text-pink-600">fal</code>
         </h1>
+        <div className="text-lg w-full">
+          <label htmlFor="prompt" className="block mb-2 text-current">
+            Image
+          </label>
+          <input
+            className="w-full text-lg p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10"
+            id="image_url"
+            name="image_url"
+            type="file"
+            placeholder="Choose a file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
         <div className="text-lg w-full">
           <label htmlFor="prompt" className="block mb-2 text-current">
             Prompt

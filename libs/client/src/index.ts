@@ -1,4 +1,5 @@
 export { config, getConfig } from './config';
+export { storageImpl as storage } from './storage';
 export { queue, run, subscribe } from './function';
 export { withMiddleware, withProxy } from './middleware';
 export type { RequestMiddleware } from './middleware';
