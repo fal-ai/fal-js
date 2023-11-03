@@ -84,6 +84,7 @@ export const storageImpl: StorageSupport = {
     return url;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transformInput: async (input: Record<string, any>) => {
     const promises = Object.entries(input).map(async ([key, value]) => {
       if (
