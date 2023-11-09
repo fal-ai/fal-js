@@ -1,16 +1,16 @@
 'use client';
 
 import * as fal from '@fal-ai/serverless-client';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 // @snippet:start(client.config)
 fal.config({
-  credentials:
-    '31d1836e-3150-4387-bb87-ba97354c1362:6c6ff4e8c527260a03f0bce7d4b0e6e7',
-  // requestMiddleware: fal.withProxy({
-  //   targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
-  //   // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
-  // }),
+  // credentials:
+    // '31d1836e-3150-4387-bb87-ba97354c1362:6c6ff4e8c527260a03f0bce7d4b0e6e7',
+  requestMiddleware: fal.withProxy({
+    targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
+    // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
+  }),
 });
 // @snippet:end
 
@@ -46,11 +46,59 @@ function Error(props: ErrorProps) {
 const DEFAULT_PROMPT =
   '(masterpiece:1.4), (best quality), (detailed), Medieval village scene with busy streets and castle in the distance';
 
-export default function Home() {
+async function record(stream: any): Promise<File> {
+  const audioChunks: any = [];
+  const mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.ondataavailable = (e) => {
+    console.log('startig');
+
+    audioChunks.push(e.data);
+  };
+
+  return new Promise((resolve, reject) => {
+    mediaRecorder.addEventListener('stop', async () => {
+      console.log('sending request to fal');
+      // Create a blob from the audio chunks
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      console.log(audioBlob);
+      const audioFile = new File([audioBlob], 'recording.webm', {
+        type: 'audio/webm',
+      });
+      console.log(audioFile);
+
+      // console.log(audioBlob);
+      resolve(audioFile);
+    });
+    setTimeout(() => {
+      console.log('stopped');
+      mediaRecorder.stop();
+    }, 10000);
+    mediaRecorder.start();
+  });
+}
+
+// async function testAudio() {
+//   useEffect(() => {
+
+// }
+
+// const result = await fal.subscribe("110602490-whisper", {
+//   input: {
+//     file_name: "recording.wav",
+//     url: audioFile,
+//   },
+//   logs: true,
+//   onQueueUpdate: (update) => {
+//     console.log(update);
+//   },
+// });
+
+export default function WhisperDemo() {
   // @snippet:start("client.ui.state")
   // Input state
-  const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  // const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
+  // const [imageFile, setImageFile] = useState<File | null>(null);
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -76,33 +124,34 @@ export default function Home() {
     setElapsedTime(0);
   };
 
-  const generateImage = async () => {
+  const startRecording = useCallback(async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return record(stream);
+  }, []);
+
+  const transcribeAudio = async (audioFile: File) => {
     reset();
     // @snippet:start("client.queue.subscribe")
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe(
-        '54285744-illusion-diffusion',
-        {
-          input: {
-            prompt,
-            image_url: imageFile,
-            image_size: 'square_hd',
-          },
-          pollInterval: 5000, // Default is 1000 (every 1s)
-          logs: true,
-          onQueueUpdate(update) {
-            setElapsedTime(Date.now() - start);
-            if (
-              update.status === 'IN_PROGRESS' ||
-              update.status === 'COMPLETED'
-            ) {
-              setLogs((update.logs || []).map((log) => log.message));
-            }
-          },
-        }
-      );
+      const result: Result = await fal.subscribe('110602490-whisper', {
+        input: {
+          file_name: 'recording.wav',
+          url: audioFile,
+        },
+        pollInterval: 1000,
+        logs: true,
+        onQueueUpdate(update) {
+          setElapsedTime(Date.now() - start);
+          if (
+            update.status === 'IN_PROGRESS' ||
+            update.status === 'COMPLETED'
+          ) {
+            setLogs((update.logs || []).map((log) => log.message));
+          }
+        },
+      });
       setResult(result);
     } catch (error: any) {
       setError(error);
@@ -118,7 +167,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8">
           Hello <code className="font-light text-pink-600">fal</code>
         </h1>
-        <div className="text-lg w-full">
+        {/* <div className="text-lg w-full">
           <label htmlFor="prompt" className="block mb-2 text-current">
             Image
           </label>
@@ -146,17 +195,18 @@ export default function Home() {
             onChange={(e) => setPrompt(e.target.value)}
             onBlur={(e) => setPrompt(e.target.value.trim())}
           />
-        </div>
+        </div> */}
 
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
-            generateImage();
+            const audioFile = await startRecording();
+            transcribeAudio(audioFile);
           }}
           className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline"
           disabled={loading}
         >
-          {loading ? 'Generating...' : 'Generate Image'}
+          {loading ? 'Transcribing...' : 'Transcribe'}
         </button>
 
         <Error error={error} />
