@@ -42,7 +42,7 @@ The result's type is contingent upon your Python function's output. Types in Pyt
 
 ### The fal client proxy
 
-Although the fal client is designed to work in any JS environment, including client-side, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/framrworks.
+Although the fal client is designed to work in any JS environment, including client-side, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/frameworks.
 
 For example, if you are using Next.js, you can:
 
