@@ -12,13 +12,30 @@ The `@fal-ai/serverless-proxy` library enables you to route client requests thro
 npm install --save @fal-ai/serverless-proxy
 ```
 
-## Next.js integration
+## Next.js page router integration
+
+For Next.js applications using the page router:
 
 1. Create an API route in your Next.js app, as a convention we suggest using `pages/api/_fal/proxy.js` (or `.ts` if you're using TypeScript):
 2. Re-export the proxy handler from the library as the default export:
    ```ts
    export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
    ```
+3. Ensure you've set the `FAL_KEY` as an environment variable in your server, containing a valid API Key.
+
+## Next.js app router integration
+
+For Next.js applications using the app router:
+
+1. Create an API route in your Next.js app, as a convention we suggest using `app/api/fal/proxy/route.js` (or `.ts` if you're using TypeScript):
+2. Re-export the proxy handler from the library as the default export:
+
+   ```ts
+   import { route } from '@fal-ai/serverless-proxy/nextjs';
+
+   export const { GET, POST } = route;
+   ```
+
 3. Ensure you've set the `FAL_KEY` as an environment variable in your server, containing a valid API Key.
 
 ## Express integration
@@ -52,7 +69,7 @@ import * as fal from '@fal-ai/serverless-js';
 
 fal.config({
   requestMiddleware: fal.withProxy({
-    targetUrl: '/api/_fal/proxy', // or https://my.app.com/api/_fal/proxy
+    targetUrl: '/api/fal/proxy', // or https://my.app.com/api/fal/proxy
   }),
 });
 ```
