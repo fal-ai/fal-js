@@ -5,11 +5,11 @@ import { useMemo, useState } from 'react';
 
 // @snippet:start(client.config)
 fal.config({
-  credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
-  // requestMiddleware: fal.withProxy({
-  //   targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
-  //   // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
-  // }),
+  // credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
+  requestMiddleware: fal.withProxy({
+    targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
+    // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
+  }),
 });
 // @snippet:end
 
