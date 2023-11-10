@@ -18,7 +18,7 @@ The `serverless-js` library serves as a client for fal serverless Python functio
 This client library is crafted as a lightweight layer atop platform standards like `fetch`. This ensures a hassle-free integration into your existing codebase. Moreover, it addresses platform disparities, guaranteeing flawless operation across various JavaScript runtimes.
 
 > **Note:**
-> Ensure you've reviewed the [fal-serverless getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions.
+> Ensure you've reviewed the [getting started guide](https://fal.ai/docs) to acquire your credentials, browser existing APIs, or create your custom functions.
 
 1. Start by configuring your credentials:
 
@@ -40,9 +40,11 @@ const result = await fal.run('my-function-id');
 
 The result's type is contingent upon your Python function's output. Types in Python are mapped to their corresponding types in JavaScript.
 
+See the available [model APIs](https://fal.ai/models) for more details.
+
 ### The fal client proxy
 
-Although the fal client is designed to work in any JS environment, including client-side, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/framrworks.
+Although the fal client is designed to work in any JS environment, including directly in your browser, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/frameworks.
 
 For example, if you are using Next.js, you can:
 
@@ -56,7 +58,7 @@ For example, if you are using Next.js, you can:
    import * as fal from '@fal-ai/serverless-js';
    fal.config({
      requestMiddleware: fal.withProxy({
-       targetUrl: '/api/_fal/proxy',
+       targetUrl: '/api/fal/proxy',
      }),
    });
    ```
@@ -66,11 +68,13 @@ See [libs/proxy](./libs/proxy/) for more details.
 
 ### The example Next.js app
 
-You can find a minimal Next.js + fal application examples in [apps/demo-nextjs-app/](https://github.com/fal-ai/serverless-js/tree/main/apps/demo-nextjs-app).
+You can find a minimal Next.js + fal application examples in [apps/demo-nextjs-page-router/](https://github.com/fal-ai/serverless-js/tree/main/apps/demo-nextjs-page-router).
 
 1. Run `npm install` on the repository root.
 2. Create a `.env.local` file and add your API Key as `FAL_KEY` environment variable (or export it any other way your prefer).
-3. Run `npx nx serve demo-nextjs-app` to start the Next.js app.
+3. Run `npx nx serve demo-nextjs-page-router` to start the Next.js app.
+
+Check our [Next.js integration docs](https://fal.ai/docs/integrations/nextjs) for more details.
 
 ## Roadmap
 

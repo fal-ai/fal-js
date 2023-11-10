@@ -55,13 +55,35 @@ function getRestApiUrl(): string {
   return host.replace('gateway', 'rest');
 }
 
+/**
+ * Get the file extension from the content type. This is used to generate
+ * a file name if the file name is not provided.
+ *
+ * @param contentType the content type of the file.
+ * @returns the file extension or `bin` if the content type is not recognized.
+ */
+function getExtensionFromContentType(contentType: string): string {
+  const [_, fileType] = contentType.split('/');
+  return fileType.split(/[-;]/)[0] ?? 'bin';
+}
+
+/**
+ * Initiate the upload of a file to the server. This returns the URL to upload
+ * the file to and the URL of the file once it is uploaded.
+ *
+ * @param file the file to upload
+ * @returns the URL to upload the file to and the URL of the file once it is uploaded.
+ */
 async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
+  const contentType = file.type || 'application/octet-stream';
+  const filename =
+    file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
     'POST',
     `https://${getRestApiUrl()}/storage/upload/initiate`,
     {
-      file_name: file.name,
-      content_type: file.type || 'application/octet-stream',
+      content_type: contentType,
+      file_name: filename,
     }
   );
 }

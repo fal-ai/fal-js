@@ -5,8 +5,7 @@ import { useMemo, useState } from 'react';
 
 // @snippet:start(client.config)
 fal.config({
-  credentials:
-    '31d1836e-3150-4387-bb87-ba97354c1362:6c6ff4e8c527260a03f0bce7d4b0e6e7',
+  credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
   // requestMiddleware: fal.withProxy({
   //   targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
   //   // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
