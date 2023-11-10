@@ -157,6 +157,17 @@ type QueueSubscribeOptions = {
   logs?: boolean;
 };
 
+/**
+ * Options for submitting a request to the queue.
+ */
+type SubmitOptions<Input> = RunOptions<Input> & {
+  /**
+   * The URL to send a webhook notification to when the request is completed.
+   * @see WebHookResponse
+   */
+  webhookUrl?: string;
+};
+
 type BaseQueueOptions = {
   /**
    * The unique identifier for the enqueued request.
@@ -184,7 +195,10 @@ interface Queue {
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of enqueuing the request.
    */
-  submit<Input>(id: string, options: RunOptions<Input>): Promise<EnqueueResult>;
+  submit<Input>(
+    id: string,
+    options: SubmitOptions<Input>
+  ): Promise<EnqueueResult>;
 
   /**
    * Retrieves the status of a specific request in the queue.
@@ -221,13 +235,16 @@ interface Queue {
 export const queue: Queue = {
   async submit<Input>(
     id: string,
-    options: RunOptions<Input>
+    options: SubmitOptions<Input>
   ): Promise<EnqueueResult> {
-    const path = options.path ?? '';
+    const { webhookUrl, path = '', ...runOptions } = options;
+    const query = webhookUrl
+      ? '?' + new URLSearchParams({ fal_webhook: webhookUrl }).toString()
+      : '';
     return run(id, {
-      ...options,
+      ...runOptions,
       method: 'post',
-      path: '/fal/queue/submit' + path,
+      path: '/fal/queue/submit' + path + query,
     });
   },
   async status(
