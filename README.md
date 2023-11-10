@@ -72,7 +72,7 @@ You can find a minimal Next.js + fal application examples in [apps/demo-nextjs-p
 
 1. Run `npm install` on the repository root.
 2. Create a `.env.local` file and add your API Key as `FAL_KEY` environment variable (or export it any other way your prefer).
-3. Run `npx nx serve demo-nextjs-page-router` to start the Next.js app.
+3. Run `npx nx serve demo-nextjs-page-router` to start the Next.js app (`demo-nextjs-app-router` is also available if you're interested in the app router version).
 
 Check our [Next.js integration docs](https://fal.ai/docs/integrations/nextjs) for more details.
 
