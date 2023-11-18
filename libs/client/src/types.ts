@@ -13,17 +13,25 @@ export type RequestLog = {
   timestamp: string; // Using string to represent date-time format, but you could also use 'Date' type if you're going to construct Date objects.
 };
 
+export type Metrics = {
+  inference_time: number | null;
+};
+
 export type QueueStatus =
-  | {
-      status: 'IN_PROGRESS' | 'COMPLETED';
-      response_url: string;
-      logs: null | RequestLog[];
-    }
-  | {
-      status: 'IN_QUEUE';
-      queue_position: number;
-      response_url: string;
-    };
+  {
+    status: 'IN_PROGRESS';
+    response_url: string;
+    logs: null | RequestLog[];
+  } | {
+    status: 'COMPLETED';
+    response_url: string;
+    logs: null | RequestLog[];
+    metrics: Metrics;
+  } | {
+    status: 'IN_QUEUE';
+    queue_position: number;
+    response_url: string;
+  };
 
 export function isQueueStatus(obj: any): obj is QueueStatus {
   return obj && obj.status && obj.response_url;
@@ -44,22 +52,22 @@ export type ValidationErrorInfo = {
  */
 export type WebHookResponse<Payload = any> =
   | {
-      /** Indicates a successful response. */
-      status: 'OK';
-      /** The payload of the response, structure determined by the Payload type. */
-      payload: Payload;
-      /** Error is never present in a successful response. */
-      error: never;
-      /** The unique identifier for the request. */
-      request_id: string;
-    }
+    /** Indicates a successful response. */
+    status: 'OK';
+    /** The payload of the response, structure determined by the Payload type. */
+    payload: Payload;
+    /** Error is never present in a successful response. */
+    error: never;
+    /** The unique identifier for the request. */
+    request_id: string;
+  }
   | {
-      /** Indicates an unsuccessful response. */
-      status: 'ERROR';
-      /** The payload of the response, structure determined by the Payload type. */
-      payload: Payload;
-      /** Description of the error that occurred. */
-      error: string;
-      /** The unique identifier for the request. */
-      request_id: string;
-    };
+    /** Indicates an unsuccessful response. */
+    status: 'ERROR';
+    /** The payload of the response, structure determined by the Payload type. */
+    payload: Payload;
+    /** Description of the error that occurred. */
+    error: string;
+    /** The unique identifier for the request. */
+    request_id: string;
+  };
