@@ -14,7 +14,7 @@ export type RequestLog = {
 };
 
 export type Metrics = {
-  inference_time: number;
+  inference_time: number | null;
 };
 
 export type QueueStatus =
