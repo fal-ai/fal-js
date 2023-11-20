@@ -24,6 +24,16 @@ type RunOptions<Input> = {
    * The HTTP method, defaults to `post`;
    */
   readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
+
+  /**
+   * If `true`, the function will automatically upload any files
+   * (i.e. instances of `Blob`) or data:uri in the input.
+   *
+   * You can disable this behavior by setting it to `false`, which
+   * is useful in cases where you want to upload the files yourself
+   * or use small data:uri in the input.
+   */
+  readonly autoUpload?: boolean;
 };
 
 /**
@@ -71,9 +81,10 @@ export async function run<Input, Output>(
   id: string,
   options: RunOptions<Input> = {}
 ): Promise<Output> {
-  const input = options.input
-    ? await storageImpl.transformInput(options.input)
-    : options.input;
+  const input =
+    options.input && options.autoUpload !== false
+      ? await storageImpl.transformInput(options.input)
+      : options.input;
   return dispatchRequest<Input, Output>(
     options.method ?? 'post',
     buildUrl(id, options),
