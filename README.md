@@ -7,11 +7,11 @@
 
 ## About the Project
 
-The fal-serverless JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal serverless functions in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
+The fal serverless JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal serverless functions in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
 
 ## Getting Started
 
-The `serverless-js` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
+The `@fal-ai/serverless-client` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
 
 ### Client Library
 
@@ -20,23 +20,26 @@ This client library is crafted as a lightweight layer atop platform standards li
 > **Note:**
 > Ensure you've reviewed the [getting started guide](https://fal.ai/docs) to acquire your credentials, browser existing APIs, or create your custom functions.
 
-1. Start by configuring your credentials:
+1. Install the client library
+   ```sh
+   npm install --save @fal-ai/serverless-client
+   ```
+2. Start by configuring your credentials:
 
-```ts
-import * as fal from '@fal-ai/serverless-js';
+   ```ts
+   import * as fal from '@fal-ai/serverless-client';
 
-fal.config({
-  // Can also be auto-configured using environment variables:
-  // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
-  credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
-});
-```
+   fal.config({
+     // Can also be auto-configured using environment variables:
+     // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
+     credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
+   });
+   ```
 
-2. Retrieve your function id and execute it:
-
-```ts
-const result = await fal.run('my-function-id');
-```
+3. Retrieve your function id and execute it:
+   ```ts
+   const result = await fal.run('my-function-id');
+   ```
 
 The result's type is contingent upon your Python function's output. Types in Python are mapped to their corresponding types in JavaScript.
 
@@ -48,7 +51,10 @@ Although the fal client is designed to work in any JS environment, including dir
 
 For example, if you are using Next.js, you can:
 
-1. Instal the proxy library `npm install --save @fal-ai/serverless-proxy`
+1. Instal the proxy library
+   ```sh
+   npm install --save @fal-ai/serverless-proxy
+   ```
 2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/\_fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-nextjs-app/pages/api/_fal/proxy.ts)
    ```ts
    export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
