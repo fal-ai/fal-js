@@ -65,7 +65,7 @@ For Express applications:
 Once you've set up the proxy, you can configure the client to use it:
 
 ```ts
-import * as fal from '@fal-ai/serverless-js';
+import * as fal from '@fal-ai/serverless-client';
 
 fal.config({
   requestMiddleware: fal.withProxy({

@@ -61,7 +61,7 @@ For example, if you are using Next.js, you can:
    ```
 3. Configure the client to use the proxy:
    ```ts
-   import * as fal from '@fal-ai/serverless-js';
+   import * as fal from '@fal-ai/serverless-client';
    fal.config({
      requestMiddleware: fal.withProxy({
        targetUrl: '/api/fal/proxy',

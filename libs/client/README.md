@@ -11,7 +11,7 @@ The `fal.ai` JavaScript Client Library provides a seamless way to interact with 
 Before diving into the client-specific features, ensure you've set up your credentials:
 
 ```ts
-import * as fal from '@fal-ai/serverless-js';
+import * as fal from '@fal-ai/serverless-client';
 
 fal.config({
   // Can also be auto-configured using environment variables:
