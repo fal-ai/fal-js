@@ -13,9 +13,6 @@ export function getUserAgent(): string {
     return memoizedUserAgent;
   }
   const packageInfo = require('../package.json');
-  const os = require('os');
-  memoizedUserAgent = `${packageInfo.name}/${
-    packageInfo.version
-  } ${os.platform()}-${os.arch()} ${process.release.name}-${process.version}`;
+  memoizedUserAgent = `${packageInfo.name}/${packageInfo.version}`;
   return memoizedUserAgent;
 }
