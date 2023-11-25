@@ -26,7 +26,7 @@ export type RequiredConfig = Required<Config>;
  */
 function hasEnvVariables(): boolean {
   return (
-    process &&
+    typeof process !== 'undefined' &&
     process.env &&
     (typeof process.env.FAL_KEY !== 'undefined' ||
       (typeof process.env.FAL_KEY_ID !== 'undefined' &&
@@ -54,7 +54,7 @@ export const credentialsFromEnv: CredentialsResolver = () => {
  */
 function getDefaultHost(): string {
   const host = 'gateway.alpha.fal.ai';
-  if (process && process.env) {
+  if (typeof process !== 'undefined' && process.env) {
     return process.env.FAL_HOST || host;
   }
   return host;
