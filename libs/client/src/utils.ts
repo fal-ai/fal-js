@@ -17,22 +17,28 @@ export function isValidUrl(url: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function debounce<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
-): (...funcArgs: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null;
+  limit: number
+): (...funcArgs: Parameters<T>) => ReturnType<T> | void {
+  let lastFunc: NodeJS.Timeout | null;
+  let lastRan: number;
 
-  return (...args: Parameters<T>): void => {
-    const later = () => {
-      timeout = null;
+  return (...args: Parameters<T>): ReturnType<T> | void => {
+    if (!lastRan) {
       func(...args);
-    };
+      lastRan = Date.now();
+    } else {
+      if (lastFunc) {
+        clearTimeout(lastFunc);
+      }
 
-    if (timeout) {
-      clearTimeout(timeout);
+      lastFunc = setTimeout(() => {
+        if (Date.now() - lastRan >= limit) {
+          func(...args);
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan));
     }
-
-    timeout = setTimeout(later, wait);
   };
 }

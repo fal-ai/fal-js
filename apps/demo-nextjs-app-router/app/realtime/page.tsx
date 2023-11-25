@@ -17,6 +17,7 @@ export default function RealtimePage() {
   const { send } = fal.realtime.connect('110602490-lcm-plexed-sd15-i2i', {
     clientOnly: true, // in ssr+csr mode, only run in csr
     connectionKey: 'single-drawing', // reuse connection between render cycles
+    throttleInterval: 64, // throttle outgoing requests to every 64ms (defaults to 16ms)
     onResult(result) {
       if (result.images && result.images[0]) {
         setImage(result.images[0].url);

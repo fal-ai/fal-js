@@ -1,7 +1,7 @@
 import { getConfig, getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 import { ApiError } from './response';
-import { debounce } from './utils';
+import { throttle } from './utils';
 
 /**
  * A connection object that allows you to `send` request payloads to a
@@ -37,13 +37,13 @@ export interface RealtimeConnectionHandler<Output> {
   clientOnly?: boolean;
 
   /**
-   * The debounce duration in milliseconds. This is used to debounce the
+   * The throtle duration in milliseconds. This is used to throtle the
    * calls to the `send` function. Realtime apps usually react to user
    * input, which can be very frequesnt (e.g. fast typing or mouse/drag movements).
    *
    * The default value is `16` milliseconds.
    */
-  debounceDuration?: number;
+  throttleInterval?: number;
 
   /**
    * Callback function that is called when a result is received.
@@ -142,7 +142,7 @@ export const realtimeImpl: RealtimeClient = {
     const {
       clientOnly = false,
       connectionKey = crypto.randomUUID(),
-      debounceDuration = 16,
+      throttleInterval = 16,
       onError = noop,
       onResult,
     } = handler;
@@ -168,7 +168,7 @@ export const realtimeImpl: RealtimeClient = {
       }
     };
     const send =
-      debounceDuration > 0 ? debounce(_send, debounceDuration) : _send;
+      throttleInterval > 0 ? throttle(_send, throttleInterval) : _send;
 
     const connect = () => {
       if (ws && ws.readyState === WebSocket.OPEN) {
