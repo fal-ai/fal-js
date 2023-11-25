@@ -109,7 +109,7 @@ async function getConnection(app: string, key: string): Promise<WebSocket> {
   const token = '***';
 
   if (connections.has(key)) {
-    return connections.get(key);
+    return connections.get(key) as WebSocket;
   }
   const ws = new WebSocket(url);
   connections.set(key, ws);
