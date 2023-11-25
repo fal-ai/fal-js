@@ -1,4 +1,4 @@
-import { getConfig } from './config';
+import { getConfig, getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 
 /**
@@ -49,11 +49,6 @@ type InitiateUploadData = {
   file_name: string;
   content_type: string | null;
 };
-
-function getRestApiUrl(): string {
-  const { host } = getConfig();
-  return host.replace('gateway', 'rest');
-}
 
 /**
  * Get the file extension from the content type. This is used to generate
