@@ -9,7 +9,7 @@ fal.config({
   proxyUrl: '/api/fal/proxy',
 });
 
-const PROMPT = 'a sunset over the ocean';
+const PROMPT = 'a moon in a starry night sky';
 
 export default function RealtimePage() {
   const [image, setImage] = useState<string | null>(null);
@@ -17,7 +17,6 @@ export default function RealtimePage() {
   const { send } = fal.realtime.connect('110602490-lcm-plexed-sd15-i2i', {
     clientOnly: true, // in ssr+csr mode, only run in csr
     connectionKey: 'single-drawing', // reuse connection between render cycles
-    throttleInterval: 64, // throttle outgoing requests to every 64ms (defaults to 16ms)
     onResult(result) {
       if (result.images && result.images[0]) {
         setImage(result.images[0].url);
@@ -26,12 +25,14 @@ export default function RealtimePage() {
   });
 
   return (
-    <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
-      <main className="container dark:text-gray-50 text-gray-900 flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
-        <h1 className="text-4xl font-mono mb-8">
+    <div className="min-h-screen bg-neutral-900 text-neutral-50">
+      <main className="container  flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
+        <h1 className="text-4xl font-mono mb-8 text-neutral-50">
           fal<code className="font-light text-pink-600">realtime</code>
         </h1>
-        <div className="prose">{PROMPT}</div>
+        <div className="prose text-neutral-400">
+          <blockquote className="italic text-xl">{PROMPT}</blockquote>
+        </div>
         <div className="flex flex-col md:flex-row space-x-4">
           <div className="flex-1">
             <DrawingCanvas

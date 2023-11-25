@@ -41,7 +41,7 @@ export interface RealtimeConnectionHandler<Output> {
    * calls to the `send` function. Realtime apps usually react to user
    * input, which can be very frequesnt (e.g. fast typing or mouse/drag movements).
    *
-   * The default value is `16` milliseconds.
+   * The default value is `64` milliseconds.
    */
   throttleInterval?: number;
 
@@ -142,7 +142,7 @@ export const realtimeImpl: RealtimeClient = {
     const {
       clientOnly = false,
       connectionKey = crypto.randomUUID(),
-      throttleInterval = 16,
+      throttleInterval = 64,
       onError = noop,
       onResult,
     } = handler;
