@@ -1,7 +1,8 @@
 import { getConfig, getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 import { ApiError } from './response';
-import { throttle } from './utils';
+import { isBrowser } from './runtime';
+import { isReact, throttle } from './utils';
 
 /**
  * A connection object that allows you to `send` request payloads to a
@@ -33,6 +34,12 @@ export interface RealtimeConnectionHandler<Output> {
    * If `true`, the connection will only be established on the client side.
    * This is useful for frameworks that reuse code for both server-side
    * rendering and client-side rendering (e.g. Next.js).
+   *
+   * This is set to `true` by default when running on React in the server.
+   * Otherwise, it is set to `false`.
+   *
+   * Note that more SSR frameworks might be automatically detected
+   * in the future. In the meantime, you can set this to `true` when needed.
    */
   clientOnly?: boolean;
 
@@ -74,7 +81,7 @@ export interface RealtimeClient {
   ): RealtimeConnection<Input>;
 }
 
-function builRealtimeUrl(app: string): string {
+function buildRealtimeUrl(app: string): string {
   const { host } = getConfig();
   return `wss://${app}.${host}/ws`;
 }
@@ -83,14 +90,20 @@ function builRealtimeUrl(app: string): string {
  * Get a token to connect to the realtime endpoint.
  */
 async function getToken(app: string): Promise<string> {
-  return await dispatchRequest<any, string>(
+  const token: string | object = await dispatchRequest<any, string>(
     'POST',
-    `https://${getRestApiUrl()}/tokens`,
+    `https://${getRestApiUrl()}/tokens/`,
     {
       allowed_apps: [app],
-      token_expiration: 60,
+      token_expiration: 5,
     }
   );
+  // keep this in case the response was wrapped (old versions of the proxy do that)
+  // should be safe to remove in the future
+  if (typeof token !== 'string' && token['detail']) {
+    return token['detail'];
+  }
+  return token;
 }
 
 /**
@@ -101,18 +114,47 @@ const WebSocketErrorCodes = {
   GOING_AWAY: 1001,
 };
 
-const connections = new Map<string, WebSocket>();
+const connectionManager = (() => {
+  const connections = new Map<string, WebSocket>();
+  let currentToken: string | null = null;
+
+  return {
+    token(): string | null {
+      return currentToken;
+    },
+    async refreshToken(app: string) {
+      currentToken = await getToken(app);
+      console.log(`refreshed token:`, JSON.stringify(currentToken));
+      return currentToken;
+    },
+    has(app: string): boolean {
+      return connections.has(app);
+    },
+    get(app: string): WebSocket | undefined {
+      return connections.get(app);
+    },
+    set(app: string, ws: WebSocket) {
+      connections.set(app, ws);
+    },
+    remove(app: string) {
+      connections.delete(app);
+    },
+  };
+})();
 
 async function getConnection(app: string, key: string): Promise<WebSocket> {
-  const url = builRealtimeUrl(app);
-  // const token = await getToken(app);
-  const token = '***';
+  const url = buildRealtimeUrl(app);
 
-  if (connections.has(key)) {
-    return connections.get(key) as WebSocket;
+  if (connectionManager.has(key)) {
+    return connectionManager.get(key) as WebSocket;
   }
-  const ws = new WebSocket(url);
-  connections.set(key, ws);
+  let token = connectionManager.token();
+  if (!token) {
+    token = await connectionManager.refreshToken(app);
+  }
+  const ws = new WebSocket(`${url}?fal_jwt_token=${token}`);
+  // const ws = new WebSocket(url);
+  connectionManager.set(key, ws);
   return ws;
 }
 
@@ -140,7 +182,8 @@ export const realtimeImpl: RealtimeClient = {
     handler: RealtimeConnectionHandler<Output>
   ): RealtimeConnection<Input> {
     const {
-      clientOnly = false,
+      // if running on React in the server, set clientOnly to true by default
+      clientOnly = isReact() && !isBrowser(),
       connectionKey = crypto.randomUUID(),
       throttleInterval = 64,
       onError = noop,
@@ -164,13 +207,13 @@ export const realtimeImpl: RealtimeClient = {
         );
       } else {
         enqueueMessages.push(input);
-        connect();
+        reconnect();
       }
     };
     const send =
       throttleInterval > 0 ? throttle(_send, throttleInterval) : _send;
 
-    const connect = () => {
+    const reconnect = () => {
       if (ws && ws.readyState === WebSocket.OPEN) {
         return;
       }
@@ -184,7 +227,7 @@ export const realtimeImpl: RealtimeClient = {
             }
           };
           ws.onclose = (event) => {
-            connections.delete(connectionKey);
+            connectionManager.remove(connectionKey);
             if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
               console.log('ws onclose');
               onError(
@@ -198,6 +241,10 @@ export const realtimeImpl: RealtimeClient = {
           ws.onerror = (event) => {
             console.log('ws onerror');
             console.error(event);
+            // if error 401, refresh token and retry
+            // if error 403, refresh token and retry
+            // if any of those are failed again, call onError
+
             onError(new ApiError({ message: 'error', status: 0 }));
           };
           ws.onmessage = (event) => {

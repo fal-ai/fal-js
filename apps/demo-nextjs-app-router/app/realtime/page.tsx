@@ -14,9 +14,9 @@ const PROMPT = 'a moon in a starry night sky';
 export default function RealtimePage() {
   const [image, setImage] = useState<string | null>(null);
 
-  const { send } = fal.realtime.connect('110602490-lcm-plexed-sd15-i2i', {
-    clientOnly: true, // in ssr+csr mode, only run in csr
-    connectionKey: 'single-drawing', // reuse connection between render cycles
+  // const { send } = fal.realtime.connect('110602490-lcm-plexed-sd15-i2i', {
+  const { send } = fal.realtime.connect('110602490-shared-lcm-test', {
+    connectionKey: 'realtime-demo',
     onResult(result) {
       if (result.images && result.images[0]) {
         setImage(result.images[0].url);
@@ -26,7 +26,7 @@ export default function RealtimePage() {
 
   return (
     <div className="min-h-screen bg-neutral-900 text-neutral-50">
-      <main className="container  flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
+      <main className="container flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
         <h1 className="text-4xl font-mono mb-8 text-neutral-50">
           fal<code className="font-light text-pink-600">realtime</code>
         </h1>
@@ -41,8 +41,28 @@ export default function RealtimePage() {
                   prompt: PROMPT,
                   image_url: imageData,
                   sync_mode: true,
-                  seed: 612023,
+                  seed: 6252023,
                 });
+                // WARNING this might spam the server if you drag shapes in the canvas
+                // fal
+                //   .run('110602490-shared-lcm-test', {
+                //   // .run('110602490-lcm-plexed-sd15-i2i', {
+                //     autoUpload: false,
+                //     input: {
+                //       prompt: PROMPT,
+                //       image_url: imageData,
+                //       sync_mode: true,
+                //       seed: 612023,
+                //     },
+                //   })
+                //   .then((result: any) => {
+                //     if (result.images && result.images[0]) {
+                //       setImage(result.images[0].url);
+                //     }
+                //   })
+                //   .catch((err: any) => {
+                //     console.error(err);
+                //   });
               }}
             />
           </div>

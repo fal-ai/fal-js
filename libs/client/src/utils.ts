@@ -42,3 +42,25 @@ export function throttle<T extends (...args: any[]) => any>(
     }
   };
 }
+
+let isRunningInReact: boolean;
+
+/**
+ * Not really the most optimal way to detect if we're running in React,
+ * but the idea here is that we can support multiple rendering engines
+ * (starting with React), with all their peculiarities, without having
+ * to add a dependency or creating custom integrations (e.g. custom hooks).
+ *
+ * Yes, a bit of magic to make things works out-of-the-box.
+ * @returns `true` if running in React, `false` otherwise.
+ */
+export function isReact() {
+  if (isRunningInReact === undefined) {
+    const stack = new Error().stack;
+    isRunningInReact =
+      stack &&
+      (stack.includes('node_modules/react-dom/') ||
+        stack.includes('node_modules/next/'));
+  }
+  return isRunningInReact;
+}
