@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react';
 // @snippet:start(client.config)
 fal.config({
   requestMiddleware: fal.withProxy({
-    targetUrl: '/api/_fal/proxy', // the built-int nextjs proxy
-    // targetUrl: 'http://localhost:3333/api/_fal/proxy', // or your own external proxy
+    targetUrl: '/api/fal/proxy', // the built-int nextjs proxy
+    // targetUrl: 'http://localhost:3333/api/fal/proxy', // or your own external proxy
   }),
 });
 // @snippet:end

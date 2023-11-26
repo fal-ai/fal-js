@@ -1,6 +1,6 @@
 export const TARGET_URL_HEADER = 'x-fal-target-url';
 
-export const DEFAULT_PROXY_ROUTE = '/api/_fal/proxy';
+export const DEFAULT_PROXY_ROUTE = '/api/fal/proxy';
 
 const FAL_KEY = process.env.FAL_KEY || process.env.NEXT_PUBLIC_FAL_KEY;
 const FAL_KEY_ID = process.env.FAL_KEY_ID || process.env.NEXT_PUBLIC_FAL_KEY_ID;
@@ -51,7 +51,7 @@ function getFalKey(): string | undefined {
   return undefined;
 }
 
-const EXCLUDED_HEADERS = ['content-length'];
+const EXCLUDED_HEADERS = ['content-length', 'content-encoding'];
 
 /**
  * A request handler that proxies the request to the fal-serverless

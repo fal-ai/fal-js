@@ -17,10 +17,7 @@ export const handler: RequestHandler = async (request, response, next) => {
   await handleRequest({
     id: 'express',
     method: request.method,
-    respondWith: (status, data) =>
-      typeof data === 'string'
-        ? response.status(status).json({ detail: data })
-        : response.status(status).json(data),
+    respondWith: (status, data) => response.status(status).json(data),
     getHeaders: () => request.headers,
     getHeader: (name) => request.headers[name],
     sendHeader: (name, value) => response.setHeader(name, value),
