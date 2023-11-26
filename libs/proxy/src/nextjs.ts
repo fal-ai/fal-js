@@ -19,10 +19,7 @@ export const handler: NextApiHandler = async (request, response) => {
   return handleRequest({
     id: 'nextjs-page-router',
     method: request.method || 'POST',
-    respondWith: (status, data) =>
-      typeof data === 'string'
-        ? response.status(status).json({ detail: data })
-        : response.status(status).json(data),
+    respondWith: (status, data) => response.status(status).json(data),
     getHeaders: () => request.headers,
     getHeader: (name) => request.headers[name],
     sendHeader: (name, value) => response.setHeader(name, value),
@@ -53,7 +50,7 @@ async function routeHandler(request: NextRequest) {
     id: 'nextjs-app-router',
     method: request.method,
     respondWith: (status, data) =>
-      NextResponse.json(typeof data === 'string' ? { detail: data } : data, {
+      NextResponse.json(data, {
         status,
         headers: responseHeaders,
       }),
