@@ -55,7 +55,7 @@ For example, if you are using Next.js, you can:
    ```sh
    npm install --save @fal-ai/serverless-proxy
    ```
-2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/\_fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-nextjs-app/pages/api/_fal/proxy.ts)
+2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/\fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-nextjs-app/pages/api/fal/proxy.ts)
    ```ts
    export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
    ```
