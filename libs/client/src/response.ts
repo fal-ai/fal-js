@@ -56,7 +56,7 @@ export async function defaultResponseHandler<Output>(
   response: Response
 ): Promise<Output> {
   const { status, statusText } = response;
-  const contentType = response.headers.get('Content-Type') ?? "";
+  const contentType = response.headers.get('Content-Type') ?? '';
   if (!response.ok) {
     if (contentType.includes('application/json')) {
       const body = await response.json();

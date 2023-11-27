@@ -113,7 +113,7 @@ export default function WhisperDemo() {
       const result = await fal.subscribe('110602490-whisper', {
         input: {
           file_name: 'recording.wav',
-          url: audioFile,
+          audio_url: audioFile,
         },
         pollInterval: 1000,
         logs: true,
@@ -128,7 +128,6 @@ export default function WhisperDemo() {
         },
       });
       setResult(result);
-      console.log(result);
     } catch (error: any) {
       setError(error);
     } finally {

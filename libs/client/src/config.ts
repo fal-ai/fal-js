@@ -1,4 +1,8 @@
-import type { RequestMiddleware } from './middleware';
+import {
+  withProxy,
+  type RequestMiddleware,
+  withMiddleware,
+} from './middleware';
 import type { ResponseHandler } from './response';
 import { defaultResponseHandler } from './response';
 
@@ -7,6 +11,7 @@ export type CredentialsResolver = () => string | undefined;
 export type Config = {
   credentials?: undefined | string | CredentialsResolver;
   host?: string;
+  proxyUrl?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
 };
@@ -21,7 +26,7 @@ export type RequiredConfig = Required<Config>;
  */
 function hasEnvVariables(): boolean {
   return (
-    process &&
+    typeof process !== 'undefined' &&
     process.env &&
     (typeof process.env.FAL_KEY !== 'undefined' ||
       (typeof process.env.FAL_KEY_ID !== 'undefined' &&
@@ -49,7 +54,7 @@ export const credentialsFromEnv: CredentialsResolver = () => {
  */
 function getDefaultHost(): string {
   const host = 'gateway.alpha.fal.ai';
-  if (process && process.env) {
+  if (typeof process !== 'undefined' && process.env) {
     return process.env.FAL_HOST || host;
   }
   return host;
@@ -71,6 +76,15 @@ let configuration: RequiredConfig;
  */
 export function config(config: Config) {
   configuration = { ...DEFAULT_CONFIG, ...config } as RequiredConfig;
+  if (config.proxyUrl) {
+    configuration = {
+      ...configuration,
+      requestMiddleware: withMiddleware(
+        configuration.requestMiddleware,
+        withProxy({ targetUrl: config.proxyUrl })
+      ),
+    };
+  }
 }
 
 /**
@@ -84,4 +98,12 @@ export function getConfig(): RequiredConfig {
     return { ...DEFAULT_CONFIG } as RequiredConfig;
   }
   return configuration;
+}
+
+/**
+ * @returns the URL of the fal serverless rest api endpoint.
+ */
+export function getRestApiUrl(): string {
+  const { host } = getConfig();
+  return host.replace('gateway', 'rest');
 }
