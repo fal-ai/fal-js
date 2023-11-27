@@ -14,7 +14,6 @@ const PROMPT = 'a moon in a starry night sky';
 export default function RealtimePage() {
   const [image, setImage] = useState<string | null>(null);
 
-  // const { send } = fal.realtime.connect('110602490-lcm-plexed-sd15-i2i', {
   const { send } = fal.realtime.connect('110602490-shared-lcm-test', {
     connectionKey: 'realtime-demo',
     onResult(result) {
@@ -43,26 +42,6 @@ export default function RealtimePage() {
                   sync_mode: true,
                   seed: 6252023,
                 });
-                // WARNING this might spam the server if you drag shapes in the canvas
-                // fal
-                //   .run('110602490-shared-lcm-test', {
-                //   // .run('110602490-lcm-plexed-sd15-i2i', {
-                //     autoUpload: false,
-                //     input: {
-                //       prompt: PROMPT,
-                //       image_url: imageData,
-                //       sync_mode: true,
-                //       seed: 612023,
-                //     },
-                //   })
-                //   .then((result: any) => {
-                //     if (result.images && result.images[0]) {
-                //       setImage(result.images[0].url);
-                //     }
-                //   })
-                //   .catch((err: any) => {
-                //     console.error(err);
-                //   });
               }}
             />
           </div>
