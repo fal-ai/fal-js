@@ -86,16 +86,19 @@ function buildRealtimeUrl(app: string): string {
   return `wss://${app}.${host}/ws`;
 }
 
+const TOKEN_EXPIRATION_SECONDS = 120;
+
 /**
  * Get a token to connect to the realtime endpoint.
  */
 async function getToken(app: string): Promise<string> {
+  const [_, ...appAlias] = app.split('-');
   const token: string | object = await dispatchRequest<any, string>(
     'POST',
     `https://${getRestApiUrl()}/tokens/`,
     {
-      allowed_apps: [app],
-      token_expiration: 5,
+      allowed_apps: [appAlias.join('-')],
+      token_expiration: 120,
     }
   );
   // keep this in case the response was wrapped (old versions of the proxy do that)
@@ -116,28 +119,37 @@ const WebSocketErrorCodes = {
 
 const connectionManager = (() => {
   const connections = new Map<string, WebSocket>();
-  let currentToken: string | null = null;
+  const tokens = new Map<string, string>();
 
   return {
-    token(): string | null {
-      return currentToken;
+    token(app: string) {
+      return tokens.get(app);
+    },
+    expireToken(app: string) {
+      tokens.delete(app);
     },
     async refreshToken(app: string) {
-      currentToken = await getToken(app);
-      console.log(`refreshed token:`, JSON.stringify(currentToken));
-      return currentToken;
+      const token = await getToken(app);
+      tokens.set(app, token);
+      // Very simple token expiration mechanism.
+      // We should make it more robust in the future.
+      setTimeout(() => {
+        console.log('token expired');
+        tokens.delete(app);
+      }, TOKEN_EXPIRATION_SECONDS * 0.9 * 1000);
+      return token;
     },
-    has(app: string): boolean {
-      return connections.has(app);
+    has(connectionKey: string): boolean {
+      return connections.has(connectionKey);
     },
-    get(app: string): WebSocket | undefined {
-      return connections.get(app);
+    get(connectionKey: string): WebSocket | undefined {
+      return connections.get(connectionKey);
     },
-    set(app: string, ws: WebSocket) {
-      connections.set(app, ws);
+    set(connectionKey: string, ws: WebSocket) {
+      connections.set(connectionKey, ws);
     },
-    remove(app: string) {
-      connections.delete(app);
+    remove(connectionKey: string) {
+      connections.delete(connectionKey);
     },
   };
 })();
@@ -148,12 +160,11 @@ async function getConnection(app: string, key: string): Promise<WebSocket> {
   if (connectionManager.has(key)) {
     return connectionManager.get(key) as WebSocket;
   }
-  let token = connectionManager.token();
+  let token = connectionManager.token(app);
   if (!token) {
     token = await connectionManager.refreshToken(app);
   }
   const ws = new WebSocket(`${url}?fal_jwt_token=${token}`);
-  // const ws = new WebSocket(url);
   connectionManager.set(key, ws);
   return ws;
 }
@@ -195,6 +206,7 @@ export const realtimeImpl: RealtimeClient = {
 
     const enqueueMessages: Input[] = [];
 
+    let reconnecting = false;
     let ws: WebSocket | null = null;
     const _send = (input: Input) => {
       const requestId = crypto.randomUUID();
@@ -207,7 +219,10 @@ export const realtimeImpl: RealtimeClient = {
         );
       } else {
         enqueueMessages.push(input);
-        reconnect();
+        if (!reconnecting) {
+          reconnecting = true;
+          reconnect();
+        }
       }
     };
     const send =
@@ -221,15 +236,16 @@ export const realtimeImpl: RealtimeClient = {
         .then((connection) => {
           ws = connection;
           ws.onopen = () => {
+            reconnecting = false;
             if (enqueueMessages.length > 0) {
               enqueueMessages.forEach((input) => send(input));
               enqueueMessages.length = 0;
             }
           };
           ws.onclose = (event) => {
+            console.log('ws onclose', event.code, event.reason);
             connectionManager.remove(connectionKey);
             if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
-              console.log('ws onclose');
               onError(
                 new ApiError({
                   message: 'Error closing the connection',
@@ -237,20 +253,25 @@ export const realtimeImpl: RealtimeClient = {
                 })
               );
             }
+            ws = null;
           };
           ws.onerror = (event) => {
+            // TODO handle errors once server specify them
             console.log('ws onerror');
-            console.error(event);
             // if error 401, refresh token and retry
             // if error 403, refresh token and retry
+            console.error(event);
+            connectionManager.expireToken(app);
+            connectionManager.remove(connectionKey);
+            ws = null;
             // if any of those are failed again, call onError
-
             onError(new ApiError({ message: 'error', status: 0 }));
           };
           ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             // Drop messages that are not related to the actual result.
             // In the future, we might want to handle other types of messages.
+            // TODO: specify the fal ws protocol format
             if (data.status !== 'error' && data.type !== 'x-fal-message') {
               onResult(data);
             }

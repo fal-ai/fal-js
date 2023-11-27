@@ -56,11 +56,7 @@ export async function defaultResponseHandler<Output>(
   response: Response
 ): Promise<Output> {
   const { status, statusText } = response;
-  console.log('responseHandler');
-  console.log(status, statusText);
   const contentType = response.headers.get('Content-Type') ?? '';
-  console.log(contentType);
-  console.log(response.ok);
   if (!response.ok) {
     if (contentType.includes('application/json')) {
       const body = await response.json();
@@ -74,7 +70,6 @@ export async function defaultResponseHandler<Output>(
     throw new ApiError({ message: `HTTP ${status}: ${statusText}`, status });
   }
   if (contentType.includes('application/json')) {
-    console.log('application/json');
     return response.json() as Promise<Output>;
   }
   if (contentType.includes('text/html')) {
