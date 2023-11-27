@@ -43,7 +43,7 @@ export function throttle<T extends (...args: any[]) => any>(
   };
 }
 
-let isRunningInReact: boolean;
+let isRunningInReact: boolean | undefined;
 
 /**
  * Not really the most optimal way to detect if we're running in React,
@@ -58,7 +58,7 @@ export function isReact() {
   if (isRunningInReact === undefined) {
     const stack = new Error().stack;
     isRunningInReact =
-      stack &&
+      !!stack &&
       (stack.includes('node_modules/react-dom/') ||
         stack.includes('node_modules/next/'));
   }
