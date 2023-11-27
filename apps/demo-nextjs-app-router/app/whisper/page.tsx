@@ -128,7 +128,6 @@ export default function WhisperDemo() {
         },
       });
       setResult(result);
-      console.log(result);
     } catch (error: any) {
       setError(error);
     } finally {

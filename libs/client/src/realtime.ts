@@ -134,7 +134,6 @@ const connectionManager = (() => {
       // Very simple token expiration mechanism.
       // We should make it more robust in the future.
       setTimeout(() => {
-        console.log('token expired');
         tokens.delete(app);
       }, TOKEN_EXPIRATION_SECONDS * 0.9 * 1000);
       return token;
@@ -243,13 +242,12 @@ export const realtimeImpl: RealtimeClient = {
             }
           };
           ws.onclose = (event) => {
-            console.log('ws onclose', event.code, event.reason);
             connectionManager.remove(connectionKey);
             if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
               onError(
                 new ApiError({
-                  message: 'Error closing the connection',
-                  status: 0,
+                  message: `Error closing the connection: ${event.reason}`,
+                  status: event.code,
                 })
               );
             }
@@ -257,15 +255,13 @@ export const realtimeImpl: RealtimeClient = {
           };
           ws.onerror = (event) => {
             // TODO handle errors once server specify them
-            console.log('ws onerror');
             // if error 401, refresh token and retry
             // if error 403, refresh token and retry
-            console.error(event);
             connectionManager.expireToken(app);
             connectionManager.remove(connectionKey);
             ws = null;
             // if any of those are failed again, call onError
-            onError(new ApiError({ message: 'error', status: 0 }));
+            onError(new ApiError({ message: 'Unknown error', status: 500 }));
           };
           ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -278,10 +274,8 @@ export const realtimeImpl: RealtimeClient = {
           };
         })
         .catch((error) => {
-          console.log('ws connection error');
-          console.error(error);
           onError(
-            new ApiError({ message: 'Error opening connection', status: 0 })
+            new ApiError({ message: 'Error opening connection', status: 500 })
           );
         });
     };
