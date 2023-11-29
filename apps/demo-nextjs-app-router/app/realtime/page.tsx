@@ -12,12 +12,11 @@ fal.config({
 const PROMPT = 'a moon in a starry night sky';
 
 export default function RealtimePage() {
-  // const [prompt, setPrompt] = useState(PROMPT);
-  // const [rerender, setRerender] = useState(0);
   const [image, setImage] = useState<string | null>(null);
 
   const { send } = fal.realtime.connect('110602490-lcm-sd15-i2i', {
     connectionKey: 'realtime-demo',
+    throttleInterval: 128,
     onResult(result) {
       console.log('onResult!!!', result);
       if (result.images && result.images[0]) {
@@ -25,18 +24,6 @@ export default function RealtimePage() {
       }
     },
   });
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setRerender((v) => v + 1);
-  //   }, 10);
-  // }, []);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setRerender((v) => v + 1);
-  //   }, 50);
-  // }, []);
 
   return (
     <div className="min-h-screen bg-neutral-900 text-neutral-50">

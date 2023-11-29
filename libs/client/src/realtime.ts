@@ -1,8 +1,151 @@
+import {
+  createMachine,
+  state,
+  transition,
+  interpret,
+  reduce,
+  ContextFunction,
+  guard,
+  immediate,
+  Service,
+  InterpretOnChangeFunction,
+} from 'robot3';
 import { getConfig, getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
 import { isReact, throttle } from './utils';
+
+// Define the context
+interface Context {
+  token?: string;
+  enqueuedMessage?: any;
+  websocket?: WebSocket;
+  error?: Error;
+}
+
+const initialState: ContextFunction<Context> = () => ({
+  enqueuedMessage: undefined,
+});
+
+type SendEvent = { type: 'send'; message: any };
+type AuthenticatedEvent = { type: 'authenticated'; token: string };
+type InitiateAuthEvent = { type: 'initiateAuth' };
+type UnauthorizedEvent = { type: 'unauthorized'; error: Error };
+type ConnectedEvent = { type: 'connected'; websocket: WebSocket };
+type ConnectionClosedEvent = {
+  type: 'connectionClosed';
+  code: number;
+  reason: string;
+};
+
+type Event =
+  | SendEvent
+  | AuthenticatedEvent
+  | InitiateAuthEvent
+  | UnauthorizedEvent
+  | ConnectedEvent
+  | ConnectionClosedEvent;
+
+function hasToken(context: Context): boolean {
+  return context.token !== undefined;
+}
+
+function noToken(context: Context): boolean {
+  return !hasToken(context);
+}
+
+function enqueueMessage(context: Context, event: SendEvent): Context {
+  return {
+    ...context,
+    enqueuedMessage: event.message,
+  };
+}
+
+function closeConnection(context: Context): Context {
+  if (context.websocket && context.websocket.readyState === WebSocket.OPEN) {
+    context.websocket.close();
+  }
+  return {
+    ...context,
+    websocket: undefined,
+  };
+}
+
+function sendMessage(context: Context, event: SendEvent): Context {
+  if (context.websocket && context.websocket.readyState === WebSocket.OPEN) {
+    context.websocket.send(JSON.stringify(event.message));
+    return {
+      ...context,
+      enqueuedMessage: undefined,
+    };
+  }
+  return enqueueMessage(context, event);
+}
+
+function expireToken(context: Context): Context {
+  return {
+    ...context,
+    token: undefined,
+  };
+}
+
+function setToken(context: Context, event: AuthenticatedEvent): Context {
+  return {
+    ...context,
+    token: event.token,
+  };
+}
+
+function connectionEstablished(
+  context: Context,
+  event: ConnectedEvent
+): Context {
+  return {
+    ...context,
+    websocket: event.websocket,
+  };
+}
+
+// State machine
+const connectionStateMachine = createMachine(
+  'idle',
+  {
+    idle: state(
+      transition('send', 'connecting', reduce(enqueueMessage)),
+      transition('expireToken', 'idle', reduce(expireToken))
+    ),
+    connecting: state(
+      transition('connecting', 'connecting'),
+      transition('connected', 'active', reduce(connectionEstablished)),
+      transition('connectionClosed', 'idle', reduce(closeConnection)),
+      transition('send', 'connecting', reduce(enqueueMessage)),
+
+      immediate('authRequired', guard(noToken))
+    ),
+    authRequired: state(
+      transition('initiateAuth', 'authInProgress'),
+      transition('send', 'authRequired', reduce(enqueueMessage))
+    ),
+    authInProgress: state(
+      transition('authenticated', 'connecting', reduce(setToken)),
+      transition(
+        'unauthorized',
+        'failed',
+        reduce(expireToken),
+        reduce(closeConnection)
+      ),
+      transition('send', 'authInProgress', reduce(enqueueMessage))
+    ),
+    active: state(
+      transition('send', 'active', reduce(sendMessage)),
+      transition('unauthorized', 'idle', reduce(expireToken)),
+      transition('connectionClosed', 'idle', reduce(closeConnection))
+    ),
+    failed: state(transition('send', 'failed')),
+  },
+  initialState
+);
 
 /**
  * A connection object that allows you to `send` request payloads to a
@@ -122,55 +265,18 @@ const WebSocketErrorCodes = {
   GOING_AWAY: 1001,
 };
 
-const connectionManager = (() => {
-  const connections = new Map<string, WebSocket>();
-  const tokens = new Map<string, string>();
+type ConnectionStateMachine = Service<typeof connectionStateMachine>;
 
-  return {
-    token(app: string) {
-      return tokens.get(app);
-    },
-    expireToken(app: string) {
-      tokens.delete(app);
-    },
-    async refreshToken(app: string) {
-      const token = await getToken(app);
-      tokens.set(app, token);
-      // Very simple token expiration mechanism.
-      // We should make it more robust in the future.
-      setTimeout(() => {
-        tokens.delete(app);
-      }, Math.round(TOKEN_EXPIRATION_SECONDS * 0.9 * 1000));
-      return token;
-    },
-    has(connectionKey: string): boolean {
-      return connections.has(connectionKey);
-    },
-    get(connectionKey: string): WebSocket | undefined {
-      return connections.get(connectionKey);
-    },
-    set(connectionKey: string, ws: WebSocket) {
-      connections.set(connectionKey, ws);
-    },
-    remove(connectionKey: string) {
-      connections.delete(connectionKey);
-    },
-  };
-})();
+type ConnectionOnChange = InterpretOnChangeFunction<
+  typeof connectionStateMachine
+>;
 
-async function getConnection(app: string, key: string): Promise<WebSocket> {
-  const url = buildRealtimeUrl(app);
-
-  if (connectionManager.has(key)) {
-    return connectionManager.get(key) as WebSocket;
+const connections = new Map<string, ConnectionStateMachine>();
+function reuseInterpreter(key: string, onChange: ConnectionOnChange) {
+  if (!connections.has(key)) {
+    connections.set(key, interpret(connectionStateMachine, onChange));
   }
-  let token = connectionManager.token(app);
-  if (!token) {
-    token = await connectionManager.refreshToken(app);
-  }
-  const ws = new WebSocket(`${url}?fal_jwt_token=${token}`);
-  connectionManager.set(key, ws);
-  return ws;
+  return connections.get(key) as ConnectionStateMachine;
 }
 
 const noop = () => {
@@ -204,54 +310,46 @@ export const realtimeImpl: RealtimeClient = {
       onError = noop,
       onResult,
     } = handler;
-    if (clientOnly && typeof window === 'undefined') {
+    if (clientOnly && !isBrowser()) {
       return NoOpConnection;
     }
 
-    const enqueueMessages: Input[] = [];
-
-    let reconnecting = false;
-    let ws: WebSocket | null = null;
-    const _send = (input: Input) => {
-      const requestId = crypto.randomUUID();
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            request_id: requestId,
-            ...input,
-          })
-        );
-      } else {
-        enqueueMessages.push(input);
-        if (!reconnecting) {
-          reconnect();
+    let previousState: string | undefined;
+    const stateMachine = reuseInterpreter(
+      connectionKey,
+      ({ context, machine, send }) => {
+        const { enqueuedMessage, token } = context;
+        if (machine.current === 'active' && enqueuedMessage) {
+          send({ type: 'send', message: enqueuedMessage });
         }
-      }
-    };
-    const send =
-      throttleInterval > 0 ? throttle(_send, throttleInterval) : _send;
-
-    const reconnect = () => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        reconnecting = false;
-        return;
-      }
-      if (reconnecting) {
-        return;
-      }
-      reconnecting = true;
-      getConnection(app, connectionKey)
-        .then((connection) => {
-          ws = connection;
+        if (
+          machine.current === 'authRequired' &&
+          token === undefined &&
+          previousState !== machine.current
+        ) {
+          send({ type: 'initiateAuth' });
+          getToken(app)
+            .then((token) => {
+              send({ type: 'authenticated', token });
+              const tokenExpirationTimeout = Math.round(
+                TOKEN_EXPIRATION_SECONDS * 0.9 * 1000
+              );
+              setTimeout(() => {
+                send({ type: 'expireToken' });
+              }, tokenExpirationTimeout);
+            })
+            .catch((error) => {
+              send({ type: 'unauthorized', error });
+            });
+        }
+        if (machine.current === 'connecting' && token !== undefined) {
+          const ws = new WebSocket(
+            `${buildRealtimeUrl(app)}?fal_jwt_token=${token}`
+          );
           ws.onopen = () => {
-            reconnecting = false;
-            if (enqueueMessages.length > 0) {
-              enqueueMessages.forEach((input) => send(input));
-              enqueueMessages.length = 0;
-            }
+            send({ type: 'connected', websocket: ws });
           };
           ws.onclose = (event) => {
-            connectionManager.remove(connectionKey);
             if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
               onError(
                 new ApiError({
@@ -260,7 +358,7 @@ export const realtimeImpl: RealtimeClient = {
                 })
               );
             }
-            ws = null;
+            send({ type: 'connectionClosed', code: event.code });
           };
           ws.onerror = (event) => {
             // TODO specify error protocol for identified errors
@@ -272,37 +370,33 @@ export const realtimeImpl: RealtimeClient = {
             // In the future, we might want to handle other types of messages.
             // TODO: specify the fal ws protocol format
             if (isUnauthorizedError(data)) {
-              connectionManager.expireToken(app);
-              connectionManager.remove(connectionKey);
-              connectionManager.expireToken(app);
-              ws = null;
+              send({ type: 'unauthorized', error: new Error('Unauthorized') });
               return;
             }
             if (data.status !== 'error' && data.type !== 'x-fal-message') {
               onResult(data);
             }
           };
-        })
-        .catch((error) => {
-          onError(
-            new ApiError({
-              message: `Error opening connection: ${error.message}`,
-              status: 500,
-            })
-          );
-        });
+        }
+        previousState = machine.current;
+      }
+    );
+
+    const sendMessage = (input: Input) => {
+      stateMachine.send({ type: 'send', message: input });
+    };
+    const send =
+      throttleInterval > 0
+        ? throttle(sendMessage, throttleInterval)
+        : sendMessage;
+
+    const close = () => {
+      stateMachine.send({ type: 'close' });
     };
 
     return {
       send,
-      close() {
-        if (ws && ws.readyState === WebSocket.CLOSED) {
-          ws.close(
-            WebSocketErrorCodes.GOING_AWAY,
-            'Client manually closed the connection.'
-          );
-        }
-      },
+      close,
     };
   },
 };
