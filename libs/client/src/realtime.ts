@@ -98,7 +98,7 @@ async function getToken(app: string): Promise<string> {
     `https://${getRestApiUrl()}/tokens/`,
     {
       allowed_apps: [appAlias.join('-')],
-      token_expiration: 40,
+      token_expiration: TOKEN_EXPIRATION_SECONDS,
     }
   );
   // keep this in case the response was wrapped (old versions of the proxy do that)
@@ -140,7 +140,7 @@ const connectionManager = (() => {
       // We should make it more robust in the future.
       setTimeout(() => {
         tokens.delete(app);
-      }, TOKEN_EXPIRATION_SECONDS * 0.9 * 1000);
+      }, Math.round(TOKEN_EXPIRATION_SECONDS * 0.9 * 1000));
       return token;
     },
     has(connectionKey: string): boolean {
