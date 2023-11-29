@@ -98,7 +98,7 @@ async function getToken(app: string): Promise<string> {
     `https://${getRestApiUrl()}/tokens/`,
     {
       allowed_apps: [appAlias.join('-')],
-      token_expiration: 120,
+      token_expiration: 40,
     }
   );
   // keep this in case the response was wrapped (old versions of the proxy do that)
@@ -107,6 +107,11 @@ async function getToken(app: string): Promise<string> {
     return token['detail'];
   }
   return token;
+}
+
+function isUnauthorizedError(message: any): boolean {
+  // TODO we need better protocol definition with error codes
+  return message['status'] === 'error' && message['error'] === 'Unauthorized';
 }
 
 /**
@@ -219,7 +224,6 @@ export const realtimeImpl: RealtimeClient = {
       } else {
         enqueueMessages.push(input);
         if (!reconnecting) {
-          reconnecting = true;
           reconnect();
         }
       }
@@ -229,8 +233,13 @@ export const realtimeImpl: RealtimeClient = {
 
     const reconnect = () => {
       if (ws && ws.readyState === WebSocket.OPEN) {
+        reconnecting = false;
         return;
       }
+      if (reconnecting) {
+        return;
+      }
+      reconnecting = true;
       getConnection(app, connectionKey)
         .then((connection) => {
           ws = connection;
@@ -254,13 +263,7 @@ export const realtimeImpl: RealtimeClient = {
             ws = null;
           };
           ws.onerror = (event) => {
-            // TODO handle errors once server specify them
-            // if error 401, refresh token and retry
-            // if error 403, refresh token and retry
-            connectionManager.expireToken(app);
-            connectionManager.remove(connectionKey);
-            ws = null;
-            // if any of those are failed again, call onError
+            // TODO specify error protocol for identified errors
             onError(new ApiError({ message: 'Unknown error', status: 500 }));
           };
           ws.onmessage = (event) => {
@@ -268,6 +271,13 @@ export const realtimeImpl: RealtimeClient = {
             // Drop messages that are not related to the actual result.
             // In the future, we might want to handle other types of messages.
             // TODO: specify the fal ws protocol format
+            if (isUnauthorizedError(data)) {
+              connectionManager.expireToken(app);
+              connectionManager.remove(connectionKey);
+              connectionManager.expireToken(app);
+              ws = null;
+              return;
+            }
             if (data.status !== 'error' && data.type !== 'x-fal-message') {
               onResult(data);
             }
@@ -275,7 +285,10 @@ export const realtimeImpl: RealtimeClient = {
         })
         .catch((error) => {
           onError(
-            new ApiError({ message: 'Error opening connection', status: 500 })
+            new ApiError({
+              message: `Error opening connection: ${error.message}`,
+              status: 500,
+            })
           );
         });
     };
