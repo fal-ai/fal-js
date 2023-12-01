@@ -19,13 +19,14 @@ export function isValidUrl(url: string) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
+  leading = false
 ): (...funcArgs: Parameters<T>) => ReturnType<T> | void {
   let lastFunc: NodeJS.Timeout | null;
   let lastRan: number;
 
   return (...args: Parameters<T>): ReturnType<T> | void => {
-    if (!lastRan) {
+    if (!lastRan && leading) {
       func(...args);
       lastRan = Date.now();
     } else {

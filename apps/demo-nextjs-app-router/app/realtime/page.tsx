@@ -2,8 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 import * as fal from '@fal-ai/serverless-client';
-import { DrawingCanvas } from '../../components/drawing';
 import { useState } from 'react';
+import { DrawingCanvas } from '../../components/drawing';
 
 fal.config({
   proxyUrl: '/api/fal/proxy',
@@ -18,7 +18,6 @@ export default function RealtimePage() {
     connectionKey: 'realtime-demo',
     throttleInterval: 128,
     onResult(result) {
-      console.log('onResult!!!', result);
       if (result.images && result.images[0]) {
         setImage(result.images[0].url);
       }

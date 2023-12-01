@@ -1,6 +1,6 @@
 import { getConfig } from './config';
-import { storageImpl } from './storage';
 import { dispatchRequest } from './request';
+import { storageImpl } from './storage';
 import { EnqueueResult, QueueStatus } from './types';
 import { isUUIDv4, isValidUrl } from './utils';
 

@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/serverless-client",
   "description": "The fal serverless JS/TS client",
-  "version": "0.7.0-alpha.0",
+  "version": "0.7.0-alpha.5",
   "license": "MIT",
   "repository": {
     "type": "git",

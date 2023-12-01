@@ -1,5 +1,5 @@
+import { NextResponse, type NextRequest } from 'next/server';
 import type { NextApiHandler } from 'next/types';
-import { type NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_PROXY_ROUTE, handleRequest } from './index';
 
 /**
