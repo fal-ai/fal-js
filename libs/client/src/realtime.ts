@@ -319,6 +319,24 @@ const NoOpConnection: RealtimeConnection<any> = {
   close: noop,
 };
 
+function isSuccessfulResult(data: any): boolean {
+  return (
+    data.status !== 'error' &&
+    data.type !== 'x-fal-message' &&
+    !isFalErrorResult(data)
+  );
+}
+
+type FalErrorResult = {
+  type: 'x-fal-error';
+  error: string;
+  reason: string;
+};
+
+function isFalErrorResult(data: any): data is FalErrorResult {
+  return data.type === 'x-fal-error';
+}
+
 /**
  * The default implementation of the realtime client.
  */
@@ -348,6 +366,8 @@ export const realtimeImpl: RealtimeClient = {
       onError: handler.onError,
       onResult: handler.onResult,
     });
+    const getCallbacks = () =>
+      connectionCallbacks.get(connectionKey) as RealtimeConnectionCallback;
     const stateMachine = reuseInterpreter(
       connectionKey,
       throttleInterval,
@@ -389,7 +409,7 @@ export const realtimeImpl: RealtimeClient = {
           };
           ws.onclose = (event) => {
             if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
-              const { onError = noop } = connectionCallbacks.get(connectionKey);
+              const { onError = noop } = getCallbacks();
               onError(
                 new ApiError({
                   message: `Error closing the connection: ${event.reason}`,
@@ -401,7 +421,7 @@ export const realtimeImpl: RealtimeClient = {
           };
           ws.onerror = (event) => {
             // TODO specify error protocol for identified errors
-            const { onError = noop } = connectionCallbacks.get(connectionKey);
+            const { onError = noop } = getCallbacks();
             onError(new ApiError({ message: 'Unknown error', status: 500 }));
           };
           ws.onmessage = (event) => {
@@ -413,9 +433,22 @@ export const realtimeImpl: RealtimeClient = {
               send({ type: 'unauthorized', error: new Error('Unauthorized') });
               return;
             }
-            if (data.status !== 'error' && data.type !== 'x-fal-message') {
-              const { onResult } = connectionCallbacks.get(connectionKey);
+            if (isSuccessfulResult(data)) {
+              const { onResult } = getCallbacks();
               onResult(data);
+              return;
+            }
+            if (isFalErrorResult(data)) {
+              const { onError = noop } = getCallbacks();
+              onError(
+                new ApiError({
+                  message: `${data.error}: ${data.reason}`,
+                  // TODO better error status code
+                  status: 400,
+                  body: data,
+                })
+              );
+              return;
             }
           };
         }
@@ -423,7 +456,7 @@ export const realtimeImpl: RealtimeClient = {
       }
     );
 
-    const send = (input: Input) => {
+    const send = (input: Input & Partial<WithRequestId>) => {
       // Use throttled send to avoid sending too many messages
       stateMachine.throttledSend({
         type: 'send',
