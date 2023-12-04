@@ -200,6 +200,15 @@ export interface RealtimeConnectionHandler<Output> {
   throttleInterval?: number;
 
   /**
+   * Configures the maximum amount of frames to store in memory before starting to drop
+   * old ones for in favor of the newer ones. It must be between `1` and `60`.
+   *
+   * The recommended is `2`. The default is `undefined` so it can be determined
+   * by the app (normally is set to the recommended setting).
+   */
+  maxBuffering?: number;
+
+  /**
    * Callback function that is called when a result is received.
    * @param result - The result of the request.
    */
@@ -226,9 +235,28 @@ export interface RealtimeClient {
   ): RealtimeConnection<Input>;
 }
 
-function buildRealtimeUrl(app: string): string {
+type RealtimeUrlParams = {
+  token: string;
+  maxBuffering?: number;
+};
+
+function buildRealtimeUrl(
+  app: string,
+  { token, maxBuffering }: RealtimeUrlParams
+): string {
   const { host } = getConfig();
-  return `wss://${app}.${host}/ws`;
+  if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
+    throw new Error('The `maxBuffering` must be between 1 and 60 (inclusive)');
+  }
+  const maxBufferingParam =
+    maxBuffering !== undefined
+      ? { max_buffering: maxBuffering.toFixed(0) }
+      : {};
+  const queryParams = new URLSearchParams({
+    fal_jwt_token: token,
+    ...maxBufferingParam,
+  });
+  return `wss://${app}.${host}/ws?${queryParams.toString()}`;
 }
 
 const TOKEN_EXPIRATION_SECONDS = 120;
@@ -349,6 +377,7 @@ export const realtimeImpl: RealtimeClient = {
       // if running on React in the server, set clientOnly to true by default
       clientOnly = isReact() && !isBrowser(),
       connectionKey = crypto.randomUUID(),
+      maxBuffering,
       throttleInterval = DEFAULT_THROTTLE_INTERVAL,
     } = handler;
     if (clientOnly && !isBrowser()) {
@@ -402,7 +431,7 @@ export const realtimeImpl: RealtimeClient = {
           token !== undefined
         ) {
           const ws = new WebSocket(
-            `${buildRealtimeUrl(app)}?fal_jwt_token=${token}`
+            buildRealtimeUrl(app, { token, maxBuffering })
           );
           ws.onopen = () => {
             send({ type: 'connected', websocket: ws });
