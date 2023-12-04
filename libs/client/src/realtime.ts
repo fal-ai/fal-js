@@ -248,14 +248,12 @@ function buildRealtimeUrl(
   if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
     throw new Error('The `maxBuffering` must be between 1 and 60 (inclusive)');
   }
-  const maxBufferingParam =
-    maxBuffering !== undefined
-      ? { max_buffering: maxBuffering.toFixed(0) }
-      : {};
   const queryParams = new URLSearchParams({
     fal_jwt_token: token,
-    ...maxBufferingParam,
   });
+  if (maxBuffering !== undefined) {
+    queryParams.set('max_buffering', maxBuffering.toFixed(0));
+  }
   return `wss://${app}.${host}/ws?${queryParams.toString()}`;
 }
 
