@@ -2,8 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 import * as fal from '@fal-ai/serverless-client';
-import { DrawingCanvas } from '../../components/drawing';
 import { useState } from 'react';
+import { DrawingCanvas } from '../../components/drawing';
 
 fal.config({
   proxyUrl: '/api/fal/proxy',
@@ -14,8 +14,9 @@ const PROMPT = 'a moon in a starry night sky';
 export default function RealtimePage() {
   const [image, setImage] = useState<string | null>(null);
 
-  const { send } = fal.realtime.connect('110602490-shared-lcm-test', {
+  const { send } = fal.realtime.connect('110602490-lcm-sd15-i2i', {
     connectionKey: 'realtime-demo',
+    throttleInterval: 128,
     onResult(result) {
       if (result.images && result.images[0]) {
         setImage(result.images[0].url);

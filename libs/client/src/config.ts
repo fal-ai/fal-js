@@ -1,7 +1,7 @@
 import {
+  withMiddleware,
   withProxy,
   type RequestMiddleware,
-  withMiddleware,
 } from './middleware';
 import type { ResponseHandler } from './response';
 import { defaultResponseHandler } from './response';
