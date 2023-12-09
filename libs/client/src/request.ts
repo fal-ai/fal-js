@@ -1,6 +1,10 @@
 import { getConfig } from './config';
 import { getUserAgent, isBrowser } from './runtime';
 
+const isCloudflareWorkers =
+  typeof navigator !== 'undefined' &&
+  navigator?.userAgent === 'Cloudflare-Workers';
+
 export async function dispatchRequest<Input, Output>(
   method: string,
   targetUrl: string,
@@ -37,7 +41,7 @@ export async function dispatchRequest<Input, Output>(
   const response = await fetch(url, {
     method,
     headers: requestHeaders,
-    mode: 'cors',
+    ...(!isCloudflareWorkers && { mode: 'cors' }),
     body:
       method.toLowerCase() !== 'get' && input
         ? JSON.stringify(input)
