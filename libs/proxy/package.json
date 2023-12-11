@@ -1,10 +1,10 @@
 {
   "name": "@fal-ai/serverless-proxy",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fal-ai/serverless-js.git",
+    "url": "https://github.com/fal-ai/fal-js.git",
     "directory": "libs/proxy"
   },
   "keywords": [
@@ -19,7 +19,8 @@
   "exports": {
     ".": "./src/index.js",
     "./express": "./src/express.js",
-    "./nextjs": "./src/nextjs.js"
+    "./nextjs": "./src/nextjs.js",
+    "./remix": "./src/remix.js"
   },
   "typesVersions": {
     "*": {
