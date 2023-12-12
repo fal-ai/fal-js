@@ -488,7 +488,7 @@ export const realtimeImpl: RealtimeClient = {
             }
             if (event.data instanceof Blob) {
               event.data.arrayBuffer().then((buffer) => {
-                const result = unpack(buffer as Buffer);
+                const result = unpack(new Uint8Array(buffer));
                 onResult(result);
               });
               return;
