@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { pack, unpack } from 'msgpackr';
 import {
   ContextFunction,
   createMachine,
@@ -75,7 +76,14 @@ function closeConnection(context: Context): Context {
 
 function sendMessage(context: Context, event: SendEvent): Context {
   if (context.websocket && context.websocket.readyState === WebSocket.OPEN) {
-    context.websocket.send(JSON.stringify(event.message));
+    if (event.message instanceof Uint8Array) {
+      context.websocket.send(event.message);
+    } else if (shouldSendBinary(event.message)) {
+      context.websocket.send(pack(event.message));
+    } else {
+      context.websocket.send(JSON.stringify(event.message));
+    }
+
     return {
       ...context,
       enqueuedMessage: undefined,
@@ -259,6 +267,16 @@ function buildRealtimeUrl(
 
 const TOKEN_EXPIRATION_SECONDS = 120;
 const DEFAULT_THROTTLE_INTERVAL = 128;
+
+function shouldSendBinary(message: any): boolean {
+  return Object.values(message).some(
+    (value) =>
+      value instanceof Buffer ||
+      value instanceof Blob ||
+      value instanceof ArrayBuffer ||
+      value instanceof Uint8Array
+  );
+}
 
 /**
  * Get a token to connect to the realtime endpoint.
@@ -452,7 +470,33 @@ export const realtimeImpl: RealtimeClient = {
             onError(new ApiError({ message: 'Unknown error', status: 500 }));
           };
           ws.onmessage = (event) => {
+            const { onResult } = getCallbacks();
+
+            // Handle binary messages as msgpack messages
+            if (event.data instanceof ArrayBuffer) {
+              const result = unpack(new Uint8Array(event.data));
+              onResult(result);
+              return;
+            }
+            if (
+              event.data instanceof Buffer ||
+              event.data instanceof Uint8Array
+            ) {
+              const result = unpack(event.data);
+              onResult(result);
+              return;
+            }
+            if (event.data instanceof Blob) {
+              event.data.arrayBuffer().then((buffer) => {
+                const result = unpack(buffer as Buffer);
+                onResult(result);
+              });
+              return;
+            }
+
+            // Otherwise handle strings as plain JSON messages
             const data = JSON.parse(event.data);
+
             // Drop messages that are not related to the actual result.
             // In the future, we might want to handle other types of messages.
             // TODO: specify the fal ws protocol format
@@ -461,7 +505,6 @@ export const realtimeImpl: RealtimeClient = {
               return;
             }
             if (isSuccessfulResult(data)) {
-              const { onResult } = getCallbacks();
               onResult(data);
               return;
             }
@@ -485,12 +528,18 @@ export const realtimeImpl: RealtimeClient = {
 
     const send = (input: Input & Partial<WithRequestId>) => {
       // Use throttled send to avoid sending too many messages
+
+      const message =
+        input instanceof Uint8Array
+          ? input
+          : {
+              ...input,
+              request_id: input['request_id'] ?? crypto.randomUUID(),
+            };
+
       stateMachine.throttledSend({
         type: 'send',
-        message: {
-          ...input,
-          request_id: input['request_id'] ?? crypto.randomUUID(),
-        },
+        message,
       });
     };
 
