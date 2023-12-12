@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { NextApiHandler } from 'next/types';
-import { DEFAULT_PROXY_ROUTE, handleRequest } from './index';
+import { DEFAULT_PROXY_ROUTE, fromHeaders, handleRequest } from './index';
 
 /**
  * The default Next API route for the fal.ai client proxy.
@@ -26,16 +26,6 @@ export const handler: NextApiHandler = async (request, response) => {
     getBody: async () => JSON.stringify(request.body),
   });
 };
-
-function fromHeaders(headers: Headers): Record<string, string | string[]> {
-  // TODO once Header.entries() is available, use that instead
-  // Object.fromEntries(headers.entries());
-  const result: Record<string, string | string[]> = {};
-  headers.forEach((value, key) => {
-    result[key] = value;
-  });
-  return result;
-}
 
 /**
  * The Next API route handler for the fal.ai client proxy on App Router apps.

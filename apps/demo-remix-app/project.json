@@ -1,0 +1,35 @@
+{
+  "name": "demo-remix-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/demo-remix-app",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/remix:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/demo-remix-app"
+      }
+    },
+    "serve": {
+      "executor": "@nx/remix:serve",
+      "options": {
+        "port": 4200
+      }
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "command": "remix-serve build",
+      "options": {
+        "cwd": "apps/demo-remix-app"
+      }
+    },
+    "typecheck": {
+      "command": "tsc",
+      "options": {
+        "cwd": "apps/demo-remix-app"
+      }
+    }
+  }
+}

@@ -120,3 +120,15 @@ export async function handleRequest<ResponseType>(
   const data = await res.text();
   return behavior.respondWith(res.status, data);
 }
+
+export function fromHeaders(
+  headers: Headers
+): Record<string, string | string[]> {
+  // TODO once Header.entries() is available, use that instead
+  // Object.fromEntries(headers.entries());
+  const result: Record<string, string | string[]> = {};
+  headers.forEach((value, key) => {
+    result[key] = value;
+  });
+  return result;
+}

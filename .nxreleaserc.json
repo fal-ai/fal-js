@@ -2,6 +2,6 @@
   "changelog": true,
   "npm": true,
   "github": true,
-  "repositoryUrl": "https://github.com/fal-ai/serverless-js",
+  "repositoryUrl": "https://github.com/fal-ai/fal-js",
   "branches": ["main"]
 }
