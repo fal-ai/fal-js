@@ -271,7 +271,6 @@ const DEFAULT_THROTTLE_INTERVAL = 128;
 function shouldSendBinary(message: any): boolean {
   return Object.values(message).some(
     (value) =>
-      value instanceof Buffer ||
       value instanceof Blob ||
       value instanceof ArrayBuffer ||
       value instanceof Uint8Array
@@ -478,10 +477,7 @@ export const realtimeImpl: RealtimeClient = {
               onResult(result);
               return;
             }
-            if (
-              event.data instanceof Buffer ||
-              event.data instanceof Uint8Array
-            ) {
+            if (event.data instanceof Uint8Array) {
               const result = unpack(event.data);
               onResult(result);
               return;
