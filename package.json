@@ -25,6 +25,7 @@
     ]
   },
   "dependencies": {
+    "@msgpack/msgpack": "^3.0.0-beta2",
     "@oclif/core": "^2.3.0",
     "@oclif/plugin-help": "^5.2.5",
     "axios": "^1.0.0",
@@ -40,7 +41,6 @@
     "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^2.0.6",
     "js-base64": "^3.7.5",
-    "msgpackr": "^1.10.0",
     "next": "^14.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -53,6 +53,7 @@
     "@commitlint/cli": "^17.0.0",
     "@commitlint/config-conventional": "^17.0.0",
     "@excalidraw/excalidraw": "^0.17.0",
+    "@inrupt/jest-jsdom-polyfills": "^3.0.1",
     "@nrwl/express": "16.10.0",
     "@nx/cypress": "16.10.0",
     "@nx/eslint-plugin": "16.10.0",
