@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { pack, unpack } from 'msgpackr';
+import { encode, decode } from '@msgpack/msgpack';
 import {
   ContextFunction,
   createMachine,
@@ -79,7 +79,7 @@ function sendMessage(context: Context, event: SendEvent): Context {
     if (event.message instanceof Uint8Array) {
       context.websocket.send(event.message);
     } else if (shouldSendBinary(event.message)) {
-      context.websocket.send(pack(event.message));
+      context.websocket.send(encode(event.message));
     } else {
       context.websocket.send(JSON.stringify(event.message));
     }
@@ -473,18 +473,18 @@ export const realtimeImpl: RealtimeClient = {
 
             // Handle binary messages as msgpack messages
             if (event.data instanceof ArrayBuffer) {
-              const result = unpack(new Uint8Array(event.data));
+              const result = decode(new Uint8Array(event.data));
               onResult(result);
               return;
             }
             if (event.data instanceof Uint8Array) {
-              const result = unpack(event.data);
+              const result = decode(event.data);
               onResult(result);
               return;
             }
             if (event.data instanceof Blob) {
               event.data.arrayBuffer().then((buffer) => {
-                const result = unpack(new Uint8Array(buffer));
+                const result = decode(new Uint8Array(buffer));
                 onResult(result);
               });
               return;
