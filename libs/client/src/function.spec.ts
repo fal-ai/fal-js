@@ -1,10 +1,10 @@
-import { randomUUID } from 'crypto';
+import uuid from 'uuid-random';
 import { getConfig } from './config';
 import { buildUrl } from './function';
 
 describe('The function test suite', () => {
   it('should build the URL with a function UUIDv4', () => {
-    const id = randomUUID();
+    const id = uuid();
     const url = buildUrl(`12345/${id}`);
     expect(url).toMatch(`trigger/12345/${id}`);
   });
