@@ -9,6 +9,8 @@ const FAL_KEY_SECRET =
 
 export type HeaderValue = string | string[] | undefined | null;
 
+const FAL_URL_REG_EXP = /(fal\.(run|ai))$/;
+
 /**
  * The proxy behavior that is passed to the proxy handler. This is a subset of
  * request objects that are used by different frameworks, like Express and NextJS.
@@ -69,7 +71,9 @@ export async function handleRequest<ResponseType>(
   if (!targetUrl) {
     return behavior.respondWith(400, `Missing the ${TARGET_URL_HEADER} header`);
   }
-  if (targetUrl.indexOf('fal.ai') === -1) {
+
+  const urlHost = new URL(targetUrl).host;
+  if (!FAL_URL_REG_EXP.test(urlHost)) {
     return behavior.respondWith(412, `Invalid ${TARGET_URL_HEADER} header`);
   }
 

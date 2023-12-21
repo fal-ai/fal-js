@@ -10,7 +10,6 @@ export type CredentialsResolver = () => string | undefined;
 
 export type Config = {
   credentials?: undefined | string | CredentialsResolver;
-  host?: string;
   proxyUrl?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
@@ -46,22 +45,7 @@ export const credentialsFromEnv: CredentialsResolver = () => {
   return `${process.env.FAL_KEY_ID}:${process.env.FAL_KEY_SECRET}`;
 };
 
-/**
- * Get the default host for the fal-serverless gateway endpoint.
- * @private
- * @returns the default host. Depending on the platform it can default to
- * the environment variable `FAL_HOST`.
- */
-function getDefaultHost(): string {
-  const host = 'gateway.alpha.fal.ai';
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env.FAL_HOST || host;
-  }
-  return host;
-}
-
 const DEFAULT_CONFIG: Partial<Config> = {
-  host: getDefaultHost(),
   credentials: credentialsFromEnv,
   requestMiddleware: (request) => Promise.resolve(request),
   responseHandler: defaultResponseHandler,
@@ -104,6 +88,5 @@ export function getConfig(): RequiredConfig {
  * @returns the URL of the fal serverless rest api endpoint.
  */
 export function getRestApiUrl(): string {
-  const { host } = getConfig();
-  return host.replace('gateway', 'rest');
+  return 'https://rest.alpha.fal.ai';
 }

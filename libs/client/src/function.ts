@@ -2,7 +2,7 @@ import { getConfig } from './config';
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
 import { EnqueueResult, QueueStatus } from './types';
-import { isUUIDv4, isValidUrl } from './utils';
+import { isLegacyAppId, isUUIDv4, isValidUrl } from './utils';
 
 /**
  * The function input and other configuration when running
@@ -49,7 +49,6 @@ export function buildUrl<Input>(
   id: string,
   options: RunOptions<Input> = {}
 ): string {
-  const { host } = getConfig();
   const method = (options.method ?? 'post').toLowerCase();
   const path = (options.path ?? '').replace(/^\//, '').replace(/\/{2,}/, '/');
   const input = options.input;
@@ -59,16 +58,22 @@ export function buildUrl<Input>(
   const queryParams = params ? `?${params.toString()}` : '';
   const parts = id.split('/');
 
-  // if a fal.ai url is passed, just use it
+  // if a fal url is passed, just use it
   if (isValidUrl(id)) {
     const url = id.endsWith('/') ? id : `${id}/`;
     return `${url}${path}${queryParams}`;
   }
 
+  // TODO remove this after some time, fal.run should be preferred
+  const host = 'gateway.alpha.fal.ai';
   if (parts.length === 2 && isUUIDv4(parts[1])) {
     return `https://${host}/trigger/${id}/${path}${queryParams}`;
   }
-  return `https://${id}.${host}/${path}${queryParams}`;
+  if (isLegacyAppId(id)) {
+    return `https://${id}.${host}/${path}${queryParams}`;
+  }
+
+  return `https://fal.run/${id}/${path}${queryParams}`;
 }
 
 /**

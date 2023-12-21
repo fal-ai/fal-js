@@ -7,10 +7,14 @@ export function isUUIDv4(id: string): boolean {
   );
 }
 
+export function isLegacyAppId(id: string): boolean {
+  return /^\d+-[a-zA-Z0-9-]+/.test(id);
+}
+
 export function isValidUrl(url: string) {
   try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.hostname.endsWith('fal.ai');
+    const { host } = new URL(url);
+    return /(fal\.(ai|run))$/.test(host);
   } catch (_) {
     return false;
   }

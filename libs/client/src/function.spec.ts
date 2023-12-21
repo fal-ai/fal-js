@@ -9,10 +9,15 @@ describe('The function test suite', () => {
     expect(url).toMatch(`trigger/12345/${id}`);
   });
 
-  it('should build the URL with a function alias', () => {
-    const { host } = getConfig();
+  it('should build the URL with a function user-id/app-alias', () => {
     const alias = '12345-some-alias';
     const url = buildUrl(alias);
-    expect(url).toMatch(`${alias}.${host}`);
+    expect(url).toMatch(`${alias}.gateway.alpha.fal.ai`);
+  });
+
+  it('should build the URL with a function username/app-alias', () => {
+    const alias = 'fal-ai/text-to-image';
+    const url = buildUrl(alias);
+    expect(url).toMatch(`fal.run/${alias}`);
   });
 });

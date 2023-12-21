@@ -16,7 +16,7 @@ import { getConfig, getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
-import { isReact, throttle } from './utils';
+import { isLegacyAppId, isReact, throttle } from './utils';
 
 // Define the context
 interface Context {
@@ -252,7 +252,6 @@ function buildRealtimeUrl(
   app: string,
   { token, maxBuffering }: RealtimeUrlParams
 ): string {
-  const { host } = getConfig();
   if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
     throw new Error('The `maxBuffering` must be between 1 and 60 (inclusive)');
   }
@@ -262,7 +261,10 @@ function buildRealtimeUrl(
   if (maxBuffering !== undefined) {
     queryParams.set('max_buffering', maxBuffering.toFixed(0));
   }
-  return `wss://${app}.${host}/ws?${queryParams.toString()}`;
+  if (isLegacyAppId(app)) {
+    return `wss://${app}.gateway.alpha.fal.ai/ws?${queryParams.toString()}`;
+  }
+  return `wss://fal.run/${app}/ws?${queryParams.toString()}`;
 }
 
 const TOKEN_EXPIRATION_SECONDS = 120;
