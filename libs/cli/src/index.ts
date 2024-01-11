@@ -13,7 +13,7 @@ import open from 'open';
 
 const program = new Command();
 const log = console.log;
-const repoUrl = 'git@github.com:dabit3/model-playground.git';
+const repoUrl = 'https://github.com/fal-ai/fal-nextjs-template.git';
 const green = chalk.green;
 const purple = chalk.hex('#6e40c9');
 
