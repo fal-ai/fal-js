@@ -121,7 +121,6 @@ async function main() {
       )}\n`
     );
   } catch (err) {
-    console.log('error;', err);
     log('\n');
     if (err.exitCode == 128) {
       log('Error: directory already exists.');
