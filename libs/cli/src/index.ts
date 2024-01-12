@@ -26,7 +26,7 @@ async function main() {
 
     program
       .name('Fal.ai App Generator')
-      .description('Full Stack React AI apps with Fal.ai.');
+      .description('Generate full stack AI apps integrated with Fal.ai.');
 
     program.parse(process.argv);
 
