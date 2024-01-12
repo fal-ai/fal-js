@@ -25,10 +25,8 @@ async function main() {
     const kebabRegez = /^([a-z]+)(-[a-z0-9]+)*$/;
 
     program
-      .name('React Native AI')
-      .description(
-        'Full Stack React Native Boilerplate for building streaming AI apps.'
-      );
+      .name('Fal.ai App Generator')
+      .description('Full Stack React AI apps with Fal.ai.');
 
     program.parse(process.argv);
 
