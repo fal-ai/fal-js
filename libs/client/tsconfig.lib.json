@@ -5,6 +5,7 @@
     "outDir": "../../dist/out-tsc",
     "inlineSources": true,
     "declaration": true,
+    "esModuleInterop": true,
     "allowJs": true,
     "checkJs": false,
     "types": ["node"]

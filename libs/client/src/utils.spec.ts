@@ -1,9 +1,9 @@
-import { randomUUID } from 'crypto';
+import uuid from 'uuid-random';
 import { isUUIDv4 } from './utils';
 
 describe('The utils test suite', () => {
   it('should match a valid v4 uuid', () => {
-    const id = randomUUID();
+    const id = uuid();
     expect(isUUIDv4(id)).toBe(true);
   });
 
