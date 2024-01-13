@@ -12,7 +12,7 @@ export function ensureAppIdFormat(id: string): string {
   if (parts.length === 2) {
     return id;
   }
-  const [, appOwner, appId] = /^([0-9]+)-([a-zA-Z0-9-]+)$/.exec(id);
+  const [, appOwner, appId] = /^([0-9]+)-([a-zA-Z0-9-]+)$/.exec(id) || [];
   if (appOwner && appId) {
     return `${appOwner}/${appId}`;
   }

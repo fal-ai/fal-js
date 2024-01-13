@@ -80,7 +80,7 @@ export function buildUrl<Input>(
 
   const appId = ensureAppIdFormat(id);
   const subdomain = options.subdomain ? `${options.subdomain}.` : '';
-  const url = `https://${subdomain}matteo.shark.fal.run/${appId}/${path}`;
+  const url = `https://${subdomain}fal.run/${appId}/${path}`;
   return `${url.replace(/\/$/, '')}${queryParams}`;
 }
 
