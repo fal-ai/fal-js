@@ -13,11 +13,11 @@ import {
   transition,
 } from 'robot3';
 import uuid from 'uuid-random';
-import { getConfig, getRestApiUrl } from './config';
+import { getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
-import { isLegacyAppId, isReact, throttle } from './utils';
+import { ensureAppIdFormat, isReact, throttle } from './utils';
 
 // Define the context
 interface Context {
@@ -262,10 +262,8 @@ function buildRealtimeUrl(
   if (maxBuffering !== undefined) {
     queryParams.set('max_buffering', maxBuffering.toFixed(0));
   }
-  if (isLegacyAppId(app)) {
-    return `wss://${app}.gateway.alpha.fal.ai/ws?${queryParams.toString()}`;
-  }
-  return `wss://fal.run/${app}/ws?${queryParams.toString()}`;
+  const appId = ensureAppIdFormat(app);
+  return `wss://fal.run/${appId}/ws?${queryParams.toString()}`;
 }
 
 const TOKEN_EXPIRATION_SECONDS = 120;
@@ -287,7 +285,7 @@ async function getToken(app: string): Promise<string> {
   const [_, ...appAlias] = app.split('-');
   const token: string | object = await dispatchRequest<any, string>(
     'POST',
-    `https://${getRestApiUrl()}/tokens/`,
+    `${getRestApiUrl()}/tokens/`,
     {
       allowed_apps: [appAlias.join('-')],
       token_expiration: TOKEN_EXPIRATION_SECONDS,

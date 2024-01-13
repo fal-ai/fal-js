@@ -7,8 +7,18 @@ export function isUUIDv4(id: string): boolean {
   );
 }
 
-export function isLegacyAppId(id: string): boolean {
-  return /^\d+-[a-zA-Z0-9-]+/.test(id);
+export function ensureAppIdFormat(id: string): string {
+  const parts = id.split('/');
+  if (parts.length === 2) {
+    return id;
+  }
+  const [, appOwner, appId] = /^([0-9]+)-([a-zA-Z0-9-]+)$/.exec(id);
+  if (appOwner && appId) {
+    return `${appOwner}/${appId}`;
+  }
+  throw new Error(
+    `Invalid app id: ${id}. Must be in the format <appOwner>/<appId>`
+  );
 }
 
 export function isValidUrl(url: string) {

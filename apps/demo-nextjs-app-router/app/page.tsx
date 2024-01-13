@@ -82,7 +82,7 @@ export default function Home() {
     const start = Date.now();
     try {
       const result: Result = await fal.subscribe(
-        '54285744-illusion-diffusion',
+        '54285744/illusion-diffusion',
         {
           input: {
             prompt,

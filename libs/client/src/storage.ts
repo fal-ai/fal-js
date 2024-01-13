@@ -75,7 +75,7 @@ async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
     'POST',
-    `https://${getRestApiUrl()}/storage/upload/initiate`,
+    `${getRestApiUrl()}/storage/upload/initiate`,
     {
       content_type: contentType,
       file_name: filename,
