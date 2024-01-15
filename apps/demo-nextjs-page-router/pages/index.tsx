@@ -74,7 +74,7 @@ export function Index() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('110602490/lora', {
+      const result: Result = await fal.subscribe('fal-ai/lora', {
         input: {
           prompt,
           model_name: 'stabilityai/stable-diffusion-xl-base-1.0',

@@ -110,7 +110,7 @@ export default function WhisperDemo() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result = await fal.subscribe('110602490-whisper', {
+      const result = await fal.subscribe('fal-ai/whisper', {
         input: {
           file_name: 'recording.wav',
           audio_url: audioFile,

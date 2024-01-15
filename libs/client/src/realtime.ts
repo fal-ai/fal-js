@@ -282,12 +282,12 @@ function shouldSendBinary(message: any): boolean {
  * Get a token to connect to the realtime endpoint.
  */
 async function getToken(app: string): Promise<string> {
-  const [_, ...appAlias] = app.split('-');
+  const [, appAlias] = ensureAppIdFormat(app).split('/');
   const token: string | object = await dispatchRequest<any, string>(
     'POST',
     `${getRestApiUrl()}/tokens/`,
     {
-      allowed_apps: [appAlias.join('-')],
+      allowed_apps: [appAlias],
       token_expiration: TOKEN_EXPIRATION_SECONDS,
     }
   );
