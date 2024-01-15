@@ -74,13 +74,13 @@ export function Index() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('110602490-lora', {
+      const result: Result = await fal.subscribe('fal-ai/lora', {
         input: {
           prompt,
           model_name: 'stabilityai/stable-diffusion-xl-base-1.0',
           image_size: 'square_hd',
         },
-        pollInterval: 5000, // Default is 1000 (every 1s)
+        pollInterval: 3000, // Default is 1000 (every 1s)
         logs: true,
         onQueueUpdate(update) {
           setElapsedTime(Date.now() - start);

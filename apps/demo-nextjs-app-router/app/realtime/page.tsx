@@ -14,7 +14,7 @@ const PROMPT = 'a moon in a starry night sky';
 export default function RealtimePage() {
   const [image, setImage] = useState<string | null>(null);
 
-  const { send } = fal.realtime.connect('110602490-lcm-sd15-i2i', {
+  const { send } = fal.realtime.connect('fal-ai/lcm-sd15-i2i', {
     connectionKey: 'realtime-demo',
     throttleInterval: 128,
     onResult(result) {

@@ -13,11 +13,11 @@ import {
   transition,
 } from 'robot3';
 import uuid from 'uuid-random';
-import { getConfig, getRestApiUrl } from './config';
+import { getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
-import { isReact, throttle } from './utils';
+import { ensureAppIdFormat, isReact, throttle } from './utils';
 
 // Define the context
 interface Context {
@@ -253,7 +253,6 @@ function buildRealtimeUrl(
   app: string,
   { token, maxBuffering }: RealtimeUrlParams
 ): string {
-  const { host } = getConfig();
   if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
     throw new Error('The `maxBuffering` must be between 1 and 60 (inclusive)');
   }
@@ -263,7 +262,8 @@ function buildRealtimeUrl(
   if (maxBuffering !== undefined) {
     queryParams.set('max_buffering', maxBuffering.toFixed(0));
   }
-  return `wss://${app}.${host}/ws?${queryParams.toString()}`;
+  const appId = ensureAppIdFormat(app);
+  return `wss://fal.run/${appId}/ws?${queryParams.toString()}`;
 }
 
 const TOKEN_EXPIRATION_SECONDS = 120;
@@ -282,12 +282,12 @@ function shouldSendBinary(message: any): boolean {
  * Get a token to connect to the realtime endpoint.
  */
 async function getToken(app: string): Promise<string> {
-  const [_, ...appAlias] = app.split('-');
+  const [, appAlias] = ensureAppIdFormat(app).split('/');
   const token: string | object = await dispatchRequest<any, string>(
     'POST',
-    `https://${getRestApiUrl()}/tokens/`,
+    `${getRestApiUrl()}/tokens/`,
     {
-      allowed_apps: [appAlias.join('-')],
+      allowed_apps: [appAlias],
       token_expiration: TOKEN_EXPIRATION_SECONDS,
     }
   );

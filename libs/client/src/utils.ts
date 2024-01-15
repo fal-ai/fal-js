@@ -7,10 +7,24 @@ export function isUUIDv4(id: string): boolean {
   );
 }
 
+export function ensureAppIdFormat(id: string): string {
+  const parts = id.split('/');
+  if (parts.length === 2) {
+    return id;
+  }
+  const [, appOwner, appId] = /^([0-9]+)-([a-zA-Z0-9-]+)$/.exec(id) || [];
+  if (appOwner && appId) {
+    return `${appOwner}/${appId}`;
+  }
+  throw new Error(
+    `Invalid app id: ${id}. Must be in the format <appOwner>/<appId>`
+  );
+}
+
 export function isValidUrl(url: string) {
   try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.hostname.endsWith('fal.ai');
+    const { host } = new URL(url);
+    return /(fal\.(ai|run))$/.test(host);
   } catch (_) {
     return false;
   }

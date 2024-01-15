@@ -1,8 +1,7 @@
-import { getConfig } from './config';
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
 import { EnqueueResult, QueueStatus } from './types';
-import { isUUIDv4, isValidUrl } from './utils';
+import { ensureAppIdFormat, isUUIDv4, isValidUrl } from './utils';
 
 /**
  * The function input and other configuration when running
@@ -36,6 +35,15 @@ type RunOptions<Input> = {
   readonly autoUpload?: boolean;
 };
 
+type ExtraOptions = {
+  /**
+   * If `true`, the function will use the queue to run the function
+   * asynchronously and return the result in a separate call. This
+   * influences how the URL is built.
+   */
+  readonly subdomain?: string;
+};
+
 /**
  * Builds the final url to run the function based on its `id` or alias and
  * a the options from `RunOptions<Input>`.
@@ -47,9 +55,8 @@ type RunOptions<Input> = {
  */
 export function buildUrl<Input>(
   id: string,
-  options: RunOptions<Input> = {}
+  options: RunOptions<Input> & ExtraOptions = {}
 ): string {
-  const { host } = getConfig();
   const method = (options.method ?? 'post').toLowerCase();
   const path = (options.path ?? '').replace(/^\//, '').replace(/\/{2,}/, '/');
   const input = options.input;
@@ -59,16 +66,37 @@ export function buildUrl<Input>(
   const queryParams = params ? `?${params.toString()}` : '';
   const parts = id.split('/');
 
-  // if a fal.ai url is passed, just use it
+  // if a fal url is passed, just use it
   if (isValidUrl(id)) {
     const url = id.endsWith('/') ? id : `${id}/`;
     return `${url}${path}${queryParams}`;
   }
 
+  // TODO remove this after some time, fal.run should be preferred
   if (parts.length === 2 && isUUIDv4(parts[1])) {
+    const host = 'gateway.shark.fal.ai';
     return `https://${host}/trigger/${id}/${path}${queryParams}`;
   }
-  return `https://${id}.${host}/${path}${queryParams}`;
+
+  const appId = ensureAppIdFormat(id);
+  const subdomain = options.subdomain ? `${options.subdomain}.` : '';
+  const url = `https://${subdomain}fal.run/${appId}/${path}`;
+  return `${url.replace(/\/$/, '')}${queryParams}`;
+}
+
+export async function send<Input, Output>(
+  id: string,
+  options: RunOptions<Input> & ExtraOptions = {}
+): Promise<Output> {
+  const input =
+    options.input && options.autoUpload !== false
+      ? await storageImpl.transformInput(options.input)
+      : options.input;
+  return dispatchRequest<Input, Output>(
+    options.method ?? 'post',
+    buildUrl(id, options),
+    input as Input
+  );
 }
 
 /**
@@ -81,15 +109,7 @@ export async function run<Input, Output>(
   id: string,
   options: RunOptions<Input> = {}
 ): Promise<Output> {
-  const input =
-    options.input && options.autoUpload !== false
-      ? await storageImpl.transformInput(options.input)
-      : options.input;
-  return dispatchRequest<Input, Output>(
-    options.method ?? 'post',
-    buildUrl(id, options),
-    input as Input
-  );
+  return send(id, options);
 }
 
 /**
@@ -252,19 +272,21 @@ export const queue: Queue = {
     const query = webhookUrl
       ? '?' + new URLSearchParams({ fal_webhook: webhookUrl }).toString()
       : '';
-    return run(id, {
+    return send(id, {
       ...runOptions,
+      subdomain: 'queue',
       method: 'post',
-      path: '/fal/queue/submit' + path + query,
+      path: path + query,
     });
   },
   async status(
     id: string,
     { requestId, logs = false }: QueueStatusOptions
   ): Promise<QueueStatus> {
-    return run(id, {
+    return send(id, {
+      subdomain: 'queue',
       method: 'get',
-      path: `/fal/queue/requests/${requestId}/status`,
+      path: `/requests/${requestId}/status`,
       input: {
         logs: logs ? '1' : '0',
       },
@@ -274,9 +296,10 @@ export const queue: Queue = {
     id: string,
     { requestId }: BaseQueueOptions
   ): Promise<Output> {
-    return run(id, {
+    return send(id, {
+      subdomain: 'queue',
       method: 'get',
-      path: `/fal/queue/requests/${requestId}/response`,
+      path: `/requests/${requestId}`,
     });
   },
   subscribe,
