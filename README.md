@@ -38,7 +38,7 @@ This client library is crafted as a lightweight layer atop platform standards li
 
 3. Retrieve your function id and execute it:
    ```ts
-   const result = await fal.run('my-function-id');
+   const result = await fal.run('user/app-alias');
    ```
 
 The result's type is contingent upon your Python function's output. Types in Python are mapped to their corresponding types in JavaScript.
