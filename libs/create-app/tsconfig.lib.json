@@ -11,10 +11,7 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-        "*": [
-            "node_modules/*",
-            "src/types/*"
-        ]
+      "*": ["node_modules/*", "src/types/*"]
     }
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
