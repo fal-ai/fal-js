@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-import chalk from 'chalk';
-import path from 'path';
-import fs from 'fs';
-import childProcess from 'child_process';
-import ora from 'ora';
-import select from '@inquirer/select';
 import { input } from '@inquirer/prompts';
+import select from '@inquirer/select';
+import chalk from 'chalk';
+import childProcess from 'child_process';
 import { Command } from 'commander';
 import { execa, execaCommand } from 'execa';
+import fs from 'fs';
 import open from 'open';
+import ora from 'ora';
+import path from 'path';
 
 const program = new Command();
 const log = console.log;
@@ -25,8 +25,8 @@ async function main() {
     const kebabRegez = /^([a-z]+)(-[a-z0-9]+)*$/;
 
     program
-      .name('Fal.ai App Generator')
-      .description('Generate full stack AI apps integrated with Fal.ai.');
+      .name('The fal.ai App Generator')
+      .description('Generate full stack AI apps integrated with fal.ai');
 
     program.parse(process.argv);
 
@@ -47,7 +47,7 @@ async function main() {
     }
 
     const hasFalEnv = await select({
-      message: 'Do you have a Fal.ai API key?',
+      message: 'Do you have a fal.ai API key?',
       choices: [
         {
           name: 'Yes',
@@ -66,10 +66,10 @@ async function main() {
 
     const fal_api_key = await input({ message: 'Fal AI API Key' });
 
-    let envs = `
+    const envs = `
     # environment, either PRODUCTION or DEVELOPMENT
     ENVIRONMENT="PRODUCTION"
-    
+
     # FAL AI API Key
     FAL_KEY="${fal_api_key}"
     `;

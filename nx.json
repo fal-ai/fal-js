@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "nx/presets/npm.json",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
@@ -50,5 +51,5 @@
       }
     }
   },
-  "defaultProject": "demo-nextjs-page-router"
+  "defaultProject": "demo-nextjs-app-router"
 }

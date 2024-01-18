@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { encode, decode } from '@msgpack/msgpack';
+import { decode, encode } from '@msgpack/msgpack';
 import {
   ContextFunction,
+  InterpretOnChangeFunction,
+  Service,
   createMachine,
   guard,
   immediate,
   interpret,
-  InterpretOnChangeFunction,
   reduce,
-  Service,
   state,
   transition,
 } from 'robot3';
