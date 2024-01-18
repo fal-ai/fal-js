@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@fal-ai/cli": ["libs/cli/src/index.ts"],
       "@fal-ai/serverless-client": ["libs/client/src/index.ts"],
       "@fal-ai/serverless-proxy": ["libs/proxy/src/index.ts"],
       "@fal-ai/serverless-proxy/express": ["libs/proxy/src/express.ts"],
