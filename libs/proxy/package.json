@@ -4,7 +4,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fal-ai/serverless-js.git",
+    "url": "https://github.com/fal-ai/fal-js.git",
     "directory": "libs/proxy"
   },
   "keywords": [
