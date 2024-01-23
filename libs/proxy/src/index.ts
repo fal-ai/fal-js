@@ -2,10 +2,9 @@ export const TARGET_URL_HEADER = 'x-fal-target-url';
 
 export const DEFAULT_PROXY_ROUTE = '/api/fal/proxy';
 
-const FAL_KEY = process.env.FAL_KEY || process.env.NEXT_PUBLIC_FAL_KEY;
-const FAL_KEY_ID = process.env.FAL_KEY_ID || process.env.NEXT_PUBLIC_FAL_KEY_ID;
-const FAL_KEY_SECRET =
-  process.env.FAL_KEY_SECRET || process.env.NEXT_PUBLIC_FAL_KEY_SECRET;
+const FAL_KEY = process.env.FAL_KEY;
+const FAL_KEY_ID = process.env.FAL_KEY_ID;
+const FAL_KEY_SECRET = process.env.FAL_KEY_SECRET;
 
 export type HeaderValue = string | string[] | undefined | null;
 
@@ -24,6 +23,7 @@ export interface ProxyBehavior<ResponseType> {
   getHeader(name: string): HeaderValue;
   sendHeader(name: string, value: string): void;
   getBody(): Promise<string | undefined>;
+  resolveApiKey?: () => Promise<string | undefined>;
 }
 
 /**
@@ -77,7 +77,9 @@ export async function handleRequest<ResponseType>(
     return behavior.respondWith(412, `Invalid ${TARGET_URL_HEADER} header`);
   }
 
-  const falKey = getFalKey();
+  const falKey = behavior.resolveApiKey
+    ? await behavior.resolveApiKey()
+    : getFalKey();
   if (!falKey) {
     return behavior.respondWith(401, 'Missing fal.ai credentials');
   }
