@@ -2,8 +2,8 @@
 
 ![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client&style=flat-square)
 ![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=proxy&style=flat-square)
-![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/serverless-js/build.yml?style=flat-square)
-![License](https://img.shields.io/github/license/fal-ai/serverless-js?style=flat-square)
+![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/fal-js/build.yml?style=flat-square)
+![License](https://img.shields.io/github/license/fal-ai/fal-js?style=flat-square)
 
 ## About the Project
 
@@ -55,7 +55,7 @@ For example, if you are using Next.js, you can:
    ```sh
    npm install --save @fal-ai/serverless-proxy
    ```
-2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/\fal/proxy.ts](https://github.com/fal-ai/serverless-js/blob/main/apps/demo-nextjs-app/pages/api/fal/proxy.ts)
+2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/fal/proxy.ts](https://github.com/fal-ai/fal-js/blob/main/apps/demo-nextjs-page-router/pages/api/fal/proxy.ts)
    ```ts
    export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
    ```
@@ -72,7 +72,7 @@ See [libs/proxy](./libs/proxy/) for more details.
 
 ### The example Next.js app
 
-You can find a minimal Next.js + fal application examples in [apps/demo-nextjs-page-router/](https://github.com/fal-ai/serverless-js/tree/main/apps/demo-nextjs-page-router).
+You can find a minimal Next.js + fal application examples in [apps/demo-nextjs-page-router/](https://github.com/fal-ai/fal-js/blob/main/apps/demo-nextjs-page-router).
 
 1. Run `npm install` on the repository root.
 2. Create a `.env.local` file and add your API Key as `FAL_KEY` environment variable (or export it any other way your prefer).
@@ -82,13 +82,13 @@ Check our [Next.js integration docs](https://fal.ai/docs/integrations/nextjs) fo
 
 ## Roadmap
 
-See the [open feature requests](https://github.com/fal-ai/serverless-js/labels/enhancement) for a list of proposed features and join the discussion.
+See the [open feature requests](https://github.com/fal-ai/fal-js/labels/enhancement) for a list of proposed features and join the discussion.
 
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-1. Make sure you read our [Code of Conduct](https://github.com/fal-ai/serverless-js/blob/main/CODE_OF_CONDUCT.md)
+1. Make sure you read our [Code of Conduct](https://github.com/fal-ai/fal-js/blob/main/CODE_OF_CONDUCT.md)
 2. Fork the project and clone your fork
 3. Setup the local environment with `npm install`
 4. Create a feature branch (`git checkout -b feature/add-cool-thing`) or a bugfix branch (`git checkout -b fix/smash-that-bug`)
@@ -96,8 +96,8 @@ Contributions are what make the open source community such an amazing place to b
 6. Push to the branch (`git push --set-upstream origin feature/add-cool-thing`)
 7. Open a Pull Request
 
-Check the [good first issue queue](https://github.com/fal-ai/serverless-js/labels/good+first+issue), your contribution will be welcome!
+Check the [good first issue queue](https://github.com/fal-ai/fal-js/labels/good+first+issue), your contribution will be welcome!
 
 ## License
 
-Distributed under the MIT License. See [LICENSE](https://github.com/fal-ai/serverless-js/blob/main/LICENSE) for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/fal-ai/fal-js/blob/main/LICENSE) for more information.
