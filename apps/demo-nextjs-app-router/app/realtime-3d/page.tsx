@@ -68,7 +68,8 @@ function ModelBox({ modelPath }: ModelBoxProps) {
     camera.position.set(0, 0, cameraDistance);
     camera.lookAt(model.position);
 
-    model.traverse((child) => {
+    // TODO proper typeing once cast to Mesh object is fixed
+    model.traverse((child: any) => {
       if (child.isMesh) {
         child.material = new MeshBasicMaterial({ color: '#bcbcbc' });
 
