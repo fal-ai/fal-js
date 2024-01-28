@@ -63,9 +63,7 @@ For example, if you are using Next.js, you can:
    ```ts
    import * as fal from '@fal-ai/serverless-client';
    fal.config({
-     requestMiddleware: fal.withProxy({
-       targetUrl: '/api/fal/proxy',
-     }),
+     proxyUrl: '/api/fal/proxy',
    });
    ```
 4. Make sure your server has `FAL_KEY` as environment variable with a valid API Key. That's it! Now your client calls will route through your server proxy, so your credentials are protected.

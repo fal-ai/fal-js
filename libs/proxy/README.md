@@ -68,9 +68,7 @@ Once you've set up the proxy, you can configure the client to use it:
 import * as fal from '@fal-ai/serverless-client';
 
 fal.config({
-  requestMiddleware: fal.withProxy({
-    targetUrl: '/api/fal/proxy', // or https://my.app.com/api/fal/proxy
-  }),
+  proxyUrl: '/api/fal/proxy', // or https://my.app.com/api/fal/proxy
 });
 ```
 
