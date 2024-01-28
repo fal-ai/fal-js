@@ -5,9 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 fal.config({
   // credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
-  requestMiddleware: fal.withProxy({
-    targetUrl: '/api/fal/proxy',
-  }),
+  proxyUrl: '/api/fal/proxy',
 });
 
 type ErrorProps = {
