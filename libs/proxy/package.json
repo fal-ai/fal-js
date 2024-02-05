@@ -1,6 +1,6 @@
 {
   "name": "@fal-ai/serverless-proxy",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -19,7 +19,8 @@
   "exports": {
     ".": "./src/index.js",
     "./express": "./src/express.js",
-    "./nextjs": "./src/nextjs.js"
+    "./nextjs": "./src/nextjs.js",
+    "./svelte": "./src/svelte.js"
   },
   "typesVersions": {
     "*": {
@@ -28,18 +29,25 @@
       ],
       "nextjs": [
         "src/nextjs.d.ts"
+      ],
+      "svelte": [
+        "src/svelte.d.ts"
       ]
     }
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "peerDependencies": {
+    "@sveltejs/kit": "^2.0.0",
     "express": "^4.0.0",
     "next": "13.4 - 14",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
   "peerDependenciesMeta": {
+    "@sveltejs/kit": {
+      "optional": true
+    },
     "express": {
       "optional": true
     },
