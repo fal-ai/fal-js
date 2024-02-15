@@ -117,6 +117,9 @@ export const storageImpl: StorageSupport = {
         const url = await storageImpl.upload(blob as Blob);
         return [key, url];
       }
+      if (value !== null && typeof value === 'object') {
+        return [key, await storageImpl.transformInput(value)];
+      }
       return [key, value] as KeyValuePair;
     });
     const results = await Promise.all(promises);
