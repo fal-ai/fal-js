@@ -42,6 +42,11 @@ type ExtraOptions = {
    * influences how the URL is built.
    */
   readonly subdomain?: string;
+
+  /**
+   * If set, the function will call provided baseUrl.
+   */
+  readonly baseUrl?: string;
 };
 
 /**
@@ -80,7 +85,8 @@ export function buildUrl<Input>(
 
   const appId = ensureAppIdFormat(id);
   const subdomain = options.subdomain ? `${options.subdomain}.` : '';
-  const url = `https://${subdomain}fal.run/${appId}/${path}`;
+  const baseUrl = options.baseUrl || "fal.run"
+  const url = `https://${subdomain}${baseUrl}/${appId}/${path}`;
   return `${url.replace(/\/$/, '')}${queryParams}`;
 }
 
