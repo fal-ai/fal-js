@@ -1,5 +1,6 @@
 import { getConfig, getRestApiUrl } from './config';
 import { dispatchRequest } from './request';
+import { isPlainObject } from './utils';
 
 /**
  * File support for the client. This interface establishes the contract for
@@ -116,6 +117,9 @@ export const storageImpl: StorageSupport = {
         }
         const url = await storageImpl.upload(blob as Blob);
         return [key, url];
+      }
+      if (isPlainObject(value)) {
+        return [key, await storageImpl.transformInput(value)];
       }
       return [key, value] as KeyValuePair;
     });
