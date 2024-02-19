@@ -1,4 +1,4 @@
-import { dispatchRequest } from './request';
+import { dispatchRequest, dispatchSSE } from './request';
 import { storageImpl } from './storage';
 import { EnqueueResult, QueueStatus } from './types';
 import { ensureAppIdFormat, isUUIDv4, isValidUrl } from './utils';
@@ -110,6 +110,23 @@ export async function run<Input, Output>(
   options: RunOptions<Input> = {}
 ): Promise<Output> {
   return send(id, options);
+}
+
+/**
+ * Listen for events from a fal function identified by its `id`.
+ *
+ * @param id the registered function revision id or alias.
+ * @returns the remote function output
+ */
+export async function listenForEvents<Input, Output>(
+  id: string,
+  options: RunOptions<Input> & ExtraOptions = {}
+): Promise<Output> {
+  const input =
+    options.input && options.autoUpload !== false
+      ? await storageImpl.transformInput(options.input)
+      : options.input;
+  return dispatchSSE<Input, Output>(buildUrl(id, options), input as Input);
 }
 
 /**
