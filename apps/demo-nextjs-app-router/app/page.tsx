@@ -79,27 +79,24 @@ export default function Home() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe(
-        '54285744/illusion-diffusion',
-        {
-          input: {
-            prompt,
-            image_url: imageFile,
-            image_size: 'square_hd',
-          },
-          pollInterval: 5000, // Default is 1000 (every 1s)
-          logs: true,
-          onQueueUpdate(update) {
-            setElapsedTime(Date.now() - start);
-            if (
-              update.status === 'IN_PROGRESS' ||
-              update.status === 'COMPLETED'
-            ) {
-              setLogs((update.logs || []).map((log) => log.message));
-            }
-          },
-        }
-      );
+      const result: Result = await fal.subscribe('fal-ai/illusion-diffusion', {
+        input: {
+          prompt,
+          image_url: imageFile,
+          image_size: 'square_hd',
+        },
+        pollInterval: 3000, // Default is 1000 (every 1s)
+        logs: true,
+        onQueueUpdate(update) {
+          setElapsedTime(Date.now() - start);
+          if (
+            update.status === 'IN_PROGRESS' ||
+            update.status === 'COMPLETED'
+          ) {
+            setLogs((update.logs || []).map((log) => log.message));
+          }
+        },
+      });
       setResult(result);
     } catch (error: any) {
       setError(error);

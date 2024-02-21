@@ -9,7 +9,7 @@ export function isUUIDv4(id: string): boolean {
 
 export function ensureAppIdFormat(id: string): string {
   const parts = id.split('/');
-  if (parts.length === 2) {
+  if (parts.length > 1) {
     return id;
   }
   const [, appOwner, appId] = /^([0-9]+)-([a-zA-Z0-9-]+)$/.exec(id) || [];

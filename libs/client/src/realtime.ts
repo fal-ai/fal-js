@@ -249,6 +249,17 @@ type RealtimeUrlParams = {
   maxBuffering?: number;
 };
 
+// This is a list of apps deployed before formal realtime support. Their URLs follow
+// a different pattern and will be kept here until we fully sunset them.
+const LEGACY_APPS = [
+  'lcm-sd15-i2i',
+  'lcm',
+  'sdxl-turbo-realtime',
+  'sd-turbo-real-time-high-fps-msgpack-a10g',
+  'lcm-plexed-sd15-i2i',
+  'sd-turbo-real-time-high-fps-msgpack',
+];
+
 function buildRealtimeUrl(
   app: string,
   { token, maxBuffering }: RealtimeUrlParams
@@ -263,7 +274,10 @@ function buildRealtimeUrl(
     queryParams.set('max_buffering', maxBuffering.toFixed(0));
   }
   const appId = ensureAppIdFormat(app);
-  return `wss://fal.run/${appId}/ws?${queryParams.toString()}`;
+  const [, appAlias] = ensureAppIdFormat(app).split('/');
+  const suffix =
+    LEGACY_APPS.includes(appAlias) || !app.includes('/') ? 'ws' : 'realtime';
+  return `wss://fal.run/${appId}/${suffix}?${queryParams.toString()}`;
 }
 
 const TOKEN_EXPIRATION_SECONDS = 120;

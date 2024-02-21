@@ -10,6 +10,7 @@ import { ensureAppIdFormat, isUUIDv4, isValidUrl } from './utils';
 type RunOptions<Input> = {
   /**
    * The path to the function, if any. Defaults to ``.
+   * @deprecated Pass the path as part of the app id itself, e.g. `fal-ai/sdxl/image-to-image`
    */
   readonly path?: string;
 
@@ -268,11 +269,12 @@ export const queue: Queue = {
     id: string,
     options: SubmitOptions<Input>
   ): Promise<EnqueueResult> {
+    const [appOwner, appAlias] = ensureAppIdFormat(id).split('/');
     const { webhookUrl, path = '', ...runOptions } = options;
     const query = webhookUrl
       ? '?' + new URLSearchParams({ fal_webhook: webhookUrl }).toString()
       : '';
-    return send(id, {
+    return send(`${appOwner}/${appAlias}`, {
       ...runOptions,
       subdomain: 'queue',
       method: 'post',
@@ -283,7 +285,8 @@ export const queue: Queue = {
     id: string,
     { requestId, logs = false }: QueueStatusOptions
   ): Promise<QueueStatus> {
-    return send(id, {
+    const [appOwner, appAlias] = ensureAppIdFormat(id).split('/');
+    return send(`${appOwner}/${appAlias}`, {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}/status`,
@@ -296,7 +299,8 @@ export const queue: Queue = {
     id: string,
     { requestId }: BaseQueueOptions
   ): Promise<Output> {
-    return send(id, {
+    const [appOwner, appAlias] = ensureAppIdFormat(id).split('/');
+    return send(`${appOwner}/${appAlias}`, {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}`,
