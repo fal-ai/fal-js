@@ -22,6 +22,11 @@ describe('The utils test suite', () => {
     expect(ensureAppIdFormat(id)).toBe(id);
   });
 
+  it('shoud match a current appOwner/appId/path format', () => {
+    const id = 'fal-ai/fast-sdxl/image-to-image';
+    expect(ensureAppIdFormat(id)).toBe(id);
+  });
+
   it('should throw on an invalid app id format', () => {
     const id = 'just-an-id';
     expect(() => ensureAppIdFormat(id)).toThrowError();

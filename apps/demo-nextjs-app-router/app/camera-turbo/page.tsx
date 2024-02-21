@@ -137,7 +137,7 @@ export default function WebcamPage() {
   const previewRef = useRef<HTMLCanvasElement | null>(null);
 
   const { send } = fal.realtime.connect<LCMInput, LCMOutput>(
-    'fal-ai/sd-turbo-real-time-high-fps-msgpack',
+    'fal-ai/sd-turbo-real-time-high-fps-msgpack-a10g',
     {
       connectionKey: 'camera-turbo-demo',
       // not throttling the client, handling throttling of the camera itself
