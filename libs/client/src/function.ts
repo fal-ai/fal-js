@@ -269,12 +269,11 @@ export const queue: Queue = {
     id: string,
     options: SubmitOptions<Input>
   ): Promise<EnqueueResult> {
-    const [appOwner, appAlias] = ensureAppIdFormat(id).split('/');
     const { webhookUrl, path = '', ...runOptions } = options;
     const query = webhookUrl
       ? '?' + new URLSearchParams({ fal_webhook: webhookUrl }).toString()
       : '';
-    return send(`${appOwner}/${appAlias}`, {
+    return send(id, {
       ...runOptions,
       subdomain: 'queue',
       method: 'post',
