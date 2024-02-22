@@ -1,6 +1,6 @@
 {
   "name": "@fal-ai/create-app",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "The fal app generator.",
   "type": "module",
   "license": "MIT",

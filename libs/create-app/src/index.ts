@@ -87,6 +87,9 @@ async function main() {
     fs.writeFileSync(`${appName}/.env.local`, envs);
 
     process.chdir(path.join(process.cwd(), appName));
+    await execa('rm', ['-rf', '.git']);
+    await execa('git', ['init']);
+
     spinner.text = '';
     let startCommand = '';
 
@@ -107,6 +110,9 @@ async function main() {
     }
 
     spinner.stop();
+    await execa('git', ['add', '.']);
+    await execa('git', ['commit', '-m', 'Initial commit']);
+
     process.chdir('../');
     log(
       `${green.bold('Success!')} Created ${purple.bold(
