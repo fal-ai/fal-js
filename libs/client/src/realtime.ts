@@ -520,6 +520,12 @@ export const realtimeImpl: RealtimeClient = {
               return;
             }
             if (isFalErrorResult(data)) {
+              if (data.error === 'TIMEOUT') {
+                // Timeout error messages just indicate that the connection hasn't
+                // received an incoming message for a while. We don't need to
+                // handle them as errors.
+                return;
+              }
               const { onError = noop } = getCallbacks();
               onError(
                 new ApiError({

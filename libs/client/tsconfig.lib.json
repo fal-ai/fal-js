@@ -6,6 +6,7 @@
     "inlineSources": true,
     "declaration": true,
     "esModuleInterop": true,
+    "importHelpers": false,
     "allowJs": true,
     "checkJs": false,
     "types": ["node"]
