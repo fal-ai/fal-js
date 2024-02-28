@@ -13,8 +13,7 @@ import {
   transition,
 } from 'robot3';
 import uuid from 'uuid-random';
-import { getRestApiUrl } from './config';
-import { dispatchRequest } from './request';
+import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from './auth';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
 import { ensureAppIdFormat, isReact, throttle } from './utils';
@@ -280,7 +279,6 @@ function buildRealtimeUrl(
   return `wss://fal.run/${appId}/${suffix}?${queryParams.toString()}`;
 }
 
-const TOKEN_EXPIRATION_SECONDS = 120;
 const DEFAULT_THROTTLE_INTERVAL = 128;
 
 function shouldSendBinary(message: any): boolean {
@@ -290,27 +288,6 @@ function shouldSendBinary(message: any): boolean {
       value instanceof ArrayBuffer ||
       value instanceof Uint8Array
   );
-}
-
-/**
- * Get a token to connect to the realtime endpoint.
- */
-async function getToken(app: string): Promise<string> {
-  const [, appAlias] = ensureAppIdFormat(app).split('/');
-  const token: string | object = await dispatchRequest<any, string>(
-    'POST',
-    `${getRestApiUrl()}/tokens/`,
-    {
-      allowed_apps: [appAlias],
-      token_expiration: TOKEN_EXPIRATION_SECONDS,
-    }
-  );
-  // keep this in case the response was wrapped (old versions of the proxy do that)
-  // should be safe to remove in the future
-  if (typeof token !== 'string' && token['detail']) {
-    return token['detail'];
-  }
-  return token;
 }
 
 function isUnauthorizedError(message: any): boolean {
@@ -441,7 +418,7 @@ export const realtimeImpl: RealtimeClient = {
           previousState !== machine.current
         ) {
           send({ type: 'initiateAuth' });
-          getToken(app)
+          getTemporaryAuthToken(app)
             .then((token) => {
               send({ type: 'authenticated', token });
               const tokenExpirationTimeout = Math.round(

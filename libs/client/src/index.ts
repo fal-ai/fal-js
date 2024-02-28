@@ -6,6 +6,7 @@ export { realtimeImpl as realtime } from './realtime';
 export { ApiError, ValidationError } from './response';
 export type { ResponseHandler } from './response';
 export { storageImpl as storage } from './storage';
+export { stream } from './streaming';
 export type {
   QueueStatus,
   ValidationErrorInfo,
