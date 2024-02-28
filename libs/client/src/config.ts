@@ -6,10 +6,16 @@ import {
 import type { ResponseHandler } from './response';
 import { defaultResponseHandler } from './response';
 
-export type CredentialsResolver = () => string | undefined;
+/**
+ * Represents the credentials for authentication.
+ * The credentials are in the format of "FAL_KEY_ID:FAL_KEY_SECRET".
+ */
+export type Credentials = `${string}:${string}`;
+
+export type CredentialsResolver = () => Credentials | undefined;
 
 export type Config = {
-  credentials?: undefined | string | CredentialsResolver;
+  credentials?: undefined | Credentials | CredentialsResolver;
   proxyUrl?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
@@ -57,6 +63,15 @@ let configuration: RequiredConfig;
  * Configures the fal serverless client.
  *
  * @param config the new configuration.
+ */
+/**
+ * Configures the fal serverless client.
+ *
+ * @param config - The new configuration. It is an object that can have the following properties:
+ * - credentials: The credentials for authentication. They are in the format of "FAL_KEY_ID:FAL_KEY_SECRET". It can also be a function that returns the credentials.
+ * - proxyUrl: The URL of the proxy server.
+ * - requestMiddleware: A function that can be used to modify the request before it is sent.
+ * - responseHandler: A function that can be used to handle the response.
  */
 export function config(config: Config) {
   configuration = { ...DEFAULT_CONFIG, ...config } as RequiredConfig;
