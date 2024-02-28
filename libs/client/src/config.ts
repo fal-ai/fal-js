@@ -39,13 +39,13 @@ function hasEnvVariables(): boolean {
   );
 }
 
-export const credentialsFromEnv: CredentialsResolver = () => {
+export const credentialsFromEnv: CredentialsResolver = (): Credentials => {
   if (!hasEnvVariables()) {
     return undefined;
   }
 
   if (typeof process.env.FAL_KEY !== 'undefined') {
-    return process.env.FAL_KEY;
+    return process.env.FAL_KEY as Credentials;
   }
 
   return `${process.env.FAL_KEY_ID}:${process.env.FAL_KEY_SECRET}`;
