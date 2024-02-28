@@ -25,8 +25,8 @@ class FalStream<Input, Output> {
   private buffer: Output[] = [];
 
   // local state
-  private currentData: Output;
-  private lastEventTimestamp: number;
+  private currentData: Output | undefined = undefined;
+  private lastEventTimestamp = 0;
   private streamClosed = false;
   private donePromise: Promise<Output>;
 
@@ -84,6 +84,18 @@ class FalStream<Input, Output> {
       return;
     }
 
+    const body = response.body;
+    if (!body) {
+      this.emit(
+        'error',
+        new ApiError({
+          message: 'Response body is empty.',
+          status: 400,
+          body: undefined,
+        })
+      );
+      return;
+    }
     const decoder = new TextDecoder('utf-8');
     const reader = response.body.getReader();
 
