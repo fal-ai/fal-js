@@ -62,11 +62,6 @@ let configuration: RequiredConfig;
 /**
  * Configures the fal serverless client.
  *
- * @param config the new configuration.
- */
-/**
- * Configures the fal serverless client.
- *
  * @param config - The new configuration. It is an object that can have the following properties:
  * - credentials: The credentials for authentication. They are in the format of "FAL_KEY_ID:FAL_KEY_SECRET". It can also be a function that returns the credentials.
  * - proxyUrl: The URL of the proxy server.
