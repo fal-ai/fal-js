@@ -47,6 +47,7 @@ export default function StreamingDemo() {
     for await (const partial of stream) {
       setAnswer(partial.output);
     }
+
     const result = await stream.done();
     setStreamStatus('done');
     setAnswer(result.output);
@@ -56,8 +57,8 @@ export default function StreamingDemo() {
     <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
       <main className="container dark:text-gray-50 text-gray-900 flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
         <h1 className="text-4xl font-bold mb-8">
-          Hello <code className="text-pink-600">fal</code> and{' '}
-          <code className="text-indigo-500">llm</code>
+          Hello <code className="text-pink-600">fal</code> +{' '}
+          <code className="text-indigo-500">streaming</code>
         </h1>
 
         <div className="flex flex-row space-x-2">

@@ -1,11 +1,28 @@
 import { createParser } from 'eventsource-parser';
 import { getTemporaryAuthToken } from './auth';
 import { buildUrl } from './function';
-import { ApiError } from './response';
+import { ApiError, defaultResponseHandler } from './response';
 import { storageImpl } from './storage';
 
+/**
+ * The stream API options. It requires the API input and also
+ * offers configuration options.
+ */
 type StreamOptions<Input> = {
+  /**
+   * The API input payload.
+   */
   input: Input;
+
+  /**
+   * The maximum time interval in milliseconds between stream chunks. Defaults to 15s.
+   */
+  timeout?: number;
+
+  /**
+   * Whether it should auto-upload File-like types to fal's storage
+   * or not.
+   */
   autoUpload?: boolean;
 };
 
@@ -15,10 +32,13 @@ type FalStreamEventType = 'message' | 'error' | 'done';
 
 type EventHandler = (event: any) => void;
 
+/**
+ * The class representing a streaming response. With t
+ */
 class FalStream<Input, Output> {
   // properties
   url: string;
-  input: Input;
+  options: StreamOptions<Input>;
 
   // support for event listeners
   private listeners: Map<FalStreamEventType, EventHandler[]> = new Map();
@@ -30,9 +50,9 @@ class FalStream<Input, Output> {
   private streamClosed = false;
   private donePromise: Promise<Output>;
 
-  constructor(url: string, input: Input) {
+  constructor(url: string, options: StreamOptions<Input>) {
     this.url = url;
-    this.input = input;
+    this.options = options;
     this.donePromise = new Promise<Output>((resolve, reject) => {
       if (this.streamClosed) {
         reject(
@@ -63,7 +83,7 @@ class FalStream<Input, Output> {
           accept: 'text/event-stream',
           'content-type': 'application/json',
         },
-        body: JSON.stringify(this.input),
+        body: JSON.stringify(this.options.input),
       });
       this.handleResponse(response);
     } catch (error) {
@@ -73,14 +93,13 @@ class FalStream<Input, Output> {
 
   private handleResponse = async (response: Response) => {
     if (!response.ok) {
-      this.emit(
-        'error',
-        new ApiError({
-          message: response.statusText,
-          status: response.status,
-          body: undefined,
-        })
-      );
+      try {
+        // we know the response failed, call the response handler
+        // so the exception gets converted to ApiError correctly
+        await defaultResponseHandler(response);
+      } catch (error) {
+        this.emit('error', error);
+      }
       return;
     }
 
@@ -114,11 +133,24 @@ class FalStream<Input, Output> {
       }
     });
 
+    const timeout = this.options.timeout ?? EVENT_STREAM_TIMEOUT;
+
     const readPartialResponse = async () => {
       const { value, done } = await reader.read();
       this.lastEventTimestamp = Date.now();
 
       parser.feed(decoder.decode(value));
+
+      if (Date.now() - this.lastEventTimestamp > timeout) {
+        this.emit(
+          'error',
+          new ApiError({
+            message:
+              'Event stream timed out after 15 seconds with no messages.',
+            status: 408,
+          })
+        );
+      }
 
       if (!done) {
         readPartialResponse().catch(this.handleError);
@@ -132,8 +164,14 @@ class FalStream<Input, Output> {
   };
 
   private handleError = (error: any) => {
-    // TODO convert error to ApiError
-    this.emit('error', error);
+    const apiError =
+      error instanceof ApiError
+        ? error
+        : new ApiError({
+            message: error.message ?? 'An unknown error occurred',
+            status: 500,
+          });
+    this.emit('error', apiError);
     return;
   };
 
@@ -162,32 +200,38 @@ class FalStream<Input, Output> {
         yield data;
       }
 
+      // the short timeout ensures the while loop doesn't block other
+      // frames getting executed concurrently
       await new Promise((resolve) => setTimeout(resolve, 16));
-
-      if (Date.now() - this.lastEventTimestamp > EVENT_STREAM_TIMEOUT) {
-        running = false;
-        this.emit(
-          'error',
-          new ApiError({
-            message:
-              'Event stream timed out after 15 seconds with no messages.',
-            status: 408,
-            body: undefined,
-          })
-        );
-      }
     }
   }
 
-  public done = async () => {
-    return this.donePromise;
-  };
+  /**
+   * Gets a reference to the `Promise` that indicates whether the streaming
+   * is done or not. Developers should always call this in their apps to ensure
+   * the request is over.
+   *
+   * An alternative to this, is to use `on('done')` in case your application
+   * architecture works best with event listeners.
+   *
+   * @returns the promise that resolves when the request is done.
+   */
+  public done = async () => this.donePromise;
 }
 
+/**
+ * Calls a fal app that supports streaming and provides a streaming-capable
+ * object as a result, that can be used to get partial results through either
+ * `AsyncIterator` or through an event listener.
+ *
+ * @param appId the app id, e.g. `fal-ai/llavav15-13b`.
+ * @param options the request options, including the input payload.
+ * @returns the `FalStream` instance.
+ */
 export async function stream<Input = Record<string, any>, Output = any>(
   appId: string,
   options: StreamOptions<Input>
-) {
+): Promise<FalStream<Input, Output>> {
   const token = await getTemporaryAuthToken(appId);
   const url = buildUrl(appId, { path: '/stream' });
 
@@ -200,5 +244,8 @@ export async function stream<Input = Record<string, any>, Output = any>(
     fal_jwt_token: token,
   });
 
-  return new FalStream<Input, Output>(`${url}?${queryParams}`, input as Input);
+  return new FalStream<Input, Output>(`${url}?${queryParams}`, {
+    ...options,
+    input: input as Input,
+  });
 }
