@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/serverless-client",
   "description": "The fal serverless JS/TS client",
-  "version": "0.8.6",
+  "version": "0.9.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   ],
   "dependencies": {
     "@msgpack/msgpack": "^3.0.0-beta2",
+    "eventsource-parser": "^1.1.2",
     "robot3": "^0.4.1",
     "uuid-random": "^1.3.2"
   },
