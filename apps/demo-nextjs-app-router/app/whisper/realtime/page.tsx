@@ -69,7 +69,7 @@ function useMediaRecorder({
           recorder.stop();
           recorder.stream.getTracks().forEach((track) => track.stop());
         }, maxDuration);
-        recorder.start(1000);
+        recorder.start(2000);
       } catch (error) {
         reject(error);
       }
@@ -100,10 +100,12 @@ export default function WhisperDemo() {
     },
   });
   const { record, stopRecording, isRecording } = useMediaRecorder({
-    onChunk: (chunk) => {
-      console.log('chunk', chunk);
+    onChunk: async (chunk) => {
+      const buffer = await chunk.arrayBuffer();
+      const uint8Array = new Uint8Array(buffer);
+      console.log('chunk', uint8Array);
       send({
-        content: chunk,
+        content: uint8Array,
       });
     },
   });
