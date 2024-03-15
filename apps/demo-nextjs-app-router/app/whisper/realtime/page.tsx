@@ -1,7 +1,7 @@
 'use client';
 
 import * as fal from '@fal-ai/serverless-client';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react'; // Add useRef here
 
 fal.config({
   // credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
@@ -29,53 +29,82 @@ function Error(props: ErrorProps) {
 type RecorderOptions = {
   maxDuration?: number;
   onChunk?: (chunk: Blob) => void;
+  sendInterval?: number; // Add this line
 };
 
 function useMediaRecorder({
-  maxDuration = 10000,
+  maxDuration = 20000,
   onChunk,
+  sendInterval = 1000, // Add this line
 }: RecorderOptions = {}) {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
+  const accumulatedChunks = useRef<BlobPart[]>([]); // Use a ref to accumulate chunks
 
-  const record = useCallback(async () => {
+  const sendAccumulatedData = useCallback(() => {
+    // Convert accumulated chunks to a single blob
+    const audioBlob = new Blob(accumulatedChunks.current, {
+      type: 'audio/wav',
+    });
+    // Optionally, here you can slice the Blob if you want to send data in smaller pieces
+    // For example: audioBlob.slice(startByte, endByte)
+    if (onChunk) {
+      onChunk(audioBlob);
+    }
+  }, [onChunk]);
+
+  const record = useCallback((): Promise<File> => {
     setIsRecording(true);
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const audioChunks: BlobPart[] = [];
-    const recorder = new MediaRecorder(stream);
-    setMediaRecorder(recorder);
-    return new Promise<File>((resolve, reject) => {
+    accumulatedChunks.current = []; // Reset accumulated chunks
+    return new Promise<File>(async (resolve, reject) => {
+      // Explicitly type the Promise here
       try {
-        recorder.addEventListener('dataavailable', (event) => {
-          if (onChunk) {
-            onChunk(event.data);
-          }
-          audioChunks.push(event.data);
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
         });
-        recorder.addEventListener('stop', async () => {
-          const fileOptions = { type: 'audio/wav' };
-          const audioBlob = new Blob(audioChunks, fileOptions);
+        const recorder = new MediaRecorder(stream);
+        setMediaRecorder(recorder);
+
+        recorder.addEventListener('dataavailable', (event) => {
+          accumulatedChunks.current.push(event.data);
+        });
+
+        recorder.addEventListener('stop', () => {
+          const audioBlob = new Blob(accumulatedChunks.current, {
+            type: 'audio/wav',
+          });
           const audioFile = new File(
             [audioBlob],
             `recording_${Date.now()}.wav`,
-            fileOptions
+            { type: 'audio/wav' }
           );
+
+          sendAccumulatedData(); // Ensure final data is sent
           setIsRecording(false);
-          resolve(audioFile);
+          resolve(audioFile); // Resolve the promise with the audio file
         });
+
+        recorder.start(1000); // Configure how often you get 'dataavailable' events
+
+        // Periodically send accumulated data
+        const intervalId = setInterval(() => {
+          sendAccumulatedData();
+        }, sendInterval);
+
         setTimeout(() => {
+          clearInterval(intervalId); // Stop the interval when recording stops
           recorder.stop();
           recorder.stream.getTracks().forEach((track) => track.stop());
         }, maxDuration);
-        recorder.start(2000);
       } catch (error) {
         reject(error);
       }
     });
-  }, [maxDuration]);
+  }, [maxDuration, sendAccumulatedData, sendInterval]);
 
+  // Stop recording logic remains the same
   const stopRecording = useCallback(() => {
     setIsRecording(false);
     mediaRecorder?.stop();
@@ -85,7 +114,14 @@ function useMediaRecorder({
   return { record, stopRecording, isRecording };
 }
 
+interface RealTimeOutput {
+  // Define the structure of your real-time output
+  // Example:
+  message: string;
+}
+
 export default function WhisperDemo() {
+  const [realTimeOutputs, setRealTimeOutputs] = useState<RealTimeOutput[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
@@ -97,18 +133,35 @@ export default function WhisperDemo() {
     throttleInterval: 128,
     onResult(result) {
       console.log('result', result);
+      handleNewOutput({ message: result.output });
     },
   });
+  const accumulatedChunksRef = useRef(new Uint8Array()); // To store accumulated chunks
+
   const { record, stopRecording, isRecording } = useMediaRecorder({
     onChunk: async (chunk) => {
       const buffer = await chunk.arrayBuffer();
-      const uint8Array = new Uint8Array(buffer);
-      console.log('chunk', uint8Array);
-      send({
-        content: uint8Array,
-      });
+      const newChunk = new Uint8Array(buffer);
+
+      // Accumulate chunks
+      const accumulatedChunks = new Uint8Array(
+        accumulatedChunksRef.current.length + newChunk.length
+      );
+      accumulatedChunks.set(accumulatedChunksRef.current, 0);
+      accumulatedChunks.set(newChunk, accumulatedChunksRef.current.length);
+      accumulatedChunksRef.current = accumulatedChunks;
+
+      console.log('Accumulated chunk', accumulatedChunks);
+      // Send the accumulated chunks using your `send` method
+      send({ content: accumulatedChunks });
     },
   });
+
+  const handleNewOutput = (newOutput: RealTimeOutput) => {
+    // Use `any` if you don't have a specific type
+    // This could be a transcription chunk, analysis result, etc.
+    setRealTimeOutputs((prevOutputs) => [...prevOutputs, newOutput]);
+  };
 
   const reset = () => {
     setLoading(false);
@@ -171,8 +224,8 @@ export default function WhisperDemo() {
                 if (isRecording) {
                   stopRecording();
                 } else {
-                  const recordedAudio = await record();
-                  setAudioFile(recordedAudio);
+                  const recordedAudioFile = await record();
+                  setAudioFile(recordedAudioFile);
                 }
               } catch (e: any) {
                 setError(e);
@@ -209,6 +262,17 @@ export default function WhisperDemo() {
 
         <Error error={error} />
 
+        {/* Real-Time Outputs Section */}
+        <div className="real-time-output-section">
+          <h2 className="text-2xl font-semibold my-4">Real-Time Outputs</h2>
+          <div className="output-container bg-gray-50 p-4 rounded-lg shadow">
+            {realTimeOutputs.map((output, index) => (
+              <p key={index}>{output.message}</p> // Ensure 'message' is the correct property
+            ))}
+          </div>
+        </div>
+
+        {/* JSON Result Section */}
         <div className="w-full flex flex-col space-y-4">
           <div className="space-y-2">
             <h3 className="text-xl font-light">JSON Result</h3>
