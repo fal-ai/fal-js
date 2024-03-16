@@ -48,11 +48,12 @@ function useMediaRecorder({
     const audioBlob = new Blob(accumulatedChunks.current, {
       type: 'audio/wav',
     });
-    // Optionally, here you can slice the Blob if you want to send data in smaller pieces
-    // For example: audioBlob.slice(startByte, endByte)
+    console.log('Sending data chunk of size:', audioBlob.size);
     if (onChunk) {
       onChunk(audioBlob);
     }
+    // Clear the accumulated chunks after sending
+    accumulatedChunks.current = [];
   }, [onChunk]);
 
   const record = useCallback((): Promise<File> => {
@@ -86,7 +87,7 @@ function useMediaRecorder({
           resolve(audioFile); // Resolve the promise with the audio file
         });
 
-        recorder.start(1000); // Configure how often you get 'dataavailable' events
+        recorder.start(sendInterval); // Configure how often you get 'dataavailable' events
 
         // Periodically send accumulated data
         const intervalId = setInterval(() => {
@@ -151,16 +152,15 @@ export default function WhisperDemo() {
       accumulatedChunks.set(newChunk, accumulatedChunksRef.current.length);
       accumulatedChunksRef.current = accumulatedChunks;
 
-      console.log('Accumulated chunk', accumulatedChunks);
       // Send the accumulated chunks using your `send` method
-      send({ content: accumulatedChunks });
+      // Ensure that the content is sent as a byte type
+      send({ content: accumulatedChunksRef.current }); // Send the Uint8Array directly
     },
   });
 
   const handleNewOutput = (newOutput: RealTimeOutput) => {
-    // Use `any` if you don't have a specific type
-    // This could be a transcription chunk, analysis result, etc.
-    setRealTimeOutputs((prevOutputs) => [...prevOutputs, newOutput]);
+    // Set only the latest output, replacing any previous ones
+    setRealTimeOutputs([newOutput]);
   };
 
   const reset = () => {
