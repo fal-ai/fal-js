@@ -33,9 +33,9 @@ type RecorderOptions = {
 };
 
 function useMediaRecorder({
-  maxDuration = 20000,
+  maxDuration = 600000,
   onChunk,
-  sendInterval = 1000, // Add this line
+  sendInterval = 500, // Add this line
 }: RecorderOptions = {}) {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
