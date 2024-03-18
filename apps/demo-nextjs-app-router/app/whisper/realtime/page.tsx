@@ -1,7 +1,7 @@
 'use client';
 
 import * as fal from '@fal-ai/serverless-client';
-import { useCallback, useMemo, useRef, useState } from 'react'; // Add useRef here
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 fal.config({
   // credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
@@ -29,13 +29,13 @@ function Error(props: ErrorProps) {
 type RecorderOptions = {
   maxDuration?: number;
   onChunk?: (chunk: Blob) => void;
-  sendInterval?: number; // Add this line
+  sendInterval?: number;
 };
 
 function useMediaRecorder({
   maxDuration = 600000,
   onChunk,
-  sendInterval = 500, // Add this line
+  sendInterval = 1000,
 }: RecorderOptions = {}) {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -116,8 +116,7 @@ function useMediaRecorder({
 }
 
 interface RealTimeOutput {
-  // Define the structure of your real-time output
-  // Example:
+  // The structure of your real-time output
   message: string;
 }
 
