@@ -128,7 +128,7 @@ export default function WhisperDemo() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const { send } = fal.realtime.connect('20128202/rtw', {
+  const { send } = fal.realtime.connect('fal-ai/fast-whisper', {
     connectionKey: 'realtime-demo',
     throttleInterval: 128,
     onResult(result) {
