@@ -21,6 +21,35 @@ export function ensureAppIdFormat(id: string): string {
   );
 }
 
+const APP_NAMESPACES = ['workflows'] as const;
+
+type AppNamespace = (typeof APP_NAMESPACES)[number];
+
+export type AppId = {
+  readonly owner: string;
+  readonly alias: string;
+  readonly path?: string;
+  readonly namespace?: AppNamespace;
+};
+
+export function parseAppId(id: string): AppId {
+  const normalizedId = ensureAppIdFormat(id);
+  const parts = normalizedId.split('/');
+  if (APP_NAMESPACES.includes(parts[0] as any)) {
+    return {
+      owner: parts[1],
+      alias: parts[2],
+      path: parts.slice(3).join('/') || undefined,
+      namespace: parts[0] as AppNamespace,
+    };
+  }
+  return {
+    owner: parts[0],
+    alias: parts[1],
+    path: parts.slice(2).join('/') || undefined,
+  };
+}
+
 export function isValidUrl(url: string) {
   try {
     const { host } = new URL(url);

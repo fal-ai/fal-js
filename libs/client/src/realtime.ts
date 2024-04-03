@@ -16,7 +16,7 @@ import uuid from 'uuid-random';
 import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from './auth';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
-import { ensureAppIdFormat, isReact, throttle } from './utils';
+import { ensureAppIdFormat, isReact, parseAppId, throttle } from './utils';
 
 // Define the context
 interface Context {
@@ -273,9 +273,9 @@ function buildRealtimeUrl(
     queryParams.set('max_buffering', maxBuffering.toFixed(0));
   }
   const appId = ensureAppIdFormat(app);
-  const [, appAlias] = ensureAppIdFormat(app).split('/');
+  const { alias } = parseAppId(appId);
   const suffix =
-    LEGACY_APPS.includes(appAlias) || !app.includes('/') ? 'ws' : 'realtime';
+    LEGACY_APPS.includes(alias) || !app.includes('/') ? 'ws' : 'realtime';
   return `wss://fal.run/${appId}/${suffix}?${queryParams.toString()}`;
 }
 

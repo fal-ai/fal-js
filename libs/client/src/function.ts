@@ -1,7 +1,7 @@
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
 import { EnqueueResult, QueueStatus } from './types';
-import { ensureAppIdFormat, isUUIDv4, isValidUrl } from './utils';
+import { ensureAppIdFormat, isUUIDv4, isValidUrl, parseAppId } from './utils';
 
 /**
  * The function input and other configuration when running
@@ -284,8 +284,8 @@ export const queue: Queue = {
     id: string,
     { requestId, logs = false }: QueueStatusOptions
   ): Promise<QueueStatus> {
-    const [appOwner, appAlias] = ensureAppIdFormat(id).split('/');
-    return send(`${appOwner}/${appAlias}`, {
+    const appId = parseAppId(id);
+    return send(`${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}/status`,
@@ -298,8 +298,8 @@ export const queue: Queue = {
     id: string,
     { requestId }: BaseQueueOptions
   ): Promise<Output> {
-    const [appOwner, appAlias] = ensureAppIdFormat(id).split('/');
-    return send(`${appOwner}/${appAlias}`, {
+    const appId = parseAppId(id);
+    return send(`${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}`,
