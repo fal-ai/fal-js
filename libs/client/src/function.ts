@@ -285,7 +285,8 @@ export const queue: Queue = {
     { requestId, logs = false }: QueueStatusOptions
   ): Promise<QueueStatus> {
     const appId = parseAppId(id);
-    return send(`${appId.owner}/${appId.alias}`, {
+    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    return send(`${prefix}${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}/status`,
@@ -299,7 +300,8 @@ export const queue: Queue = {
     { requestId }: BaseQueueOptions
   ): Promise<Output> {
     const appId = parseAppId(id);
-    return send(`${appId.owner}/${appId.alias}`, {
+    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    return send(`${prefix}${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}`,
