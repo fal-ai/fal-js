@@ -121,6 +121,9 @@ export const storageImpl: StorageSupport = {
       if (isPlainObject(value)) {
         return [key, await storageImpl.transformInput(value)];
       }
+      if (Array.isArray(value)) {
+        return [key, await Promise.all(value.map(storageImpl.transformInput))];
+      }
       return [key, value] as KeyValuePair;
     });
     const results = await Promise.all(promises);

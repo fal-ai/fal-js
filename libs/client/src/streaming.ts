@@ -72,7 +72,7 @@ class FalStream<Input, Output> {
         reject(error);
       });
     });
-    this.start();
+    this.start().catch(this.handleError);
   }
 
   private start = async () => {
@@ -145,8 +145,7 @@ class FalStream<Input, Output> {
         this.emit(
           'error',
           new ApiError({
-            message:
-              'Event stream timed out after 15 seconds with no messages.',
+            message: `Event stream timed out after ${(timeout / 1000).toFixed(0)} seconds with no messages.`,
             status: 408,
           })
         );
