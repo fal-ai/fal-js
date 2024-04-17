@@ -104,6 +104,9 @@ export const storageImpl: StorageSupport = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transformInput: async (input: Record<string, any>) => {
+    if (!isPlainObject(input)) {
+      return input;
+    }
     const promises = Object.entries(input).map(async ([key, value]) => {
       if (
         value instanceof Blob ||
