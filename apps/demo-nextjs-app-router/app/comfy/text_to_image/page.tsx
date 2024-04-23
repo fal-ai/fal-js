@@ -84,7 +84,9 @@ export function Index() {
     const start = Date.now();
     try {
       const result: Result = await fal.subscribe('fal-ai/comfy-server', {
-        input: getWorkflow({}),
+        input: getWorkflow({
+          prompt: prompt,
+        }),
         pollInterval: 3000, // Default is 1000 (every 1s)
         logs: true,
         onQueueUpdate(update) {
