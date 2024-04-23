@@ -81,7 +81,7 @@ const WORKFLOW = {
 };
 
 export default function getWorkflow(object: any) {
-  let newWorkflow = JSON.parse(JSON.stringify(WORKFLOW));
+  const newWorkflow = JSON.parse(JSON.stringify(WORKFLOW));
   newWorkflow.fal_inputs = {
     ...newWorkflow.fal_inputs,
     ...object,
