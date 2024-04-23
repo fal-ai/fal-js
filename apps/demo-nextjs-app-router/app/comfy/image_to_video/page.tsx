@@ -44,7 +44,7 @@ function Error(props: ErrorProps) {
   );
 }
 
-export function Index() {
+export default function ComfyImageToVideoPage() {
   // @snippet:start("client.ui.state")
   // Input state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -179,5 +179,3 @@ export function Index() {
     </div>
   );
 }
-
-export default Index;

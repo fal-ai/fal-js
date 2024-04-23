@@ -47,7 +47,7 @@ function Error(props: ErrorProps) {
 const DEFAULT_PROMPT =
   'photograph of victorian woman with wings, sky clouds, meadow grass';
 
-export function Index() {
+export default function ComfyImageToImagePage() {
   // @snippet:start("client.ui.state")
   // Input state
   const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
@@ -201,5 +201,3 @@ export function Index() {
     </div>
   );
 }
-
-export default Index;
