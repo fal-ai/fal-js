@@ -10,14 +10,14 @@ import initialDrawing from './drawingState.json';
 export type CanvasChangeEvent = {
   elements: readonly ExcalidrawElement[];
   appState: AppState;
-  imageData: string;
+  imageData: Uint8Array;
 };
 
 export type DrawingCanvasProps = {
   onCanvasChange: (event: CanvasChangeEvent) => void;
 };
 
-async function blobToBase64(blob: Blob): Promise<string> {
+export async function blobToBase64(blob: Blob): Promise<string> {
   const reader = new FileReader();
   reader.readAsDataURL(blob);
   return new Promise<string>((resolve) => {
@@ -25,6 +25,11 @@ async function blobToBase64(blob: Blob): Promise<string> {
       resolve(reader.result?.toString() || '');
     };
   });
+}
+
+export async function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
+  const buffer = await blob.arrayBuffer();
+  return new Uint8Array(buffer);
 }
 
 export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
@@ -95,7 +100,7 @@ export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
             return { width: 512, height: 512 };
           },
         });
-        const imageData = await blobToBase64(blob);
+        const imageData = await blobToUint8Array(blob);
         onCanvasChange({ elements, appState, imageData });
       }
     },
