@@ -16,7 +16,7 @@ import uuid from 'uuid-random';
 import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from './auth';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
-import { ensureAppIdFormat, isReact, parseAppId, throttle } from './utils';
+import { ensureAppIdFormat, isReact, throttle } from './utils';
 
 // Define the context
 interface Context {
@@ -78,10 +78,8 @@ function sendMessage(context: Context, event: SendEvent): Context {
   if (context.websocket && context.websocket.readyState === WebSocket.OPEN) {
     if (event.message instanceof Uint8Array) {
       context.websocket.send(event.message);
-    } else if (shouldSendBinary(event.message)) {
-      context.websocket.send(encode(event.message));
     } else {
-      context.websocket.send(JSON.stringify(event.message));
+      context.websocket.send(encode(event.message));
     }
 
     return {
@@ -248,17 +246,6 @@ type RealtimeUrlParams = {
   maxBuffering?: number;
 };
 
-// This is a list of apps deployed before formal realtime support. Their URLs follow
-// a different pattern and will be kept here until we fully sunset them.
-const LEGACY_APPS = [
-  'lcm-sd15-i2i',
-  'lcm',
-  'sdxl-turbo-realtime',
-  'sd-turbo-real-time-high-fps-msgpack-a10g',
-  'lcm-plexed-sd15-i2i',
-  'sd-turbo-real-time-high-fps-msgpack',
-];
-
 function buildRealtimeUrl(
   app: string,
   { token, maxBuffering }: RealtimeUrlParams
@@ -273,22 +260,10 @@ function buildRealtimeUrl(
     queryParams.set('max_buffering', maxBuffering.toFixed(0));
   }
   const appId = ensureAppIdFormat(app);
-  const { alias } = parseAppId(appId);
-  const suffix =
-    LEGACY_APPS.includes(alias) || !app.includes('/') ? 'ws' : 'realtime';
-  return `wss://fal.run/${appId}/${suffix}?${queryParams.toString()}`;
+  return `wss://fal.run/${appId}/realtime?${queryParams.toString()}`;
 }
 
 const DEFAULT_THROTTLE_INTERVAL = 128;
-
-function shouldSendBinary(message: any): boolean {
-  return Object.values(message).some(
-    (value) =>
-      value instanceof Blob ||
-      value instanceof ArrayBuffer ||
-      value instanceof Uint8Array
-  );
-}
 
 function isUnauthorizedError(message: any): boolean {
   // TODO we need better protocol definition with error codes

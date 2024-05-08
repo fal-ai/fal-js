@@ -31,8 +31,7 @@ This client library is crafted as a lightweight layer atop platform standards li
 
    fal.config({
      // Can also be auto-configured using environment variables:
-     // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
-     credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
+     credentials: 'FAL_KEY',
    });
    ```
 
