@@ -12,3 +12,4 @@ export type {
   ValidationErrorInfo,
   WebHookResponse,
 } from './types';
+export { parseAppId } from './utils';

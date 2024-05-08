@@ -109,7 +109,7 @@ const useWebcam = ({
 
 type LCMInput = {
   prompt: string;
-  image: Uint8Array;
+  image_bytes: Uint8Array;
   strength?: number;
   negative_prompt?: string;
   seed?: number | null;
@@ -121,8 +121,14 @@ type LCMInput = {
   width?: number;
 };
 
+type ImageOutput = {
+  content: Uint8Array;
+  width: number;
+  height: number;
+};
+
 type LCMOutput = {
-  image: Uint8Array;
+  images: ImageOutput[];
   timings: Record<string, number>;
   seed: number;
   num_inference_steps: number;
@@ -137,15 +143,17 @@ export default function WebcamPage() {
   const previewRef = useRef<HTMLCanvasElement | null>(null);
 
   const { send } = fal.realtime.connect<LCMInput, LCMOutput>(
-    'fal-ai/sd-turbo-real-time-high-fps-msgpack-a10g',
+    'fal-ai/fast-turbo-diffusion/image-to-image',
     {
       connectionKey: 'camera-turbo-demo',
       // not throttling the client, handling throttling of the camera itself
       // and letting all requests through in real-time
       throttleInterval: 0,
       onResult(result) {
-        if (processedImageRef.current && result.image) {
-          const blob = new Blob([result.image], { type: 'image/jpeg' });
+        if (processedImageRef.current && result.images && result.images[0]) {
+          const blob = new Blob([result.images[0].content], {
+            type: 'image/jpeg',
+          });
           const url = URL.createObjectURL(blob);
           processedImageRef.current.src = url;
         }
@@ -158,10 +166,10 @@ export default function WebcamPage() {
       return;
     }
     send({
-      prompt: 'a picture of leonardo di caprio, elegant, in a suit, 8k, uhd',
-      image: data,
+      prompt: 'a picture of george clooney, elegant, in a suit, 8k, uhd',
+      image_bytes: data,
       num_inference_steps: 3,
-      strength: 0.44,
+      strength: 0.6,
       guidance_scale: 1,
       seed: 6252023,
     });
