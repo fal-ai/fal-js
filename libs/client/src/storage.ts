@@ -103,33 +103,29 @@ export const storageImpl: StorageSupport = {
   },
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transformInput: async (input: Record<string, any>) => {
-    if (!isPlainObject(input)) {
-      return input;
-    }
-    const promises = Object.entries(input).map(async ([key, value]) => {
-      if (
-        value instanceof Blob ||
-        (typeof value === 'string' && isDataUri(value))
-      ) {
-        let blob = value;
-        // if string is a data uri, convert to blob
-        if (typeof value === 'string' && isDataUri(value)) {
-          const response = await fetch(value);
-          blob = await response.blob();
-        }
-        const url = await storageImpl.upload(blob as Blob);
-        return [key, url];
+  transformInput: async (input: any) => {
+    if (Array.isArray(input)) {
+      return Promise.all(input.map((item) => storageImpl.transformInput(item)));
+    } else if (
+      input instanceof Blob ||
+      (typeof input === 'string' && isDataUri(input))
+    ) {
+      let blob = input;
+      // If the string is a data URI, convert it to a blob
+      if (typeof input === 'string' && isDataUri(input)) {
+        const response = await fetch(input);
+        blob = await response.blob();
       }
-      if (isPlainObject(value)) {
+      const url = await storageImpl.upload(blob as Blob);
+      return url;
+    } else if (isPlainObject(input)) {
+      const promises = Object.entries(input).map(async ([key, value]) => {
         return [key, await storageImpl.transformInput(value)];
-      }
-      if (Array.isArray(value)) {
-        return [key, await Promise.all(value.map(storageImpl.transformInput))];
-      }
-      return [key, value] as KeyValuePair;
-    });
-    const results = await Promise.all(promises);
-    return Object.fromEntries(results);
+      });
+      const results = await Promise.all(promises);
+      return Object.fromEntries(results);
+    }
+    // Return the input as is if it's neither an object nor a file/blob/data URI
+    return input;
   },
 };
