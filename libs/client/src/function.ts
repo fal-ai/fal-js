@@ -187,6 +187,12 @@ type QueueSubscribeOptions = {
    * Defaults to `false`.
    */
   logs?: boolean;
+
+  /**
+   * The URL to send a webhook notification to when the request is completed.
+   * @see WebHookResponse
+   */
+  webhookUrl?: string;
 };
 
 /**
