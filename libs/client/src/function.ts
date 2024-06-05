@@ -43,6 +43,11 @@ type ExtraOptions = {
    * influences how the URL is built.
    */
   readonly subdomain?: string;
+
+  /**
+   * The query parameters to include in the URL.
+   */
+  readonly query?: Record<string, string>;
 };
 
 /**
@@ -61,10 +66,15 @@ export function buildUrl<Input>(
   const method = (options.method ?? 'post').toLowerCase();
   const path = (options.path ?? '').replace(/^\//, '').replace(/\/{2,}/, '/');
   const input = options.input;
-  const params =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    method === 'get' && input ? new URLSearchParams(input as any) : undefined;
-  const queryParams = params ? `?${params.toString()}` : '';
+  const params = {
+    ...(options.query || {}),
+    ...(method === 'get' ? input : {}),
+  };
+
+  const queryParams =
+    Object.keys(params).length > 0
+      ? `?${new URLSearchParams(params).toString()}`
+      : '';
   const parts = id.split('/');
 
   // if a fal url is passed, just use it
@@ -276,14 +286,12 @@ export const queue: Queue = {
     options: SubmitOptions<Input>
   ): Promise<EnqueueResult> {
     const { webhookUrl, path = '', ...runOptions } = options;
-    const query = webhookUrl
-      ? '?' + new URLSearchParams({ fal_webhook: webhookUrl }).toString()
-      : '';
     return send(id, {
       ...runOptions,
       subdomain: 'queue',
       method: 'post',
-      path: path + query,
+      path: path,
+      query: webhookUrl ? { fal_webhook: webhookUrl } : undefined,
     });
   },
   async status(
