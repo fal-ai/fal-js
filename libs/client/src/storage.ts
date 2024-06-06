@@ -103,7 +103,7 @@ export const storageImpl: StorageSupport = {
   },
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transformInput: async (input: any) => {
+  transformInput: async (input: any): Promise<any> => {
     if (Array.isArray(input)) {
       return Promise.all(input.map((item) => storageImpl.transformInput(item)));
     } else if (
@@ -119,9 +119,12 @@ export const storageImpl: StorageSupport = {
       const url = await storageImpl.upload(blob as Blob);
       return url;
     } else if (isPlainObject(input)) {
-      const promises = Object.entries(input).map(async ([key, value]) => {
-        return [key, await storageImpl.transformInput(value)];
-      });
+      const inputObject = input as Record<string, any>;
+      const promises = Object.entries(inputObject).map(
+        async ([key, value]): Promise<KeyValuePair> => {
+          return [key, await storageImpl.transformInput(value)];
+        }
+      );
       const results = await Promise.all(promises);
       return Object.fromEntries(results);
     }
