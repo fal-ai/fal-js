@@ -2,7 +2,6 @@
 
 import * as fal from '@fal-ai/serverless-client';
 import { useMemo, useState } from 'react';
-import getWorkflow from './workflow';
 
 // @snippet:start(client.config)
 fal.config({
@@ -84,23 +83,26 @@ export default function ComfyImageToImagePage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('fal-ai/comfy-server', {
-        input: getWorkflow({
-          prompt: prompt,
-          loadimage_1: imageFile,
-        }),
-        pollInterval: 3000, // Default is 1000 (every 1s)
-        logs: true,
-        onQueueUpdate(update) {
-          setElapsedTime(Date.now() - start);
-          if (
-            update.status === 'IN_PROGRESS' ||
-            update.status === 'COMPLETED'
-          ) {
-            setLogs((update.logs || []).map((log) => log.message));
-          }
-        },
-      });
+      const result: Result = await fal.subscribe(
+        'comfy/fal-ai/image-to-image',
+        {
+          input: {
+            prompt: prompt,
+            loadimage_1: imageFile,
+          },
+          pollInterval: 3000, // Default is 1000 (every 1s)
+          logs: true,
+          onQueueUpdate(update) {
+            setElapsedTime(Date.now() - start);
+            if (
+              update.status === 'IN_PROGRESS' ||
+              update.status === 'COMPLETED'
+            ) {
+              setLogs((update.logs || []).map((log) => log.message));
+            }
+          },
+        }
+      );
       setResult(getImageURL(result));
     } catch (error: any) {
       setError(error);

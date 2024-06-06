@@ -21,7 +21,7 @@ export function ensureAppIdFormat(id: string): string {
   );
 }
 
-const APP_NAMESPACES = ['workflows'] as const;
+const APP_NAMESPACES = ['workflows', 'comfy'] as const;
 
 type AppNamespace = (typeof APP_NAMESPACES)[number];
 

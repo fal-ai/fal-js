@@ -2,7 +2,6 @@
 
 import * as fal from '@fal-ai/serverless-client';
 import { useMemo, useState } from 'react';
-import getWorkflow from './workflow';
 
 // @snippet:start(client.config)
 fal.config({
@@ -83,10 +82,10 @@ export default function ComfyTextToImagePage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('fal-ai/comfy-server', {
-        input: getWorkflow({
+      const result: Result = await fal.subscribe('comfy/fal-ai/text-to-image', {
+        input: {
           prompt: prompt,
-        }),
+        },
         pollInterval: 3000, // Default is 1000 (every 1s)
         logs: true,
         onQueueUpdate(update) {
