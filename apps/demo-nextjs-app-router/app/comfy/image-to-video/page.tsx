@@ -2,7 +2,6 @@
 
 import * as fal from '@fal-ai/serverless-client';
 import { useMemo, useState } from 'react';
-import getWorkflow from './workflow';
 
 // @snippet:start(client.config)
 fal.config({
@@ -44,13 +43,9 @@ function Error(props: ErrorProps) {
   );
 }
 
-const DEFAULT_PROMPT =
-  'photograph of victorian woman with wings, sky clouds, meadow grass';
-
-export default function ComfyImageToImagePage() {
+export default function ComfyImageToVideoPage() {
   // @snippet:start("client.ui.state")
   // Input state
-  const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
   const [imageFile, setImageFile] = useState<File | null>(null);
   // Result state
   const [loading, setLoading] = useState(false);
@@ -75,7 +70,7 @@ export default function ComfyImageToImagePage() {
   };
 
   const getImageURL = (result: Result) => {
-    return result.outputs[9].images[0];
+    return result.outputs[10].images[0];
   };
 
   const generateVideo = async () => {
@@ -84,23 +79,25 @@ export default function ComfyImageToImagePage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('fal-ai/comfy-server', {
-        input: getWorkflow({
-          prompt: prompt,
-          loadimage_1: imageFile,
-        }),
-        pollInterval: 3000, // Default is 1000 (every 1s)
-        logs: true,
-        onQueueUpdate(update) {
-          setElapsedTime(Date.now() - start);
-          if (
-            update.status === 'IN_PROGRESS' ||
-            update.status === 'COMPLETED'
-          ) {
-            setLogs((update.logs || []).map((log) => log.message));
-          }
-        },
-      });
+      const result: Result = await fal.subscribe(
+        'comfy/fal-ai/image-to-video',
+        {
+          input: {
+            loadimage_1: imageFile,
+          },
+          pollInterval: 3000, // Default is 1000 (every 1s)
+          logs: true,
+          onQueueUpdate(update) {
+            setElapsedTime(Date.now() - start);
+            if (
+              update.status === 'IN_PROGRESS' ||
+              update.status === 'COMPLETED'
+            ) {
+              setLogs((update.logs || []).map((log) => log.message));
+            }
+          },
+        }
+      );
       setResult(getImageURL(result));
     } catch (error: any) {
       setError(error);
@@ -113,9 +110,7 @@ export default function ComfyImageToImagePage() {
   return (
     <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
       <main className="container dark:text-gray-50 text-gray-900 flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
-        <h1 className="text-4xl font-bold mb-8">
-          Comfy SD1.5 - Image to Image
-        </h1>
+        <h1 className="text-4xl font-bold mb-8">Comfy SVD - Image to Video</h1>
         <div className="text-lg w-full">
           <label htmlFor="image" className="block mb-2 text-current">
             Image
@@ -142,21 +137,6 @@ export default function ComfyImageToImagePage() {
             />
           </div>
         </div>
-        <div className="text-lg w-full">
-          <label htmlFor="prompt" className="block mb-2 text-current">
-            Prompt
-          </label>
-          <input
-            className="w-full text-lg p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10"
-            id="prompt"
-            name="prompt"
-            placeholder="Imagine..."
-            value={prompt}
-            autoComplete="off"
-            onChange={(e) => setPrompt(e.target.value)}
-            onBlur={(e) => setPrompt(e.target.value.trim())}
-          />
-        </div>
 
         <button
           onClick={(e) => {
@@ -166,7 +146,7 @@ export default function ComfyImageToImagePage() {
           className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline"
           disabled={loading}
         >
-          {loading ? 'Generating...' : 'Generate Image'}
+          {loading ? 'Generating...' : 'Generate Video'}
         </button>
 
         <Error error={error} />
