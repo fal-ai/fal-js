@@ -16,19 +16,19 @@ export default function Index() {
         </p>
         <div className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-3">
           <button
-            onClick={() => router.push('/comfy/text_to_image')}
+            onClick={() => router.push('/comfy/text-to-image')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md transition-transform transform hover:-translate-y-1"
           >
             Text to Image
           </button>
           <button
-            onClick={() => router.push('/comfy/image_to_image')}
+            onClick={() => router.push('/comfy/image-to-image')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md transition-transform transform hover:-translate-y-1"
           >
             Image to Image
           </button>
           <button
-            onClick={() => router.push('/comfy/image_to_video')}
+            onClick={() => router.push('/comfy/image-to-video')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md transition-transform transform hover:-translate-y-1"
           >
             Image to Video
