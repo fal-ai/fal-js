@@ -2,7 +2,7 @@ import { getTemporaryAuthToken } from './auth';
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
 import { FalStream } from './streaming';
-import { EnqueueResult, QueueStatus } from './types';
+import { EnqueueResult, QueueStatus, RequestLog } from './types';
 import { ensureAppIdFormat, isUUIDv4, isValidUrl, parseAppId } from './utils';
 
 /**
@@ -144,8 +144,15 @@ export async function subscribe<Input, Output>(
     requestId,
     logs: options.logs,
   });
-  status.on('message', (data) => {
+  const logs: RequestLog[] = [];
+  status.on('message', (data: QueueStatus) => {
     if (options.onQueueUpdate) {
+      // accumulate logs to match previous polling behavior
+      if ('logs' in data && Array.isArray(data.logs) && data.logs.length > 0) {
+        logs.push(...data.logs);
+        options.onQueueUpdate({ ...data, logs });
+        return;
+      }
       options.onQueueUpdate(data);
     }
   });
