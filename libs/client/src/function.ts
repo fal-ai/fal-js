@@ -1,5 +1,7 @@
+import { getTemporaryAuthToken } from './auth';
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
+import { FalStream } from './streaming';
 import { EnqueueResult, QueueStatus } from './types';
 import { ensureAppIdFormat, isUUIDv4, isValidUrl, parseAppId } from './utils';
 
@@ -138,36 +140,19 @@ export async function subscribe<Input, Output>(
   if (options.onEnqueue) {
     options.onEnqueue(requestId);
   }
-  return new Promise<Output>((resolve, reject) => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const pollInterval = options.pollInterval ?? 1000;
-    const poll = async () => {
-      try {
-        const requestStatus = await queue.status(id, {
-          requestId,
-          logs: options.logs ?? false,
-        });
-        if (options.onQueueUpdate) {
-          options.onQueueUpdate(requestStatus);
-        }
-        if (requestStatus.status === 'COMPLETED') {
-          clearTimeout(timeoutId);
-          try {
-            const result = await queue.result<Output>(id, { requestId });
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-          return;
-        }
-        timeoutId = setTimeout(poll, pollInterval);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        reject(error);
-      }
-    };
-    poll().catch(reject);
+  const status = await queue.streamStatus(id, {
+    requestId,
+    logs: options.logs,
   });
+  status.on('message', (data) => {
+    console.log('!!!!!!!!!!!!!!!!');
+    console.log(data);
+    if (options.onQueueUpdate) {
+      options.onQueueUpdate(data);
+    }
+  });
+  await status.done();
+  return queue.result<Output>(id, { requestId });
 }
 
 /**
@@ -177,6 +162,9 @@ type QueueSubscribeOptions = {
   /**
    * The interval (in milliseconds) at which to poll for updates.
    * If not provided, a default value of `1000` will be used.
+   *
+   * @deprecated starting from v0.12.0 the queue status is streamed
+   * using the `queue.subscribeToStatus` method.
    */
   pollInterval?: number;
 
@@ -239,40 +227,48 @@ interface Queue {
   /**
    * Submits a request to the queue.
    *
-   * @param id - The ID or URL of the function web endpoint.
+   * @param endpointId - The ID or URL of the function web endpoint.
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of enqueuing the request.
    */
   submit<Input>(
-    id: string,
+    endpointId: string,
     options: SubmitOptions<Input>
   ): Promise<EnqueueResult>;
 
   /**
    * Retrieves the status of a specific request in the queue.
    *
-   * @param id - The ID or URL of the function web endpoint.
+   * @param endpointId - The ID or URL of the function web endpoint.
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the status of the request.
    */
-  status(id: string, options: QueueStatusOptions): Promise<QueueStatus>;
+  status(endpointId: string, options: QueueStatusOptions): Promise<QueueStatus>;
 
   /**
    * Retrieves the result of a specific request from the queue.
    *
-   * @param id - The ID or URL of the function web endpoint.
+   * @param endpointId - The ID or URL of the function web endpoint.
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of the request.
    */
-  result<Output>(id: string, options: BaseQueueOptions): Promise<Output>;
+  result<Output>(
+    endpointId: string,
+    options: BaseQueueOptions
+  ): Promise<Output>;
 
   /**
    * @deprecated Use `fal.subscribe` instead.
    */
   subscribe<Input, Output>(
-    id: string,
+    endpointId: string,
     options: RunOptions<Input> & QueueSubscribeOptions
   ): Promise<Output>;
+
+  streamStatus(
+    endpointId: string,
+    options: QueueStatusOptions
+  ): Promise<FalStream<unknown, QueueStatus>>;
 }
 
 /**
@@ -282,11 +278,11 @@ interface Queue {
  */
 export const queue: Queue = {
   async submit<Input>(
-    id: string,
+    endpointId: string,
     options: SubmitOptions<Input>
   ): Promise<EnqueueResult> {
     const { webhookUrl, path = '', ...runOptions } = options;
-    return send(id, {
+    return send(endpointId, {
       ...runOptions,
       subdomain: 'queue',
       method: 'post',
@@ -295,10 +291,10 @@ export const queue: Queue = {
     });
   },
   async status(
-    id: string,
+    endpointId: string,
     { requestId, logs = false }: QueueStatusOptions
   ): Promise<QueueStatus> {
-    const appId = parseAppId(id);
+    const appId = parseAppId(endpointId);
     const prefix = appId.namespace ? `${appId.namespace}/` : '';
     return send(`${prefix}${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',
@@ -309,11 +305,33 @@ export const queue: Queue = {
       },
     });
   },
+  async streamStatus(
+    endpointId: string,
+    { requestId, logs = false }: QueueStatusOptions
+  ): Promise<FalStream<unknown, QueueStatus>> {
+    const appId = parseAppId(endpointId);
+    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    const token = await getTemporaryAuthToken(endpointId);
+    const url = buildUrl(`${prefix}${appId.owner}/${appId.alias}`, {
+      subdomain: 'queue',
+      path: `/requests/${requestId}/status/stream`,
+    });
+
+    const queryParams = new URLSearchParams({
+      fal_jwt_token: token,
+      logs: logs ? '1' : '0',
+    });
+
+    return new FalStream<unknown, QueueStatus>(`${url}?${queryParams}`, {
+      input: {},
+      method: 'get',
+    });
+  },
   async result<Output>(
-    id: string,
+    endpointId: string,
     { requestId }: BaseQueueOptions
   ): Promise<Output> {
-    const appId = parseAppId(id);
+    const appId = parseAppId(endpointId);
     const prefix = appId.namespace ? `${appId.namespace}/` : '';
     return send(`${prefix}${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',

@@ -12,18 +12,23 @@ type StreamOptions<Input> = {
   /**
    * The API input payload.
    */
-  input: Input;
+  readonly input?: Input;
 
   /**
    * The maximum time interval in milliseconds between stream chunks. Defaults to 15s.
    */
-  timeout?: number;
+  readonly timeout?: number;
 
   /**
    * Whether it should auto-upload File-like types to fal's storage
    * or not.
    */
-  autoUpload?: boolean;
+  readonly autoUpload?: boolean;
+
+  /**
+   * The HTTP method, defaults to `post`;
+   */
+  readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
@@ -35,7 +40,7 @@ type EventHandler = (event: any) => void;
 /**
  * The class representing a streaming response. With t
  */
-class FalStream<Input, Output> {
+export class FalStream<Input, Output> {
   // properties
   url: string;
   options: StreamOptions<Input>;
@@ -76,14 +81,16 @@ class FalStream<Input, Output> {
   }
 
   private start = async () => {
+    const { url, options } = this;
+    const { input, method = 'post' } = options;
     try {
-      const response = await fetch(this.url, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: method.toUpperCase(),
         headers: {
           accept: 'text/event-stream',
           'content-type': 'application/json',
         },
-        body: JSON.stringify(this.options.input),
+        body: input && method !== 'get' ? JSON.stringify(input) : undefined,
       });
       this.handleResponse(response);
     } catch (error) {
