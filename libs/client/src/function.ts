@@ -145,8 +145,6 @@ export async function subscribe<Input, Output>(
     logs: options.logs,
   });
   status.on('message', (data) => {
-    console.log('!!!!!!!!!!!!!!!!');
-    console.log(data);
     if (options.onQueueUpdate) {
       options.onQueueUpdate(data);
     }
