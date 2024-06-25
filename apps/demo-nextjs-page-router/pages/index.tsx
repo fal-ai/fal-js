@@ -78,7 +78,6 @@ export function Index() {
           model_name: 'stabilityai/stable-diffusion-xl-base-1.0',
           image_size: 'square_hd',
         },
-        pollInterval: 3000, // Default is 1000 (every 1s)
         logs: true,
         onQueueUpdate(update) {
           setElapsedTime(Date.now() - start);

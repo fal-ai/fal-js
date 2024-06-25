@@ -85,7 +85,6 @@ export default function ComfyImageToVideoPage() {
           input: {
             loadimage_1: imageFile,
           },
-          pollInterval: 3000, // Default is 1000 (every 1s)
           logs: true,
           onQueueUpdate(update) {
             setElapsedTime(Date.now() - start);

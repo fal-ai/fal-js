@@ -86,7 +86,6 @@ export default function ComfyTextToImagePage() {
         input: {
           prompt: prompt,
         },
-        pollInterval: 3000, // Default is 1000 (every 1s)
         logs: true,
         onQueueUpdate(update) {
           setElapsedTime(Date.now() - start);

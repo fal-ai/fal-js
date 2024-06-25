@@ -85,7 +85,6 @@ export default function Home() {
           image_url: imageFile,
           image_size: 'square_hd',
         },
-        pollInterval: 3000, // Default is 1000 (every 1s)
         logs: true,
         onQueueUpdate(update) {
           setElapsedTime(Date.now() - start);
