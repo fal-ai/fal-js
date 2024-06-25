@@ -1,26 +1,11 @@
 'use client';
 
 import * as fal from '@fal-ai/serverless-client';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-// @snippet:start(client.config)
 fal.config({
-  // credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
-  proxyUrl: '/api/fal/proxy', // the built-int nextjs proxy
-  // proxyUrl: 'http://localhost:3333/api/fal/proxy', // or your own external proxy
+  proxyUrl: '/api/fal/proxy',
 });
-// @snippet:end
-
-// @snippet:start(client.result.type)
-type Image = {
-  url: string;
-  file_name: string;
-  file_size: number;
-};
-type Result = {
-  image: Image;
-};
-// @snippet:end
 
 type ErrorProps = {
   error: any;
@@ -40,30 +25,16 @@ function Error(props: ErrorProps) {
   );
 }
 
-const DEFAULT_PROMPT =
-  '(masterpiece:1.4), (best quality), (detailed), Medieval village scene with busy streets and castle in the distance';
-
 export default function Home() {
-  // @snippet:start("client.ui.state")
   // Input state
-  const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [endpointId, setEndpointId] = useState<string>('');
+  const [input, setInput] = useState<string>('{}');
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<any | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
-  // @snippet:end
-  const image = useMemo(() => {
-    if (!result) {
-      return null;
-    }
-    if (result.image) {
-      return result.image;
-    }
-    return null;
-  }, [result]);
 
   const reset = () => {
     setLoading(false);
@@ -73,26 +44,25 @@ export default function Home() {
     setElapsedTime(0);
   };
 
-  const generateImage = async () => {
+  const run = async () => {
     reset();
-    // @snippet:start("client.queue.subscribe")
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe('fal-ai/illusion-diffusion', {
-        input: {
-          prompt,
-          image_url: imageFile,
-          image_size: 'square_hd',
-        },
+      const result: any = await fal.subscribe(endpointId, {
+        input: JSON.parse(input),
         logs: true,
         onQueueUpdate(update) {
+          console.log('queue update');
+          console.log(update);
           setElapsedTime(Date.now() - start);
           if (
             update.status === 'IN_PROGRESS' ||
             update.status === 'COMPLETED'
           ) {
-            setLogs((update.logs || []).map((log) => log.message));
+            if (update.logs && update.logs.length > logs.length) {
+              setLogs((update.logs || []).map((log) => log.message));
+            }
           }
         },
       });
@@ -103,64 +73,60 @@ export default function Home() {
       setLoading(false);
       setElapsedTime(Date.now() - start);
     }
-    // @snippet:end
   };
   return (
     <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
       <main className="container dark:text-gray-50 text-gray-900 flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
         <h1 className="text-4xl font-bold mb-8">
-          Hello <code className="font-light text-pink-600">fal</code>
+          <code className="font-light text-pink-600">fal</code>
+          <code>queue</code>
         </h1>
         <div className="text-lg w-full">
           <label htmlFor="prompt" className="block mb-2 text-current">
-            Image
+            Endpoint ID
           </label>
           <input
-            className="w-full text-lg p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10"
-            id="image_url"
-            name="image_url"
-            type="file"
-            placeholder="Choose a file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            className="w-full text-base p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10"
+            id="endpointId"
+            name="endpointId"
+            autoComplete="off"
+            placeholder="Endpoint ID"
+            value={endpointId}
+            spellCheck={false}
+            onChange={(e) => setEndpointId(e.target.value)}
           />
         </div>
         <div className="text-lg w-full">
           <label htmlFor="prompt" className="block mb-2 text-current">
-            Prompt
+            JSON Input
           </label>
-          <input
-            className="w-full text-lg p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10"
-            id="prompt"
-            name="prompt"
-            placeholder="Imagine..."
-            value={prompt}
+          <textarea
+            className="w-full text-sm p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10 font-mono"
+            id="input"
+            name="Input"
+            placeholder="JSON"
+            value={input}
             autoComplete="off"
-            onChange={(e) => setPrompt(e.target.value)}
-            onBlur={(e) => setPrompt(e.target.value.trim())}
-          />
+            spellCheck={false}
+            onChange={(e) => setInput(e.target.value)}
+            rows={6}
+          ></textarea>
         </div>
 
         <button
           onClick={(e) => {
             e.preventDefault();
-            generateImage();
+            run();
           }}
           className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline"
           disabled={loading}
         >
-          {loading ? 'Generating...' : 'Generate Image'}
+          {loading ? 'Running...' : 'Run'}
         </button>
 
         <Error error={error} />
 
         <div className="w-full flex flex-col space-y-4">
-          <div className="mx-auto">
-            {image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={image.url} alt="" />
-            )}
-          </div>
           <div className="space-y-2">
             <h3 className="text-xl font-light">JSON Result</h3>
             <p className="text-sm text-current/80">
@@ -176,7 +142,7 @@ export default function Home() {
           <div className="space-y-2">
             <h3 className="text-xl font-light">Logs</h3>
             <pre className="text-sm bg-black/70 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
-              {logs.filter(Boolean).join('\n')}
+              {logs.join('\n')}
             </pre>
           </div>
         </div>

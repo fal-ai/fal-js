@@ -113,7 +113,6 @@ export default function WhisperDemo() {
           file_name: 'recording.wav',
           audio_url: audioFile,
         },
-        pollInterval: 1000,
         logs: true,
         onQueueUpdate(update) {
           setElapsedTime(Date.now() - start);
