@@ -150,10 +150,8 @@ export async function subscribe<Input, Output>(
       // accumulate logs to match previous polling behavior
       if ('logs' in data && Array.isArray(data.logs) && data.logs.length > 0) {
         logs.push(...data.logs);
-        options.onQueueUpdate({ ...data, logs });
-        return;
       }
-      options.onQueueUpdate(data);
+      options.onQueueUpdate('logs' in data ? { ...data, logs } : data);
     }
   });
   await status.done();
