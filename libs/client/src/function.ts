@@ -125,6 +125,8 @@ export async function run<Input, Output>(
   return send(id, options);
 }
 
+const DEFAULT_POLL_INTERVAL = 500;
+
 /**
  * Subscribes to updates for a specific request in the queue.
  *
@@ -140,22 +142,59 @@ export async function subscribe<Input, Output>(
   if (options.onEnqueue) {
     options.onEnqueue(requestId);
   }
-  const status = await queue.streamStatus(id, {
-    requestId,
-    logs: options.logs,
-  });
-  const logs: RequestLog[] = [];
-  status.on('message', (data: QueueStatus) => {
-    if (options.onQueueUpdate) {
-      // accumulate logs to match previous polling behavior
-      if ('logs' in data && Array.isArray(data.logs) && data.logs.length > 0) {
-        logs.push(...data.logs);
+  if (options.mode === 'streaming') {
+    const status = await queue.streamStatus(id, {
+      requestId,
+      logs: options.logs,
+    });
+    const logs: RequestLog[] = [];
+    status.on('message', (data: QueueStatus) => {
+      if (options.onQueueUpdate) {
+        // accumulate logs to match previous polling behavior
+        if (
+          'logs' in data &&
+          Array.isArray(data.logs) &&
+          data.logs.length > 0
+        ) {
+          logs.push(...data.logs);
+        }
+        options.onQueueUpdate('logs' in data ? { ...data, logs } : data);
       }
-      options.onQueueUpdate('logs' in data ? { ...data, logs } : data);
-    }
+    });
+    await status.done();
+    return queue.result<Output>(id, { requestId });
+  }
+  // default to polling until status streaming is stable and faster
+  return new Promise<Output>((resolve, reject) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
+    const poll = async () => {
+      try {
+        const requestStatus = await queue.status(id, {
+          requestId,
+          logs: options.logs ?? false,
+        });
+        if (options.onQueueUpdate) {
+          options.onQueueUpdate(requestStatus);
+        }
+        if (requestStatus.status === 'COMPLETED') {
+          clearTimeout(timeoutId);
+          try {
+            const result = await queue.result<Output>(id, { requestId });
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+          return;
+        }
+        timeoutId = setTimeout(poll, pollInterval);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    };
+    poll().catch(reject);
   });
-  await status.done();
-  return queue.result<Output>(id, { requestId });
 }
 
 /**
@@ -163,13 +202,15 @@ export async function subscribe<Input, Output>(
  */
 type QueueSubscribeOptions = {
   /**
-   * The interval (in milliseconds) at which to poll for updates.
-   * If not provided, a default value of `1000` will be used.
+   * The mode to use for subscribing to updates. It defaults to `polling`.
+   * You can also use client-side streaming by setting it to `streaming`.
    *
-   * @deprecated starting from v0.12.0 the queue status is streamed
-   * using the `queue.subscribeToStatus` method.
+   * **Note:** Streaming is currently experimental and once stable, it will
+   * be the default mode.
+   *
+   * @see pollInterval
    */
-  pollInterval?: number;
+  mode?: 'polling' | 'streaming';
 
   /**
    * Callback function that is called when a request is enqueued.
@@ -194,7 +235,19 @@ type QueueSubscribeOptions = {
    * @see WebHookResponse
    */
   webhookUrl?: string;
-};
+} & (
+  | {
+      mode?: 'polling';
+      /**
+       * The interval (in milliseconds) at which to poll for updates.
+       * If not provided, a default value of `500` will be used.
+       */
+      pollInterval?: number;
+    }
+  | {
+      mode: 'streaming';
+    }
+);
 
 /**
  * Options for submitting a request to the queue.

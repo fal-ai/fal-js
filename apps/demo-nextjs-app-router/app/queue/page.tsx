@@ -52,6 +52,8 @@ export default function Home() {
       const result: any = await fal.subscribe(endpointId, {
         input: JSON.parse(input),
         logs: true,
+        mode: 'streaming',
+        // pollInterval: 1000,
         onQueueUpdate(update) {
           console.log('queue update');
           console.log(update);
