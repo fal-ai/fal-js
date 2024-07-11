@@ -28,19 +28,6 @@ export interface StorageSupport {
   transformInput: (input: Record<string, any>) => Promise<Record<string, any>>;
 }
 
-function isDataUri(uri: string): boolean {
-  // avoid uri parsing if it doesn't start with data:
-  if (!uri.startsWith('data:')) {
-    return false;
-  }
-  try {
-    const url = new URL(uri);
-    return url.protocol === 'data:';
-  } catch (_) {
-    return false;
-  }
-}
-
 type InitiateUploadResult = {
   file_url: string;
   upload_url: string;
@@ -106,18 +93,8 @@ export const storageImpl: StorageSupport = {
   transformInput: async (input: any): Promise<any> => {
     if (Array.isArray(input)) {
       return Promise.all(input.map((item) => storageImpl.transformInput(item)));
-    } else if (
-      input instanceof Blob ||
-      (typeof input === 'string' && isDataUri(input))
-    ) {
-      let blob = input;
-      // If the string is a data URI, convert it to a blob
-      if (typeof input === 'string' && isDataUri(input)) {
-        const response = await fetch(input);
-        blob = await response.blob();
-      }
-      const url = await storageImpl.upload(blob as Blob);
-      return url;
+    } else if (input instanceof Blob) {
+      return await storageImpl.upload(input);
     } else if (isPlainObject(input)) {
       const inputObject = input as Record<string, any>;
       const promises = Object.entries(inputObject).map(

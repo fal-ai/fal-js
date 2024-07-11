@@ -29,11 +29,9 @@ type RunOptions<Input> = {
 
   /**
    * If `true`, the function will automatically upload any files
-   * (i.e. instances of `Blob`) or data:uri in the input.
+   * (i.e. instances of `Blob`).
    *
-   * You can disable this behavior by setting it to `false`, which
-   * is useful in cases where you want to upload the files yourself
-   * or use small data:uri in the input.
+   * This is enabled by default. You can disable it by setting it to `false`.
    */
   readonly autoUpload?: boolean;
 };
@@ -241,6 +239,8 @@ type QueueSubscribeOptions = {
       /**
        * The interval (in milliseconds) at which to poll for updates.
        * If not provided, a default value of `500` will be used.
+       *
+       * This value is ignored if `mode` is set to `streaming`.
        */
       pollInterval?: number;
     }
