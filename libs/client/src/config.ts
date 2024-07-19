@@ -65,8 +65,8 @@ export function config(config: Config) {
     configuration = {
       ...configuration,
       requestMiddleware: withMiddleware(
-        configuration.requestMiddleware,
-        withProxy({ targetUrl: config.proxyUrl })
+        withProxy({ targetUrl: config.proxyUrl }),
+        configuration.requestMiddleware
       ),
     };
   }
