@@ -1,5 +1,6 @@
 import { createParser } from 'eventsource-parser';
 import { getTemporaryAuthToken } from './auth';
+import { getConfig } from './config';
 import { buildUrl } from './function';
 import { ApiError, defaultResponseHandler } from './response';
 import { storageImpl } from './storage';
@@ -83,6 +84,7 @@ export class FalStream<Input, Output> {
   private start = async () => {
     const { url, options } = this;
     const { input, method = 'post' } = options;
+    const { fetch = global.fetch } = getConfig();
     try {
       const response = await fetch(url, {
         method: method.toUpperCase(),

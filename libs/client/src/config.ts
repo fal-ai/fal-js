@@ -13,6 +13,7 @@ export type Config = {
   proxyUrl?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
+  fetch?: typeof fetch;
 };
 
 export type RequiredConfig = Required<Config>;

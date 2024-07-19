@@ -14,6 +14,7 @@ export async function dispatchRequest<Input, Output>(
     credentials: credentialsValue,
     requestMiddleware,
     responseHandler,
+    fetch = global.fetch,
   } = getConfig();
   const userAgent = isBrowser() ? {} : { 'User-Agent': getUserAgent() };
   const credentials =

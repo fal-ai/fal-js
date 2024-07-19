@@ -49,6 +49,20 @@ export default function Home() {
     setLoading(true);
     const start = Date.now();
     try {
+      const requestId = await fal.queue.submit(
+        'fal-ai/fast-animatediff/turbo/text-to-video',
+        {
+          input: {
+            prompt: prompt,
+          },
+          webhookUrl:
+            'https://webhook.site/6679a19d-9dbc-4496-8c2d-53679e417861?userId=1234',
+        }
+      );
+      console.log(requestId);
+      setLoading(false);
+      return;
+
       const result: any = await fal.subscribe(endpointId, {
         input: JSON.parse(input),
         logs: true,
