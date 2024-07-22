@@ -123,6 +123,8 @@ export async function run<Input, Output>(
   return send(id, options);
 }
 
+type TimeoutId = ReturnType<typeof setTimeout>;
+
 const DEFAULT_POLL_INTERVAL = 500;
 
 /**
@@ -139,6 +141,16 @@ export async function subscribe<Input, Output>(
   const { request_id: requestId } = await queue.submit(id, options);
   if (options.onEnqueue) {
     options.onEnqueue(requestId);
+  }
+  const timeout = options.timeout;
+  let timeoutId: TimeoutId = undefined;
+  if (timeout) {
+    timeoutId = setTimeout(() => {
+      queue.cancel(id, { requestId }).catch(console.warn);
+      throw new Error(
+        `Client timed out waiting for the request to complete after ${timeout}ms`
+      );
+    }, timeout);
   }
   if (options.mode === 'streaming') {
     const status = await queue.streamStatus(id, {
@@ -160,6 +172,9 @@ export async function subscribe<Input, Output>(
       }
     });
     await status.done();
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
     return queue.result<Output>(id, { requestId });
   }
   // default to polling until status streaming is stable and faster
@@ -229,6 +244,15 @@ type QueueSubscribeOptions = {
   logs?: boolean;
 
   /**
+   * The timeout (in milliseconds) for the request. If the request is not
+   * completed within this time, the subscription will be cancelled.
+   *
+   * Note: currently, the timeout is not enforced and the default is `undefined`.
+   * This behavior might change in the future.
+   */
+  timeout?: number;
+
+  /**
    * The URL to send a webhook notification to when the request is completed.
    * @see WebHookResponse
    */
@@ -283,7 +307,7 @@ interface Queue {
   /**
    * Submits a request to the queue.
    *
-   * @param endpointId - The ID or URL of the function web endpoint.
+   * @param endpointId - The ID of the function web endpoint.
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of enqueuing the request.
    */
@@ -295,7 +319,7 @@ interface Queue {
   /**
    * Retrieves the status of a specific request in the queue.
    *
-   * @param endpointId - The ID or URL of the function web endpoint.
+   * @param endpointId - The ID of the function web endpoint.
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the status of the request.
    */
@@ -304,7 +328,7 @@ interface Queue {
   /**
    * Retrieves the result of a specific request from the queue.
    *
-   * @param endpointId - The ID or URL of the function web endpoint.
+   * @param endpointId - The ID of the function web endpoint.
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of the request.
    */
@@ -321,10 +345,27 @@ interface Queue {
     options: RunOptions<Input> & QueueSubscribeOptions
   ): Promise<Output>;
 
+  /**
+   * Subscribes to updates for a specific request in the queue.
+   *
+   * @param endpointId - The ID of the function web endpoint.
+   * @param options - Options to configure how the request is run and how updates are received.
+   */
   streamStatus(
     endpointId: string,
     options: QueueStatusOptions
   ): Promise<FalStream<unknown, QueueStatus>>;
+
+  /**
+   * Cancels a request in the queue.
+   *
+   * @param endpointId - The ID of the function web endpoint.
+   * @param options - Options to configure how the request
+   * is run and how updates are received.
+   * @returns A promise that resolves once the request is cancelled.
+   * @throws {Error} If the request cannot be cancelled.
+   */
+  cancel(endpointId: string, options: BaseQueueOptions): Promise<void>;
 }
 
 /**
@@ -393,6 +434,18 @@ export const queue: Queue = {
       subdomain: 'queue',
       method: 'get',
       path: `/requests/${requestId}`,
+    });
+  },
+  async cancel(
+    endpointId: string,
+    { requestId }: BaseQueueOptions
+  ): Promise<void> {
+    const appId = parseAppId(endpointId);
+    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    await send(`${prefix}${appId.owner}/${appId.alias}`, {
+      subdomain: 'queue',
+      method: 'put',
+      path: `/requests/${requestId}/cancel`,
     });
   },
   subscribe,
