@@ -76,6 +76,7 @@ type KeyValuePair = [string, any];
 
 export const storageImpl: StorageSupport = {
   upload: async (file: Blob) => {
+    const { fetch = global.fetch } = getConfig();
     const { upload_url: uploadUrl, file_url: url } = await initiateUpload(file);
     const response = await fetch(uploadUrl, {
       method: 'PUT',

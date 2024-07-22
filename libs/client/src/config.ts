@@ -13,6 +13,7 @@ export type Config = {
   proxyUrl?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
+  fetch?: typeof fetch;
 };
 
 export type RequiredConfig = Required<Config>;
@@ -64,8 +65,8 @@ export function config(config: Config) {
     configuration = {
       ...configuration,
       requestMiddleware: withMiddleware(
-        configuration.requestMiddleware,
-        withProxy({ targetUrl: config.proxyUrl })
+        withProxy({ targetUrl: config.proxyUrl }),
+        configuration.requestMiddleware
       ),
     };
   }
