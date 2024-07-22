@@ -55,4 +55,5 @@ export const route = {
   handler: routeHandler,
   GET: routeHandler,
   POST: routeHandler,
+  PUT: routeHandler,
 };

@@ -44,5 +44,6 @@ export const createRequestHandler = ({
     requestHandler: handler,
     GET: handler,
     POST: handler,
+    PUT: handler,
   };
 };
