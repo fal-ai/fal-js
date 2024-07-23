@@ -30,13 +30,19 @@ type StreamOptions<Input> = {
    * The HTTP method, defaults to `post`;
    */
   readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
+
+  /**
+   * The content type the client accepts as response.
+   * By default this is set to `text/event-stream`.
+   */
+  readonly accept?: string;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
 
-type FalStreamEventType = 'message' | 'error' | 'done';
+type FalStreamEventType = 'data' | 'error' | 'done';
 
-type EventHandler = (event: any) => void;
+type EventHandler<T = any> = (event: T) => void;
 
 /**
  * The class representing a streaming response. With t
@@ -91,7 +97,7 @@ export class FalStream<Input, Output> {
       const response = await fetch(url, {
         method: method.toUpperCase(),
         headers: {
-          accept: 'text/event-stream',
+          accept: options.accept ?? 'text/event-stream',
           'content-type': 'application/json',
         },
         body: input && method !== 'get' ? JSON.stringify(input) : undefined,
@@ -127,6 +133,26 @@ export class FalStream<Input, Output> {
       );
       return;
     }
+
+    // any response that is not a text/event-stream will be handled as a binary stream
+    if (response.headers.get('content-type') !== 'text/event-stream') {
+      // pass the binary chunks to this.emit('data', chunk)
+      const reader = body.getReader();
+      const emitRawChunk = () => {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            this.emit('done', this.currentData);
+            return;
+          }
+          this.currentData = value as Output;
+          this.emit('data', value);
+          emitRawChunk();
+        });
+      };
+      emitRawChunk();
+      return;
+    }
+
     const decoder = new TextDecoder('utf-8');
     const reader = response.body.getReader();
 
@@ -138,7 +164,10 @@ export class FalStream<Input, Output> {
           const parsedData = JSON.parse(data);
           this.buffer.push(parsedData);
           this.currentData = parsedData;
-          this.emit('message', parsedData);
+          this.emit('data', parsedData);
+
+          // also emit 'message'for backwards compatibility
+          this.emit('message' as any, parsedData);
         } catch (e) {
           this.emit('error', e);
         }
@@ -242,16 +271,16 @@ export class FalStream<Input, Output> {
  * object as a result, that can be used to get partial results through either
  * `AsyncIterator` or through an event listener.
  *
- * @param appId the app id, e.g. `fal-ai/llavav15-13b`.
+ * @param endpointId the endpoint id, e.g. `fal-ai/llavav15-13b`.
  * @param options the request options, including the input payload.
  * @returns the `FalStream` instance.
  */
 export async function stream<Input = Record<string, any>, Output = any>(
-  appId: string,
+  endpointId: string,
   options: StreamOptions<Input>
 ): Promise<FalStream<Input, Output>> {
-  const token = await getTemporaryAuthToken(appId);
-  const url = buildUrl(appId, { path: '/stream' });
+  const token = await getTemporaryAuthToken(endpointId);
+  const url = buildUrl(endpointId, { path: '/stream' });
 
   const input =
     options.input && options.autoUpload !== false

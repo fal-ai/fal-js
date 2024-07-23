@@ -390,7 +390,7 @@ export const queue: Queue = {
           );
         }, timeout);
       }
-      status.on('message', (data: QueueStatus) => {
+      status.on('data', (data: QueueStatus) => {
         if (options.onQueueUpdate) {
           // accumulate logs to match previous polling behavior
           if (
