@@ -56,6 +56,8 @@ export class FalStream<Input, Output> {
   private streamClosed = false;
   private donePromise: Promise<Output>;
 
+  private abortController = new AbortController();
+
   constructor(url: string, options: StreamOptions<Input>) {
     this.url = url;
     this.options = options;
@@ -93,6 +95,7 @@ export class FalStream<Input, Output> {
           'content-type': 'application/json',
         },
         body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+        signal: this.abortController.signal,
       });
       this.handleResponse(response);
     } catch (error) {
@@ -225,6 +228,13 @@ export class FalStream<Input, Output> {
    * @returns the promise that resolves when the request is done.
    */
   public done = async () => this.donePromise;
+
+  /**
+   * Aborts the streaming request.
+   */
+  public abort = () => {
+    this.abortController.abort();
+  };
 }
 
 /**
