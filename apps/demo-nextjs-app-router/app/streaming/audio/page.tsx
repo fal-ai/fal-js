@@ -64,15 +64,14 @@ export default function AudioStreamingDemo() {
       }
     );
     setStreamStatus('running');
+    await audioRef.current?.play();
 
     stream.on('data', (data: Uint8Array) => {
       const sourceBuffer = sourceBufferRef.current;
 
-      audioRef.current?.play();
-
       if (sourceBuffer) {
         console.log('Appending buffer...');
-        // sourceBuffer.appendBuffer(data);
+        sourceBuffer.appendBuffer(data);
         // console.log('sourceBuffer', sourceBuffer);
       } else {
         console.warn('Source buffer not found or not ready');
@@ -99,6 +98,7 @@ export default function AudioStreamingDemo() {
           <button
             onClick={runInference}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline disabled:opacity-70"
+            disabled={streamStatus === 'running'}
           >
             Run inference
           </button>
