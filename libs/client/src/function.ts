@@ -131,7 +131,7 @@ export async function run<Input, Output>(
   return send(id, options);
 }
 
-type TimeoutId = ReturnType<typeof setTimeout>;
+type TimeoutId = ReturnType<typeof setTimeout> | undefined;
 
 const DEFAULT_POLL_INTERVAL = 500;
 
