@@ -2,7 +2,12 @@ import { getTemporaryAuthToken } from './auth';
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
 import { FalStream } from './streaming';
-import { EnqueueResult, QueueStatus, RequestLog } from './types';
+import {
+  CompletedQueueStatus,
+  EnqueueResult,
+  QueueStatus,
+  RequestLog,
+} from './types';
 import { ensureAppIdFormat, isUUIDv4, isValidUrl, parseAppId } from './utils';
 
 /**
@@ -110,6 +115,9 @@ export async function send<Input, Output>(
   );
 }
 
+export type QueueStatusSubscriptionOptions = QueueStatusOptions &
+  Omit<QueueSubscribeOptions, 'onEnqueue' | 'webhookUrl'>;
+
 /**
  * Runs a fal serverless function identified by its `id`.
  *
@@ -126,89 +134,6 @@ export async function run<Input, Output>(
 type TimeoutId = ReturnType<typeof setTimeout>;
 
 const DEFAULT_POLL_INTERVAL = 500;
-
-/**
- * Subscribes to updates for a specific request in the queue.
- *
- * @param id - The ID or URL of the function web endpoint.
- * @param options - Options to configure how the request is run and how updates are received.
- * @returns A promise that resolves to the result of the request once it's completed.
- */
-export async function subscribe<Input, Output>(
-  id: string,
-  options: RunOptions<Input> & QueueSubscribeOptions = {}
-): Promise<Output> {
-  const { request_id: requestId } = await queue.submit(id, options);
-  if (options.onEnqueue) {
-    options.onEnqueue(requestId);
-  }
-  const timeout = options.timeout;
-  let timeoutId: TimeoutId = undefined;
-  if (timeout) {
-    timeoutId = setTimeout(() => {
-      queue.cancel(id, { requestId }).catch(console.warn);
-      throw new Error(
-        `Client timed out waiting for the request to complete after ${timeout}ms`
-      );
-    }, timeout);
-  }
-  if (options.mode === 'streaming') {
-    const status = await queue.streamStatus(id, {
-      requestId,
-      logs: options.logs,
-    });
-    const logs: RequestLog[] = [];
-    status.on('message', (data: QueueStatus) => {
-      if (options.onQueueUpdate) {
-        // accumulate logs to match previous polling behavior
-        if (
-          'logs' in data &&
-          Array.isArray(data.logs) &&
-          data.logs.length > 0
-        ) {
-          logs.push(...data.logs);
-        }
-        options.onQueueUpdate('logs' in data ? { ...data, logs } : data);
-      }
-    });
-    await status.done();
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    return queue.result<Output>(id, { requestId });
-  }
-  // default to polling until status streaming is stable and faster
-  return new Promise<Output>((resolve, reject) => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
-    const poll = async () => {
-      try {
-        const requestStatus = await queue.status(id, {
-          requestId,
-          logs: options.logs ?? false,
-        });
-        if (options.onQueueUpdate) {
-          options.onQueueUpdate(requestStatus);
-        }
-        if (requestStatus.status === 'COMPLETED') {
-          clearTimeout(timeoutId);
-          try {
-            const result = await queue.result<Output>(id, { requestId });
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-          return;
-        }
-        timeoutId = setTimeout(poll, pollInterval);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        reject(error);
-      }
-    };
-    poll().catch(reject);
-  });
-}
 
 /**
  * Options for subscribing to the request queue.
@@ -246,6 +171,10 @@ type QueueSubscribeOptions = {
   /**
    * The timeout (in milliseconds) for the request. If the request is not
    * completed within this time, the subscription will be cancelled.
+   *
+   * Keep in mind that although the client resolves the function on a timeout,
+   * and will try to cancel the request on the server, the server might not be
+   * able to cancel the request if it's already running.
    *
    * Note: currently, the timeout is not enforced and the default is `undefined`.
    * This behavior might change in the future.
@@ -326,6 +255,31 @@ interface Queue {
   status(endpointId: string, options: QueueStatusOptions): Promise<QueueStatus>;
 
   /**
+   * Subscribes to updates for a specific request in the queue using HTTP streaming events.
+   *
+   * @param endpointId - The ID of the function web endpoint.
+   * @param options - Options to configure how the request is run and how updates are received.
+   * @returns The streaming object that can be used to listen for updates.
+   */
+  streamStatus(
+    endpointId: string,
+    options: QueueStatusOptions
+  ): Promise<FalStream<unknown, QueueStatus>>;
+
+  /**
+   * Subscribes to updates for a specific request in the queue using polling or streaming.
+   * See `options.mode` for more details.
+   *
+   * @param endpointId - The ID of the function web endpoint.
+   * @param options - Options to configure how the request is run and how updates are received.
+   * @returns A promise that resolves to the final status of the request.
+   */
+  subscribeToStatus(
+    endpointId: string,
+    options: QueueStatusSubscriptionOptions
+  ): Promise<CompletedQueueStatus>;
+
+  /**
    * Retrieves the result of a specific request from the queue.
    *
    * @param endpointId - The ID of the function web endpoint.
@@ -336,25 +290,6 @@ interface Queue {
     endpointId: string,
     options: BaseQueueOptions
   ): Promise<Output>;
-
-  /**
-   * @deprecated Use `fal.subscribe` instead.
-   */
-  subscribe<Input, Output>(
-    endpointId: string,
-    options: RunOptions<Input> & QueueSubscribeOptions
-  ): Promise<Output>;
-
-  /**
-   * Subscribes to updates for a specific request in the queue.
-   *
-   * @param endpointId - The ID of the function web endpoint.
-   * @param options - Options to configure how the request is run and how updates are received.
-   */
-  streamStatus(
-    endpointId: string,
-    options: QueueStatusOptions
-  ): Promise<FalStream<unknown, QueueStatus>>;
 
   /**
    * Cancels a request in the queue.
@@ -402,6 +337,7 @@ export const queue: Queue = {
       },
     });
   },
+
   async streamStatus(
     endpointId: string,
     { requestId, logs = false }: QueueStatusOptions
@@ -424,6 +360,108 @@ export const queue: Queue = {
       method: 'get',
     });
   },
+
+  async subscribeToStatus(endpointId, options): Promise<CompletedQueueStatus> {
+    const requestId = options.requestId;
+    const timeout = options.timeout;
+    let timeoutId: TimeoutId = undefined;
+
+    const handleCancelError = () => {
+      // Ignore errors as the client will follow through with the timeout
+      // regardless of the server response. In case cancelation fails, we
+      // still want to reject the promise and consider the client call canceled.
+    };
+    if (options.mode === 'streaming') {
+      const status = await queue.streamStatus(endpointId, {
+        requestId,
+        logs: options.logs,
+      });
+      const logs: RequestLog[] = [];
+      if (timeout) {
+        timeoutId = setTimeout(() => {
+          status.abort();
+          queue.cancel(endpointId, { requestId }).catch(handleCancelError);
+          // TODO this error cannot bubble up to the user since it's thrown in
+          // a closure in the global scope due to setTimeout behavior.
+          // User will get a platform error instead. We should find a way to
+          // make this behavior aligned with polling.
+          throw new Error(
+            `Client timed out waiting for the request to complete after ${timeout}ms`
+          );
+        }, timeout);
+      }
+      status.on('message', (data: QueueStatus) => {
+        if (options.onQueueUpdate) {
+          // accumulate logs to match previous polling behavior
+          if (
+            'logs' in data &&
+            Array.isArray(data.logs) &&
+            data.logs.length > 0
+          ) {
+            logs.push(...data.logs);
+          }
+          options.onQueueUpdate('logs' in data ? { ...data, logs } : data);
+        }
+      });
+      const doneStatus = await status.done();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      return doneStatus as CompletedQueueStatus;
+    }
+    // default to polling until status streaming is stable and faster
+    return new Promise<CompletedQueueStatus>((resolve, reject) => {
+      let pollingTimeoutId: TimeoutId;
+      // type resolution isn't great in this case, so check for its presence
+      // and and type so the typechecker behaves as expected
+      const pollInterval =
+        'pollInterval' in options && typeof options.pollInterval === 'number'
+          ? options.pollInterval ?? DEFAULT_POLL_INTERVAL
+          : DEFAULT_POLL_INTERVAL;
+
+      const clearScheduledTasks = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        if (pollingTimeoutId) {
+          clearTimeout(pollingTimeoutId);
+        }
+      };
+      if (timeout) {
+        timeoutId = setTimeout(() => {
+          clearScheduledTasks();
+          queue.cancel(endpointId, { requestId }).catch(handleCancelError);
+          reject(
+            new Error(
+              `Client timed out waiting for the request to complete after ${timeout}ms`
+            )
+          );
+        }, timeout);
+      }
+      const poll = async () => {
+        try {
+          const requestStatus = await queue.status(endpointId, {
+            requestId,
+            logs: options.logs ?? false,
+          });
+          if (options.onQueueUpdate) {
+            options.onQueueUpdate(requestStatus);
+          }
+          if (requestStatus.status === 'COMPLETED') {
+            clearScheduledTasks();
+            resolve(requestStatus);
+            return;
+          }
+          pollingTimeoutId = setTimeout(poll, pollInterval);
+        } catch (error) {
+          clearScheduledTasks();
+          reject(error);
+        }
+      };
+      poll().catch(reject);
+    });
+  },
+
   async result<Output>(
     endpointId: string,
     { requestId }: BaseQueueOptions
@@ -436,6 +474,7 @@ export const queue: Queue = {
       path: `/requests/${requestId}`,
     });
   },
+
   async cancel(
     endpointId: string,
     { requestId }: BaseQueueOptions
@@ -448,5 +487,23 @@ export const queue: Queue = {
       path: `/requests/${requestId}/cancel`,
     });
   },
-  subscribe,
 };
+
+/**
+ * Subscribes to updates for a specific request in the queue.
+ *
+ * @param endpointId - The ID of the function web endpoint.
+ * @param options - Options to configure how the request is run and how updates are received.
+ * @returns A promise that resolves to the result of the request once it's completed.
+ */
+export async function subscribe<Input, Output>(
+  endpointId: string,
+  options: RunOptions<Input> & QueueSubscribeOptions = {}
+): Promise<Output> {
+  const { request_id: requestId } = await queue.submit(endpointId, options);
+  if (options.onEnqueue) {
+    options.onEnqueue(requestId);
+  }
+  await queue.subscribeToStatus(endpointId, { requestId, ...options });
+  return queue.result(endpointId, { requestId });
+}

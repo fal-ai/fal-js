@@ -17,26 +17,40 @@ export type Metrics = {
   inference_time: number | null;
 };
 
+interface BaseQueueStatus {
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'IN_QUEUE';
+}
+
+export interface InProgressQueueStatus extends BaseQueueStatus {
+  status: 'IN_PROGRESS';
+  response_url: string;
+  logs: RequestLog[];
+}
+
+export interface CompletedQueueStatus extends BaseQueueStatus {
+  status: 'COMPLETED';
+  response_url: string;
+  logs: RequestLog[];
+  metrics: Metrics;
+}
+
+export interface EnqueuedQueueStatus extends BaseQueueStatus {
+  status: 'IN_QUEUE';
+  queue_position: number;
+  response_url: string;
+}
+
 export type QueueStatus =
-  | {
-      status: 'IN_PROGRESS';
-      response_url: string;
-      logs: null | RequestLog[];
-    }
-  | {
-      status: 'COMPLETED';
-      response_url: string;
-      logs: null | RequestLog[];
-      metrics: Metrics;
-    }
-  | {
-      status: 'IN_QUEUE';
-      queue_position: number;
-      response_url: string;
-    };
+  | InProgressQueueStatus
+  | CompletedQueueStatus
+  | EnqueuedQueueStatus;
 
 export function isQueueStatus(obj: any): obj is QueueStatus {
   return obj && obj.status && obj.response_url;
+}
+
+export function isCompletedQueueStatus(obj: any): obj is CompletedQueueStatus {
+  return isQueueStatus(obj) && obj.status === 'COMPLETED';
 }
 
 export type ValidationErrorInfo = {
