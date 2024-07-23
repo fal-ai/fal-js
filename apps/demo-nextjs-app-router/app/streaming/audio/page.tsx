@@ -1,7 +1,7 @@
 'use client';
 
 import * as fal from '@fal-ai/serverless-client';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 fal.config({
   proxyUrl: '/api/fal/proxy',
@@ -23,43 +23,24 @@ export default function AudioStreamingDemo() {
   const mediaSourceRef = useRef<MediaSource | null>(null);
   const sourceBufferRef = useRef<SourceBuffer | null>(null);
 
-  useEffect(() => {
+  const setupMediaSource = () => {
     if (!audioRef.current) {
       console.warn('Audio element not found or not ready');
-      return;
+      return null;
     }
-    const mimeCodec = 'audio/mpeg';
-
-    let sourceUrl: string | null = null;
-    if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
-      const mediaSource = new MediaSource();
-      mediaSourceRef.current = mediaSource;
-      sourceUrl = URL.createObjectURL(mediaSource);
-      console.log('sourceUrl', sourceUrl);
-      audioRef.current.src = sourceUrl;
-
-      mediaSource.addEventListener('sourceopen', () => {
-        console.log('MediaSource ready - adding source buffer');
-        const sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
-        // sourceBuffer.addEventListener('updateend', () => {
-        //   mediaSource.endOfStream();
-        // });
-        sourceBufferRef.current = sourceBuffer;
-      });
-    } else {
-      console.error(
-        'Unsupported MIME type or MediaSource API is not available'
-      );
-    }
-
-    return () => {
-      if (sourceUrl) {
-        URL.revokeObjectURL(sourceUrl);
-      }
-    };
-  }, []);
+    const mediaSource = new MediaSource();
+    mediaSourceRef.current = mediaSource;
+    const url = URL.createObjectURL(mediaSource);
+    audioRef.current.src = url;
+    mediaSource.addEventListener('sourceopen', () => {
+      const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+      sourceBufferRef.current = sourceBuffer;
+    });
+    return url;
+  };
 
   const runInference = async () => {
+    setupMediaSource();
     setTimeToFirstChunk(null);
     const startedAt = Date.now();
     const stream = await fal.stream<PlayHTInput, Uint8Array>(
@@ -78,14 +59,14 @@ export default function AudioStreamingDemo() {
       if (audioRef.current?.paused) {
         audioRef.current?.play();
       }
-      console.log('Received data', data);
+      // console.log('Received data', data);
       if (firstChunk) {
         setTimeToFirstChunk(Date.now() - startedAt);
         firstChunk = false;
       }
       const sourceBuffer = sourceBufferRef.current;
 
-      console.log('sourceBuffer before', sourceBuffer);
+      // console.log('sourceBuffer before', sourceBuffer);
       if (sourceBuffer) {
         // console.log('Appending buffer...');
         sourceBuffer.appendBuffer(data);
@@ -97,7 +78,6 @@ export default function AudioStreamingDemo() {
 
     const result = await stream.done();
     // console.log('result', result);
-    sourceBufferRef.current?.appendBuffer(result);
     setStreamStatus('done');
     sourceBufferRef.current?.addEventListener('updateend', () => {
       mediaSourceRef.current?.endOfStream();
