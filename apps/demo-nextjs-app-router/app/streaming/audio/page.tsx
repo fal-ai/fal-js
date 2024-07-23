@@ -11,8 +11,13 @@ type PlayHTInput = {
   text: string;
 };
 
+const DEFAULT_PROMPT =
+  'Hey, this is Daniel from fal (dot) ai. Please hold on a moment, let me just um pull up your details real quick. Can you tell me your account email or, your phone number?';
+
 export default function AudioStreamingDemo() {
+  const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
   const [streamStatus, setStreamStatus] = useState<string>('idle');
+  const [timeToFirstChunk, setTimeToFirstChunk] = useState<number | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaSourceRef = useRef<MediaSource | null>(null);
@@ -55,31 +60,44 @@ export default function AudioStreamingDemo() {
   }, []);
 
   const runInference = async () => {
+    setTimeToFirstChunk(null);
+    const startedAt = Date.now();
     const stream = await fal.stream<PlayHTInput, Uint8Array>(
       'fal-ai/playht-tts',
       {
         input: {
-          text: 'Do you know who drew this picture and what is the name of it?',
+          text: prompt,
         },
       }
     );
     setStreamStatus('running');
-    await audioRef.current?.play();
+    // await audioRef.current?.play();
+    let firstChunk = true;
 
     stream.on('data', (data: Uint8Array) => {
+      if (audioRef.current?.paused) {
+        audioRef.current?.play();
+      }
+      console.log('Received data', data);
+      if (firstChunk) {
+        setTimeToFirstChunk(Date.now() - startedAt);
+        firstChunk = false;
+      }
       const sourceBuffer = sourceBufferRef.current;
 
+      console.log('sourceBuffer before', sourceBuffer);
       if (sourceBuffer) {
-        console.log('Appending buffer...');
+        // console.log('Appending buffer...');
         sourceBuffer.appendBuffer(data);
-        // console.log('sourceBuffer', sourceBuffer);
+        // console.log('sourceBuffer after', sourceBuffer);
       } else {
         console.warn('Source buffer not found or not ready');
       }
     });
 
     const result = await stream.done();
-    console.log('result', result);
+    // console.log('result', result);
+    sourceBufferRef.current?.appendBuffer(result);
     setStreamStatus('done');
     sourceBufferRef.current?.addEventListener('updateend', () => {
       mediaSourceRef.current?.endOfStream();
@@ -94,10 +112,17 @@ export default function AudioStreamingDemo() {
           <code className="text-indigo-500">streaming</code>
         </h1>
 
-        <div className="flex flex-row space-x-2">
+        <div className="flex flex-col space-y-2 flex-1 w-full">
+          <textarea
+            className="flex-1 p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10 text-sm"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Prompt"
+            rows={4}
+          ></textarea>
           <button
             onClick={runInference}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline disabled:opacity-70"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline disabled:opacity-70"
             disabled={streamStatus === 'running'}
           >
             Run inference
@@ -106,10 +131,18 @@ export default function AudioStreamingDemo() {
 
         <div className="w-full flex flex-col space-y-4">
           <div className="flex flex-row items-center justify-between">
-            <h2 className="text-2xl font-bold">Answer</h2>
-            <span>
-              streaming: <code className="font-semibold">{streamStatus}</code>
-            </span>
+            <h2 className="text-2xl font-bold">Result</h2>
+            <div className="space-x-4">
+              <span>
+                time to first chunk:{' '}
+                <code className="font-semibold">
+                  {timeToFirstChunk ? `${timeToFirstChunk}ms` : 'n/a'}
+                </code>
+              </span>
+              <span>
+                streaming: <code className="font-semibold">{streamStatus}</code>
+              </span>
+            </div>
           </div>
           <audio controls className="w-full" ref={audioRef} />
         </div>
