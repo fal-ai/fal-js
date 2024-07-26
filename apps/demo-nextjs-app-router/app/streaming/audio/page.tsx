@@ -12,7 +12,7 @@ type PlayHTInput = {
 };
 
 const DEFAULT_PROMPT =
-  'Hey, this is Daniel from fal (dot) ai. Please hold on a moment, let me just um pull up your details real quick. Can you tell me your account email or, your phone number?';
+  "As she sat watching the world go by, something caught her eye. It wasn't so much its color or shape, but the way it was moving. She squinted to see if she could better understand what it was and where it was going, but it didn't help. As she continued to stare into the distance, she didn't understand why this uneasiness was building inside her body.";
 
 export default function AudioStreamingDemo() {
   const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
@@ -49,35 +49,30 @@ export default function AudioStreamingDemo() {
         input: {
           text: prompt,
         },
+        connectionMode: 'server',
       }
     );
     setStreamStatus('running');
-    // await audioRef.current?.play();
     let firstChunk = true;
 
     stream.on('data', (data: Uint8Array) => {
       if (audioRef.current?.paused) {
         audioRef.current?.play();
       }
-      // console.log('Received data', data);
       if (firstChunk) {
         setTimeToFirstChunk(Date.now() - startedAt);
         firstChunk = false;
       }
       const sourceBuffer = sourceBufferRef.current;
 
-      // console.log('sourceBuffer before', sourceBuffer);
       if (sourceBuffer) {
-        // console.log('Appending buffer...');
         sourceBuffer.appendBuffer(data);
-        // console.log('sourceBuffer after', sourceBuffer);
       } else {
         console.warn('Source buffer not found or not ready');
       }
     });
 
-    const result = await stream.done();
-    // console.log('result', result);
+    await stream.done();
     setStreamStatus('done');
     sourceBufferRef.current?.addEventListener('updateend', () => {
       mediaSourceRef.current?.endOfStream();

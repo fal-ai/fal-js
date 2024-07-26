@@ -1,5 +1,6 @@
 import { createParser } from 'eventsource-parser';
 import { getTemporaryAuthToken } from './auth';
+import { getConfig } from './config';
 import { buildUrl } from './function';
 import { dispatchRequest } from './request';
 import { ApiError, defaultResponseHandler } from './response';
@@ -16,6 +17,11 @@ type StreamOptions<Input> = {
    * The API input payload.
    */
   readonly input?: Input;
+
+  /**
+   * The query parameters to be sent with the request.
+   */
+  readonly queryParams?: Record<string, string>;
 
   /**
    * The maximum time interval in milliseconds between stream chunks. Defaults to 15s.
@@ -61,6 +67,7 @@ type EventHandler<T = any> = (event: T) => void;
  */
 export class FalStream<Input, Output> {
   // properties
+  endpointId: string;
   url: string;
   options: StreamOptions<Input>;
 
@@ -76,8 +83,12 @@ export class FalStream<Input, Output> {
 
   private abortController = new AbortController();
 
-  constructor(url: string, options: StreamOptions<Input>) {
-    this.url = url;
+  constructor(endpointId: string, options: StreamOptions<Input>) {
+    this.endpointId = endpointId;
+    this.url = buildUrl(endpointId, {
+      path: '/stream',
+      query: options.queryParams,
+    });
     this.options = options;
     this.donePromise = new Promise<Output>((resolve, reject) => {
       if (this.streamClosed) {
@@ -102,10 +113,40 @@ export class FalStream<Input, Output> {
   }
 
   private start = async () => {
-    const { url, options } = this;
-    const { input, method = 'post' } = options;
+    const { endpointId, options } = this;
+    const {
+      input,
+      method = 'post',
+      connectionMode = typeof window === 'undefined' ? 'server' : 'client',
+      queryParams = {},
+    } = options;
     try {
-      dispatchRequest(method.toUpperCase(), url, input, {
+      if (connectionMode === 'client') {
+        // if we are in the browser, we need to get a temporary token
+        // to authenticate the request
+        const token = await getTemporaryAuthToken(endpointId);
+        const { fetch = global.fetch } = getConfig();
+        const url = buildUrl(endpointId, {
+          path: '/stream',
+          query: {
+            ...queryParams,
+            fal_jwt_token: token,
+          },
+        });
+        const response = await fetch(url, {
+          method: method.toUpperCase(),
+          headers: {
+            accept: options.accept ?? 'text/event-stream',
+            'content-type': 'application/json',
+          },
+          body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+        });
+        return await this.handleResponse(response);
+      }
+      return await dispatchRequest(method.toUpperCase(), this.url, input, {
+        headers: {
+          accept: options.accept ?? 'text/event-stream',
+        },
         responseHandler: this.handleResponse,
         signal: this.abortController.signal,
       });
@@ -284,25 +325,11 @@ export async function stream<Input = Record<string, any>, Output = any>(
   endpointId: string,
   options: StreamOptions<Input>
 ): Promise<FalStream<Input, Output>> {
-  const queryParams: Record<string, string> = {};
-  const connectionMode =
-    options.connectionMode ??
-    (typeof window === 'undefined' ? 'server' : 'client');
-  if (connectionMode === 'client') {
-    queryParams['fal_jwt_token'] = await getTemporaryAuthToken(endpointId);
-  }
-  const url = buildUrl(endpointId, { path: '/stream' });
-
   const input =
     options.input && options.autoUpload !== false
       ? await storageImpl.transformInput(options.input)
       : options.input;
-
-  const query =
-    Object.keys(queryParams).length > 0
-      ? '?' + new URLSearchParams(queryParams).toString()
-      : '';
-  return new FalStream<Input, Output>(url + query, {
+  return new FalStream<Input, Output>(endpointId, {
     ...options,
     input: input as Input,
   });
