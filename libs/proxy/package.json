@@ -1,6 +1,6 @@
 {
   "name": "@fal-ai/serverless-proxy",
-  "version": "0.7.5",
+  "version": "0.8.0-alpha.1",
   "license": "MIT",
   "repository": {
     "type": "git",

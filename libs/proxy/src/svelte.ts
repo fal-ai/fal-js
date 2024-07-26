@@ -1,5 +1,5 @@
 import { type RequestHandler } from '@sveltejs/kit';
-import { fromHeaders, handleRequest } from './index';
+import { fromHeaders, handleRequest, responsePassthrough } from './index';
 
 type RequestHandlerParams = {
   /**
@@ -28,16 +28,17 @@ export const createRequestHandler = ({
     return await handleRequest({
       id: 'svelte-app-router',
       method: request.method,
+      getRequestBody: async () => request.text(),
+      getHeaders: () => fromHeaders(request.headers),
+      getHeader: (name) => request.headers.get(name),
+      sendHeader: (name, value) => (responseHeaders[name] = value),
+      resolveApiKey: () => Promise.resolve(FAL_KEY),
       respondWith: (status, data) =>
         new Response(JSON.stringify(data), {
           status,
           headers: responseHeaders,
         }),
-      getHeaders: () => fromHeaders(request.headers),
-      getHeader: (name) => request.headers.get(name),
-      sendHeader: (name, value) => (responseHeaders[name] = value),
-      getBody: async () => request.text(),
-      resolveApiKey: () => Promise.resolve(FAL_KEY),
+      sendResponse: responsePassthrough,
     });
   };
   return {

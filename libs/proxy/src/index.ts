@@ -19,10 +19,11 @@ export interface ProxyBehavior<ResponseType> {
   method: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   respondWith(status: number, data: string | any): ResponseType;
+  sendResponse(response: Response): Promise<ResponseType>;
   getHeaders(): Record<string, HeaderValue>;
   getHeader(name: string): HeaderValue;
   sendHeader(name: string, value: string): void;
-  getBody(): Promise<string | undefined>;
+  getRequestBody(): Promise<string | undefined>;
   resolveApiKey?: () => Promise<string | undefined>;
 }
 
@@ -109,7 +110,7 @@ export async function handleRequest<ResponseType>(
     body:
       behavior.method?.toUpperCase() === 'GET'
         ? undefined
-        : await behavior.getBody(),
+        : await behavior.getRequestBody(),
   });
 
   // copy headers from fal to the proxied response
@@ -119,12 +120,7 @@ export async function handleRequest<ResponseType>(
     }
   });
 
-  if (res.headers.get('content-type')?.includes('application/json')) {
-    const data = await res.json();
-    return behavior.respondWith(res.status, data);
-  }
-  const data = await res.text();
-  return behavior.respondWith(res.status, data);
+  return behavior.sendResponse(res);
 }
 
 export function fromHeaders(
@@ -138,3 +134,5 @@ export function fromHeaders(
   });
   return result;
 }
+
+export const responsePassthrough = (res: Response) => Promise.resolve(res);
