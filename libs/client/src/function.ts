@@ -90,7 +90,7 @@ export function buildUrl<Input>(
 
   // TODO remove this after some time, fal.run should be preferred
   if (parts.length === 2 && isUUIDv4(parts[1])) {
-    const host = 'gateway.shark.fal.ai';
+    const host = 'gateway.alpha.fal.ai';
     return `https://${host}/trigger/${id}/${path}${queryParams}`;
   }
 
