@@ -1,9 +1,11 @@
 import { createParser } from 'eventsource-parser';
 import { getTemporaryAuthToken } from './auth';
-import { getConfig } from './config';
 import { buildUrl } from './function';
+import { dispatchRequest } from './request';
 import { ApiError, defaultResponseHandler } from './response';
 import { storageImpl } from './storage';
+
+type StreamingConnectionMode = 'client' | 'server';
 
 /**
  * The stream API options. It requires the API input and also
@@ -36,6 +38,16 @@ type StreamOptions<Input> = {
    * By default this is set to `text/event-stream`.
    */
   readonly accept?: string;
+
+  /**
+   * The streaming connection mode. This is used to determine
+   * whether the streaming will be done from the browser itself (client)
+   * or through your own server, either when running on NodeJS or when
+   * using a proxy that supports streaming.
+   *
+   * It defaults to `client` when running in the browser or `server` otherwise.
+   */
+  readonly connectionMode?: StreamingConnectionMode;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
@@ -92,18 +104,11 @@ export class FalStream<Input, Output> {
   private start = async () => {
     const { url, options } = this;
     const { input, method = 'post' } = options;
-    const { fetch = global.fetch } = getConfig();
     try {
-      const response = await fetch(url, {
-        method: method.toUpperCase(),
-        headers: {
-          accept: options.accept ?? 'text/event-stream',
-          'content-type': 'application/json',
-        },
-        body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+      dispatchRequest(method.toUpperCase(), url, input, {
+        responseHandler: this.handleResponse,
         signal: this.abortController.signal,
       });
-      this.handleResponse(response);
     } catch (error) {
       this.handleError(error);
     }
@@ -279,7 +284,13 @@ export async function stream<Input = Record<string, any>, Output = any>(
   endpointId: string,
   options: StreamOptions<Input>
 ): Promise<FalStream<Input, Output>> {
-  const token = await getTemporaryAuthToken(endpointId);
+  const queryParams: Record<string, string> = {};
+  const connectionMode =
+    options.connectionMode ??
+    (typeof window === 'undefined' ? 'server' : 'client');
+  if (connectionMode === 'client') {
+    queryParams['fal_jwt_token'] = await getTemporaryAuthToken(endpointId);
+  }
   const url = buildUrl(endpointId, { path: '/stream' });
 
   const input =
@@ -287,11 +298,11 @@ export async function stream<Input = Record<string, any>, Output = any>(
       ? await storageImpl.transformInput(options.input)
       : options.input;
 
-  const queryParams = new URLSearchParams({
-    fal_jwt_token: token,
-  });
-
-  return new FalStream<Input, Output>(`${url}?${queryParams}`, {
+  const query =
+    Object.keys(queryParams).length > 0
+      ? '?' + new URLSearchParams(queryParams).toString()
+      : '';
+  return new FalStream<Input, Output>(url + query, {
     ...options,
     input: input as Input,
   });
