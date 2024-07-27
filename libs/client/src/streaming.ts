@@ -6,13 +6,19 @@ import { dispatchRequest } from './request';
 import { ApiError, defaultResponseHandler } from './response';
 import { storageImpl } from './storage';
 
-type StreamingConnectionMode = 'client' | 'server';
+export type StreamingConnectionMode = 'client' | 'server';
 
 /**
  * The stream API options. It requires the API input and also
  * offers configuration options.
  */
 type StreamOptions<Input> = {
+  /**
+   * The endpoint URL. If not provided, it will be generated from the
+   * `endpointId` and the `queryParams`.
+   */
+  readonly url?: string;
+
   /**
    * The API input payload.
    */
@@ -51,7 +57,8 @@ type StreamOptions<Input> = {
    * or through your own server, either when running on NodeJS or when
    * using a proxy that supports streaming.
    *
-   * It defaults to `client` when running in the browser or `server` otherwise.
+   * It defaults to `server`. Set to `client` if your server proxy doesn't
+   * support streaming.
    */
   readonly connectionMode?: StreamingConnectionMode;
 };
@@ -85,10 +92,12 @@ export class FalStream<Input, Output> {
 
   constructor(endpointId: string, options: StreamOptions<Input>) {
     this.endpointId = endpointId;
-    this.url = buildUrl(endpointId, {
-      path: '/stream',
-      query: options.queryParams,
-    });
+    this.url =
+      options.url ??
+      buildUrl(endpointId, {
+        path: '/stream',
+        query: options.queryParams,
+      });
     this.options = options;
     this.donePromise = new Promise<Output>((resolve, reject) => {
       if (this.streamClosed) {
@@ -114,32 +123,24 @@ export class FalStream<Input, Output> {
 
   private start = async () => {
     const { endpointId, options } = this;
-    const {
-      input,
-      method = 'post',
-      connectionMode = typeof window === 'undefined' ? 'server' : 'client',
-      queryParams = {},
-    } = options;
+    const { input, method = 'post', connectionMode = 'server' } = options;
     try {
       if (connectionMode === 'client') {
         // if we are in the browser, we need to get a temporary token
         // to authenticate the request
         const token = await getTemporaryAuthToken(endpointId);
         const { fetch = global.fetch } = getConfig();
-        const url = buildUrl(endpointId, {
-          path: '/stream',
-          query: {
-            ...queryParams,
-            fal_jwt_token: token,
-          },
-        });
-        const response = await fetch(url, {
+        const parsedUrl = new URL(this.url);
+        console.log(this.url);
+        parsedUrl.searchParams.set('fal_jwt_token', token);
+        const response = await fetch(parsedUrl.toString(), {
           method: method.toUpperCase(),
           headers: {
             accept: options.accept ?? 'text/event-stream',
             'content-type': 'application/json',
           },
           body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+          signal: this.abortController.signal,
         });
         return await this.handleResponse(response);
       }
@@ -182,7 +183,6 @@ export class FalStream<Input, Output> {
 
     // any response that is not a text/event-stream will be handled as a binary stream
     if (response.headers.get('content-type') !== 'text/event-stream') {
-      // pass the binary chunks to this.emit('data', chunk)
       const reader = body.getReader();
       const emitRawChunk = () => {
         reader.read().then(({ done, value }) => {

@@ -25,10 +25,15 @@ function Error(props: ErrorProps) {
   );
 }
 
+const DEFAULT_ENDPOINT_ID = 'fal-ai/fast-sdxl';
+const DEFAULT_INPUT = `{
+  "prompt": "A beautiful sunset over the ocean"
+}`;
+
 export default function Home() {
   // Input state
-  const [endpointId, setEndpointId] = useState<string>('');
-  const [input, setInput] = useState<string>('{}');
+  const [endpointId, setEndpointId] = useState<string>(DEFAULT_ENDPOINT_ID);
+  const [input, setInput] = useState<string>(DEFAULT_INPUT);
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);

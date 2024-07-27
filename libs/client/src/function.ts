@@ -1,7 +1,6 @@
-import { getTemporaryAuthToken } from './auth';
 import { dispatchRequest } from './request';
 import { storageImpl } from './storage';
-import { FalStream } from './streaming';
+import { FalStream, StreamingConnectionMode } from './streaming';
 import {
   CompletedQueueStatus,
   EnqueueResult,
@@ -199,6 +198,12 @@ type QueueSubscribeOptions = {
     }
   | {
       mode: 'streaming';
+
+      /**
+       * The connection mode to use for streaming updates. It defaults to `server`.
+       * Set to `client` if your server proxy doesn't support streaming.
+       */
+      connectionMode?: StreamingConnectionMode;
     }
 );
 
@@ -226,6 +231,14 @@ type QueueStatusOptions = BaseQueueOptions & {
    * Defaults to `false`.
    */
   logs?: boolean;
+};
+
+type QueueStatusStreamOptions = QueueStatusOptions & {
+  /**
+   * The connection mode to use for streaming updates. It defaults to `server`.
+   * Set to `client` if your server proxy doesn't support streaming.
+   */
+  connectionMode?: StreamingConnectionMode;
 };
 
 /**
@@ -263,7 +276,7 @@ interface Queue {
    */
   streamStatus(
     endpointId: string,
-    options: QueueStatusOptions
+    options: QueueStatusStreamOptions
   ): Promise<FalStream<unknown, QueueStatus>>;
 
   /**
@@ -340,24 +353,26 @@ export const queue: Queue = {
 
   async streamStatus(
     endpointId: string,
-    { requestId, logs = false }: QueueStatusOptions
+    { requestId, logs = false, connectionMode }: QueueStatusStreamOptions
   ): Promise<FalStream<unknown, QueueStatus>> {
     const appId = parseAppId(endpointId);
     const prefix = appId.namespace ? `${appId.namespace}/` : '';
-    const token = await getTemporaryAuthToken(endpointId);
+
+    const queryParams = {
+      logs: logs ? '1' : '0',
+    };
+
     const url = buildUrl(`${prefix}${appId.owner}/${appId.alias}`, {
       subdomain: 'queue',
       path: `/requests/${requestId}/status/stream`,
+      query: queryParams,
     });
 
-    const queryParams = new URLSearchParams({
-      fal_jwt_token: token,
-      logs: logs ? '1' : '0',
-    });
-
-    return new FalStream<unknown, QueueStatus>(`${url}?${queryParams}`, {
-      input: {},
+    return new FalStream<unknown, QueueStatus>(endpointId, {
+      url,
       method: 'get',
+      connectionMode,
+      queryParams,
     });
   },
 
@@ -375,6 +390,10 @@ export const queue: Queue = {
       const status = await queue.streamStatus(endpointId, {
         requestId,
         logs: options.logs,
+        connectionMode:
+          'connectionMode' in options
+            ? (options.connectionMode as StreamingConnectionMode)
+            : undefined,
       });
       const logs: RequestLog[] = [];
       if (timeout) {

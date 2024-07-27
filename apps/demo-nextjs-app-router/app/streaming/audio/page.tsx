@@ -50,6 +50,7 @@ export default function AudioStreamingDemo() {
           text: prompt,
         },
         connectionMode: 'server',
+        accept: 'audio/*',
       }
     );
     setStreamStatus('running');
