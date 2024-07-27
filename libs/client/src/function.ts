@@ -7,7 +7,7 @@ import {
   QueueStatus,
   RequestLog,
 } from './types';
-import { ensureAppIdFormat, isUUIDv4, isValidUrl, parseAppId } from './utils';
+import { ensureAppIdFormat, isValidUrl, parseAppId } from './utils';
 
 /**
  * The function input and other configuration when running
@@ -79,18 +79,11 @@ export function buildUrl<Input>(
     Object.keys(params).length > 0
       ? `?${new URLSearchParams(params).toString()}`
       : '';
-  const parts = id.split('/');
 
   // if a fal url is passed, just use it
   if (isValidUrl(id)) {
     const url = id.endsWith('/') ? id : `${id}/`;
     return `${url}${path}${queryParams}`;
-  }
-
-  // TODO remove this after some time, fal.run should be preferred
-  if (parts.length === 2 && isUUIDv4(parts[1])) {
-    const host = 'gateway.alpha.fal.ai';
-    return `https://${host}/trigger/${id}/${path}${queryParams}`;
   }
 
   const appId = ensureAppIdFormat(id);

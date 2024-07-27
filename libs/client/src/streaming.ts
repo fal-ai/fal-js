@@ -131,7 +131,6 @@ export class FalStream<Input, Output> {
         const token = await getTemporaryAuthToken(endpointId);
         const { fetch = global.fetch } = getConfig();
         const parsedUrl = new URL(this.url);
-        console.log(this.url);
         parsedUrl.searchParams.set('fal_jwt_token', token);
         const response = await fetch(parsedUrl.toString(), {
           method: method.toUpperCase(),
