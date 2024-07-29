@@ -2,6 +2,7 @@
 
 import * as fal from '@fal-ai/serverless-client';
 import { useRef, useState } from 'react';
+import uuid from 'uuid-random';
 
 fal.config({
   proxyUrl: '/api/fal/proxy',
@@ -9,6 +10,7 @@ fal.config({
 
 type PlayHTInput = {
   text: string;
+  request_id: string;
 };
 
 const DEFAULT_PROMPT =
@@ -48,9 +50,10 @@ export default function AudioStreamingDemo() {
       {
         input: {
           text: prompt,
+          request_id: uuid(),
         },
-        connectionMode: 'server',
         accept: 'audio/*',
+        connectionMode: 'client',
       }
     );
     setStreamStatus('running');
@@ -97,7 +100,7 @@ export default function AudioStreamingDemo() {
             rows={4}
           ></textarea>
           <button
-            onClick={runInference}
+            onClick={() => runInference().catch(console.error)}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline disabled:opacity-70"
             disabled={streamStatus === 'running'}
           >
