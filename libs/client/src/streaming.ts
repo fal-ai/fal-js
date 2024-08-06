@@ -2,8 +2,11 @@ import { createParser } from 'eventsource-parser';
 import { getTemporaryAuthToken } from './auth';
 import { getConfig } from './config';
 import { buildUrl } from './function';
+import { dispatchRequest } from './request';
 import { ApiError, defaultResponseHandler } from './response';
 import { storageImpl } from './storage';
+
+export type StreamingConnectionMode = 'client' | 'server';
 
 /**
  * The stream API options. It requires the API input and also
@@ -11,9 +14,20 @@ import { storageImpl } from './storage';
  */
 type StreamOptions<Input> = {
   /**
+   * The endpoint URL. If not provided, it will be generated from the
+   * `endpointId` and the `queryParams`.
+   */
+  readonly url?: string;
+
+  /**
    * The API input payload.
    */
   readonly input?: Input;
+
+  /**
+   * The query parameters to be sent with the request.
+   */
+  readonly queryParams?: Record<string, string>;
 
   /**
    * The maximum time interval in milliseconds between stream chunks. Defaults to 15s.
@@ -30,19 +44,37 @@ type StreamOptions<Input> = {
    * The HTTP method, defaults to `post`;
    */
   readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
+
+  /**
+   * The content type the client accepts as response.
+   * By default this is set to `text/event-stream`.
+   */
+  readonly accept?: string;
+
+  /**
+   * The streaming connection mode. This is used to determine
+   * whether the streaming will be done from the browser itself (client)
+   * or through your own server, either when running on NodeJS or when
+   * using a proxy that supports streaming.
+   *
+   * It defaults to `server`. Set to `client` if your server proxy doesn't
+   * support streaming.
+   */
+  readonly connectionMode?: StreamingConnectionMode;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
 
-type FalStreamEventType = 'message' | 'error' | 'done';
+type FalStreamEventType = 'data' | 'error' | 'done';
 
-type EventHandler = (event: any) => void;
+type EventHandler<T = any> = (event: T) => void;
 
 /**
  * The class representing a streaming response. With t
  */
 export class FalStream<Input, Output> {
   // properties
+  endpointId: string;
   url: string;
   options: StreamOptions<Input>;
 
@@ -58,8 +90,14 @@ export class FalStream<Input, Output> {
 
   private abortController = new AbortController();
 
-  constructor(url: string, options: StreamOptions<Input>) {
-    this.url = url;
+  constructor(endpointId: string, options: StreamOptions<Input>) {
+    this.endpointId = endpointId;
+    this.url =
+      options.url ??
+      buildUrl(endpointId, {
+        path: '/stream',
+        query: options.queryParams,
+      });
     this.options = options;
     this.donePromise = new Promise<Output>((resolve, reject) => {
       if (this.streamClosed) {
@@ -84,20 +122,34 @@ export class FalStream<Input, Output> {
   }
 
   private start = async () => {
-    const { url, options } = this;
-    const { input, method = 'post' } = options;
-    const { fetch = global.fetch } = getConfig();
+    const { endpointId, options } = this;
+    const { input, method = 'post', connectionMode = 'server' } = options;
     try {
-      const response = await fetch(url, {
-        method: method.toUpperCase(),
+      if (connectionMode === 'client') {
+        // if we are in the browser, we need to get a temporary token
+        // to authenticate the request
+        const token = await getTemporaryAuthToken(endpointId);
+        const { fetch = global.fetch } = getConfig();
+        const parsedUrl = new URL(this.url);
+        parsedUrl.searchParams.set('fal_jwt_token', token);
+        const response = await fetch(parsedUrl.toString(), {
+          method: method.toUpperCase(),
+          headers: {
+            accept: options.accept ?? 'text/event-stream',
+            'content-type': 'application/json',
+          },
+          body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+          signal: this.abortController.signal,
+        });
+        return await this.handleResponse(response);
+      }
+      return await dispatchRequest(method.toUpperCase(), this.url, input, {
         headers: {
-          accept: 'text/event-stream',
-          'content-type': 'application/json',
+          accept: options.accept ?? 'text/event-stream',
         },
-        body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+        responseHandler: this.handleResponse,
         signal: this.abortController.signal,
       });
-      this.handleResponse(response);
     } catch (error) {
       this.handleError(error);
     }
@@ -127,6 +179,25 @@ export class FalStream<Input, Output> {
       );
       return;
     }
+
+    // any response that is not a text/event-stream will be handled as a binary stream
+    if (response.headers.get('content-type') !== 'text/event-stream') {
+      const reader = body.getReader();
+      const emitRawChunk = () => {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            this.emit('done', this.currentData);
+            return;
+          }
+          this.currentData = value as Output;
+          this.emit('data', value);
+          emitRawChunk();
+        });
+      };
+      emitRawChunk();
+      return;
+    }
+
     const decoder = new TextDecoder('utf-8');
     const reader = response.body.getReader();
 
@@ -138,7 +209,10 @@ export class FalStream<Input, Output> {
           const parsedData = JSON.parse(data);
           this.buffer.push(parsedData);
           this.currentData = parsedData;
-          this.emit('message', parsedData);
+          this.emit('data', parsedData);
+
+          // also emit 'message'for backwards compatibility
+          this.emit('message' as any, parsedData);
         } catch (e) {
           this.emit('error', e);
         }
@@ -242,27 +316,19 @@ export class FalStream<Input, Output> {
  * object as a result, that can be used to get partial results through either
  * `AsyncIterator` or through an event listener.
  *
- * @param appId the app id, e.g. `fal-ai/llavav15-13b`.
+ * @param endpointId the endpoint id, e.g. `fal-ai/llavav15-13b`.
  * @param options the request options, including the input payload.
  * @returns the `FalStream` instance.
  */
 export async function stream<Input = Record<string, any>, Output = any>(
-  appId: string,
+  endpointId: string,
   options: StreamOptions<Input>
 ): Promise<FalStream<Input, Output>> {
-  const token = await getTemporaryAuthToken(appId);
-  const url = buildUrl(appId, { path: '/stream' });
-
   const input =
     options.input && options.autoUpload !== false
       ? await storageImpl.transformInput(options.input)
       : options.input;
-
-  const queryParams = new URLSearchParams({
-    fal_jwt_token: token,
-  });
-
-  return new FalStream<Input, Output>(`${url}?${queryParams}`, {
+  return new FalStream<Input, Output>(endpointId, {
     ...options,
     input: input as Input,
   });

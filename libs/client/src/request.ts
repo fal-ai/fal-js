@@ -1,14 +1,20 @@
 import { getConfig } from './config';
+import { ResponseHandler } from './response';
 import { getUserAgent, isBrowser } from './runtime';
 
 const isCloudflareWorkers =
   typeof navigator !== 'undefined' &&
   navigator?.userAgent === 'Cloudflare-Workers';
 
+type RequestOptions = {
+  responseHandler?: ResponseHandler<any>;
+};
+
 export async function dispatchRequest<Input, Output>(
   method: string,
   targetUrl: string,
-  input: Input
+  input: Input,
+  options: RequestOptions & RequestInit = {}
 ): Promise<Output> {
   const {
     credentials: credentialsValue,
@@ -39,14 +45,21 @@ export async function dispatchRequest<Input, Output>(
     ...userAgent,
     ...(headers ?? {}),
   } as HeadersInit;
+
+  const { responseHandler: customResponseHandler, ...requestInit } = options;
   const response = await fetch(url, {
+    ...requestInit,
     method,
-    headers: requestHeaders,
+    headers: {
+      ...requestHeaders,
+      ...(requestInit.headers ?? {}),
+    },
     ...(!isCloudflareWorkers && { mode: 'cors' }),
     body:
       method.toLowerCase() !== 'get' && input
         ? JSON.stringify(input)
         : undefined,
   });
-  return await responseHandler(response);
+  const handleResponse = customResponseHandler ?? responseHandler;
+  return await handleResponse(response);
 }

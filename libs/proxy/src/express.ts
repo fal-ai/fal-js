@@ -17,11 +17,37 @@ export const handler: RequestHandler = async (request, response, next) => {
   await handleRequest({
     id: 'express',
     method: request.method,
-    respondWith: (status, data) => response.status(status).json(data),
+    getRequestBody: async () => JSON.stringify(request.body),
     getHeaders: () => request.headers,
     getHeader: (name) => request.headers[name],
     sendHeader: (name, value) => response.setHeader(name, value),
-    getBody: async () => JSON.stringify(request.body),
+    respondWith: (status, data) => response.status(status).json(data),
+    sendResponse: async (res) => {
+      if (res.body instanceof ReadableStream) {
+        const reader = res.body.getReader();
+        const stream = async () => {
+          const { done, value } = await reader.read();
+          if (done) {
+            response.end();
+            return response;
+          }
+          response.write(value);
+          return await stream();
+        };
+
+        return await stream().catch((error) => {
+          if (!response.headersSent) {
+            response.status(500).send(error.message);
+          } else {
+            response.end();
+          }
+        });
+      }
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        return response.status(res.status).json(await res.json());
+      }
+      return response.status(res.status).send(await res.text());
+    },
   });
   next();
 };
