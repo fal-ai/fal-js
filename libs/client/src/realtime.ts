@@ -12,7 +12,6 @@ import {
   state,
   transition,
 } from 'robot3';
-import uuid from 'uuid-random';
 import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from './auth';
 import { ApiError } from './response';
 import { isBrowser } from './runtime';
@@ -358,7 +357,7 @@ export const realtimeImpl: RealtimeClient = {
     const {
       // if running on React in the server, set clientOnly to true by default
       clientOnly = isReact() && !isBrowser(),
-      connectionKey = uuid(),
+      connectionKey = crypto.randomUUID(),
       maxBuffering,
       throttleInterval = DEFAULT_THROTTLE_INTERVAL,
     } = handler;
@@ -503,7 +502,7 @@ export const realtimeImpl: RealtimeClient = {
           ? input
           : {
               ...input,
-              request_id: input['request_id'] ?? uuid(),
+              request_id: input['request_id'] ?? crypto.randomUUID(),
             };
 
       stateMachine.throttledSend({
