@@ -136,3 +136,5 @@ export function fromHeaders(
 }
 
 export const responsePassthrough = (res: Response) => Promise.resolve(res);
+
+export const resolveApiKeyFromEnv = () => Promise.resolve(getFalKey());
