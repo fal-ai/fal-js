@@ -129,7 +129,7 @@ export class FalStream<Input, Output> {
         // if we are in the browser, we need to get a temporary token
         // to authenticate the request
         const token = await getTemporaryAuthToken(endpointId);
-        const { fetch = global.fetch } = getConfig();
+        const { fetch } = getConfig();
         const parsedUrl = new URL(this.url);
         parsedUrl.searchParams.set('fal_jwt_token', token);
         const response = await fetch(parsedUrl.toString(), {

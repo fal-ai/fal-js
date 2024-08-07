@@ -8,12 +8,23 @@ import { defaultResponseHandler } from './response';
 
 export type CredentialsResolver = () => string | undefined;
 
+type FetchType = typeof fetch;
+
+export function resolveDefaultFetch(): FetchType {
+  if (typeof fetch === 'undefined') {
+    throw new Error(
+      'Your environment does not support fetch. Please provide your own fetch implementation.'
+    );
+  }
+  return fetch;
+}
+
 export type Config = {
   credentials?: undefined | string | CredentialsResolver;
   proxyUrl?: string;
   requestMiddleware?: RequestMiddleware;
   responseHandler?: ResponseHandler<any>;
-  fetch?: typeof fetch;
+  fetch?: FetchType;
 };
 
 export type RequiredConfig = Required<Config>;
@@ -60,7 +71,11 @@ let configuration: RequiredConfig;
  * @param config the new configuration.
  */
 export function config(config: Config) {
-  configuration = { ...DEFAULT_CONFIG, ...config } as RequiredConfig;
+  configuration = {
+    ...DEFAULT_CONFIG,
+    ...config,
+    fetch: config.fetch ?? resolveDefaultFetch(),
+  } as RequiredConfig;
   if (config.proxyUrl) {
     configuration = {
       ...configuration,
@@ -80,7 +95,10 @@ export function config(config: Config) {
 export function getConfig(): RequiredConfig {
   if (!configuration) {
     console.info('Using default configuration for the fal client');
-    return { ...DEFAULT_CONFIG } as RequiredConfig;
+    return {
+      ...DEFAULT_CONFIG,
+      fetch: resolveDefaultFetch(),
+    } as RequiredConfig;
   }
   return configuration;
 }
