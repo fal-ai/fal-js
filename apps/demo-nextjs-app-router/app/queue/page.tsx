@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import * as fal from '@fal-ai/serverless-client';
-import { useState } from 'react';
+import * as fal from "@fal-ai/serverless-client";
+import { useState } from "react";
 
 fal.config({
-  proxyUrl: '/api/fal/proxy',
+  proxyUrl: "/api/fal/proxy",
 });
 
 type ErrorProps = {
@@ -17,7 +17,7 @@ function Error(props: ErrorProps) {
   }
   return (
     <div
-      className="p-4 mb-4 text-sm text-red-800 rounded bg-red-50 dark:bg-gray-800 dark:text-red-400"
+      className="mb-4 rounded bg-red-50 p-4 text-sm text-red-800 dark:bg-gray-800 dark:text-red-400"
       role="alert"
     >
       <span className="font-medium">Error</span> {props.error.message}
@@ -25,7 +25,7 @@ function Error(props: ErrorProps) {
   );
 }
 
-const DEFAULT_ENDPOINT_ID = 'fal-ai/fast-sdxl';
+const DEFAULT_ENDPOINT_ID = "fal-ai/fast-sdxl";
 const DEFAULT_INPUT = `{
   "prompt": "A beautiful sunset over the ocean"
 }`;
@@ -58,15 +58,15 @@ export default function Home() {
         input: JSON.parse(input),
         logs: true,
         // mode: "streaming",
-        mode: 'polling',
+        mode: "polling",
         pollInterval: 1000,
         onQueueUpdate(update) {
-          console.log('queue update');
+          console.log("queue update");
           console.log(update);
           setElapsedTime(Date.now() - start);
           if (
-            update.status === 'IN_PROGRESS' ||
-            update.status === 'COMPLETED'
+            update.status === "IN_PROGRESS" ||
+            update.status === "COMPLETED"
           ) {
             if (update.logs && update.logs.length > logs.length) {
               setLogs((update.logs || []).map((log) => log.message));
@@ -83,18 +83,18 @@ export default function Home() {
     }
   };
   return (
-    <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
-      <main className="container dark:text-gray-50 text-gray-900 flex flex-col items-center justify-center w-full flex-1 py-10 space-y-8">
-        <h1 className="text-4xl font-bold mb-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <main className="container flex w-full flex-1 flex-col items-center justify-center space-y-8 py-10 text-gray-900 dark:text-gray-50">
+        <h1 className="mb-8 text-4xl font-bold">
           <code className="font-light text-pink-600">fal</code>
           <code>queue</code>
         </h1>
-        <div className="text-lg w-full">
-          <label htmlFor="prompt" className="block mb-2 text-current">
+        <div className="w-full text-lg">
+          <label htmlFor="prompt" className="mb-2 block text-current">
             Endpoint ID
           </label>
           <input
-            className="w-full text-base p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10"
+            className="w-full rounded border border-black/20 bg-black/10 p-2 text-base dark:border-white/10 dark:bg-white/5"
             id="endpointId"
             name="endpointId"
             autoComplete="off"
@@ -104,12 +104,12 @@ export default function Home() {
             onChange={(e) => setEndpointId(e.target.value)}
           />
         </div>
-        <div className="text-lg w-full">
-          <label htmlFor="prompt" className="block mb-2 text-current">
+        <div className="w-full text-lg">
+          <label htmlFor="prompt" className="mb-2 block text-current">
             JSON Input
           </label>
           <textarea
-            className="w-full text-sm p-2 rounded bg-black/10 dark:bg-white/5 border border-black/20 dark:border-white/10 font-mono"
+            className="w-full rounded border border-black/20 bg-black/10 p-2 font-mono text-sm dark:border-white/10 dark:bg-white/5"
             id="input"
             name="Input"
             placeholder="JSON"
@@ -126,31 +126,31 @@ export default function Home() {
             e.preventDefault();
             run();
           }}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-3 px-6 mx-auto rounded focus:outline-none focus:shadow-outline"
+          className="focus:shadow-outline mx-auto rounded bg-indigo-600 py-3 px-6 text-lg font-bold text-white hover:bg-indigo-700 focus:outline-none"
           disabled={loading}
         >
-          {loading ? 'Running...' : 'Run'}
+          {loading ? "Running..." : "Run"}
         </button>
 
         <Error error={error} />
 
-        <div className="w-full flex flex-col space-y-4">
+        <div className="flex w-full flex-col space-y-4">
           <div className="space-y-2">
             <h3 className="text-xl font-light">JSON Result</h3>
-            <p className="text-sm text-current/80">
+            <p className="text-current/80 text-sm">
               {`Elapsed Time (seconds): ${(elapsedTime / 1000).toFixed(2)}`}
             </p>
-            <pre className="text-sm bg-black/70 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
+            <pre className="h-60 w-full overflow-auto whitespace-pre rounded bg-black/70 font-mono text-sm text-white/80">
               {result
                 ? JSON.stringify(result, null, 2)
-                : '// result pending...'}
+                : "// result pending..."}
             </pre>
           </div>
 
           <div className="space-y-2">
             <h3 className="text-xl font-light">Logs</h3>
-            <pre className="text-sm bg-black/70 text-white/80 font-mono h-60 rounded whitespace-pre overflow-auto w-full">
-              {logs.join('\n')}
+            <pre className="h-60 w-full overflow-auto whitespace-pre rounded bg-black/70 font-mono text-sm text-white/80">
+              {logs.join("\n")}
             </pre>
           </div>
         </div>

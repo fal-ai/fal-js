@@ -2,7 +2,7 @@
 
 export function isBrowser(): boolean {
   return (
-    typeof window !== 'undefined' && typeof window.document !== 'undefined'
+    typeof window !== "undefined" && typeof window.document !== "undefined"
   );
 }
 
@@ -12,7 +12,7 @@ export function getUserAgent(): string {
   if (memoizedUserAgent !== null) {
     return memoizedUserAgent;
   }
-  const packageInfo = require('../package.json');
+  const packageInfo = require("../package.json");
   memoizedUserAgent = `${packageInfo.name}/${packageInfo.version}`;
   return memoizedUserAgent;
 }

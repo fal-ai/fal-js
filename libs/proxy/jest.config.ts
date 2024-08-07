@@ -1,17 +1,17 @@
 /* eslint-disable */
 export default {
-  displayName: 'proxy',
-  preset: '../../jest.preset.js',
+  displayName: "proxy",
+  preset: "../../jest.preset.js",
   globals: {},
-  testEnvironment: 'node',
+  testEnvironment: "node",
   transform: {
-    '^.+\\.[tj]sx?$': [
-      'ts-jest',
+    "^.+\\.[tj]sx?$": [
+      "ts-jest",
       {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
+        tsconfig: "<rootDir>/tsconfig.spec.json",
       },
     ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/proxy',
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
+  coverageDirectory: "../../coverage/libs/proxy",
 };

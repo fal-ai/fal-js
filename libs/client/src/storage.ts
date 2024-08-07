@@ -1,6 +1,6 @@
-import { getConfig, getRestApiUrl } from './config';
-import { dispatchRequest } from './request';
-import { isPlainObject } from './utils';
+import { getConfig, getRestApiUrl } from "./config";
+import { dispatchRequest } from "./request";
+import { isPlainObject } from "./utils";
 
 /**
  * File support for the client. This interface establishes the contract for
@@ -46,8 +46,8 @@ type InitiateUploadData = {
  * @returns the file extension or `bin` if the content type is not recognized.
  */
 function getExtensionFromContentType(contentType: string): string {
-  const [_, fileType] = contentType.split('/');
-  return fileType.split(/[-;]/)[0] ?? 'bin';
+  const [_, fileType] = contentType.split("/");
+  return fileType.split(/[-;]/)[0] ?? "bin";
 }
 
 /**
@@ -58,16 +58,16 @@ function getExtensionFromContentType(contentType: string): string {
  * @returns the URL to upload the file to and the URL of the file once it is uploaded.
  */
 async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
-  const contentType = file.type || 'application/octet-stream';
+  const contentType = file.type || "application/octet-stream";
   const filename =
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
-    'POST',
+    "POST",
     `${getRestApiUrl()}/storage/upload/initiate`,
     {
       content_type: contentType,
       file_name: filename,
-    }
+    },
   );
 }
 
@@ -79,10 +79,10 @@ export const storageImpl: StorageSupport = {
     const { fetch } = getConfig();
     const { upload_url: uploadUrl, file_url: url } = await initiateUpload(file);
     const response = await fetch(uploadUrl, {
-      method: 'PUT',
+      method: "PUT",
       body: file,
       headers: {
-        'Content-Type': file.type || 'application/octet-stream',
+        "Content-Type": file.type || "application/octet-stream",
       },
     });
     const { responseHandler } = getConfig();
@@ -101,7 +101,7 @@ export const storageImpl: StorageSupport = {
       const promises = Object.entries(inputObject).map(
         async ([key, value]): Promise<KeyValuePair> => {
           return [key, await storageImpl.transformInput(value)];
-        }
+        },
       );
       const results = await Promise.all(promises);
       return Object.fromEntries(results);

@@ -1,15 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
-'use client';
+"use client";
 
-import * as fal from '@fal-ai/serverless-client';
-import { MutableRefObject, useEffect, useRef, useState } from 'react';
+import * as fal from "@fal-ai/serverless-client";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 
 fal.config({
-  proxyUrl: '/api/fal/proxy',
+  proxyUrl: "/api/fal/proxy",
 });
 
 const EMPTY_IMG =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjOHPmzH8ACDADZKt3GNsAAAAASUVORK5CYII=';
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjOHPmzH8ACDADZKt3GNsAAAAASUVORK5CYII=";
 
 type WebcamOptions = {
   videoRef: MutableRefObject<HTMLVideoElement | null>;
@@ -65,7 +65,7 @@ const useWebcam = ({
     canvas.width = width;
     canvas.height = height;
 
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
     if (context === null) {
       return;
     }
@@ -80,7 +80,7 @@ const useWebcam = ({
       0,
       0,
       width,
-      height
+      height,
     );
 
     // Callback with frame data
@@ -92,8 +92,8 @@ const useWebcam = ({
             onFrameUpdate(frameData);
           });
         },
-        'image/jpeg',
-        0.7
+        "image/jpeg",
+        0.7,
       );
     }
   };
@@ -143,22 +143,22 @@ export default function WebcamPage() {
   const previewRef = useRef<HTMLCanvasElement | null>(null);
 
   const { send } = fal.realtime.connect<LCMInput, LCMOutput>(
-    'fal-ai/fast-turbo-diffusion/image-to-image',
+    "fal-ai/fast-turbo-diffusion/image-to-image",
     {
-      connectionKey: 'camera-turbo-demo',
+      connectionKey: "camera-turbo-demo",
       // not throttling the client, handling throttling of the camera itself
       // and letting all requests through in real-time
       throttleInterval: 0,
       onResult(result) {
         if (processedImageRef.current && result.images && result.images[0]) {
           const blob = new Blob([result.images[0].content], {
-            type: 'image/jpeg',
+            type: "image/jpeg",
           });
           const url = URL.createObjectURL(blob);
           processedImageRef.current.src = url;
         }
       },
-    }
+    },
   );
 
   const onFrameUpdate = (data: Uint8Array) => {
@@ -166,7 +166,7 @@ export default function WebcamPage() {
       return;
     }
     send({
-      prompt: 'a picture of george clooney, elegant, in a suit, 8k, uhd',
+      prompt: "a picture of george clooney, elegant, in a suit, 8k, uhd",
       image_bytes: data,
       num_inference_steps: 3,
       strength: 0.6,
@@ -182,29 +182,29 @@ export default function WebcamPage() {
   });
 
   return (
-    <main className="flex-col px-32 mx-auto my-20">
-      <h1 className="text-4xl font-mono mb-8 text-current text-center">
+    <main className="mx-auto my-20 flex-col px-32">
+      <h1 className="mb-8 text-center font-mono text-4xl text-current">
         fal<code className="font-light text-pink-600">camera</code>
       </h1>
-      <video ref={videoRef} style={{ display: 'none' }}></video>
-      <div className="py-12 flex items-center justify-center">
+      <video ref={videoRef} style={{ display: "none" }}></video>
+      <div className="flex items-center justify-center py-12">
         <button
-          className="py-3 px-4 bg-indigo-700 text-white text-lg rounded"
+          className="rounded bg-indigo-700 py-3 px-4 text-lg text-white"
           onClick={() => {
             setEnabled(!enabled);
           }}
         >
-          {enabled ? 'Stop' : 'Start'}
+          {enabled ? "Stop" : "Start"}
         </button>
       </div>
-      <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 justify-between">
+      <div className="flex flex-col justify-between space-y-4 lg:flex-row lg:space-y-0 lg:space-x-4">
         <canvas ref={previewRef} width="512" height="512"></canvas>
         <img
           ref={processedImageRef}
           src={EMPTY_IMG}
           width={512}
           height={512}
-          className="min-w-[512px] min-h-[512px]"
+          className="min-h-[512px] min-w-[512px]"
           alt="generated"
         />
       </div>

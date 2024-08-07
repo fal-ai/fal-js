@@ -1,6 +1,6 @@
-export const TARGET_URL_HEADER = 'x-fal-target-url';
+export const TARGET_URL_HEADER = "x-fal-target-url";
 
-export const DEFAULT_PROXY_ROUTE = '/api/fal/proxy';
+export const DEFAULT_PROXY_ROUTE = "/api/fal/proxy";
 
 const FAL_KEY = process.env.FAL_KEY;
 const FAL_KEY_ID = process.env.FAL_KEY_ID;
@@ -54,7 +54,7 @@ function getFalKey(): string | undefined {
   return undefined;
 }
 
-const EXCLUDED_HEADERS = ['content-length', 'content-encoding'];
+const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 
 /**
  * A request handler that proxies the request to the fal-serverless
@@ -66,7 +66,7 @@ const EXCLUDED_HEADERS = ['content-length', 'content-encoding'];
  * @returns Promise<any> the promise that will be resolved once the request is done.
  */
 export async function handleRequest<ResponseType>(
-  behavior: ProxyBehavior<ResponseType>
+  behavior: ProxyBehavior<ResponseType>,
 ) {
   const targetUrl = singleHeaderValue(behavior.getHeader(TARGET_URL_HEADER));
   if (!targetUrl) {
@@ -82,33 +82,33 @@ export async function handleRequest<ResponseType>(
     ? await behavior.resolveApiKey()
     : getFalKey();
   if (!falKey) {
-    return behavior.respondWith(401, 'Missing fal.ai credentials');
+    return behavior.respondWith(401, "Missing fal.ai credentials");
   }
 
   // pass over headers prefixed with x-fal-*
   const headers: Record<string, HeaderValue> = {};
   Object.keys(behavior.getHeaders()).forEach((key) => {
-    if (key.toLowerCase().startsWith('x-fal-')) {
+    if (key.toLowerCase().startsWith("x-fal-")) {
       headers[key.toLowerCase()] = behavior.getHeader(key);
     }
   });
 
   const proxyUserAgent = `@fal-ai/serverless-proxy/${behavior.id}`;
-  const userAgent = singleHeaderValue(behavior.getHeader('user-agent'));
+  const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
       ...headers,
       authorization:
-        singleHeaderValue(behavior.getHeader('authorization')) ??
+        singleHeaderValue(behavior.getHeader("authorization")) ??
         `Key ${falKey}`,
-      accept: 'application/json',
-      'content-type': 'application/json',
-      'user-agent': userAgent,
-      'x-fal-client-proxy': proxyUserAgent,
+      accept: "application/json",
+      "content-type": "application/json",
+      "user-agent": userAgent,
+      "x-fal-client-proxy": proxyUserAgent,
     } as HeadersInit,
     body:
-      behavior.method?.toUpperCase() === 'GET'
+      behavior.method?.toUpperCase() === "GET"
         ? undefined
         : await behavior.getRequestBody(),
   });
@@ -124,7 +124,7 @@ export async function handleRequest<ResponseType>(
 }
 
 export function fromHeaders(
-  headers: Headers
+  headers: Headers,
 ): Record<string, string | string[]> {
   // TODO once Header.entries() is available, use that instead
   // Object.fromEntries(headers.entries());
