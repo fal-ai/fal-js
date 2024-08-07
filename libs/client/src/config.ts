@@ -20,10 +20,43 @@ export function resolveDefaultFetch(): FetchType {
 }
 
 export type Config = {
+  /**
+   * The credentials to use for the fal serverless client. When using the
+   * client in the browser, it's recommended to use a proxy server to avoid
+   * exposing the credentials in the client's environment.
+   *
+   * By default it tries to use the `FAL_KEY` environment variable, when
+   * `process.env` is defined.
+   *
+   * @see https://fal.ai/docs/model-endpoints/server-side
+   * @see #suppressLocalCredentialsWarning
+   */
   credentials?: undefined | string | CredentialsResolver;
+  /**
+   * Suppresses the warning when the fal credentials are exposed in the
+   * browser's environment. Make sure you understand the security implications
+   * before enabling this option.
+   */
+  suppressLocalCredentialsWarning?: boolean;
+  /**
+   * The URL of the proxy server to use for the client requests. The proxy
+   * server should forward the requests to the fal serverless rest api.
+   */
   proxyUrl?: string;
+  /**
+   * The request middleware to use for the client requests. By default it
+   * doesn't apply any middleware.
+   */
   requestMiddleware?: RequestMiddleware;
+  /**
+   * The response handler to use for the client requests. By default it uses
+   * a built-in response handler that returns the JSON response.
+   */
   responseHandler?: ResponseHandler<any>;
+  /**
+   * The fetch implementation to use for the client requests. By default it uses
+   * the global `fetch` function.
+   */
   fetch?: FetchType;
 };
 
@@ -59,6 +92,7 @@ export const credentialsFromEnv: CredentialsResolver = () => {
 
 const DEFAULT_CONFIG: Partial<Config> = {
   credentials: credentialsFromEnv,
+  suppressLocalCredentialsWarning: false,
   requestMiddleware: (request) => Promise.resolve(request),
   responseHandler: defaultResponseHandler,
 };
@@ -84,6 +118,17 @@ export function config(config: Config) {
         configuration.requestMiddleware
       ),
     };
+  }
+  const { credentials, suppressLocalCredentialsWarning } = configuration;
+  if (
+    typeof window !== 'undefined' &&
+    credentials &&
+    !suppressLocalCredentialsWarning
+  ) {
+    console.warn(
+      "The fal credentials are exposed in the browser's environment. " +
+        "That's not recommended for production use cases."
+    );
   }
 }
 

@@ -32,12 +32,6 @@ export async function dispatchRequest<Input, Output>(
     url: targetUrl,
   });
   const authHeader = credentials ? { Authorization: `Key ${credentials}` } : {};
-  if (typeof window !== 'undefined' && credentials) {
-    console.warn(
-      "The fal credentials are exposed in the browser's environment. " +
-        "That's not recommended for production use cases."
-    );
-  }
   const requestHeaders = {
     ...authHeader,
     Accept: 'application/json',
