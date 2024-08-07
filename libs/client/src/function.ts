@@ -1,13 +1,13 @@
-import { dispatchRequest } from './request';
-import { storageImpl } from './storage';
-import { FalStream, StreamingConnectionMode } from './streaming';
+import { dispatchRequest } from "./request";
+import { storageImpl } from "./storage";
+import { FalStream, StreamingConnectionMode } from "./streaming";
 import {
   CompletedQueueStatus,
   EnqueueResult,
   QueueStatus,
   RequestLog,
-} from './types';
-import { ensureAppIdFormat, isValidUrl, parseAppId } from './utils';
+} from "./types";
+import { ensureAppIdFormat, isValidUrl, parseAppId } from "./utils";
 
 /**
  * The function input and other configuration when running
@@ -29,7 +29,7 @@ type RunOptions<Input> = {
   /**
    * The HTTP method, defaults to `post`;
    */
-  readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
+  readonly method?: "get" | "post" | "put" | "delete" | string;
 
   /**
    * If `true`, the function will automatically upload any files
@@ -65,50 +65,50 @@ type ExtraOptions = {
  */
 export function buildUrl<Input>(
   id: string,
-  options: RunOptions<Input> & ExtraOptions = {}
+  options: RunOptions<Input> & ExtraOptions = {},
 ): string {
-  const method = (options.method ?? 'post').toLowerCase();
-  const path = (options.path ?? '').replace(/^\//, '').replace(/\/{2,}/, '/');
+  const method = (options.method ?? "post").toLowerCase();
+  const path = (options.path ?? "").replace(/^\//, "").replace(/\/{2,}/, "/");
   const input = options.input;
   const params = {
     ...(options.query || {}),
-    ...(method === 'get' ? input : {}),
+    ...(method === "get" ? input : {}),
   };
 
   const queryParams =
     Object.keys(params).length > 0
       ? `?${new URLSearchParams(params).toString()}`
-      : '';
+      : "";
 
   // if a fal url is passed, just use it
   if (isValidUrl(id)) {
-    const url = id.endsWith('/') ? id : `${id}/`;
+    const url = id.endsWith("/") ? id : `${id}/`;
     return `${url}${path}${queryParams}`;
   }
 
   const appId = ensureAppIdFormat(id);
-  const subdomain = options.subdomain ? `${options.subdomain}.` : '';
+  const subdomain = options.subdomain ? `${options.subdomain}.` : "";
   const url = `https://${subdomain}fal.run/${appId}/${path}`;
-  return `${url.replace(/\/$/, '')}${queryParams}`;
+  return `${url.replace(/\/$/, "")}${queryParams}`;
 }
 
 export async function send<Input, Output>(
   id: string,
-  options: RunOptions<Input> & ExtraOptions = {}
+  options: RunOptions<Input> & ExtraOptions = {},
 ): Promise<Output> {
   const input =
     options.input && options.autoUpload !== false
       ? await storageImpl.transformInput(options.input)
       : options.input;
   return dispatchRequest<Input, Output>(
-    options.method ?? 'post',
+    options.method ?? "post",
     buildUrl(id, options),
-    input as Input
+    input as Input,
   );
 }
 
 export type QueueStatusSubscriptionOptions = QueueStatusOptions &
-  Omit<QueueSubscribeOptions, 'onEnqueue' | 'webhookUrl'>;
+  Omit<QueueSubscribeOptions, "onEnqueue" | "webhookUrl">;
 
 /**
  * Runs a fal serverless function identified by its `id`.
@@ -118,7 +118,7 @@ export type QueueStatusSubscriptionOptions = QueueStatusOptions &
  */
 export async function run<Input, Output>(
   id: string,
-  options: RunOptions<Input> = {}
+  options: RunOptions<Input> = {},
 ): Promise<Output> {
   return send(id, options);
 }
@@ -140,7 +140,7 @@ type QueueSubscribeOptions = {
    *
    * @see pollInterval
    */
-  mode?: 'polling' | 'streaming';
+  mode?: "polling" | "streaming";
 
   /**
    * Callback function that is called when a request is enqueued.
@@ -180,7 +180,7 @@ type QueueSubscribeOptions = {
   webhookUrl?: string;
 } & (
   | {
-      mode?: 'polling';
+      mode?: "polling";
       /**
        * The interval (in milliseconds) at which to poll for updates.
        * If not provided, a default value of `500` will be used.
@@ -190,7 +190,7 @@ type QueueSubscribeOptions = {
       pollInterval?: number;
     }
   | {
-      mode: 'streaming';
+      mode: "streaming";
 
       /**
        * The connection mode to use for streaming updates. It defaults to `server`.
@@ -248,7 +248,7 @@ interface Queue {
    */
   submit<Input>(
     endpointId: string,
-    options: SubmitOptions<Input>
+    options: SubmitOptions<Input>,
   ): Promise<EnqueueResult>;
 
   /**
@@ -269,7 +269,7 @@ interface Queue {
    */
   streamStatus(
     endpointId: string,
-    options: QueueStatusStreamOptions
+    options: QueueStatusStreamOptions,
   ): Promise<FalStream<unknown, QueueStatus>>;
 
   /**
@@ -282,7 +282,7 @@ interface Queue {
    */
   subscribeToStatus(
     endpointId: string,
-    options: QueueStatusSubscriptionOptions
+    options: QueueStatusSubscriptionOptions,
   ): Promise<CompletedQueueStatus>;
 
   /**
@@ -294,7 +294,7 @@ interface Queue {
    */
   result<Output>(
     endpointId: string,
-    options: BaseQueueOptions
+    options: BaseQueueOptions,
   ): Promise<Output>;
 
   /**
@@ -317,53 +317,53 @@ interface Queue {
 export const queue: Queue = {
   async submit<Input>(
     endpointId: string,
-    options: SubmitOptions<Input>
+    options: SubmitOptions<Input>,
   ): Promise<EnqueueResult> {
-    const { webhookUrl, path = '', ...runOptions } = options;
+    const { webhookUrl, path = "", ...runOptions } = options;
     return send(endpointId, {
       ...runOptions,
-      subdomain: 'queue',
-      method: 'post',
+      subdomain: "queue",
+      method: "post",
       path: path,
       query: webhookUrl ? { fal_webhook: webhookUrl } : undefined,
     });
   },
   async status(
     endpointId: string,
-    { requestId, logs = false }: QueueStatusOptions
+    { requestId, logs = false }: QueueStatusOptions,
   ): Promise<QueueStatus> {
     const appId = parseAppId(endpointId);
-    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    const prefix = appId.namespace ? `${appId.namespace}/` : "";
     return send(`${prefix}${appId.owner}/${appId.alias}`, {
-      subdomain: 'queue',
-      method: 'get',
+      subdomain: "queue",
+      method: "get",
       path: `/requests/${requestId}/status`,
       input: {
-        logs: logs ? '1' : '0',
+        logs: logs ? "1" : "0",
       },
     });
   },
 
   async streamStatus(
     endpointId: string,
-    { requestId, logs = false, connectionMode }: QueueStatusStreamOptions
+    { requestId, logs = false, connectionMode }: QueueStatusStreamOptions,
   ): Promise<FalStream<unknown, QueueStatus>> {
     const appId = parseAppId(endpointId);
-    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    const prefix = appId.namespace ? `${appId.namespace}/` : "";
 
     const queryParams = {
-      logs: logs ? '1' : '0',
+      logs: logs ? "1" : "0",
     };
 
     const url = buildUrl(`${prefix}${appId.owner}/${appId.alias}`, {
-      subdomain: 'queue',
+      subdomain: "queue",
       path: `/requests/${requestId}/status/stream`,
       query: queryParams,
     });
 
     return new FalStream<unknown, QueueStatus>(endpointId, {
       url,
-      method: 'get',
+      method: "get",
       connectionMode,
       queryParams,
     });
@@ -379,12 +379,12 @@ export const queue: Queue = {
       // regardless of the server response. In case cancelation fails, we
       // still want to reject the promise and consider the client call canceled.
     };
-    if (options.mode === 'streaming') {
+    if (options.mode === "streaming") {
       const status = await queue.streamStatus(endpointId, {
         requestId,
         logs: options.logs,
         connectionMode:
-          'connectionMode' in options
+          "connectionMode" in options
             ? (options.connectionMode as StreamingConnectionMode)
             : undefined,
       });
@@ -398,21 +398,21 @@ export const queue: Queue = {
           // User will get a platform error instead. We should find a way to
           // make this behavior aligned with polling.
           throw new Error(
-            `Client timed out waiting for the request to complete after ${timeout}ms`
+            `Client timed out waiting for the request to complete after ${timeout}ms`,
           );
         }, timeout);
       }
-      status.on('data', (data: QueueStatus) => {
+      status.on("data", (data: QueueStatus) => {
         if (options.onQueueUpdate) {
           // accumulate logs to match previous polling behavior
           if (
-            'logs' in data &&
+            "logs" in data &&
             Array.isArray(data.logs) &&
             data.logs.length > 0
           ) {
             logs.push(...data.logs);
           }
-          options.onQueueUpdate('logs' in data ? { ...data, logs } : data);
+          options.onQueueUpdate("logs" in data ? { ...data, logs } : data);
         }
       });
       const doneStatus = await status.done();
@@ -427,8 +427,8 @@ export const queue: Queue = {
       // type resolution isn't great in this case, so check for its presence
       // and and type so the typechecker behaves as expected
       const pollInterval =
-        'pollInterval' in options && typeof options.pollInterval === 'number'
-          ? options.pollInterval ?? DEFAULT_POLL_INTERVAL
+        "pollInterval" in options && typeof options.pollInterval === "number"
+          ? (options.pollInterval ?? DEFAULT_POLL_INTERVAL)
           : DEFAULT_POLL_INTERVAL;
 
       const clearScheduledTasks = () => {
@@ -445,8 +445,8 @@ export const queue: Queue = {
           queue.cancel(endpointId, { requestId }).catch(handleCancelError);
           reject(
             new Error(
-              `Client timed out waiting for the request to complete after ${timeout}ms`
-            )
+              `Client timed out waiting for the request to complete after ${timeout}ms`,
+            ),
           );
         }, timeout);
       }
@@ -459,7 +459,7 @@ export const queue: Queue = {
           if (options.onQueueUpdate) {
             options.onQueueUpdate(requestStatus);
           }
-          if (requestStatus.status === 'COMPLETED') {
+          if (requestStatus.status === "COMPLETED") {
             clearScheduledTasks();
             resolve(requestStatus);
             return;
@@ -476,26 +476,26 @@ export const queue: Queue = {
 
   async result<Output>(
     endpointId: string,
-    { requestId }: BaseQueueOptions
+    { requestId }: BaseQueueOptions,
   ): Promise<Output> {
     const appId = parseAppId(endpointId);
-    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    const prefix = appId.namespace ? `${appId.namespace}/` : "";
     return send(`${prefix}${appId.owner}/${appId.alias}`, {
-      subdomain: 'queue',
-      method: 'get',
+      subdomain: "queue",
+      method: "get",
       path: `/requests/${requestId}`,
     });
   },
 
   async cancel(
     endpointId: string,
-    { requestId }: BaseQueueOptions
+    { requestId }: BaseQueueOptions,
   ): Promise<void> {
     const appId = parseAppId(endpointId);
-    const prefix = appId.namespace ? `${appId.namespace}/` : '';
+    const prefix = appId.namespace ? `${appId.namespace}/` : "";
     await send(`${prefix}${appId.owner}/${appId.alias}`, {
-      subdomain: 'queue',
-      method: 'put',
+      subdomain: "queue",
+      method: "put",
       path: `/requests/${requestId}/cancel`,
     });
   },
@@ -510,7 +510,7 @@ export const queue: Queue = {
  */
 export async function subscribe<Input, Output>(
   endpointId: string,
-  options: RunOptions<Input> & QueueSubscribeOptions = {}
+  options: RunOptions<Input> & QueueSubscribeOptions = {},
 ): Promise<Output> {
   const { request_id: requestId } = await queue.submit(endpointId, options);
   if (options.onEnqueue) {

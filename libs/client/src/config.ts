@@ -2,18 +2,18 @@ import {
   withMiddleware,
   withProxy,
   type RequestMiddleware,
-} from './middleware';
-import type { ResponseHandler } from './response';
-import { defaultResponseHandler } from './response';
+} from "./middleware";
+import type { ResponseHandler } from "./response";
+import { defaultResponseHandler } from "./response";
 
 export type CredentialsResolver = () => string | undefined;
 
 type FetchType = typeof fetch;
 
 export function resolveDefaultFetch(): FetchType {
-  if (typeof fetch === 'undefined') {
+  if (typeof fetch === "undefined") {
     throw new Error(
-      'Your environment does not support fetch. Please provide your own fetch implementation.'
+      "Your environment does not support fetch. Please provide your own fetch implementation.",
     );
   }
   return fetch;
@@ -70,11 +70,11 @@ export type RequiredConfig = Required<Config>;
  */
 function hasEnvVariables(): boolean {
   return (
-    typeof process !== 'undefined' &&
+    typeof process !== "undefined" &&
     process.env &&
-    (typeof process.env.FAL_KEY !== 'undefined' ||
-      (typeof process.env.FAL_KEY_ID !== 'undefined' &&
-        typeof process.env.FAL_KEY_SECRET !== 'undefined'))
+    (typeof process.env.FAL_KEY !== "undefined" ||
+      (typeof process.env.FAL_KEY_ID !== "undefined" &&
+        typeof process.env.FAL_KEY_SECRET !== "undefined"))
   );
 }
 
@@ -83,7 +83,7 @@ export const credentialsFromEnv: CredentialsResolver = () => {
     return undefined;
   }
 
-  if (typeof process.env.FAL_KEY !== 'undefined') {
+  if (typeof process.env.FAL_KEY !== "undefined") {
     return process.env.FAL_KEY;
   }
 
@@ -115,19 +115,19 @@ export function config(config: Config) {
       ...configuration,
       requestMiddleware: withMiddleware(
         withProxy({ targetUrl: config.proxyUrl }),
-        configuration.requestMiddleware
+        configuration.requestMiddleware,
       ),
     };
   }
   const { credentials, suppressLocalCredentialsWarning } = configuration;
   if (
-    typeof window !== 'undefined' &&
+    typeof window !== "undefined" &&
     credentials &&
     !suppressLocalCredentialsWarning
   ) {
     console.warn(
       "The fal credentials are exposed in the browser's environment. " +
-        "That's not recommended for production use cases."
+        "That's not recommended for production use cases.",
     );
   }
 }
@@ -139,7 +139,7 @@ export function config(config: Config) {
  */
 export function getConfig(): RequiredConfig {
   if (!configuration) {
-    console.info('Using default configuration for the fal client');
+    console.info("Using default configuration for the fal client");
     return {
       ...DEFAULT_CONFIG,
       fetch: resolveDefaultFetch(),
@@ -152,5 +152,5 @@ export function getConfig(): RequiredConfig {
  * @returns the URL of the fal serverless rest api endpoint.
  */
 export function getRestApiUrl(): string {
-  return 'https://rest.alpha.fal.ai';
+  return "https://rest.alpha.fal.ai";
 }

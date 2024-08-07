@@ -13,7 +13,7 @@ export type RequestConfig = {
 };
 
 export type RequestMiddleware = (
-  request: RequestConfig
+  request: RequestConfig,
 ) => Promise<RequestConfig>;
 
 /**
@@ -29,7 +29,7 @@ export function withMiddleware(
     middlewares.reduce(
       (configPromise, middleware) =>
         configPromise.then((req) => middleware(req)),
-      Promise.resolve(config)
+      Promise.resolve(config),
     );
 }
 
@@ -37,11 +37,11 @@ export type RequestProxyConfig = {
   targetUrl: string;
 };
 
-export const TARGET_URL_HEADER = 'x-fal-target-url';
+export const TARGET_URL_HEADER = "x-fal-target-url";
 
 export function withProxy(config: RequestProxyConfig): RequestMiddleware {
   // when running on the server, we don't need to proxy the request
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return (requestConfig) => Promise.resolve(requestConfig);
   }
   return (requestConfig) =>

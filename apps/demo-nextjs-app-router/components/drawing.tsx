@@ -1,11 +1,11 @@
-import { type Excalidraw } from '@excalidraw/excalidraw';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types';
+import { type Excalidraw } from "@excalidraw/excalidraw";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import {
   AppState,
   ExcalidrawImperativeAPI,
-} from '@excalidraw/excalidraw/types/types';
-import { useCallback, useEffect, useState } from 'react';
-import initialDrawing from './drawingState.json';
+} from "@excalidraw/excalidraw/types/types";
+import { useCallback, useEffect, useState } from "react";
+import initialDrawing from "./drawingState.json";
 
 export type CanvasChangeEvent = {
   elements: readonly ExcalidrawElement[];
@@ -22,7 +22,7 @@ export async function blobToBase64(blob: Blob): Promise<string> {
   reader.readAsDataURL(blob);
   return new Promise<string>((resolve) => {
     reader.onloadend = () => {
-      resolve(reader.result?.toString() || '');
+      resolve(reader.result?.toString() || "");
     };
   });
 }
@@ -41,17 +41,17 @@ export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
   const [sceneData, setSceneData] = useState<any>(null);
 
   useEffect(() => {
-    import('@excalidraw/excalidraw').then((comp) =>
-      setExcalidrawComponent(comp.Excalidraw)
+    import("@excalidraw/excalidraw").then((comp) =>
+      setExcalidrawComponent(comp.Excalidraw),
     );
     const onResize = () => {
       if (excalidrawAPI) {
         excalidrawAPI.refresh();
       }
     };
-    window.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
     return () => {
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
@@ -61,17 +61,17 @@ export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
         return;
       }
       const { exportToBlob, convertToExcalidrawElements, serializeAsJSON } =
-        await import('@excalidraw/excalidraw');
+        await import("@excalidraw/excalidraw");
 
       const [boundingBoxElement] = convertToExcalidrawElements([
         {
-          type: 'rectangle',
+          type: "rectangle",
           x: 0,
           y: 0,
           width: 512,
           height: 512,
-          fillStyle: 'solid',
-          backgroundColor: 'cyan',
+          fillStyle: "solid",
+          backgroundColor: "cyan",
         },
       ]);
 
@@ -79,7 +79,7 @@ export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
         elements,
         appState,
         excalidrawAPI.getFiles(),
-        'local'
+        "local",
       );
       if (newSceneData !== sceneData) {
         setSceneData(newSceneData);
@@ -93,7 +93,7 @@ export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
             },
           },
           files: excalidrawAPI.getFiles(),
-          mimeType: 'image/webp',
+          mimeType: "image/webp",
           quality: 0.5,
           exportPadding: 0,
           getDimensions: () => {
@@ -104,11 +104,11 @@ export function DrawingCanvas({ onCanvasChange }: DrawingCanvasProps) {
         onCanvasChange({ elements, appState, imageData });
       }
     },
-    [excalidrawAPI, onCanvasChange, sceneData]
+    [excalidrawAPI, onCanvasChange, sceneData],
   );
 
   return (
-    <div style={{ height: '560px', width: '560px' }}>
+    <div style={{ height: "560px", width: "560px" }}>
       {ExcalidrawComponent && (
         <ExcalidrawComponent
           excalidrawAPI={(api) => setExcalidrawAPI(api)}

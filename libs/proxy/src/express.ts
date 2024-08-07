@@ -1,5 +1,5 @@
-import type { RequestHandler } from 'express';
-import { DEFAULT_PROXY_ROUTE, handleRequest } from './index';
+import type { RequestHandler } from "express";
+import { DEFAULT_PROXY_ROUTE, handleRequest } from "./index";
 
 /**
  * The default Express route for the fal.ai client proxy.
@@ -15,7 +15,7 @@ export const route = DEFAULT_PROXY_ROUTE;
  */
 export const handler: RequestHandler = async (request, response, next) => {
   await handleRequest({
-    id: 'express',
+    id: "express",
     method: request.method,
     getRequestBody: async () => JSON.stringify(request.body),
     getHeaders: () => request.headers,
@@ -43,7 +43,7 @@ export const handler: RequestHandler = async (request, response, next) => {
           }
         });
       }
-      if (res.headers.get('content-type')?.includes('application/json')) {
+      if (res.headers.get("content-type")?.includes("application/json")) {
         return response.status(res.status).json(await res.json());
       }
       return response.status(res.status).send(await res.text());

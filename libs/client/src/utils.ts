@@ -1,5 +1,5 @@
 export function ensureAppIdFormat(id: string): string {
-  const parts = id.split('/');
+  const parts = id.split("/");
   if (parts.length > 1) {
     return id;
   }
@@ -8,11 +8,11 @@ export function ensureAppIdFormat(id: string): string {
     return `${appOwner}/${appId}`;
   }
   throw new Error(
-    `Invalid app id: ${id}. Must be in the format <appOwner>/<appId>`
+    `Invalid app id: ${id}. Must be in the format <appOwner>/<appId>`,
   );
 }
 
-const APP_NAMESPACES = ['workflows', 'comfy'] as const;
+const APP_NAMESPACES = ["workflows", "comfy"] as const;
 
 type AppNamespace = (typeof APP_NAMESPACES)[number];
 
@@ -25,19 +25,19 @@ export type AppId = {
 
 export function parseAppId(id: string): AppId {
   const normalizedId = ensureAppIdFormat(id);
-  const parts = normalizedId.split('/');
+  const parts = normalizedId.split("/");
   if (APP_NAMESPACES.includes(parts[0] as any)) {
     return {
       owner: parts[1],
       alias: parts[2],
-      path: parts.slice(3).join('/') || undefined,
+      path: parts.slice(3).join("/") || undefined,
       namespace: parts[0] as AppNamespace,
     };
   }
   return {
     owner: parts[0],
     alias: parts[1],
-    path: parts.slice(2).join('/') || undefined,
+    path: parts.slice(2).join("/") || undefined,
   };
 }
 
@@ -54,7 +54,7 @@ export function isValidUrl(url: string) {
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number,
-  leading = false
+  leading = false,
 ): (...funcArgs: Parameters<T>) => ReturnType<T> | void {
   let lastFunc: NodeJS.Timeout | null;
   let lastRan: number;
@@ -75,7 +75,7 @@ export function throttle<T extends (...args: any[]) => any>(
             lastRan = Date.now();
           }
         },
-        limit - (Date.now() - lastRan)
+        limit - (Date.now() - lastRan),
       );
     }
   };
@@ -97,8 +97,8 @@ export function isReact() {
     const stack = new Error().stack;
     isRunningInReact =
       !!stack &&
-      (stack.includes('node_modules/react-dom/') ||
-        stack.includes('node_modules/next/'));
+      (stack.includes("node_modules/react-dom/") ||
+        stack.includes("node_modules/next/"));
   }
   return isRunningInReact;
 }

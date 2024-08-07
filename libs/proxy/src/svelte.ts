@@ -1,5 +1,5 @@
-import { type RequestHandler } from '@sveltejs/kit';
-import { fromHeaders, handleRequest, responsePassthrough } from './index';
+import { type RequestHandler } from "@sveltejs/kit";
+import { fromHeaders, handleRequest, responsePassthrough } from "./index";
 
 type RequestHandlerParams = {
   /**
@@ -20,13 +20,13 @@ export const createRequestHandler = ({
   credentials,
 }: RequestHandlerParams = {}) => {
   const handler: RequestHandler = async ({ request }) => {
-    const FAL_KEY = credentials || process.env.FAL_KEY || '';
+    const FAL_KEY = credentials || process.env.FAL_KEY || "";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const responseHeaders: Record<string, any> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
     return await handleRequest({
-      id: 'svelte-app-router',
+      id: "svelte-app-router",
       method: request.method,
       getRequestBody: async () => request.text(),
       getHeaders: () => fromHeaders(request.headers),

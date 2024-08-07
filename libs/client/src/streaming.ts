@@ -1,12 +1,12 @@
-import { createParser } from 'eventsource-parser';
-import { getTemporaryAuthToken } from './auth';
-import { getConfig } from './config';
-import { buildUrl } from './function';
-import { dispatchRequest } from './request';
-import { ApiError, defaultResponseHandler } from './response';
-import { storageImpl } from './storage';
+import { createParser } from "eventsource-parser";
+import { getTemporaryAuthToken } from "./auth";
+import { getConfig } from "./config";
+import { buildUrl } from "./function";
+import { dispatchRequest } from "./request";
+import { ApiError, defaultResponseHandler } from "./response";
+import { storageImpl } from "./storage";
 
-export type StreamingConnectionMode = 'client' | 'server';
+export type StreamingConnectionMode = "client" | "server";
 
 /**
  * The stream API options. It requires the API input and also
@@ -43,7 +43,7 @@ type StreamOptions<Input> = {
   /**
    * The HTTP method, defaults to `post`;
    */
-  readonly method?: 'get' | 'post' | 'put' | 'delete' | string;
+  readonly method?: "get" | "post" | "put" | "delete" | string;
 
   /**
    * The content type the client accepts as response.
@@ -65,7 +65,7 @@ type StreamOptions<Input> = {
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
 
-type FalStreamEventType = 'data' | 'error' | 'done';
+type FalStreamEventType = "data" | "error" | "done";
 
 type EventHandler<T = any> = (event: T) => void;
 
@@ -95,7 +95,7 @@ export class FalStream<Input, Output> {
     this.url =
       options.url ??
       buildUrl(endpointId, {
-        path: '/stream',
+        path: "/stream",
         query: options.queryParams,
       });
     this.options = options;
@@ -103,17 +103,17 @@ export class FalStream<Input, Output> {
       if (this.streamClosed) {
         reject(
           new ApiError({
-            message: 'Streaming connection is already closed.',
+            message: "Streaming connection is already closed.",
             status: 400,
             body: undefined,
-          })
+          }),
         );
       }
-      this.on('done', (data) => {
+      this.on("done", (data) => {
         this.streamClosed = true;
         resolve(data);
       });
-      this.on('error', (error) => {
+      this.on("error", (error) => {
         this.streamClosed = true;
         reject(error);
       });
@@ -123,29 +123,29 @@ export class FalStream<Input, Output> {
 
   private start = async () => {
     const { endpointId, options } = this;
-    const { input, method = 'post', connectionMode = 'server' } = options;
+    const { input, method = "post", connectionMode = "server" } = options;
     try {
-      if (connectionMode === 'client') {
+      if (connectionMode === "client") {
         // if we are in the browser, we need to get a temporary token
         // to authenticate the request
         const token = await getTemporaryAuthToken(endpointId);
         const { fetch } = getConfig();
         const parsedUrl = new URL(this.url);
-        parsedUrl.searchParams.set('fal_jwt_token', token);
+        parsedUrl.searchParams.set("fal_jwt_token", token);
         const response = await fetch(parsedUrl.toString(), {
           method: method.toUpperCase(),
           headers: {
-            accept: options.accept ?? 'text/event-stream',
-            'content-type': 'application/json',
+            accept: options.accept ?? "text/event-stream",
+            "content-type": "application/json",
           },
-          body: input && method !== 'get' ? JSON.stringify(input) : undefined,
+          body: input && method !== "get" ? JSON.stringify(input) : undefined,
           signal: this.abortController.signal,
         });
         return await this.handleResponse(response);
       }
       return await dispatchRequest(method.toUpperCase(), this.url, input, {
         headers: {
-          accept: options.accept ?? 'text/event-stream',
+          accept: options.accept ?? "text/event-stream",
         },
         responseHandler: this.handleResponse,
         signal: this.abortController.signal,
@@ -162,7 +162,7 @@ export class FalStream<Input, Output> {
         // so the exception gets converted to ApiError correctly
         await defaultResponseHandler(response);
       } catch (error) {
-        this.emit('error', error);
+        this.emit("error", error);
       }
       return;
     }
@@ -170,27 +170,27 @@ export class FalStream<Input, Output> {
     const body = response.body;
     if (!body) {
       this.emit(
-        'error',
+        "error",
         new ApiError({
-          message: 'Response body is empty.',
+          message: "Response body is empty.",
           status: 400,
           body: undefined,
-        })
+        }),
       );
       return;
     }
 
     // any response that is not a text/event-stream will be handled as a binary stream
-    if (response.headers.get('content-type') !== 'text/event-stream') {
+    if (response.headers.get("content-type") !== "text/event-stream") {
       const reader = body.getReader();
       const emitRawChunk = () => {
         reader.read().then(({ done, value }) => {
           if (done) {
-            this.emit('done', this.currentData);
+            this.emit("done", this.currentData);
             return;
           }
           this.currentData = value as Output;
-          this.emit('data', value);
+          this.emit("data", value);
           emitRawChunk();
         });
       };
@@ -198,23 +198,23 @@ export class FalStream<Input, Output> {
       return;
     }
 
-    const decoder = new TextDecoder('utf-8');
+    const decoder = new TextDecoder("utf-8");
     const reader = response.body.getReader();
 
     const parser = createParser((event) => {
-      if (event.type === 'event') {
+      if (event.type === "event") {
         const data = event.data;
 
         try {
           const parsedData = JSON.parse(data);
           this.buffer.push(parsedData);
           this.currentData = parsedData;
-          this.emit('data', parsedData);
+          this.emit("data", parsedData);
 
           // also emit 'message'for backwards compatibility
-          this.emit('message' as any, parsedData);
+          this.emit("message" as any, parsedData);
         } catch (e) {
-          this.emit('error', e);
+          this.emit("error", e);
         }
       }
     });
@@ -229,18 +229,18 @@ export class FalStream<Input, Output> {
 
       if (Date.now() - this.lastEventTimestamp > timeout) {
         this.emit(
-          'error',
+          "error",
           new ApiError({
             message: `Event stream timed out after ${(timeout / 1000).toFixed(0)} seconds with no messages.`,
             status: 408,
-          })
+          }),
         );
       }
 
       if (!done) {
         readPartialResponse().catch(this.handleError);
       } else {
-        this.emit('done', this.currentData);
+        this.emit("done", this.currentData);
       }
     };
 
@@ -253,10 +253,10 @@ export class FalStream<Input, Output> {
       error instanceof ApiError
         ? error
         : new ApiError({
-            message: error.message ?? 'An unknown error occurred',
+            message: error.message ?? "An unknown error occurred",
             status: 500,
           });
-    this.emit('error', apiError);
+    this.emit("error", apiError);
     return;
   };
 
@@ -277,8 +277,8 @@ export class FalStream<Input, Output> {
   async *[Symbol.asyncIterator]() {
     let running = true;
     const stopAsyncIterator = () => (running = false);
-    this.on('error', stopAsyncIterator);
-    this.on('done', stopAsyncIterator);
+    this.on("error", stopAsyncIterator);
+    this.on("done", stopAsyncIterator);
     while (running) {
       const data = this.buffer.shift();
       if (data) {
@@ -322,7 +322,7 @@ export class FalStream<Input, Output> {
  */
 export async function stream<Input = Record<string, any>, Output = any>(
   endpointId: string,
-  options: StreamOptions<Input>
+  options: StreamOptions<Input>,
 ): Promise<FalStream<Input, Output>> {
   const input =
     options.input && options.autoUpload !== false

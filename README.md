@@ -27,17 +27,17 @@ This client library is crafted as a lightweight layer atop platform standards li
 2. Start by configuring your credentials:
 
    ```ts
-   import * as fal from '@fal-ai/serverless-client';
+   import * as fal from "@fal-ai/serverless-client";
 
    fal.config({
      // Can also be auto-configured using environment variables:
-     credentials: 'FAL_KEY',
+     credentials: "FAL_KEY",
    });
    ```
 
 3. Retrieve your function id and execute it:
    ```ts
-   const result = await fal.run('user/app-alias');
+   const result = await fal.run("user/app-alias");
    ```
 
 The result's type is contingent upon your Python function's output. Types in Python are mapped to their corresponding types in JavaScript.
@@ -56,13 +56,13 @@ For example, if you are using Next.js, you can:
    ```
 2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/fal/proxy.ts](https://github.com/fal-ai/fal-js/blob/main/apps/demo-nextjs-page-router/pages/api/fal/proxy.ts)
    ```ts
-   export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
+   export { handler as default } from "@fal-ai/serverless-proxy/nextjs";
    ```
 3. Configure the client to use the proxy:
    ```ts
-   import * as fal from '@fal-ai/serverless-client';
+   import * as fal from "@fal-ai/serverless-client";
    fal.config({
-     proxyUrl: '/api/fal/proxy',
+     proxyUrl: "/api/fal/proxy",
    });
    ```
 4. Make sure your server has `FAL_KEY` as environment variable with a valid API Key. That's it! Now your client calls will route through your server proxy, so your credentials are protected.

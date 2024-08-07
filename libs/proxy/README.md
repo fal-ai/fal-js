@@ -19,7 +19,7 @@ For Next.js applications using the page router:
 1. Create an API route in your Next.js app, as a convention we suggest using `pages/api/fal/proxy.js` (or `.ts` if you're using TypeScript):
 2. Re-export the proxy handler from the library as the default export:
    ```ts
-   export { handler as default } from '@fal-ai/serverless-proxy/nextjs';
+   export { handler as default } from "@fal-ai/serverless-proxy/nextjs";
    ```
 3. Ensure you've set the `FAL_KEY` as an environment variable in your server, containing a valid API Key.
 
@@ -31,7 +31,7 @@ For Next.js applications using the app router:
 2. Re-export the proxy handler from the library as the default export:
 
    ```ts
-   import { route } from '@fal-ai/serverless-proxy/nextjs';
+   import { route } from "@fal-ai/serverless-proxy/nextjs";
 
    export const { GET, POST } = route;
    ```
@@ -49,12 +49,12 @@ For Express applications:
 2. Add the proxy route and its handler. Note that if your client lives outside of the express app (i.e. the express app is solely used as an external API for other clients), you will need to allow CORS on the proxy route:
 
    ```ts
-   import * as falProxy from '@fal-ai/serverless-proxy/express';
+   import * as falProxy from "@fal-ai/serverless-proxy/express";
 
    app.all(
      falProxy.route, // '/api/fal/proxy' or you can use your own
      cors(), // if external clients will use the proxy
-     falProxy.handler
+     falProxy.handler,
    );
    ```
 
@@ -65,10 +65,10 @@ For Express applications:
 Once you've set up the proxy, you can configure the client to use it:
 
 ```ts
-import * as fal from '@fal-ai/serverless-client';
+import * as fal from "@fal-ai/serverless-client";
 
 fal.config({
-  proxyUrl: '/api/fal/proxy', // or https://my.app.com/api/fal/proxy
+  proxyUrl: "/api/fal/proxy", // or https://my.app.com/api/fal/proxy
 });
 ```
 

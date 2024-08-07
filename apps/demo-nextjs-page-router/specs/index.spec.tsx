@@ -1,11 +1,11 @@
-import '@inrupt/jest-jsdom-polyfills';
+import "@inrupt/jest-jsdom-polyfills";
 
-import { render } from '@testing-library/react';
+import { render } from "@testing-library/react";
 
-import Index from '../pages/index';
+import Index from "../pages/index";
 
-describe('Index', () => {
-  xit('should render successfully', () => {
+describe("Index", () => {
+  xit("should render successfully", () => {
     const { baseElement } = render(<Index />);
     expect(baseElement).toBeTruthy();
   });
