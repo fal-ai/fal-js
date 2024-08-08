@@ -119,7 +119,12 @@ export function config(config: Config) {
       ),
     };
   }
-  const { credentials, suppressLocalCredentialsWarning } = configuration;
+  const { credentials: resolveCredentials, suppressLocalCredentialsWarning } =
+    configuration;
+  const credentials =
+    typeof resolveCredentials === "function"
+      ? resolveCredentials()
+      : resolveCredentials;
   if (
     typeof window !== "undefined" &&
     credentials &&
