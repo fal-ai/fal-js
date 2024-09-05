@@ -3,12 +3,13 @@
  *
  * **Note:** This is a simplified version of the `RequestConfig` type from the
  * `fetch` API. It contains only the properties that are relevant for the
- * `fal-serverless` client. It also works around the fact that the `fetch` API
- * `Request` does not support mutability, its clone method has critical limitations
+ * fal client. It also works around the fact that the `fetch` API `Request`
+ * does not support mutability, its clone method has critical limitations
  * to our use case.
  */
 export type RequestConfig = {
   url: string;
+  method: string;
   headers?: Record<string, string | string[]>;
 };
 
