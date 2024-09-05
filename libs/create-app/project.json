@@ -15,6 +15,14 @@
         "assets": ["LICENSE", "CODE_OF_CONDUCT.md", "libs/create-app/README.md"]
       }
     },
+    "run-script": {
+      "executor": "nx:run-commands",
+      "configurations": {
+        "cli": {
+          "commands": ["./libs/create-app/bin/dev.js"]
+        }
+      }
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
