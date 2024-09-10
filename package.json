@@ -7,6 +7,7 @@
     "build": "nx build",
     "test": "nx test",
     "lint:staged": "lint-staged",
+    "docs:typedoc": "typedoc --tsconfig libs/client/tsconfig.lib.json",
     "prepare": "husky install"
   },
   "private": true,
@@ -22,6 +23,9 @@
       "secretlint",
       "cspell",
       "prettier --write"
+    ],
+    "libs/client/src/**/*.{ts}": [
+      "npm run docs:typedoc"
     ]
   },
   "dependencies": {
@@ -123,6 +127,10 @@
     "ts-node": "^10.9.1",
     "ts-protoc-gen": "^0.15.0",
     "tsconfig-paths": "^4.2.0",
+    "typedoc": "^0.26.7",
+    "typedoc-github-theme": "^0.1.2",
+    "typedoc-plugin-extras": "^3.1.0",
+    "typedoc-plugin-mdn-links": "^3.2.12",
     "typescript": "^5.5.4"
   },
   "prettier": {
