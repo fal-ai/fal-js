@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "out": "docs/reference",
+  "entryPoints": ["./libs/client/src/index.ts"],
+  "exclude": ["./src/__tests__/**", "*.spec.ts"],
+  "excludeExternals": true,
+  "excludeInternal": false,
+  "includeVersion": true,
+  "githubPages": true,
+  "plugin": ["typedoc-plugin-mdn-links", "typedoc-plugin-extras", "typedoc-github-theme"],
+  "readme": "none",
+  "hideGenerator": true
+}
