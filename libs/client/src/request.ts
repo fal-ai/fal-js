@@ -30,6 +30,7 @@ export async function dispatchRequest<Input, Output>(
 
   const { url, headers } = await requestMiddleware({
     url: targetUrl,
+    method: method.toUpperCase(),
   });
   const authHeader = credentials ? { Authorization: `Key ${credentials}` } : {};
   const requestHeaders = {
