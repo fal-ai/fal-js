@@ -8,6 +8,8 @@ import { storageImpl } from "./storage";
 
 export type StreamingConnectionMode = "client" | "server";
 
+const CONTENT_TYPE_EVENT_STREAM = "text/event-stream";
+
 /**
  * The stream API options. It requires the API input and also
  * offers configuration options.
@@ -135,7 +137,7 @@ export class FalStream<Input, Output> {
         const response = await fetch(parsedUrl.toString(), {
           method: method.toUpperCase(),
           headers: {
-            accept: options.accept ?? "text/event-stream",
+            accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
             "content-type": "application/json",
           },
           body: input && method !== "get" ? JSON.stringify(input) : undefined,
@@ -145,7 +147,7 @@ export class FalStream<Input, Output> {
       }
       return await dispatchRequest(method.toUpperCase(), this.url, input, {
         headers: {
-          accept: options.accept ?? "text/event-stream",
+          accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
         },
         responseHandler: this.handleResponse,
         signal: this.abortController.signal,
@@ -180,8 +182,11 @@ export class FalStream<Input, Output> {
       return;
     }
 
+    const isEventStream = response.headers
+      .get("content-type")
+      .startsWith(CONTENT_TYPE_EVENT_STREAM);
     // any response that is not a text/event-stream will be handled as a binary stream
-    if (response.headers.get("content-type") !== "text/event-stream") {
+    if (!isEventStream) {
       const reader = body.getReader();
       const emitRawChunk = () => {
         reader.read().then(({ done, value }) => {
