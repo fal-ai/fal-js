@@ -2,4 +2,5 @@
 
 /dist
 /coverage
+/docs
 package-lock.json
