@@ -1,7 +1,7 @@
 import { createParser } from "eventsource-parser";
 import { getTemporaryAuthToken } from "./auth";
+import { buildUrl } from "./client";
 import { getConfig } from "./config";
-import { buildUrl } from "./function";
 import { dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { storageImpl } from "./storage";

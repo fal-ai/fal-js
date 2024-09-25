@@ -1,5 +1,5 @@
+export { queue, run, subscribe } from "./client";
 export { config, getConfig } from "./config";
-export { queue, run, subscribe } from "./function";
 export { withMiddleware, withProxy } from "./middleware";
 export type { RequestMiddleware } from "./middleware";
 export { realtimeImpl as realtime } from "./realtime";
