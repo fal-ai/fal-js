@@ -1,4 +1,4 @@
-import * as fal from "@fal-ai/serverless-client";
+import { fal } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
 // @snippet:start(client.config)

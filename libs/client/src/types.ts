@@ -1,5 +1,41 @@
-export type Result<T> = {
-  result: T;
+// export type Result<T> = {
+//   result: T;
+// };
+
+/**
+ * The function input and other configuration when running
+ * the function, such as the HTTP method to use.
+ */
+export type RunOptions<Input> = {
+  /**
+   * The function input. It will be submitted either as query params
+   * or the body payload, depending on the `method`.
+   */
+  readonly input?: Input;
+
+  /**
+   * The HTTP method, defaults to `post`;
+   */
+  readonly method?: "get" | "post" | "put" | "delete" | string;
+};
+
+export type UrlOptions = {
+  /**
+   * If `true`, the function will use the queue to run the function
+   * asynchronously and return the result in a separate call. This
+   * influences how the URL is built.
+   */
+  readonly subdomain?: string;
+
+  /**
+   * The query parameters to include in the URL.
+   */
+  readonly query?: Record<string, string>;
+
+  /**
+   * The path to append to the function URL.
+   */
+  path?: string;
 };
 
 export type EnqueueResult = {
@@ -31,7 +67,7 @@ export interface CompletedQueueStatus extends BaseQueueStatus {
   status: "COMPLETED";
   response_url: string;
   logs: RequestLog[];
-  metrics: Metrics;
+  metrics?: Metrics;
 }
 
 export interface EnqueuedQueueStatus extends BaseQueueStatus {

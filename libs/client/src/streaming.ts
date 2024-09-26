@@ -1,10 +1,9 @@
 import { createParser } from "eventsource-parser";
 import { getTemporaryAuthToken } from "./auth";
-import { buildUrl } from "./client";
-import { getConfig } from "./config";
-import { dispatchRequest } from "./request";
+import { RequiredConfig } from "./config";
+import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
-import { storageImpl } from "./storage";
+import { type StorageClient } from "./storage";
 
 export type StreamingConnectionMode = "client" | "server";
 
@@ -76,6 +75,7 @@ type EventHandler<T = any> = (event: T) => void;
  */
 export class FalStream<Input, Output> {
   // properties
+  config: RequiredConfig;
   endpointId: string;
   url: string;
   options: StreamOptions<Input>;
@@ -92,8 +92,13 @@ export class FalStream<Input, Output> {
 
   private abortController = new AbortController();
 
-  constructor(endpointId: string, options: StreamOptions<Input>) {
+  constructor(
+    endpointId: string,
+    config: RequiredConfig,
+    options: StreamOptions<Input>,
+  ) {
     this.endpointId = endpointId;
+    this.config = config;
     this.url =
       options.url ??
       buildUrl(endpointId, {
@@ -130,8 +135,8 @@ export class FalStream<Input, Output> {
       if (connectionMode === "client") {
         // if we are in the browser, we need to get a temporary token
         // to authenticate the request
-        const token = await getTemporaryAuthToken(endpointId);
-        const { fetch } = getConfig();
+        const token = await getTemporaryAuthToken(endpointId, this.config);
+        const { fetch } = this.config;
         const parsedUrl = new URL(this.url);
         parsedUrl.searchParams.set("fal_jwt_token", token);
         const response = await fetch(parsedUrl.toString(), {
@@ -145,12 +150,18 @@ export class FalStream<Input, Output> {
         });
         return await this.handleResponse(response);
       }
-      return await dispatchRequest(method.toUpperCase(), this.url, input, {
-        headers: {
-          accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
+      return await dispatchRequest({
+        method: method.toUpperCase(),
+        targetUrl: this.url,
+        input,
+        config: this.config,
+        options: {
+          headers: {
+            accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
+          },
+          responseHandler: this.handleResponse,
+          signal: this.abortController.signal,
         },
-        responseHandler: this.handleResponse,
-        signal: this.abortController.signal,
       });
     } catch (error) {
       this.handleError(error);
@@ -317,24 +328,45 @@ export class FalStream<Input, Output> {
 }
 
 /**
- * Calls a fal app that supports streaming and provides a streaming-capable
- * object as a result, that can be used to get partial results through either
- * `AsyncIterator` or through an event listener.
- *
- * @param endpointId the endpoint id, e.g. `fal-ai/llavav15-13b`.
- * @param options the request options, including the input payload.
- * @returns the `FalStream` instance.
+ * The streaming client interface.
  */
-export async function stream<Input = Record<string, any>, Output = any>(
-  endpointId: string,
-  options: StreamOptions<Input>,
-): Promise<FalStream<Input, Output>> {
-  const input =
-    options.input && options.autoUpload !== false
-      ? await storageImpl.transformInput(options.input)
-      : options.input;
-  return new FalStream<Input, Output>(endpointId, {
-    ...options,
-    input: input as Input,
-  });
+export interface StreamingClient {
+  /**
+   * Calls a fal app that supports streaming and provides a streaming-capable
+   * object as a result, that can be used to get partial results through either
+   * `AsyncIterator` or through an event listener.
+   *
+   * @param endpointId the endpoint id, e.g. `fal-ai/llavav15-13b`.
+   * @param options the request options, including the input payload.
+   * @returns the `FalStream` instance.
+   */
+  stream<Input = Record<string, any>, Output = any>(
+    endpointId: string,
+    options: StreamOptions<Input>,
+  ): Promise<FalStream<Input, Output>>;
+}
+
+type StreamingClientDependencies = {
+  config: RequiredConfig;
+  storage: StorageClient;
+};
+
+export function createStreamingClient({
+  config,
+  storage,
+}: StreamingClientDependencies): StreamingClient {
+  return {
+    async stream<Input, Output>(
+      endpointId: string,
+      options: StreamOptions<Input>,
+    ) {
+      const input = options.input
+        ? await storage.transformInput(options.input)
+        : undefined;
+      return new FalStream<Input, Output>(endpointId, config, {
+        ...options,
+        input: input as Input,
+      });
+    },
+  };
 }

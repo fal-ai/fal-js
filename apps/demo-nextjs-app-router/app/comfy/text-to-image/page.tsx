@@ -1,16 +1,13 @@
 "use client";
 
-import * as fal from "@fal-ai/serverless-client";
+import { createFalClient } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
-// @snippet:start(client.config)
-fal.config({
+const fal = createFalClient({
   proxyUrl: "/api/fal/proxy", // the built-int nextjs proxy
   // proxyUrl: 'http://localhost:3333/api/fal/proxy', // or your own external proxy
 });
-// @snippet:end
 
-// @snippet:start(client.result.type)
 type Image = {
   filename: string;
   subfolder: string;
@@ -23,7 +20,6 @@ type Result = {
   outputs: Record<string, any>[];
   images: Image[];
 };
-// @snippet:end
 
 type ErrorProps = {
   error: any;

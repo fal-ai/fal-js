@@ -1,4 +1,4 @@
-export function ensureAppIdFormat(id: string): string {
+export function ensureEndpointIdFormat(id: string): string {
   const parts = id.split("/");
   if (parts.length > 1) {
     return id;
@@ -23,8 +23,8 @@ export type AppId = {
   readonly namespace?: AppNamespace;
 };
 
-export function parseAppId(id: string): AppId {
-  const normalizedId = ensureAppIdFormat(id);
+export function parseEndpointId(id: string): AppId {
+  const normalizedId = ensureEndpointIdFormat(id);
   const parts = normalizedId.split("/");
   if (APP_NAMESPACES.includes(parts[0] as any)) {
     return {

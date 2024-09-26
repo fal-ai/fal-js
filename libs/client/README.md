@@ -1,6 +1,6 @@
 # fal.ai JavaScript/TypeScript client library
 
-![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=%40fal-ai%2Fserverless-client&style=flat-square)
+![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=%40fal-ai%2Fclient&style=flat-square)
 
 ## Introduction
 
@@ -11,7 +11,7 @@ The `fal.ai` JavaScript Client Library provides a seamless way to interact with 
 Before diving into the client-specific features, ensure you've set up your credentials:
 
 ```ts
-import * as fal from "@fal-ai/serverless-client";
+import { fal } from "@fal-ai/client";
 
 fal.config({
   // Can also be auto-configured using environment variables:

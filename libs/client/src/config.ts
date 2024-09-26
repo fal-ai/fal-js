@@ -97,15 +97,13 @@ const DEFAULT_CONFIG: Partial<Config> = {
   responseHandler: defaultResponseHandler,
 };
 
-let configuration: RequiredConfig;
-
 /**
  * Configures the fal serverless client.
  *
  * @param config the new configuration.
  */
-export function config(config: Config) {
-  configuration = {
+export function createConfig(config: Config): RequiredConfig {
+  let configuration = {
     ...DEFAULT_CONFIG,
     ...config,
     fetch: config.fetch ?? resolveDefaultFetch(),
@@ -134,21 +132,6 @@ export function config(config: Config) {
       "The fal credentials are exposed in the browser's environment. " +
         "That's not recommended for production use cases.",
     );
-  }
-}
-
-/**
- * Get the current fal serverless client configuration.
- *
- * @returns the current client configuration.
- */
-export function getConfig(): RequiredConfig {
-  if (!configuration) {
-    console.info("Using default configuration for the fal client");
-    return {
-      ...DEFAULT_CONFIG,
-      fetch: resolveDefaultFetch(),
-    } as RequiredConfig;
   }
   return configuration;
 }

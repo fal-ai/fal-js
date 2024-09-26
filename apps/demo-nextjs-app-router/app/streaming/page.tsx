@@ -1,9 +1,9 @@
 "use client";
 
-import * as fal from "@fal-ai/serverless-client";
+import { createFalClient } from "@fal-ai/client";
 import { useState } from "react";
 
-fal.config({
+const fal = createFalClient({
   proxyUrl: "/api/fal/proxy",
 });
 

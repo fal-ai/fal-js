@@ -1,11 +1,11 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import * as fal from "@fal-ai/serverless-client";
+import { createFalClient } from "@fal-ai/client";
 import { ChangeEvent, useRef, useState } from "react";
 import { DrawingCanvas } from "../../components/drawing";
 
-fal.config({
+const fal = createFalClient({
   proxyUrl: "/api/fal/proxy",
 });
 

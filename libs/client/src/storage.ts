@@ -1,4 +1,4 @@
-import { getConfig, getRestApiUrl } from "./config";
+import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
 import { isPlainObject } from "./utils";
 
@@ -7,7 +7,7 @@ import { isPlainObject } from "./utils";
  * uploading files to the server and transforming the input to replace file
  * objects with URLs.
  */
-export interface StorageSupport {
+export interface StorageClient {
   /**
    * Upload a file to the server. Returns the URL of the uploaded file.
    * @param file the file to upload
@@ -57,56 +57,71 @@ function getExtensionFromContentType(contentType: string): string {
  * @param file the file to upload
  * @returns the URL to upload the file to and the URL of the file once it is uploaded.
  */
-async function initiateUpload(file: Blob): Promise<InitiateUploadResult> {
+async function initiateUpload(
+  file: Blob,
+  config: RequiredConfig,
+): Promise<InitiateUploadResult> {
   const contentType = file.type || "application/octet-stream";
   const filename =
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
-  return await dispatchRequest<InitiateUploadData, InitiateUploadResult>(
-    "POST",
-    `${getRestApiUrl()}/storage/upload/initiate`,
-    {
+  return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
+    method: "POST",
+    targetUrl: `${getRestApiUrl()}/storage/upload/initiate`,
+    input: {
       content_type: contentType,
       file_name: filename,
     },
-  );
+    config,
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type KeyValuePair = [string, any];
 
-export const storageImpl: StorageSupport = {
-  upload: async (file: Blob) => {
-    const { fetch } = getConfig();
-    const { upload_url: uploadUrl, file_url: url } = await initiateUpload(file);
-    const response = await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type || "application/octet-stream",
-      },
-    });
-    const { responseHandler } = getConfig();
-    await responseHandler(response);
-    return url;
-  },
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transformInput: async (input: any): Promise<any> => {
-    if (Array.isArray(input)) {
-      return Promise.all(input.map((item) => storageImpl.transformInput(item)));
-    } else if (input instanceof Blob) {
-      return await storageImpl.upload(input);
-    } else if (isPlainObject(input)) {
-      const inputObject = input as Record<string, any>;
-      const promises = Object.entries(inputObject).map(
-        async ([key, value]): Promise<KeyValuePair> => {
-          return [key, await storageImpl.transformInput(value)];
-        },
-      );
-      const results = await Promise.all(promises);
-      return Object.fromEntries(results);
-    }
-    // Return the input as is if it's neither an object nor a file/blob/data URI
-    return input;
-  },
+type StorageClientDependencies = {
+  config: RequiredConfig;
 };
+
+export function createStorageClient({
+  config,
+}: StorageClientDependencies): StorageClient {
+  const ref: StorageClient = {
+    upload: async (file: Blob) => {
+      const { fetch, responseHandler } = config;
+      const { upload_url: uploadUrl, file_url: url } = await initiateUpload(
+        file,
+        config,
+      );
+      const response = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+        },
+      });
+      await responseHandler(response);
+      return url;
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    transformInput: async (input: any): Promise<any> => {
+      if (Array.isArray(input)) {
+        return Promise.all(input.map((item) => ref.transformInput(item)));
+      } else if (input instanceof Blob) {
+        return await ref.upload(input);
+      } else if (isPlainObject(input)) {
+        const inputObject = input as Record<string, any>;
+        const promises = Object.entries(inputObject).map(
+          async ([key, value]): Promise<KeyValuePair> => {
+            return [key, await ref.transformInput(value)];
+          },
+        );
+        const results = await Promise.all(promises);
+        return Object.fromEntries(results);
+      }
+      // Return the input as is if it's neither an object nor a file/blob/data URI
+      return input;
+    },
+  };
+  return ref;
+}

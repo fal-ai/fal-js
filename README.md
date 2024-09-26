@@ -1,6 +1,6 @@
 # The fal.ai JS client
 
-![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client&style=flat-square)
+![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=client&style=flat-square)
 ![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=proxy&style=flat-square)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/fal-js/build.yml?style=flat-square)
 ![License](https://img.shields.io/github/license/fal-ai/fal-js?style=flat-square)
@@ -11,7 +11,7 @@ The fal serverless JavaScript/TypeScript Client is a robust and user-friendly li
 
 ## Getting Started
 
-The `@fal-ai/serverless-client` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
+The `@fal-ai/client` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
 
 ### Client Library
 
@@ -22,12 +22,12 @@ This client library is crafted as a lightweight layer atop platform standards li
 
 1. Install the client library
    ```sh
-   npm install --save @fal-ai/serverless-client
+   npm install --save @fal-ai/client
    ```
 2. Start by configuring your credentials:
 
    ```ts
-   import * as fal from "@fal-ai/serverless-client";
+   import { fal } from "@fal-ai/client";
 
    fal.config({
      // Can also be auto-configured using environment variables:
@@ -60,7 +60,7 @@ For example, if you are using Next.js, you can:
    ```
 3. Configure the client to use the proxy:
    ```ts
-   import * as fal from "@fal-ai/serverless-client";
+   import { fal } from "@fal-ai/client";
    fal.config({
      proxyUrl: "/api/fal/proxy",
    });
