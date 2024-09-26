@@ -12,26 +12,26 @@ export function ensureEndpointIdFormat(id: string): string {
   );
 }
 
-const APP_NAMESPACES = ["workflows", "comfy"] as const;
+const ENDPOINT_NAMESPACES = ["workflows", "comfy"] as const;
 
-type AppNamespace = (typeof APP_NAMESPACES)[number];
+type EndpointNamespace = (typeof ENDPOINT_NAMESPACES)[number];
 
-export type AppId = {
+export type EndpointId = {
   readonly owner: string;
   readonly alias: string;
   readonly path?: string;
-  readonly namespace?: AppNamespace;
+  readonly namespace?: EndpointNamespace;
 };
 
-export function parseEndpointId(id: string): AppId {
+export function parseEndpointId(id: string): EndpointId {
   const normalizedId = ensureEndpointIdFormat(id);
   const parts = normalizedId.split("/");
-  if (APP_NAMESPACES.includes(parts[0] as any)) {
+  if (ENDPOINT_NAMESPACES.includes(parts[0] as any)) {
     return {
       owner: parts[1],
       alias: parts[2],
       path: parts.slice(3).join("/") || undefined,
-      namespace: parts[0] as AppNamespace,
+      namespace: parts[0] as EndpointNamespace,
     };
   }
   return {

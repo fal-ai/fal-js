@@ -1,5 +1,5 @@
-import { createFalClient, FalClient } from "./client";
-import { Config, createConfig, RequiredConfig } from "./config";
+import { createFalClient, type FalClient } from "./client";
+import { Config, createConfig, type RequiredConfig } from "./config";
 import { RunOptions } from "./types";
 
 export { createFalClient, type FalClient } from "./client";
@@ -11,6 +11,7 @@ export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";
 export type { StorageClient } from "./storage";
 export type { StreamingClient } from "./streaming";
+export * from "./types";
 export type {
   QueueStatus,
   ValidationErrorInfo,

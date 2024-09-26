@@ -6,13 +6,35 @@ import { createStorageClient, StorageClient } from "./storage";
 import { createStreamingClient, StreamingClient } from "./streaming";
 import { RunOptions } from "./types";
 
+/**
+ * The main client type, it provides access to simple API model usage,
+ * as well as access to the `queue` and `storage` APIs.
+ *
+ * @see createFalClient
+ */
 export interface FalClient {
+  /**
+   * The queue client to interact with the queue API.
+   */
   readonly queue: QueueClient;
 
+  /**
+   * The realtime client to interact with the realtime API
+   * and receive updates in real-time.
+   * @see #RealtimeClient
+   * @see #RealtimeClient.connect
+   */
   readonly realtime: RealtimeClient;
 
+  /**
+   * The storage client to interact with the storage API.
+   */
   readonly storage: StorageClient;
 
+  /**
+   * The streaming client to interact with the streaming API.
+   * @see #stream
+   */
   readonly streaming: StreamingClient;
 
   /**
@@ -35,10 +57,24 @@ export interface FalClient {
     options: RunOptions<Input> & QueueSubscribeOptions,
   ): Promise<Output>;
 
+  /**
+   * Calls a fal app that supports streaming and provides a streaming-capable
+   * object as a result, that can be used to get partial results through either
+   * `AsyncIterator` or through an event listener.
+   *
+   * @param endpointId the endpoint id, e.g. `fal-ai/llavav15-13b`.
+   * @param options the request options, including the input payload.
+   * @returns the `FalStream` instance.
+   */
   stream: StreamingClient["stream"];
 }
 
-export const createFalClient = (userConfig: Config = {}): FalClient => {
+/**
+ * Creates a new reference of the `FalClient`.
+ * @param userConfig Optional configuration to override the default settings.
+ * @returns a new instance of the `FalClient`.
+ */
+export function createFalClient(userConfig: Config = {}): FalClient {
   const config = createConfig(userConfig);
   const storage = createStorageClient({ config });
   const queue = createQueueClient({ config, storage });
@@ -76,4 +112,4 @@ export const createFalClient = (userConfig: Config = {}): FalClient => {
       return queue.result(endpointId, { requestId });
     },
   };
-};
+}
