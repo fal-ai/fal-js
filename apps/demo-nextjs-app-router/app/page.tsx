@@ -1,23 +1,20 @@
 "use client";
 
-import { fal } from "@fal-ai/client";
+import { createFalClient } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
-// @snippet:start(client.config)
-fal.config({
+const fal = createFalClient({
   // credentials: 'FAL_KEY_ID:FAL_KEY_SECRET',
   proxyUrl: "/api/fal/proxy", // the built-int nextjs proxy
   // proxyUrl: 'http://localhost:3333/api/fal/proxy', // or your own external proxy
 });
-// @snippet:end
 
-// @snippet:start(client.result.type)
 type Image = {
   url: string;
   file_name: string;
   file_size: number;
 };
-type Result = {
+type Output = {
   image: Image;
 };
 // @snippet:end
@@ -51,7 +48,7 @@ export default function Home() {
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<Output | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   // @snippet:end
@@ -79,7 +76,7 @@ export default function Home() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe("fal-ai/illusion-diffusion", {
+      const result = await fal.subscribe<Output>("fal-ai/illusion-diffusion", {
         input: {
           prompt,
           image_url: imageFile,
@@ -96,7 +93,7 @@ export default function Home() {
           }
         },
       });
-      setResult(result);
+      setResult(result.data);
     } catch (error: any) {
       setError(error);
     } finally {

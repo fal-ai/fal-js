@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { createFalClient } from "@fal-ai/client";
@@ -15,7 +16,7 @@ type Image = {
   url: string;
 };
 
-type Result = {
+type ComfyOutput = {
   url: string;
   outputs: Record<string, any>[];
   images: Image[];
@@ -50,7 +51,7 @@ export default function ComfyImageToImagePage() {
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<ComfyOutput | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   // @snippet:end
@@ -69,7 +70,7 @@ export default function ComfyImageToImagePage() {
     setElapsedTime(0);
   };
 
-  const getImageURL = (result: Result) => {
+  const getImageURL = (result: ComfyOutput) => {
     return result.outputs[9].images[0];
   };
 
@@ -79,7 +80,7 @@ export default function ComfyImageToImagePage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe(
+      const { data } = await fal.subscribe<ComfyOutput>(
         "comfy/fal-ai/image-to-image",
         {
           input: {
@@ -98,7 +99,7 @@ export default function ComfyImageToImagePage() {
           },
         },
       );
-      setResult(getImageURL(result));
+      setResult(getImageURL(data));
     } catch (error: any) {
       setError(error);
     } finally {

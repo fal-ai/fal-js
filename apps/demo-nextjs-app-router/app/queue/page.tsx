@@ -1,9 +1,9 @@
 "use client";
 
-import { createFalClient } from "@fal-ai/client";
+import { fal } from "@fal-ai/client";
 import { useState } from "react";
 
-const fal = createFalClient({
+fal.config({
   proxyUrl: "/api/fal/proxy",
 });
 
@@ -54,7 +54,7 @@ export default function Home() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: any = await fal.subscribe(endpointId, {
+      const result = await fal.subscribe(endpointId, {
         input: JSON.parse(input),
         logs: true,
         // mode: "streaming",
