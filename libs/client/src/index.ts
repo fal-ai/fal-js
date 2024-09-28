@@ -1,5 +1,6 @@
 import { createFalClient, type FalClient } from "./client";
-import { Config, createConfig, type RequiredConfig } from "./config";
+import { Config, createConfig } from "./config";
+import { StreamOptions } from "./streaming";
 import { RunOptions } from "./types";
 
 export { createFalClient, type FalClient } from "./client";
@@ -28,12 +29,11 @@ type SingletonFalClient = {
  * layer for existing code that uses the clients version prior to 1.0.0.
  */
 export const fal: SingletonFalClient = (function createSingletonFalClient() {
-  let currentConfig: RequiredConfig = createConfig({});
-  let currentInstance: FalClient = createFalClient(currentConfig);
+  let currentInstance: FalClient = createFalClient();
   return {
     config(config: Config) {
-      currentConfig = createConfig(config);
-      currentInstance = createFalClient(currentConfig);
+      console.log(config.requestMiddleware);
+      currentInstance = createFalClient(createConfig(config));
     },
     get queue() {
       return currentInstance.queue;
@@ -47,14 +47,14 @@ export const fal: SingletonFalClient = (function createSingletonFalClient() {
     get streaming() {
       return currentInstance.streaming;
     },
-    run<Input, Output>(id: string, options: RunOptions<Input>) {
-      return currentInstance.run<Input, Output>(id, options);
+    run<Output, Input>(id: string, options: RunOptions<Input>) {
+      return currentInstance.run<Output, Input>(id, options);
     },
-    subscribe<Input, Output>(endpointId: string, options: RunOptions<Input>) {
-      return currentInstance.subscribe<Input, Output>(endpointId, options);
+    subscribe<Output, Input>(endpointId: string, options: RunOptions<Input>) {
+      return currentInstance.subscribe<Output, Input>(endpointId, options);
     },
-    stream<Input, Output>(endpointId, options) {
-      return currentInstance.stream<Input, Output>(endpointId, options);
+    stream<Output, Input>(endpointId: string, options: StreamOptions<Input>) {
+      return currentInstance.stream<Output, Input>(endpointId, options);
     },
   } satisfies SingletonFalClient;
 })();

@@ -26,12 +26,16 @@ export type RequestMiddleware = (
 export function withMiddleware(
   ...middlewares: RequestMiddleware[]
 ): RequestMiddleware {
-  return (config) =>
-    middlewares.reduce(
-      (configPromise, middleware) =>
-        configPromise.then((req) => middleware(req)),
-      Promise.resolve(config),
-    );
+  const isDefined = (middleware: RequestMiddleware): boolean =>
+    typeof middleware === "function";
+
+  return async (config: RequestConfig) => {
+    let currentConfig = config;
+    for (const middleware of middlewares.filter(isDefined)) {
+      currentConfig = await middleware(currentConfig);
+    }
+    return currentConfig;
+  };
 }
 
 export type RequestProxyConfig = {

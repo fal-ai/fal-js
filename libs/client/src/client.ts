@@ -2,9 +2,10 @@ import { Config, createConfig } from "./config";
 import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
 import { createRealtimeClient, RealtimeClient } from "./realtime";
 import { buildUrl, dispatchRequest } from "./request";
+import { resultResponseHandler } from "./response";
 import { createStorageClient, StorageClient } from "./storage";
 import { createStreamingClient, StreamingClient } from "./streaming";
-import { RunOptions } from "./types";
+import { Result, RunOptions } from "./types";
 
 /**
  * The main client type, it provides access to simple API model usage,
@@ -43,7 +44,10 @@ export interface FalClient {
    * @param id the registered function revision id or alias.
    * @returns the remote function output
    */
-  run<Input, Output>(id: string, options: RunOptions<Input>): Promise<Output>;
+  run<Output = any, Input = Record<string, any>>(
+    id: string,
+    options: RunOptions<Input>,
+  ): Promise<Result<Output>>;
 
   /**
    * Subscribes to updates for a specific request in the queue.
@@ -52,10 +56,10 @@ export interface FalClient {
    * @param options - Options to configure how the request is run and how updates are received.
    * @returns A promise that resolves to the result of the request once it's completed.
    */
-  subscribe<Input, Output>(
+  subscribe<Output = any, Input = Record<string, any>>(
     endpointId: string,
     options: RunOptions<Input> & QueueSubscribeOptions,
-  ): Promise<Output>;
+  ): Promise<Result<Output>>;
 
   /**
    * Calls a fal app that supports streaming and provides a streaming-capable
@@ -86,24 +90,27 @@ export function createFalClient(userConfig: Config = {}): FalClient {
     storage,
     streaming,
     stream: streaming.stream,
-    async run<Input, Output>(
+    async run<Output, Input>(
       id: string,
       options: RunOptions<Input> = {},
-    ): Promise<Output> {
+    ): Promise<Result<Output>> {
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
-      return dispatchRequest<Input, Output>({
+      return dispatchRequest<Input, Result<Output>>({
         method: options.method,
         targetUrl: buildUrl(id, options),
         input: input as Input,
-        config,
+        config: {
+          ...config,
+          responseHandler: resultResponseHandler,
+        },
       });
     },
-    async subscribe<Input, Output>(
+    async subscribe<Output, Input>(
       endpointId: string,
       options: RunOptions<Input> & QueueSubscribeOptions = {},
-    ): Promise<Output> {
+    ): Promise<Result<Output>> {
       const { request_id: requestId } = await queue.submit(endpointId, options);
       if (options.onEnqueue) {
         options.onEnqueue(requestId);

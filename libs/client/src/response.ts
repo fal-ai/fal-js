@@ -1,6 +1,13 @@
-import { ValidationErrorInfo } from "./types";
+import { RequiredConfig } from "./config";
+import { Result, ValidationErrorInfo } from "./types";
 
 export type ResponseHandler<Output> = (response: Response) => Promise<Output>;
+
+const REQUEST_ID_HEADER = "x-fal-request-id";
+
+export type ResponseHandlerCreator<Output> = (
+  config: RequiredConfig,
+) => ResponseHandler<Output>;
 
 type ApiErrorArgs = {
   message: string;
@@ -80,4 +87,14 @@ export async function defaultResponseHandler<Output>(
   }
   // TODO convert to either number or bool automatically
   return response.text() as Promise<Output>;
+}
+
+export async function resultResponseHandler<Output>(
+  response: Response,
+): Promise<Result<Output>> {
+  const data = await defaultResponseHandler<Output>(response);
+  return {
+    data,
+    requestId: response.headers.get(REQUEST_ID_HEADER) || "",
+  } satisfies Result<Output>;
 }

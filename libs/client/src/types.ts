@@ -1,6 +1,11 @@
-// export type Result<T> = {
-//   result: T;
-// };
+/**
+ * Represents an API result, containing the data,
+ *  the request ID and any other relevant information.
+ */
+export type Result<T> = {
+  data: T;
+  requestId: string;
+};
 
 /**
  * The function input and other configuration when running
@@ -38,10 +43,6 @@ export type UrlOptions = {
   path?: string;
 };
 
-export type EnqueueResult = {
-  request_id: string;
-};
-
 export type RequestLog = {
   message: string;
   level: "STDERR" | "STDOUT" | "ERROR" | "INFO" | "WARN" | "DEBUG";
@@ -54,7 +55,14 @@ export type Metrics = {
 };
 
 interface BaseQueueStatus {
-  status: "IN_PROGRESS" | "COMPLETED" | "IN_QUEUE";
+  status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED";
+  request_id: string;
+}
+
+export interface InQueueQueueStatus extends BaseQueueStatus {
+  status: "IN_QUEUE";
+  queue_position: number;
+  response_url: string;
 }
 
 export interface InProgressQueueStatus extends BaseQueueStatus {
@@ -70,16 +78,10 @@ export interface CompletedQueueStatus extends BaseQueueStatus {
   metrics?: Metrics;
 }
 
-export interface EnqueuedQueueStatus extends BaseQueueStatus {
-  status: "IN_QUEUE";
-  queue_position: number;
-  response_url: string;
-}
-
 export type QueueStatus =
   | InProgressQueueStatus
   | CompletedQueueStatus
-  | EnqueuedQueueStatus;
+  | InQueueQueueStatus;
 
 export function isQueueStatus(obj: any): obj is QueueStatus {
   return obj && obj.status && obj.response_url;

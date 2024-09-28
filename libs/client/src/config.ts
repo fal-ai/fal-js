@@ -1,8 +1,4 @@
-import {
-  withMiddleware,
-  withProxy,
-  type RequestMiddleware,
-} from "./middleware";
+import { withProxy, type RequestMiddleware } from "./middleware";
 import type { ResponseHandler } from "./response";
 import { defaultResponseHandler } from "./response";
 
@@ -111,10 +107,11 @@ export function createConfig(config: Config): RequiredConfig {
   if (config.proxyUrl) {
     configuration = {
       ...configuration,
-      requestMiddleware: withMiddleware(
-        withProxy({ targetUrl: config.proxyUrl }),
-        configuration.requestMiddleware,
-      ),
+      requestMiddleware: withProxy({ targetUrl: config.proxyUrl }),
+      // requestMiddleware: withMiddleware(
+      //   withProxy({ targetUrl: config.proxyUrl }),
+      //   configuration.requestMiddleware,
+      // ),
     };
   }
   const { credentials: resolveCredentials, suppressLocalCredentialsWarning } =

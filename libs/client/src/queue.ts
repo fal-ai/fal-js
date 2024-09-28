@@ -1,12 +1,14 @@
 import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
+import { resultResponseHandler } from "./response";
 import { StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
 import {
   CompletedQueueStatus,
-  EnqueueResult,
+  InQueueQueueStatus,
   QueueStatus,
   RequestLog,
+  Result,
   RunOptions,
 } from "./types";
 import { parseEndpointId } from "./utils";
@@ -140,7 +142,7 @@ export interface QueueClient {
   submit<Input>(
     endpointId: string,
     options: SubmitOptions<Input>,
-  ): Promise<EnqueueResult>;
+  ): Promise<InQueueQueueStatus>;
 
   /**
    * Retrieves the status of a specific request in the queue.
@@ -186,7 +188,7 @@ export interface QueueClient {
   result<Output>(
     endpointId: string,
     options: BaseQueueOptions,
-  ): Promise<Output>;
+  ): Promise<Result<Output>>;
 
   /**
    * Cancels a request in the queue.
@@ -213,12 +215,12 @@ export const createQueueClient = ({
     async submit<Input>(
       endpointId: string,
       options: SubmitOptions<Input>,
-    ): Promise<EnqueueResult> {
+    ): Promise<InQueueQueueStatus> {
       const { webhookUrl, ...runOptions } = options;
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
-      return dispatchRequest<Input, EnqueueResult>({
+      return dispatchRequest<Input, InQueueQueueStatus>({
         method: options.method,
         targetUrl: buildUrl(endpointId, {
           ...runOptions,
@@ -382,16 +384,19 @@ export const createQueueClient = ({
     async result<Output>(
       endpointId: string,
       { requestId }: BaseQueueOptions,
-    ): Promise<Output> {
+    ): Promise<Result<Output>> {
       const appId = parseEndpointId(endpointId);
       const prefix = appId.namespace ? `${appId.namespace}/` : "";
-      return dispatchRequest<unknown, Output>({
+      return dispatchRequest<unknown, Result<Output>>({
         method: "get",
         targetUrl: buildUrl(`${prefix}${appId.owner}/${appId.alias}`, {
           subdomain: "queue",
           path: `/requests/${requestId}`,
         }),
-        config,
+        config: {
+          ...config,
+          responseHandler: resultResponseHandler,
+        },
       });
     },
 

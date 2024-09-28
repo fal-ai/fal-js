@@ -13,7 +13,7 @@ const CONTENT_TYPE_EVENT_STREAM = "text/event-stream";
  * The stream API options. It requires the API input and also
  * offers configuration options.
  */
-type StreamOptions<Input> = {
+export type StreamOptions<Input> = {
   /**
    * The endpoint URL. If not provided, it will be generated from the
    * `endpointId` and the `queryParams`.
@@ -193,9 +193,9 @@ export class FalStream<Input, Output> {
       return;
     }
 
-    const isEventStream = response.headers
-      .get("content-type")
-      .startsWith(CONTENT_TYPE_EVENT_STREAM);
+    const isEventStream = (
+      response.headers.get("content-type") ?? ""
+    ).startsWith(CONTENT_TYPE_EVENT_STREAM);
     // any response that is not a text/event-stream will be handled as a binary stream
     if (!isEventStream) {
       const reader = body.getReader();
@@ -340,7 +340,7 @@ export interface StreamingClient {
    * @param options the request options, including the input payload.
    * @returns the `FalStream` instance.
    */
-  stream<Input = Record<string, any>, Output = any>(
+  stream<Output = any, Input = Record<string, any>>(
     endpointId: string,
     options: StreamOptions<Input>,
   ): Promise<FalStream<Input, Output>>;
