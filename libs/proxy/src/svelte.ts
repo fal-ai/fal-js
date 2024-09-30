@@ -21,10 +21,9 @@ export const createRequestHandler = ({
 }: RequestHandlerParams = {}) => {
   const handler: RequestHandler = async ({ request }) => {
     const FAL_KEY = credentials || process.env.FAL_KEY || "";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const responseHeaders: Record<string, any> = {
+    const responseHeaders = new Headers({
       "Content-Type": "application/json",
-    };
+    });
     return await handleRequest({
       id: "svelte-app-router",
       method: request.method,

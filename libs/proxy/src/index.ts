@@ -93,7 +93,7 @@ export async function handleRequest<ResponseType>(
     }
   });
 
-  const proxyUserAgent = `@fal-ai/serverless-proxy/${behavior.id}`;
+  const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
   const res = await fetch(targetUrl, {
     method: behavior.method,

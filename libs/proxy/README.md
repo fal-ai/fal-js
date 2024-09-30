@@ -1,15 +1,15 @@
 # fal.ai proxy library
 
-![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=%40fal-ai%2Fserverless-proxy&style=flat-square)
+![@fal-ai/server-proxy npm package](https://img.shields.io/npm/v/@fal-ai/server-proxy?color=%237527D7&label=%40fal-ai%2Fserver-proxy&style=flat-square)
 
 ## Introduction
 
-The `@fal-ai/serverless-proxy` library enables you to route client requests through your own server, therefore safeguarding sensitive credentials. With built-in support for popular frameworks like Next.js and Express, setting up the proxy becomes a breeze.
+The `@fal-ai/server-proxy` library enables you to route client requests through your own server, therefore safeguarding sensitive credentials. With built-in support for popular frameworks like Next.js and Express, setting up the proxy becomes a breeze.
 
 ### Install the proxy library:
 
 ```
-npm install --save @fal-ai/serverless-proxy
+npm install --save @fal-ai/server-proxy
 ```
 
 ## Next.js page router integration
@@ -19,7 +19,7 @@ For Next.js applications using the page router:
 1. Create an API route in your Next.js app, as a convention we suggest using `pages/api/fal/proxy.js` (or `.ts` if you're using TypeScript):
 2. Re-export the proxy handler from the library as the default export:
    ```ts
-   export { handler as default } from "@fal-ai/serverless-proxy/nextjs";
+   export { handler as default } from "@fal-ai/server-proxy/nextjs";
    ```
 3. Ensure you've set the `FAL_KEY` as an environment variable in your server, containing a valid API Key.
 
@@ -31,9 +31,9 @@ For Next.js applications using the app router:
 2. Re-export the proxy handler from the library as the default export:
 
    ```ts
-   import { route } from "@fal-ai/serverless-proxy/nextjs";
+   import { route } from "@fal-ai/server-proxy/nextjs";
 
-   export const { GET, POST } = route;
+   export const { GET, POST, PUT } = route;
    ```
 
 3. Ensure you've set the `FAL_KEY` as an environment variable in your server, containing a valid API Key.
@@ -49,7 +49,7 @@ For Express applications:
 2. Add the proxy route and its handler. Note that if your client lives outside of the express app (i.e. the express app is solely used as an external API for other clients), you will need to allow CORS on the proxy route:
 
    ```ts
-   import * as falProxy from "@fal-ai/serverless-proxy/express";
+   import * as falProxy from "@fal-ai/server-proxy/express";
 
    app.all(
      falProxy.route, // '/api/fal/proxy' or you can use your own

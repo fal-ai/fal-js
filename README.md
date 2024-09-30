@@ -1,7 +1,7 @@
 # The fal.ai JS client
 
 ![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=client&style=flat-square)
-![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=proxy&style=flat-square)
+![@fal-ai/server-proxy npm package](https://img.shields.io/npm/v/@fal-ai/server-proxy?color=%237527D7&label=proxy&style=flat-square)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/fal-js/build.yml?style=flat-square)
 ![License](https://img.shields.io/github/license/fal-ai/fal-js?style=flat-square)
 
@@ -52,11 +52,11 @@ For example, if you are using Next.js, you can:
 
 1. Instal the proxy library
    ```sh
-   npm install --save @fal-ai/serverless-proxy
+   npm install --save @fal-ai/server-proxy
    ```
 2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/fal/proxy.ts](https://github.com/fal-ai/fal-js/blob/main/apps/demo-nextjs-page-router/pages/api/fal/proxy.ts)
    ```ts
-   export { handler as default } from "@fal-ai/serverless-proxy/nextjs";
+   export { handler as default } from "@fal-ai/server-proxy/nextjs";
    ```
 3. Configure the client to use the proxy:
    ```ts
