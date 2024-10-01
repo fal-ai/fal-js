@@ -6,6 +6,9 @@
 
 The `@fal-ai/serverless-proxy` library enables you to route client requests through your own server, therefore safeguarding sensitive credentials. With built-in support for popular frameworks like Next.js and Express, setting up the proxy becomes a breeze.
 
+> [!WARNING]
+> This dependency was **deprecated** in favor of the official 1.0.0 release, renamed to `@fal-ai/server-proxy`. Please update your dependencies to the new package.
+
 ### Install the proxy library:
 
 ```

@@ -9,6 +9,9 @@
 
 The fal serverless JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal serverless functions in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
 
+> [!WARNING]
+> This dependency was **deprecated** in favor of the official 1.0.0 release, renamed to `@fal-ai/client`. Please update your dependencies to the new package.
+
 ## Getting Started
 
 The `@fal-ai/serverless-client` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).

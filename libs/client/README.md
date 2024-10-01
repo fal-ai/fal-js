@@ -6,6 +6,9 @@
 
 The `fal.ai` JavaScript Client Library provides a seamless way to interact with `fal` serverless functions from your JavaScript or TypeScript applications. With built-in support for various platforms, it ensures consistent behavior across web, Node.js, and React Native environments.
 
+> [!WARNING]
+> This dependency was **deprecated** in favor of the official 1.0.0 release, renamed to `@fal-ai/client`. Please update your dependencies to the new package.
+
 ## Getting started
 
 Before diving into the client-specific features, ensure you've set up your credentials:
