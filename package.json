@@ -24,7 +24,7 @@
       "cspell",
       "prettier --write"
     ],
-    "libs/client/src/**/*.{ts}": [
+    "libs/client/src/**/*.ts": [
       "npm run docs:typedoc"
     ]
   },
