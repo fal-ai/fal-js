@@ -30,7 +30,7 @@ export function withMiddleware(
     typeof middleware === "function";
 
   return async (config: RequestConfig) => {
-    let currentConfig = config;
+    let currentConfig = { ...config };
     for (const middleware of middlewares.filter(isDefined)) {
       currentConfig = await middleware(currentConfig);
     }
@@ -45,17 +45,22 @@ export type RequestProxyConfig = {
 export const TARGET_URL_HEADER = "x-fal-target-url";
 
 export function withProxy(config: RequestProxyConfig): RequestMiddleware {
+  const passthrough = (requestConfig: RequestConfig) =>
+    Promise.resolve(requestConfig);
   // when running on the server, we don't need to proxy the request
   if (typeof window === "undefined") {
-    return (requestConfig) => Promise.resolve(requestConfig);
+    return passthrough;
   }
+  // if x-fal-target-url is already set, we skip it
   return (requestConfig) =>
-    Promise.resolve({
-      ...requestConfig,
-      url: config.targetUrl,
-      headers: {
-        ...(requestConfig.headers || {}),
-        [TARGET_URL_HEADER]: requestConfig.url,
-      },
-    });
+    requestConfig.headers && TARGET_URL_HEADER in requestConfig
+      ? passthrough(requestConfig)
+      : Promise.resolve({
+          ...requestConfig,
+          url: config.targetUrl,
+          headers: {
+            ...(requestConfig.headers || {}),
+            [TARGET_URL_HEADER]: requestConfig.url,
+          },
+        });
 }

@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/client",
   "description": "The fal.ai client for JavaScript and TypeScript",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -10,10 +10,10 @@
   },
   "keywords": [
     "fal",
-    "serverless",
     "client",
     "ai",
-    "ml"
+    "ml",
+    "typescript"
   ],
   "dependencies": {
     "@msgpack/msgpack": "^3.0.0-beta2",

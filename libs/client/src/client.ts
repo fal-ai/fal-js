@@ -39,20 +39,20 @@ export interface FalClient {
   readonly streaming: StreamingClient;
 
   /**
-   * Runs a fal serverless function identified by its `id`.
+   * Runs a fal endpoints identified by its `endpointId`.
    *
-   * @param id the registered function revision id or alias.
+   * @param endpointId the registered function revision id or alias.
    * @returns the remote function output
    */
   run<Output = any, Input = Record<string, any>>(
-    id: string,
+    endpointId: string,
     options: RunOptions<Input>,
   ): Promise<Result<Output>>;
 
   /**
    * Subscribes to updates for a specific request in the queue.
    *
-   * @param endpointId - The ID of the function web endpoint.
+   * @param endpointId - The ID of the API endpoint.
    * @param options - Options to configure how the request is run and how updates are received.
    * @returns A promise that resolves to the result of the request once it's completed.
    */
@@ -91,7 +91,7 @@ export function createFalClient(userConfig: Config = {}): FalClient {
     streaming,
     stream: streaming.stream,
     async run<Output, Input>(
-      id: string,
+      endpointId: string,
       options: RunOptions<Input> = {},
     ): Promise<Result<Output>> {
       const input = options.input
@@ -99,7 +99,7 @@ export function createFalClient(userConfig: Config = {}): FalClient {
         : undefined;
       return dispatchRequest<Input, Result<Output>>({
         method: options.method,
-        targetUrl: buildUrl(id, options),
+        targetUrl: buildUrl(endpointId, options),
         input: input as Input,
         config: {
           ...config,

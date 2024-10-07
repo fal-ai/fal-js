@@ -57,8 +57,8 @@ function getFalKey(): string | undefined {
 const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 
 /**
- * A request handler that proxies the request to the fal-serverless
- * endpoint. This is useful so client-side calls to the fal-serverless endpoint
+ * A request handler that proxies the request to the fal API
+ * endpoint. This is useful so client-side calls to the fal endpoint
  * can be made without CORS issues and the correct credentials can be added
  * effortlessly.
  *

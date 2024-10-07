@@ -23,7 +23,7 @@ type RequestParams<Input = any> = {
 export async function dispatchRequest<Input, Output>(
   params: RequestParams<Input>,
 ): Promise<Output> {
-  const { method = "POST", targetUrl, input, config, options = {} } = params;
+  const { targetUrl, input, config, options = {} } = params;
   const {
     credentials: credentialsValue,
     requestMiddleware,
@@ -36,9 +36,9 @@ export async function dispatchRequest<Input, Output>(
       ? credentialsValue()
       : credentialsValue;
 
-  const { url, headers } = await requestMiddleware({
+  const { method, url, headers } = await requestMiddleware({
+    method: (params.method ?? options.method ?? "post").toUpperCase(),
     url: targetUrl,
-    method: method.toUpperCase(),
   });
   const authHeader = credentials ? { Authorization: `Key ${credentials}` } : {};
   const requestHeaders = {

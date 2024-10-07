@@ -4,7 +4,7 @@
 
 ## Introduction
 
-The `fal.ai` JavaScript Client Library provides a seamless way to interact with `fal` serverless functions from your JavaScript or TypeScript applications. With built-in support for various platforms, it ensures consistent behavior across web, Node.js, and React Native environments.
+The `fal.ai` JavaScript Client Library provides a seamless way to interact with `fal` endpoints from your JavaScript or TypeScript applications. With built-in support for various platforms, it ensures consistent behavior across web, Node.js, and React Native environments.
 
 ## Getting started
 
@@ -49,4 +49,4 @@ const result = await fal.subscribe("my-function-id", {
 
 ## More features
 
-The client library offers a plethora of features designed to simplify your serverless journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
+The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.

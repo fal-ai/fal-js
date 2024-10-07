@@ -1,4 +1,8 @@
-import { withProxy, type RequestMiddleware } from "./middleware";
+import {
+  withMiddleware,
+  withProxy,
+  type RequestMiddleware,
+} from "./middleware";
 import type { ResponseHandler } from "./response";
 import { defaultResponseHandler } from "./response";
 
@@ -17,7 +21,7 @@ export function resolveDefaultFetch(): FetchType {
 
 export type Config = {
   /**
-   * The credentials to use for the fal serverless client. When using the
+   * The credentials to use for the fal client. When using the
    * client in the browser, it's recommended to use a proxy server to avoid
    * exposing the credentials in the client's environment.
    *
@@ -36,7 +40,7 @@ export type Config = {
   suppressLocalCredentialsWarning?: boolean;
   /**
    * The URL of the proxy server to use for the client requests. The proxy
-   * server should forward the requests to the fal serverless rest api.
+   * server should forward the requests to the fal api.
    */
   proxyUrl?: string;
   /**
@@ -94,7 +98,7 @@ const DEFAULT_CONFIG: Partial<Config> = {
 };
 
 /**
- * Configures the fal serverless client.
+ * Configures the fal client.
  *
  * @param config the new configuration.
  */
@@ -107,11 +111,10 @@ export function createConfig(config: Config): RequiredConfig {
   if (config.proxyUrl) {
     configuration = {
       ...configuration,
-      requestMiddleware: withProxy({ targetUrl: config.proxyUrl }),
-      // requestMiddleware: withMiddleware(
-      //   withProxy({ targetUrl: config.proxyUrl }),
-      //   configuration.requestMiddleware,
-      // ),
+      requestMiddleware: withMiddleware(
+        configuration.requestMiddleware,
+        withProxy({ targetUrl: config.proxyUrl }),
+      ),
     };
   }
   const { credentials: resolveCredentials, suppressLocalCredentialsWarning } =
@@ -134,7 +137,7 @@ export function createConfig(config: Config): RequiredConfig {
 }
 
 /**
- * @returns the URL of the fal serverless rest api endpoint.
+ * @returns the URL of the fal REST api endpoint.
  */
 export function getRestApiUrl(): string {
   return "https://rest.alpha.fal.ai";

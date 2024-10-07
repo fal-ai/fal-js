@@ -1,5 +1,5 @@
 import { createFalClient, type FalClient } from "./client";
-import { Config, createConfig } from "./config";
+import { Config } from "./config";
 import { StreamOptions } from "./streaming";
 import { RunOptions } from "./types";
 
@@ -32,8 +32,7 @@ export const fal: SingletonFalClient = (function createSingletonFalClient() {
   let currentInstance: FalClient = createFalClient();
   return {
     config(config: Config) {
-      console.log(config.requestMiddleware);
-      currentInstance = createFalClient(createConfig(config));
+      currentInstance = createFalClient(config);
     },
     get queue() {
       return currentInstance.queue;

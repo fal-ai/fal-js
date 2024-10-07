@@ -7,11 +7,11 @@
 
 ## About the Project
 
-The fal serverless JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal serverless functions in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
+The fal JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal endpoints in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
 
 ## Getting Started
 
-The `@fal-ai/client` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
+The `@fal-ai/client` library serves as a client for fal apps hosted on fal. For guidance on consuming and creating apps, refer to the [quickstart guide](https://fal.ai/docs).
 
 ### Client Library
 
@@ -46,7 +46,7 @@ See the available [model APIs](https://fal.ai/models) for more details.
 
 ### The fal client proxy
 
-Although the fal client is designed to work in any JS environment, including directly in your browser, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/frameworks.
+Although the fal client is designed to work in any JS environment, including directly in your browser, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to fal APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/frameworks.
 
 For example, if you are using Next.js, you can:
 
