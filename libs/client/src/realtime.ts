@@ -13,9 +13,10 @@ import {
   transition,
 } from "robot3";
 import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from "./auth";
+import { RequiredConfig } from "./config";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
-import { ensureAppIdFormat, isReact, throttle } from "./utils";
+import { ensureEndpointIdFormat, isReact, throttle } from "./utils";
 
 // Define the context
 interface Context {
@@ -258,7 +259,7 @@ function buildRealtimeUrl(
   if (maxBuffering !== undefined) {
     queryParams.set("max_buffering", maxBuffering.toFixed(0));
   }
-  const appId = ensureAppIdFormat(app);
+  const appId = ensureEndpointIdFormat(app);
   return `wss://fal.run/${appId}/realtime?${queryParams.toString()}`;
 }
 
@@ -346,178 +347,186 @@ function isFalErrorResult(data: any): data is FalErrorResult {
   return data.type === "x-fal-error";
 }
 
-/**
- * The default implementation of the realtime client.
- */
-export const realtimeImpl: RealtimeClient = {
-  connect<Input, Output>(
-    app: string,
-    handler: RealtimeConnectionHandler<Output>,
-  ): RealtimeConnection<Input> {
-    const {
-      // if running on React in the server, set clientOnly to true by default
-      clientOnly = isReact() && !isBrowser(),
-      connectionKey = crypto.randomUUID(),
-      maxBuffering,
-      throttleInterval = DEFAULT_THROTTLE_INTERVAL,
-    } = handler;
-    if (clientOnly && !isBrowser()) {
-      return NoOpConnection;
-    }
+type RealtimeClientDependencies = {
+  config: RequiredConfig;
+};
 
-    let previousState: string | undefined;
+export function createRealtimeClient({
+  config,
+}: RealtimeClientDependencies): RealtimeClient {
+  return {
+    connect<Input, Output>(
+      app: string,
+      handler: RealtimeConnectionHandler<Output>,
+    ): RealtimeConnection<Input> {
+      const {
+        // if running on React in the server, set clientOnly to true by default
+        clientOnly = isReact() && !isBrowser(),
+        connectionKey = crypto.randomUUID(),
+        maxBuffering,
+        throttleInterval = DEFAULT_THROTTLE_INTERVAL,
+      } = handler;
+      if (clientOnly && !isBrowser()) {
+        return NoOpConnection;
+      }
 
-    // Although the state machine is cached so we don't open multiple connections,
-    // we still need to update the callbacks so we can call the correct references
-    // when the state machine is reused. This is needed because the callbacks
-    // are passed as part of the handler object, which can be different across
-    // different calls to `connect`.
-    connectionCallbacks.set(connectionKey, {
-      onError: handler.onError,
-      onResult: handler.onResult,
-    });
-    const getCallbacks = () =>
-      connectionCallbacks.get(connectionKey) as RealtimeConnectionCallback;
-    const stateMachine = reuseInterpreter(
-      connectionKey,
-      throttleInterval,
-      ({ context, machine, send }) => {
-        const { enqueuedMessage, token } = context;
-        if (machine.current === "active" && enqueuedMessage) {
-          send({ type: "send", message: enqueuedMessage });
-        }
-        if (
-          machine.current === "authRequired" &&
-          token === undefined &&
-          previousState !== machine.current
-        ) {
-          send({ type: "initiateAuth" });
-          getTemporaryAuthToken(app)
-            .then((token) => {
-              send({ type: "authenticated", token });
-              const tokenExpirationTimeout = Math.round(
-                TOKEN_EXPIRATION_SECONDS * 0.9 * 1000,
-              );
-              setTimeout(() => {
-                send({ type: "expireToken" });
-              }, tokenExpirationTimeout);
-            })
-            .catch((error) => {
-              send({ type: "unauthorized", error });
-            });
-        }
-        if (
-          machine.current === "connecting" &&
-          previousState !== machine.current &&
-          token !== undefined
-        ) {
-          const ws = new WebSocket(
-            buildRealtimeUrl(app, { token, maxBuffering }),
-          );
-          ws.onopen = () => {
-            send({ type: "connected", websocket: ws });
-          };
-          ws.onclose = (event) => {
-            if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
-              const { onError = noop } = getCallbacks();
-              onError(
-                new ApiError({
-                  message: `Error closing the connection: ${event.reason}`,
-                  status: event.code,
-                }),
-              );
-            }
-            send({ type: "connectionClosed", code: event.code });
-          };
-          ws.onerror = (event) => {
-            // TODO specify error protocol for identified errors
-            const { onError = noop } = getCallbacks();
-            onError(new ApiError({ message: "Unknown error", status: 500 }));
-          };
-          ws.onmessage = (event) => {
-            const { onResult } = getCallbacks();
+      let previousState: string | undefined;
 
-            // Handle binary messages as msgpack messages
-            if (event.data instanceof ArrayBuffer) {
-              const result = decode(new Uint8Array(event.data));
-              onResult(result);
-              return;
-            }
-            if (event.data instanceof Uint8Array) {
-              const result = decode(event.data);
-              onResult(result);
-              return;
-            }
-            if (event.data instanceof Blob) {
-              event.data.arrayBuffer().then((buffer) => {
-                const result = decode(new Uint8Array(buffer));
-                onResult(result);
+      // Although the state machine is cached so we don't open multiple connections,
+      // we still need to update the callbacks so we can call the correct references
+      // when the state machine is reused. This is needed because the callbacks
+      // are passed as part of the handler object, which can be different across
+      // different calls to `connect`.
+      connectionCallbacks.set(connectionKey, {
+        onError: handler.onError,
+        onResult: handler.onResult,
+      });
+      const getCallbacks = () =>
+        connectionCallbacks.get(connectionKey) as RealtimeConnectionCallback;
+      const stateMachine = reuseInterpreter(
+        connectionKey,
+        throttleInterval,
+        ({ context, machine, send }) => {
+          const { enqueuedMessage, token } = context;
+          if (machine.current === "active" && enqueuedMessage) {
+            send({ type: "send", message: enqueuedMessage });
+          }
+          if (
+            machine.current === "authRequired" &&
+            token === undefined &&
+            previousState !== machine.current
+          ) {
+            send({ type: "initiateAuth" });
+            getTemporaryAuthToken(app, config)
+              .then((token) => {
+                send({ type: "authenticated", token });
+                const tokenExpirationTimeout = Math.round(
+                  TOKEN_EXPIRATION_SECONDS * 0.9 * 1000,
+                );
+                setTimeout(() => {
+                  send({ type: "expireToken" });
+                }, tokenExpirationTimeout);
+              })
+              .catch((error) => {
+                send({ type: "unauthorized", error });
               });
-              return;
-            }
+          }
+          if (
+            machine.current === "connecting" &&
+            previousState !== machine.current &&
+            token !== undefined
+          ) {
+            const ws = new WebSocket(
+              buildRealtimeUrl(app, { token, maxBuffering }),
+            );
+            ws.onopen = () => {
+              send({ type: "connected", websocket: ws });
+            };
+            ws.onclose = (event) => {
+              if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
+                const { onError = noop } = getCallbacks();
+                onError(
+                  new ApiError({
+                    message: `Error closing the connection: ${event.reason}`,
+                    status: event.code,
+                  }),
+                );
+              }
+              send({ type: "connectionClosed", code: event.code });
+            };
+            ws.onerror = (event) => {
+              // TODO specify error protocol for identified errors
+              const { onError = noop } = getCallbacks();
+              onError(new ApiError({ message: "Unknown error", status: 500 }));
+            };
+            ws.onmessage = (event) => {
+              const { onResult } = getCallbacks();
 
-            // Otherwise handle strings as plain JSON messages
-            const data = JSON.parse(event.data);
-
-            // Drop messages that are not related to the actual result.
-            // In the future, we might want to handle other types of messages.
-            // TODO: specify the fal ws protocol format
-            if (isUnauthorizedError(data)) {
-              send({ type: "unauthorized", error: new Error("Unauthorized") });
-              return;
-            }
-            if (isSuccessfulResult(data)) {
-              onResult(data);
-              return;
-            }
-            if (isFalErrorResult(data)) {
-              if (data.error === "TIMEOUT") {
-                // Timeout error messages just indicate that the connection hasn't
-                // received an incoming message for a while. We don't need to
-                // handle them as errors.
+              // Handle binary messages as msgpack messages
+              if (event.data instanceof ArrayBuffer) {
+                const result = decode(new Uint8Array(event.data));
+                onResult(result);
                 return;
               }
-              const { onError = noop } = getCallbacks();
-              onError(
-                new ApiError({
-                  message: `${data.error}: ${data.reason}`,
-                  // TODO better error status code
-                  status: 400,
-                  body: data,
-                }),
-              );
-              return;
-            }
-          };
-        }
-        previousState = machine.current;
-      },
-    );
+              if (event.data instanceof Uint8Array) {
+                const result = decode(event.data);
+                onResult(result);
+                return;
+              }
+              if (event.data instanceof Blob) {
+                event.data.arrayBuffer().then((buffer) => {
+                  const result = decode(new Uint8Array(buffer));
+                  onResult(result);
+                });
+                return;
+              }
 
-    const send = (input: Input & Partial<WithRequestId>) => {
-      // Use throttled send to avoid sending too many messages
+              // Otherwise handle strings as plain JSON messages
+              const data = JSON.parse(event.data);
 
-      const message =
-        input instanceof Uint8Array
-          ? input
-          : {
-              ...input,
-              request_id: input["request_id"] ?? crypto.randomUUID(),
+              // Drop messages that are not related to the actual result.
+              // In the future, we might want to handle other types of messages.
+              // TODO: specify the fal ws protocol format
+              if (isUnauthorizedError(data)) {
+                send({
+                  type: "unauthorized",
+                  error: new Error("Unauthorized"),
+                });
+                return;
+              }
+              if (isSuccessfulResult(data)) {
+                onResult(data);
+                return;
+              }
+              if (isFalErrorResult(data)) {
+                if (data.error === "TIMEOUT") {
+                  // Timeout error messages just indicate that the connection hasn't
+                  // received an incoming message for a while. We don't need to
+                  // handle them as errors.
+                  return;
+                }
+                const { onError = noop } = getCallbacks();
+                onError(
+                  new ApiError({
+                    message: `${data.error}: ${data.reason}`,
+                    // TODO better error status code
+                    status: 400,
+                    body: data,
+                  }),
+                );
+                return;
+              }
             };
+          }
+          previousState = machine.current;
+        },
+      );
 
-      stateMachine.throttledSend({
-        type: "send",
-        message,
-      });
-    };
+      const send = (input: Input & Partial<WithRequestId>) => {
+        // Use throttled send to avoid sending too many messages
 
-    const close = () => {
-      stateMachine.send({ type: "close" });
-    };
+        const message =
+          input instanceof Uint8Array
+            ? input
+            : {
+                ...input,
+                request_id: input["request_id"] ?? crypto.randomUUID(),
+              };
 
-    return {
-      send,
-      close,
-    };
-  },
-};
+        stateMachine.throttledSend({
+          type: "send",
+          message,
+        });
+      };
+
+      const close = () => {
+        stateMachine.send({ type: "close" });
+      };
+
+      return {
+        send,
+        close,
+      };
+    },
+  };
+}

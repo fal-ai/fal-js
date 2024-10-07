@@ -1,9 +1,46 @@
+/**
+ * Represents an API result, containing the data,
+ *  the request ID and any other relevant information.
+ */
 export type Result<T> = {
-  result: T;
+  data: T;
+  requestId: string;
 };
 
-export type EnqueueResult = {
-  request_id: string;
+/**
+ * The function input and other configuration when running
+ * the function, such as the HTTP method to use.
+ */
+export type RunOptions<Input> = {
+  /**
+   * The function input. It will be submitted either as query params
+   * or the body payload, depending on the `method`.
+   */
+  readonly input?: Input;
+
+  /**
+   * The HTTP method, defaults to `post`;
+   */
+  readonly method?: "get" | "post" | "put" | "delete" | string;
+};
+
+export type UrlOptions = {
+  /**
+   * If `true`, the function will use the queue to run the function
+   * asynchronously and return the result in a separate call. This
+   * influences how the URL is built.
+   */
+  readonly subdomain?: string;
+
+  /**
+   * The query parameters to include in the URL.
+   */
+  readonly query?: Record<string, string>;
+
+  /**
+   * The path to append to the function URL.
+   */
+  path?: string;
 };
 
 export type RequestLog = {
@@ -18,7 +55,14 @@ export type Metrics = {
 };
 
 interface BaseQueueStatus {
-  status: "IN_PROGRESS" | "COMPLETED" | "IN_QUEUE";
+  status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED";
+  request_id: string;
+}
+
+export interface InQueueQueueStatus extends BaseQueueStatus {
+  status: "IN_QUEUE";
+  queue_position: number;
+  response_url: string;
 }
 
 export interface InProgressQueueStatus extends BaseQueueStatus {
@@ -31,19 +75,13 @@ export interface CompletedQueueStatus extends BaseQueueStatus {
   status: "COMPLETED";
   response_url: string;
   logs: RequestLog[];
-  metrics: Metrics;
-}
-
-export interface EnqueuedQueueStatus extends BaseQueueStatus {
-  status: "IN_QUEUE";
-  queue_position: number;
-  response_url: string;
+  metrics?: Metrics;
 }
 
 export type QueueStatus =
   | InProgressQueueStatus
   | CompletedQueueStatus
-  | EnqueuedQueueStatus;
+  | InQueueQueueStatus;
 
 export function isQueueStatus(obj: any): obj is QueueStatus {
   return obj && obj.status && obj.response_url;

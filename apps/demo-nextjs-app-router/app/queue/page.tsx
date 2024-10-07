@@ -1,6 +1,6 @@
 "use client";
 
-import * as fal from "@fal-ai/serverless-client";
+import { fal } from "@fal-ai/client";
 import { useState } from "react";
 
 fal.config({
@@ -54,7 +54,7 @@ export default function Home() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: any = await fal.subscribe(endpointId, {
+      const result = await fal.subscribe(endpointId, {
         input: JSON.parse(input),
         logs: true,
         // mode: "streaming",

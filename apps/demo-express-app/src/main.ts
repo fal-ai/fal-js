@@ -3,8 +3,8 @@
  * This is only a minimal backend to get started.
  */
 
-import * as fal from "@fal-ai/serverless-client";
-import * as falProxy from "@fal-ai/serverless-proxy/express";
+import { fal } from "@fal-ai/client";
+import * as falProxy from "@fal-ai/server-proxy/express";
 import cors from "cors";
 import { configDotenv } from "dotenv";
 import express from "express";

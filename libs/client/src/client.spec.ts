@@ -1,4 +1,4 @@
-import { buildUrl } from "./function";
+import { buildUrl } from "./request";
 
 describe("The function test suite", () => {
   it("should build the URL with a function username/app-alias", () => {

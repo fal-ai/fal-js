@@ -1,16 +1,13 @@
 "use client";
 
-import * as fal from "@fal-ai/serverless-client";
+import { createFalClient } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
-// @snippet:start(client.config)
-fal.config({
+const fal = createFalClient({
   proxyUrl: "/api/fal/proxy", // the built-int nextjs proxy
   // proxyUrl: 'http://localhost:3333/api/fal/proxy', // or your own external proxy
 });
-// @snippet:end
 
-// @snippet:start(client.result.type)
 type Image = {
   filename: string;
   subfolder: string;
@@ -18,12 +15,11 @@ type Image = {
   url: string;
 };
 
-type Result = {
+type ComfyOutput = {
   url: string;
   outputs: Record<string, any>[];
   images: Image[];
 };
-// @snippet:end
 
 type ErrorProps = {
   error: any;
@@ -50,7 +46,7 @@ export default function ComfyImageToVideoPage() {
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<ComfyOutput | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   // @snippet:end
@@ -69,7 +65,7 @@ export default function ComfyImageToVideoPage() {
     setElapsedTime(0);
   };
 
-  const getImageURL = (result: Result) => {
+  const getImageURL = (result: ComfyOutput) => {
     return result.outputs[10].images[0];
   };
 
@@ -79,7 +75,7 @@ export default function ComfyImageToVideoPage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result: Result = await fal.subscribe(
+      const { data } = await fal.subscribe<ComfyOutput>(
         "comfy/fal-ai/image-to-video",
         {
           input: {
@@ -97,7 +93,7 @@ export default function ComfyImageToVideoPage() {
           },
         },
       );
-      setResult(getImageURL(result));
+      setResult(getImageURL(data));
     } catch (error: any) {
       setError(error);
     } finally {

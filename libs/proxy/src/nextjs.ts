@@ -47,18 +47,14 @@ export const handler: NextApiHandler = async (request, response) => {
  * @returns a promise that resolves when the request is handled.
  */
 async function routeHandler(request: NextRequest) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const responseHeaders: Record<string, any> = {};
-
-  // check if response if from a streaming request
-
+  const responseHeaders = new Headers();
   return await handleRequest({
     id: "nextjs-app-router",
     method: request.method,
     getRequestBody: async () => request.text(),
     getHeaders: () => fromHeaders(request.headers),
     getHeader: (name) => request.headers.get(name),
-    sendHeader: (name, value) => (responseHeaders[name] = value),
+    sendHeader: (name, value) => responseHeaders.set(name, value),
     respondWith: (status, data) =>
       NextResponse.json(data, {
         status,

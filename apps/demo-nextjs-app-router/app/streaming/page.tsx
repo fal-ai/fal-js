@@ -1,9 +1,9 @@
 "use client";
 
-import * as fal from "@fal-ai/serverless-client";
+import { createFalClient } from "@fal-ai/client";
 import { useState } from "react";
 
-fal.config({
+const fal = createFalClient({
   proxyUrl: "/api/fal/proxy",
 });
 
@@ -29,7 +29,7 @@ export default function StreamingDemo() {
   const [streamStatus, setStreamStatus] = useState<string>("idle");
 
   const runInference = async () => {
-    const stream = await fal.stream<LlavaInput, LlavaOutput>(
+    const stream = await fal.stream<LlavaOutput, LlavaInput>(
       "fal-ai/llavav15-13b",
       {
         input: {

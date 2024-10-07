@@ -1,17 +1,17 @@
 # The fal.ai JS client
 
-![@fal-ai/serverless-client npm package](https://img.shields.io/npm/v/@fal-ai/serverless-client?color=%237527D7&label=client&style=flat-square)
-![@fal-ai/serverless-proxy npm package](https://img.shields.io/npm/v/@fal-ai/serverless-proxy?color=%237527D7&label=proxy&style=flat-square)
+![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=client&style=flat-square)
+![@fal-ai/server-proxy npm package](https://img.shields.io/npm/v/@fal-ai/server-proxy?color=%237527D7&label=proxy&style=flat-square)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/fal-js/build.yml?style=flat-square)
 ![License](https://img.shields.io/github/license/fal-ai/fal-js?style=flat-square)
 
 ## About the Project
 
-The fal serverless JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal serverless functions in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
+The fal JavaScript/TypeScript Client is a robust and user-friendly library designed for seamless integration of fal endpoints in Web, Node.js, and React Native applications. Developed in TypeScript, it provides developers with type safety right from the start.
 
 ## Getting Started
 
-The `@fal-ai/serverless-client` library serves as a client for fal serverless Python functions. For guidance on creating your functions, refer to the [quickstart guide](https://fal.ai/docs).
+The `@fal-ai/client` library serves as a client for fal apps hosted on fal. For guidance on consuming and creating apps, refer to the [quickstart guide](https://fal.ai/docs).
 
 ### Client Library
 
@@ -22,12 +22,12 @@ This client library is crafted as a lightweight layer atop platform standards li
 
 1. Install the client library
    ```sh
-   npm install --save @fal-ai/serverless-client
+   npm install --save @fal-ai/client
    ```
 2. Start by configuring your credentials:
 
    ```ts
-   import * as fal from "@fal-ai/serverless-client";
+   import { fal } from "@fal-ai/client";
 
    fal.config({
      // Can also be auto-configured using environment variables:
@@ -46,21 +46,21 @@ See the available [model APIs](https://fal.ai/models) for more details.
 
 ### The fal client proxy
 
-Although the fal client is designed to work in any JS environment, including directly in your browser, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to serverless APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/frameworks.
+Although the fal client is designed to work in any JS environment, including directly in your browser, **it is not recommended** to store your credentials in your client source code. The common practice is to use your own server to serve as a proxy to fal APIs. Luckily fal supports that out-of-the-box with plug-and-play proxy functions for the most common engines/frameworks.
 
 For example, if you are using Next.js, you can:
 
 1. Instal the proxy library
    ```sh
-   npm install --save @fal-ai/serverless-proxy
+   npm install --save @fal-ai/server-proxy
    ```
 2. Add the proxy as an API endpoint of your app, see an example here in [pages/api/fal/proxy.ts](https://github.com/fal-ai/fal-js/blob/main/apps/demo-nextjs-page-router/pages/api/fal/proxy.ts)
    ```ts
-   export { handler as default } from "@fal-ai/serverless-proxy/nextjs";
+   export { handler as default } from "@fal-ai/server-proxy/nextjs";
    ```
 3. Configure the client to use the proxy:
    ```ts
-   import * as fal from "@fal-ai/serverless-client";
+   import { fal } from "@fal-ai/client";
    fal.config({
      proxyUrl: "/api/fal/proxy",
    });
