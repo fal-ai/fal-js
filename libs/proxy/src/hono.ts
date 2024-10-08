@@ -38,7 +38,7 @@ export function createRouteHandler({
         return context.json(data, status as StatusCode, responseHeaders);
       },
       getHeaders: () => responseHeaders,
-      getHeader: (name) => context.req.header[name],
+      getHeader: (name) => context.req.header(name),
       sendHeader: (name, value) => (responseHeaders[name] = value),
       getRequestBody: async () => JSON.stringify(await context.req.json()),
       sendResponse: responsePassthrough,
