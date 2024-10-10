@@ -123,18 +123,20 @@ const connectionStateMachine = createMachine(
     idle: state(
       transition("send", "connecting", reduce(enqueueMessage)),
       transition("expireToken", "idle", reduce(expireToken)),
+      transition("close", "idle", reduce(closeConnection)),
     ),
     connecting: state(
       transition("connecting", "connecting"),
       transition("connected", "active", reduce(connectionEstablished)),
       transition("connectionClosed", "idle", reduce(closeConnection)),
       transition("send", "connecting", reduce(enqueueMessage)),
-
+      transition("close", "idle", reduce(closeConnection)),
       immediate("authRequired", guard(noToken)),
     ),
     authRequired: state(
       transition("initiateAuth", "authInProgress"),
       transition("send", "authRequired", reduce(enqueueMessage)),
+      transition("close", "idle", reduce(closeConnection)),
     ),
     authInProgress: state(
       transition("authenticated", "connecting", reduce(setToken)),
@@ -145,13 +147,18 @@ const connectionStateMachine = createMachine(
         reduce(closeConnection),
       ),
       transition("send", "authInProgress", reduce(enqueueMessage)),
+      transition("close", "idle", reduce(closeConnection)),
     ),
     active: state(
       transition("send", "active", reduce(sendMessage)),
       transition("unauthorized", "idle", reduce(expireToken)),
       transition("connectionClosed", "idle", reduce(closeConnection)),
+      transition("close", "idle", reduce(closeConnection)),
     ),
-    failed: state(transition("send", "failed")),
+    failed: state(
+      transition("send", "failed"),
+      transition("close", "idle", reduce(closeConnection)),
+    ),
   },
   initialState,
 );
