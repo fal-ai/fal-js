@@ -5,6 +5,7 @@ import {
 } from "./middleware";
 import type { ResponseHandler } from "./response";
 import { defaultResponseHandler } from "./response";
+import { isBrowser } from "./runtime";
 
 export type CredentialsResolver = () => string | undefined;
 
@@ -87,7 +88,9 @@ export const credentialsFromEnv: CredentialsResolver = () => {
     return process.env.FAL_KEY;
   }
 
-  return `${process.env.FAL_KEY_ID}:${process.env.FAL_KEY_SECRET}`;
+  return process.env.FAL_KEY_ID
+    ? `${process.env.FAL_KEY_ID}:${process.env.FAL_KEY_SECRET}`
+    : undefined;
 };
 
 const DEFAULT_CONFIG: Partial<Config> = {
@@ -123,11 +126,7 @@ export function createConfig(config: Config): RequiredConfig {
     typeof resolveCredentials === "function"
       ? resolveCredentials()
       : resolveCredentials;
-  if (
-    typeof window !== "undefined" &&
-    credentials &&
-    !suppressLocalCredentialsWarning
-  ) {
+  if (isBrowser() && credentials && !suppressLocalCredentialsWarning) {
     console.warn(
       "The fal credentials are exposed in the browser's environment. " +
         "That's not recommended for production use cases.",
