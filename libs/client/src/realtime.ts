@@ -511,18 +511,9 @@ export function createRealtimeClient({
 
       const send = (input: Input & Partial<WithRequestId>) => {
         // Use throttled send to avoid sending too many messages
-
-        const message =
-          input instanceof Uint8Array
-            ? input
-            : {
-                ...input,
-                request_id: input["request_id"] ?? crypto.randomUUID(),
-              };
-
         stateMachine.throttledSend({
           type: "send",
-          message,
+          message: input,
         });
       };
 
