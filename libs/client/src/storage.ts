@@ -75,6 +75,95 @@ async function initiateUpload(
   });
 }
 
+class CdnToken {
+  constructor(
+    public token: string,
+    public tokenType: string,
+    public baseUploadUrl: string,
+    public expiresAt: Date,
+  ) {}
+
+  isExpired(): boolean {
+    return new Date().getTime() >= this.expiresAt.getTime();
+  }
+}
+
+type AuthTokenRequest = object;
+type AuthTokenResponse = {
+  token: string;
+  token_type: string;
+  base_upload_url: string;
+  expires_at: string;
+};
+
+class CdnTokenManager {
+  private token: CdnToken;
+
+  constructor(private config: RequiredConfig) {
+    this.token = new CdnToken("", "", "", new Date(0));
+  }
+
+  async getToken(): Promise<CdnToken> {
+    if (this.token.isExpired()) {
+      this.token = await this.fetchToken();
+    }
+    return this.token;
+  }
+
+  private async fetchToken(): Promise<CdnToken> {
+    const response = await dispatchRequest<AuthTokenRequest, AuthTokenResponse>({
+      method: "POST",
+      targetUrl: `${getRestApiUrl()}/storage/auth/token?storage_type=fal-cdn-v3`,
+      config: this.config,
+    });
+    return new CdnToken(
+      response.token,
+      response.token_type,
+      response.base_upload_url,
+      new Date(response.expires_at),
+    );
+  }
+}
+
+type UploadCdnResponse = {
+  access_url: string;
+};
+
+async function uploadCdn(
+  file: Blob,
+  config: RequiredConfig,
+) {
+  const tokenManager = new CdnTokenManager(config);
+  const token = await tokenManager.getToken();
+  const response = await dispatchRequest<Blob, UploadCdnResponse>({
+    method: "POST",
+    targetUrl: `${token.baseUploadUrl}/files/upload`,
+    input: file,
+    config,
+    headers: {
+     Authorization: `${token.tokenType} ${token.token}`,
+    },
+  });
+  return response.access_url;
+}
+
+async function uploadLegacy(file: Blob, config: RequiredConfig) {
+  const { fetch, responseHandler } = config;
+  const { upload_url: uploadUrl, file_url: url } = await initiateUpload(
+    file,
+    config,
+  );
+  const response = await fetch(uploadUrl, {
+    method: "PUT",
+    body: file,
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+    },
+  });
+  await responseHandler(response);
+  return url;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type KeyValuePair = [string, any];
 
@@ -87,20 +176,7 @@ export function createStorageClient({
 }: StorageClientDependencies): StorageClient {
   const ref: StorageClient = {
     upload: async (file: Blob) => {
-      const { fetch, responseHandler } = config;
-      const { upload_url: uploadUrl, file_url: url } = await initiateUpload(
-        file,
-        config,
-      );
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-        },
-      });
-      await responseHandler(response);
-      return url;
+      return await uploadCdn(file, config);
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
