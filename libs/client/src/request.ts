@@ -18,6 +18,7 @@ type RequestParams<Input = any> = {
   input?: Input;
   config: RequiredConfig;
   options?: RequestOptions & RequestInit;
+  headers?: Record<string, string>;
 };
 
 export async function dispatchRequest<Input, Output>(
@@ -39,6 +40,7 @@ export async function dispatchRequest<Input, Output>(
   const { method, url, headers } = await requestMiddleware({
     method: (params.method ?? options.method ?? "post").toUpperCase(),
     url: targetUrl,
+    headers: params.headers,
   });
   const authHeader = credentials ? { Authorization: `Key ${credentials}` } : {};
   const requestHeaders = {

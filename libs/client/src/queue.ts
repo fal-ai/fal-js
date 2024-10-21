@@ -13,6 +13,7 @@ import {
 } from "./types";
 import { parseEndpointId } from "./utils";
 
+export type QueuePriority = "low" | "normal";
 export type QueueStatusSubscriptionOptions = QueueStatusOptions &
   Omit<QueueSubscribeOptions, "onEnqueue" | "webhookUrl">;
 
@@ -71,6 +72,12 @@ export type QueueSubscribeOptions = {
    * @see WebHookResponse
    */
   webhookUrl?: string;
+
+  /**
+   * The priority of the request. It defaults to `normal`.
+   * @see QueuePriority
+   */
+  priority?: QueuePriority;
 } & (
   | {
       mode?: "polling";
@@ -102,6 +109,12 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * @see WebHookResponse
    */
   webhookUrl?: string;
+
+  /**
+   * The priority of the request. It defaults to `normal`.
+   * @see QueuePriority
+   */
+  priority?: QueuePriority;
 };
 
 type BaseQueueOptions = {
@@ -216,7 +229,7 @@ export const createQueueClient = ({
       endpointId: string,
       options: SubmitOptions<Input>,
     ): Promise<InQueueQueueStatus> {
-      const { webhookUrl, ...runOptions } = options;
+      const { webhookUrl, priority, ...runOptions } = options;
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
@@ -227,6 +240,9 @@ export const createQueueClient = ({
           subdomain: "queue",
           query: webhookUrl ? { fal_webhook: webhookUrl } : undefined,
         }),
+        headers: {
+          "x-fal-queue-priority": priority ?? "normal",
+        },
         input: input as Input,
         config,
       });
