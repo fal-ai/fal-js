@@ -265,6 +265,13 @@ export class FalStream<Input, Output> {
   };
 
   private handleError = (error: any) => {
+    // In case AbortError is thrown but the signal is marked as aborted
+    // it means the user called abort() and we should not emit an error
+    // as it's expected behavior
+    // See note on: https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
+    if (this.signal.aborted) {
+      return;
+    }
     const apiError =
       error instanceof ApiError
         ? error
@@ -325,6 +332,15 @@ export class FalStream<Input, Output> {
   public abort = () => {
     this.abortController.abort();
   };
+
+  /**
+   * Gets the `AbortSignal` instance that can be used to listen for abort events.
+   * @returns the `AbortSignal` instance.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
+   */
+  public get signal() {
+    return this.abortController.signal;
+  }
 }
 
 /**
