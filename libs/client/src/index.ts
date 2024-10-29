@@ -11,7 +11,7 @@ export type { RealtimeClient } from "./realtime";
 export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";
 export type { StorageClient } from "./storage";
-export type { StreamingClient } from "./streaming";
+export type { FalStream, StreamingClient } from "./streaming";
 export * from "./types";
 export type {
   QueueStatus,
