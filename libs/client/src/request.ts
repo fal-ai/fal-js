@@ -60,6 +60,7 @@ export async function dispatchRequest<Input, Output>(
       ...(requestInit.headers ?? {}),
     },
     ...(!isCloudflareWorkers && { mode: "cors" }),
+    signal: options.signal,
     body:
       method.toLowerCase() !== "get" && input
         ? JSON.stringify(input)

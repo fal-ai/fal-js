@@ -116,6 +116,9 @@ export class FalStream<Input, Output> {
           }),
         );
       }
+      this.signal.addEventListener("abort", () => {
+        resolve(this.currentData);
+      });
       this.on("done", (data) => {
         this.streamClosed = true;
         resolve(data);
@@ -269,7 +272,7 @@ export class FalStream<Input, Output> {
     // it means the user called abort() and we should not emit an error
     // as it's expected behavior
     // See note on: https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
-    if (this.signal.aborted) {
+    if (error.name === "AbortError" || this.signal.aborted) {
       return;
     }
     const apiError =
@@ -328,9 +331,15 @@ export class FalStream<Input, Output> {
 
   /**
    * Aborts the streaming request.
+   *
+   * **Note:** This method is noop in case the request is already done.
+   *
+   * @param reason optional cause for aborting the request.
    */
-  public abort = () => {
-    this.abortController.abort();
+  public abort = (reason?: string | Error) => {
+    if (!this.streamClosed) {
+      this.abortController.abort(reason);
+    }
   };
 
   /**
