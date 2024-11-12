@@ -4,6 +4,7 @@ import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
+import { EndpointType, InputType, OutputType } from "./types/client";
 
 export type StreamingConnectionMode = "client" | "server";
 
@@ -117,7 +118,7 @@ export class FalStream<Input, Output> {
         );
       }
       this.signal.addEventListener("abort", () => {
-        resolve(this.currentData);
+        resolve(this.currentData ?? ({} as Output));
       });
       this.on("done", (data) => {
         this.streamClosed = true;
@@ -365,10 +366,10 @@ export interface StreamingClient {
    * @param options the request options, including the input payload.
    * @returns the `FalStream` instance.
    */
-  stream<Output = any, Input = Record<string, any>>(
-    endpointId: string,
-    options: StreamOptions<Input>,
-  ): Promise<FalStream<Input, Output>>;
+  stream<Id extends EndpointType>(
+    endpointId: Id,
+    options: StreamOptions<InputType<Id>>,
+  ): Promise<FalStream<InputType<Id>, OutputType<Id>>>;
 }
 
 type StreamingClientDependencies = {
@@ -381,16 +382,16 @@ export function createStreamingClient({
   storage,
 }: StreamingClientDependencies): StreamingClient {
   return {
-    async stream<Input, Output>(
-      endpointId: string,
-      options: StreamOptions<Input>,
+    async stream<Id extends EndpointType>(
+      endpointId: Id,
+      options: StreamOptions<InputType<Id>>,
     ) {
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
-      return new FalStream<Input, Output>(endpointId, config, {
+      return new FalStream<InputType<Id>, OutputType<Id>>(endpointId, config, {
         ...options,
-        input: input as Input,
+        input: input as InputType<Id>,
       });
     },
   };

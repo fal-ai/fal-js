@@ -1,7 +1,8 @@
 import { createFalClient, type FalClient } from "./client";
 import { Config } from "./config";
 import { StreamOptions } from "./streaming";
-import { RunOptions } from "./types";
+import { EndpointType, InputType } from "./types/client";
+import { RunOptions } from "./types/common";
 
 export { createFalClient, type FalClient } from "./client";
 export { withMiddleware, withProxy } from "./middleware";
@@ -12,12 +13,12 @@ export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";
 export type { StorageClient } from "./storage";
 export type { FalStream, StreamingClient } from "./streaming";
-export * from "./types";
+export * from "./types/common";
 export type {
   QueueStatus,
   ValidationErrorInfo,
   WebHookResponse,
-} from "./types";
+} from "./types/common";
 export { parseEndpointId } from "./utils";
 
 type SingletonFalClient = {
@@ -46,14 +47,20 @@ export const fal: SingletonFalClient = (function createSingletonFalClient() {
     get streaming() {
       return currentInstance.streaming;
     },
-    run<Output, Input>(id: string, options: RunOptions<Input>) {
-      return currentInstance.run<Output, Input>(id, options);
+    run<Id extends EndpointType>(id: Id, options: RunOptions<InputType<Id>>) {
+      return currentInstance.run<Id>(id, options);
     },
-    subscribe<Output, Input>(endpointId: string, options: RunOptions<Input>) {
-      return currentInstance.subscribe<Output, Input>(endpointId, options);
+    subscribe<Id extends EndpointType>(
+      endpointId: Id,
+      options: RunOptions<InputType<Id>>,
+    ) {
+      return currentInstance.subscribe<Id>(endpointId, options);
     },
-    stream<Output, Input>(endpointId: string, options: StreamOptions<Input>) {
-      return currentInstance.stream<Output, Input>(endpointId, options);
+    stream<Id extends EndpointType>(
+      endpointId: Id,
+      options: StreamOptions<InputType<Id>>,
+    ) {
+      return currentInstance.stream<Id>(endpointId, options);
     },
   } satisfies SingletonFalClient;
 })();

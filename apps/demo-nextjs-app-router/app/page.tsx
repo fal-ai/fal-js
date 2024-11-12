@@ -1,6 +1,7 @@
 "use client";
 
 import { createFalClient } from "@fal-ai/client";
+import { IllusionDiffusionOutput } from "@fal-ai/client/endpoints";
 import { useMemo, useState } from "react";
 
 const fal = createFalClient({
@@ -8,16 +9,6 @@ const fal = createFalClient({
   proxyUrl: "/api/fal/proxy", // the built-int nextjs proxy
   // proxyUrl: 'http://localhost:3333/api/fal/proxy', // or your own external proxy
 });
-
-type Image = {
-  url: string;
-  file_name: string;
-  file_size: number;
-};
-type Output = {
-  image: Image;
-};
-// @snippet:end
 
 type ErrorProps = {
   error: any;
@@ -48,7 +39,7 @@ export default function Home() {
   // Result state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [result, setResult] = useState<Output | null>(null);
+  const [result, setResult] = useState<IllusionDiffusionOutput | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   // @snippet:end
@@ -71,12 +62,13 @@ export default function Home() {
   };
 
   const generateImage = async () => {
+    if (!imageFile) return;
     reset();
     // @snippet:start("client.queue.subscribe")
     setLoading(true);
     const start = Date.now();
     try {
-      const result = await fal.subscribe<Output>("fal-ai/illusion-diffusion", {
+      const result = await fal.subscribe("fal-ai/illusion-diffusion", {
         input: {
           prompt,
           image_url: imageFile,
