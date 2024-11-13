@@ -2,7 +2,11 @@
   "$schema": "https://typedoc.org/schema.json",
   "out": "docs/reference",
   "entryPoints": ["./libs/client/src/index.ts"],
-  "exclude": ["./src/__tests__/**", "*.spec.ts", "./libs/client/src/types/endpoints.ts"],
+  "exclude": [
+    "./src/__tests__/**",
+    "*.spec.ts",
+    "./libs/client/src/types/endpoints.ts"
+  ],
   "excludeExternals": true,
   "excludeInternal": false,
   "includeVersion": true,

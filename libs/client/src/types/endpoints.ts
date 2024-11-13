@@ -590,6 +590,10 @@ export type FluxProTextToImageInput = {
    * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type FluxProV11UltraInput = {
   /**
@@ -619,6 +623,10 @@ export type FluxProV11UltraInput = {
    * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
   /**
    * The aspect ratio of the generated image. Default value: `"16:9"`
    */
@@ -690,6 +698,10 @@ export type FluxProPlusTextToImageInput = {
    * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type FluxLoraFastTrainingInput = {
   /**
@@ -1694,6 +1706,10 @@ export type FluxProUltraTextToImageInput = {
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
   /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
    * The aspect ratio of the generated image. Default value: `"16:9"`
    */
   aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16" | "9:21";
@@ -1764,6 +1780,10 @@ export type FluxProV11Input = {
    * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type FluxProNewInput = {
   /**
@@ -1809,6 +1829,10 @@ export type FluxProNewInput = {
    * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type FluxProNewOutput = {
   /**
