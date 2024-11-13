@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { createFalClient } from "@fal-ai/client";
+import { createFalClient, Result } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
 const fal = createFalClient({
@@ -80,7 +80,7 @@ export default function ComfyImageToImagePage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const { data } = await fal.subscribe<ComfyOutput>(
+      const { data }: Result<ComfyOutput> = await fal.subscribe(
         "comfy/fal-ai/image-to-image",
         {
           input: {

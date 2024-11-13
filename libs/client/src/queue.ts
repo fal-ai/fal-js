@@ -10,7 +10,7 @@ import {
   RequestLog,
   Result,
   RunOptions,
-} from "./types";
+} from "./types/common";
 import { parseEndpointId } from "./utils";
 
 export type QueuePriority = "low" | "normal";

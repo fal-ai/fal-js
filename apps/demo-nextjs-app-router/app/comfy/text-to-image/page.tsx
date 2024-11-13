@@ -1,6 +1,6 @@
 "use client";
 
-import { createFalClient } from "@fal-ai/client";
+import { createFalClient, Result } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
 const fal = createFalClient({
@@ -78,7 +78,7 @@ export default function ComfyTextToImagePage() {
     setLoading(true);
     const start = Date.now();
     try {
-      const { data } = await fal.subscribe<ComfyOutput>(
+      const { data }: Result<ComfyOutput> = await fal.subscribe(
         "comfy/fal-ai/text-to-image",
         {
           input: {

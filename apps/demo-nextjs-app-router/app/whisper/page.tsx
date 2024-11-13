@@ -108,10 +108,10 @@ export default function WhisperDemo() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result = await fal.subscribe("fal-ai/whisper", {
+      const result = await fal.subscribe("fal-ai/wizper", {
         input: {
-          file_name: "recording.wav",
           audio_url: audioFile,
+          version: "3",
         },
         logs: true,
         onQueueUpdate(update) {

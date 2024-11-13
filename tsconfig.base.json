@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@fal-ai/client": ["libs/client/src/index.ts"],
+      "@fal-ai/client/endpoints": ["libs/client/src/types/endpoints.ts"],
       "@fal-ai/create-app": ["libs/create-app/src/index.ts"],
       "@fal-ai/server-proxy": ["libs/proxy/src/index.ts"],
       "@fal-ai/server-proxy/express": ["libs/proxy/src/express.ts"],
