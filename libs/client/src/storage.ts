@@ -36,41 +36,41 @@ type CdnAuthToken = {
 };
 
 function isExpired(token: CdnAuthToken): boolean {
-  return new Date(token.expires_at) < new Date();
+  return new Date().getTime() >= new Date(token.expires_at).getTime();
 }
 
-class CdnTokenManager {
-  private readonly config: RequiredConfig;
-  private token: CdnAuthToken;
+interface TokenManager {
+  token: CdnAuthToken | null;
 
-  constructor(config: RequiredConfig) {
-    this.config = config;
-  }
+  fetchToken(config: RequiredConfig): Promise<CdnAuthToken>;
 
-  async getToken(): Promise<CdnAuthToken> {
-    if (!this.token || isExpired(this.token)) {
-      this.token = await this.fetchToken();
-    }
-    return this.token;
-  }
-
-  private async fetchToken(): Promise<CdnAuthToken> {
-    return dispatchRequest<object, CdnAuthToken>({
-      method: "POST",
-      targetUrl: `${getRestApiUrl()}/storage/auth/token?storage_type=fal-cdn-v3`,
-      config: this.config,
-      input: {},
-    });
-  }
+  getToken(config: RequiredConfig): Promise<CdnAuthToken>;
 }
 
 type UploadCdnResponse = {
   access_url: string;
 };
 
-async function uploadCdn(file: Blob, config: RequiredConfig) {
-  const tokenManager = new CdnTokenManager(config);
-  const token = await tokenManager.getToken();
+const tokenManager: TokenManager = {
+  token: null,
+  async getToken(config: RequiredConfig) {
+    if (!tokenManager.token || isExpired(tokenManager.token)) {
+      tokenManager.token = await tokenManager.fetchToken(config);
+    }
+    return tokenManager.token;
+  },
+  async fetchToken(config: RequiredConfig): Promise<CdnAuthToken> {
+    return dispatchRequest<object, CdnAuthToken>({
+      method: "POST",
+      targetUrl: `${getRestApiUrl()}/storage/auth/token?storage_type=fal-cdn-v3`,
+      config: config,
+      input: {},
+    });
+  },
+};
+
+async function uploadFile(file: Blob, config: RequiredConfig) {
+  const token = await tokenManager.getToken(config);
   const response = await fetch(`${token.base_url}/files/upload`, {
     method: "POST",
     headers: {
@@ -80,7 +80,6 @@ async function uploadCdn(file: Blob, config: RequiredConfig) {
     body: file,
   });
   const result: UploadCdnResponse = await response.json();
-  console.log(result);
   return result.access_url;
 }
 
@@ -96,7 +95,7 @@ export function createStorageClient({
 }: StorageClientDependencies): StorageClient {
   const ref: StorageClient = {
     upload: async (file: Blob) => {
-      return await uploadCdn(file, config);
+      return await uploadFile(file, config);
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
