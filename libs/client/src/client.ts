@@ -1,3 +1,4 @@
+import { createCDNClient } from "./cdn";
 import { Config, createConfig } from "./config";
 import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
 import { createRealtimeClient, RealtimeClient } from "./realtime";
@@ -79,9 +80,14 @@ export interface FalClient {
  * @param userConfig Optional configuration to override the default settings.
  * @returns a new instance of the `FalClient`.
  */
-export function createFalClient(userConfig: Config = {}): FalClient {
+export function createFalClient(
+  userConfig: Config = {},
+  useCDN: boolean = false,
+): FalClient {
   const config = createConfig(userConfig);
-  const storage = createStorageClient({ config });
+  const storage = useCDN
+    ? createCDNClient({ config })
+    : createStorageClient({ config });
   const queue = createQueueClient({ config, storage });
   const streaming = createStreamingClient({ config, storage });
   const realtime = createRealtimeClient({ config });
