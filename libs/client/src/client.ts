@@ -82,7 +82,7 @@ export interface FalClient {
  */
 export function createFalClient(
   userConfig: Config = {},
-  useCDN: boolean = false,
+  useCDN = false,
 ): FalClient {
   const config = createConfig(userConfig);
   const storage = useCDN

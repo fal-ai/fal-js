@@ -3,7 +3,7 @@ import { dispatchRequest } from "./request";
 import { StorageClient } from "./storage";
 import { isPlainObject } from "./utils";
 
-type AuthTokenRequest = {};
+type AuthTokenRequest = object;
 
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
