@@ -1,5 +1,5 @@
 import { RequiredConfig } from "./config";
-import { Result, ValidationErrorInfo } from "./types";
+import { Result, ValidationErrorInfo } from "./types/common";
 
 export type ResponseHandler<Output> = (response: Response) => Promise<Output>;
 

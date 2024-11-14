@@ -4,6 +4,7 @@ import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
+import { EndpointType, InputType, OutputType } from "./types/client";
 
 export type StreamingConnectionMode = "client" | "server";
 
@@ -116,6 +117,9 @@ export class FalStream<Input, Output> {
           }),
         );
       }
+      this.signal.addEventListener("abort", () => {
+        resolve(this.currentData ?? ({} as Output));
+      });
       this.on("done", (data) => {
         this.streamClosed = true;
         resolve(data);
@@ -265,6 +269,13 @@ export class FalStream<Input, Output> {
   };
 
   private handleError = (error: any) => {
+    // In case AbortError is thrown but the signal is marked as aborted
+    // it means the user called abort() and we should not emit an error
+    // as it's expected behavior
+    // See note on: https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
+    if (error.name === "AbortError" || this.signal.aborted) {
+      return;
+    }
     const apiError =
       error instanceof ApiError
         ? error
@@ -321,10 +332,25 @@ export class FalStream<Input, Output> {
 
   /**
    * Aborts the streaming request.
+   *
+   * **Note:** This method is noop in case the request is already done.
+   *
+   * @param reason optional cause for aborting the request.
    */
-  public abort = () => {
-    this.abortController.abort();
+  public abort = (reason?: string | Error) => {
+    if (!this.streamClosed) {
+      this.abortController.abort(reason);
+    }
   };
+
+  /**
+   * Gets the `AbortSignal` instance that can be used to listen for abort events.
+   * @returns the `AbortSignal` instance.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
+   */
+  public get signal() {
+    return this.abortController.signal;
+  }
 }
 
 /**
@@ -340,10 +366,10 @@ export interface StreamingClient {
    * @param options the request options, including the input payload.
    * @returns the `FalStream` instance.
    */
-  stream<Output = any, Input = Record<string, any>>(
-    endpointId: string,
-    options: StreamOptions<Input>,
-  ): Promise<FalStream<Input, Output>>;
+  stream<Id extends EndpointType>(
+    endpointId: Id,
+    options: StreamOptions<InputType<Id>>,
+  ): Promise<FalStream<InputType<Id>, OutputType<Id>>>;
 }
 
 type StreamingClientDependencies = {
@@ -356,16 +382,16 @@ export function createStreamingClient({
   storage,
 }: StreamingClientDependencies): StreamingClient {
   return {
-    async stream<Input, Output>(
-      endpointId: string,
-      options: StreamOptions<Input>,
+    async stream<Id extends EndpointType>(
+      endpointId: Id,
+      options: StreamOptions<InputType<Id>>,
     ) {
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
-      return new FalStream<Input, Output>(endpointId, config, {
+      return new FalStream<InputType<Id>, OutputType<Id>>(endpointId, config, {
         ...options,
-        input: input as Input,
+        input: input as InputType<Id>,
       });
     },
   };

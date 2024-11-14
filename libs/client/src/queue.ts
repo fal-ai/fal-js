@@ -3,6 +3,7 @@ import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
 import { StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
+import { EndpointType, InputType, OutputType } from "./types/client";
 import {
   CompletedQueueStatus,
   InQueueQueueStatus,
@@ -10,7 +11,7 @@ import {
   RequestLog,
   Result,
   RunOptions,
-} from "./types";
+} from "./types/common";
 import { parseEndpointId } from "./utils";
 
 export type QueuePriority = "low" | "normal";
@@ -152,9 +153,9 @@ export interface QueueClient {
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of enqueuing the request.
    */
-  submit<Input>(
-    endpointId: string,
-    options: SubmitOptions<Input>,
+  submit<Id extends EndpointType>(
+    endpointId: Id,
+    options: SubmitOptions<InputType<Id>>,
   ): Promise<InQueueQueueStatus>;
 
   /**
@@ -198,10 +199,10 @@ export interface QueueClient {
    * @param options - Options to configure how the request is run.
    * @returns A promise that resolves to the result of the request.
    */
-  result<Output>(
-    endpointId: string,
+  result<Id extends EndpointType>(
+    endpointId: Id,
     options: BaseQueueOptions,
-  ): Promise<Result<Output>>;
+  ): Promise<Result<OutputType<EndpointType>>>;
 
   /**
    * Cancels a request in the queue.

@@ -1,7 +1,7 @@
 import { RequiredConfig } from "./config";
 import { ResponseHandler } from "./response";
 import { getUserAgent, isBrowser } from "./runtime";
-import { RunOptions, UrlOptions } from "./types";
+import { RunOptions, UrlOptions } from "./types/common";
 import { ensureEndpointIdFormat, isValidUrl } from "./utils";
 
 const isCloudflareWorkers =
@@ -60,6 +60,7 @@ export async function dispatchRequest<Input, Output>(
       ...(requestInit.headers ?? {}),
     },
     ...(!isCloudflareWorkers && { mode: "cors" }),
+    signal: options.signal,
     body:
       method.toLowerCase() !== "get" && input
         ? JSON.stringify(input)
