@@ -28,100 +28,39 @@ export interface StorageClient {
   transformInput: (input: Record<string, any>) => Promise<Record<string, any>>;
 }
 
-type InitiateUploadResult = {
-  file_url: string;
-  upload_url: string;
-};
-
-type InitiateUploadData = {
-  file_name: string;
-  content_type: string | null;
-};
-
-/**
- * Get the file extension from the content type. This is used to generate
- * a file name if the file name is not provided.
- *
- * @param contentType the content type of the file.
- * @returns the file extension or `bin` if the content type is not recognized.
- */
-function getExtensionFromContentType(contentType: string): string {
-  const [_, fileType] = contentType.split("/");
-  return fileType.split(/[-;]/)[0] ?? "bin";
-}
-
-/**
- * Initiate the upload of a file to the server. This returns the URL to upload
- * the file to and the URL of the file once it is uploaded.
- *
- * @param file the file to upload
- * @returns the URL to upload the file to and the URL of the file once it is uploaded.
- */
-async function initiateUpload(
-  file: Blob,
-  config: RequiredConfig,
-): Promise<InitiateUploadResult> {
-  const contentType = file.type || "application/octet-stream";
-  const filename =
-    file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
-  return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
-    method: "POST",
-    targetUrl: `${getRestApiUrl()}/storage/upload/initiate`,
-    input: {
-      content_type: contentType,
-      file_name: filename,
-    },
-    config,
-  });
-}
-
-class CdnToken {
-  constructor(
-    public token: string,
-    public tokenType: string,
-    public baseUploadUrl: string,
-    public expiresAt: Date,
-  ) {}
-
-  isExpired(): boolean {
-    return new Date().getTime() >= this.expiresAt.getTime();
-  }
-}
-
-type AuthTokenRequest = object;
-type AuthTokenResponse = {
+type CdnAuthToken = {
+  base_url: string;
+  expires_at: string;
   token: string;
   token_type: string;
-  base_upload_url: string;
-  expires_at: string;
 };
 
-class CdnTokenManager {
-  private token: CdnToken;
+function isExpired(token: CdnAuthToken): boolean {
+  return new Date(token.expires_at) < new Date();
+}
 
-  constructor(private config: RequiredConfig) {
-    this.token = new CdnToken("", "", "", new Date(0));
+class CdnTokenManager {
+  private readonly config: RequiredConfig;
+  private token: CdnAuthToken;
+
+  constructor(config: RequiredConfig) {
+    this.config = config;
   }
 
-  async getToken(): Promise<CdnToken> {
-    if (this.token.isExpired()) {
+  async getToken(): Promise<CdnAuthToken> {
+    if (!this.token || isExpired(this.token)) {
       this.token = await this.fetchToken();
     }
     return this.token;
   }
 
-  private async fetchToken(): Promise<CdnToken> {
-    const response = await dispatchRequest<AuthTokenRequest, AuthTokenResponse>({
+  private async fetchToken(): Promise<CdnAuthToken> {
+    return dispatchRequest<object, CdnAuthToken>({
       method: "POST",
       targetUrl: `${getRestApiUrl()}/storage/auth/token?storage_type=fal-cdn-v3`,
       config: this.config,
+      input: {},
     });
-    return new CdnToken(
-      response.token,
-      response.token_type,
-      response.base_upload_url,
-      new Date(response.expires_at),
-    );
   }
 }
 
@@ -129,39 +68,20 @@ type UploadCdnResponse = {
   access_url: string;
 };
 
-async function uploadCdn(
-  file: Blob,
-  config: RequiredConfig,
-) {
+async function uploadCdn(file: Blob, config: RequiredConfig) {
   const tokenManager = new CdnTokenManager(config);
   const token = await tokenManager.getToken();
-  const response = await dispatchRequest<Blob, UploadCdnResponse>({
+  const response = await fetch(`${token.base_url}/files/upload`, {
     method: "POST",
-    targetUrl: `${token.baseUploadUrl}/files/upload`,
-    input: file,
-    config,
     headers: {
-     Authorization: `${token.tokenType} ${token.token}`,
-    },
-  });
-  return response.access_url;
-}
-
-async function uploadLegacy(file: Blob, config: RequiredConfig) {
-  const { fetch, responseHandler } = config;
-  const { upload_url: uploadUrl, file_url: url } = await initiateUpload(
-    file,
-    config,
-  );
-  const response = await fetch(uploadUrl, {
-    method: "PUT",
-    body: file,
-    headers: {
+      Authorization: `${token.token_type} ${token.token}`,
       "Content-Type": file.type || "application/octet-stream",
     },
+    body: file,
   });
-  await responseHandler(response);
-  return url;
+  const result: UploadCdnResponse = await response.json();
+  console.log(result);
+  return result.access_url;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
