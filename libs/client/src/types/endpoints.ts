@@ -3472,6 +3472,94 @@ export type FluxGeneralRfInversionOutput = {
    */
   prompt: string;
 };
+export type FluxPulidInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * URL of image to use for inpainting.
+   */
+  reference_image_url: string | Blob | File;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `20`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
+   */
+  guidance_scale?: number;
+  /**
+   * The prompt to generate an image from. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of steps to start the CFG from.
+   */
+  start_step?: number;
+  /**
+   * The weight of the CFG loss. Default value: `1`
+   */
+  true_cfg?: number;
+  /**
+   * The weight of the ID loss. Default value: `1`
+   */
+  id_weight?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The maximum sequence length for the model. Default value: `"128"`
+   */
+  max_sequence_length?: "128" | "256" | "512";
+};
+export type FluxPulidOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
 export type IclightV2Output = {
   /**
    * The generated image files info.
@@ -3508,6 +3596,10 @@ export type IclightV2Input = {
    * URL of image to be used for relighting
    */
   image_url: string | Blob | File;
+  /**
+   * URL of mask to be used for ic-light conditioning image
+   */
+  mask_image_url?: string | Blob | File;
   /**
    * The size of the generated image.
    */
@@ -5587,7 +5679,7 @@ export type ClarityUpscalerInput = {
    * The same seed and the same prompt given to the same version of Stable Diffusion
    * will output the same image every time.
    */
-  seed?: number;
+  seed?: number | null;
   /**
    * If set to false, the safety checker will be disabled. Default value: `true`
    */
@@ -16249,6 +16341,103 @@ export type MusePoseOutput = {
    */
   video: File;
 };
+export type KolorsOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type KolorsImg2ImgInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want
+   * in the image. This could be colors, objects, scenery and even the small
+   * details (e.g. moustache, blurry, low resolution). Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show
+   * you. Default value: `5`
+   */
+  guidance_scale?: number;
+  /**
+   * The number of inference steps to perform. Default value: `50`
+   */
+  num_inference_steps?: number;
+  /**
+   * Seed
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and
+   * uploaded before returning the response. This will increase the latency of
+   * the function but it allows you to get the image directly in the response
+   * without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * Enable safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The scheduler to use for the model. Default value: `"EulerDiscreteScheduler"`
+   */
+  scheduler?:
+    | "EulerDiscreteScheduler"
+    | "EulerAncestralDiscreteScheduler"
+    | "DPMSolverMultistepScheduler"
+    | "DPMSolverMultistepScheduler_SDE_karras"
+    | "UniPCMultistepScheduler"
+    | "DEISMultistepScheduler";
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * URL of image to use for image to image
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength to use for image-to-image. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
+   */
+  strength?: number;
+};
 export type KolorsInput = {
   /**
    * The prompt to use for generating the image. Be as descriptive as possible
@@ -16311,19 +16500,23 @@ export type KolorsInput = {
     | "DPMSolverMultistepScheduler_SDE_karras"
     | "UniPCMultistepScheduler"
     | "DEISMultistepScheduler";
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
 };
-export type KolorsOutput = {
+export type KolorsImageToImageOutput = {
   /**
    * The generated image files info.
    */
   images: Array<Image>;
   /**
-   * The timings of the different steps of the generation process.
+   *
    */
   timings: any;
   /**
-   * Seed of the generated Image. It will be the same value of the one passed in
-   * the input or the randomly generated that was used in case none was passed.
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
    */
   seed: number;
   /**
@@ -16334,6 +16527,80 @@ export type KolorsOutput = {
    * The prompt used for generating the image.
    */
   prompt: string;
+};
+export type KolorsImageToImageInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want
+   * in the image. This could be colors, objects, scenery and even the small
+   * details (e.g. moustache, blurry, low resolution). Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show
+   * you. Default value: `5`
+   */
+  guidance_scale?: number;
+  /**
+   * The number of inference steps to perform. Default value: `50`
+   */
+  num_inference_steps?: number;
+  /**
+   * Seed
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and
+   * uploaded before returning the response. This will increase the latency of
+   * the function but it allows you to get the image directly in the response
+   * without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * Enable safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The scheduler to use for the model. Default value: `"EulerDiscreteScheduler"`
+   */
+  scheduler?:
+    | "EulerDiscreteScheduler"
+    | "EulerAncestralDiscreteScheduler"
+    | "DPMSolverMultistepScheduler"
+    | "DPMSolverMultistepScheduler_SDE_karras"
+    | "UniPCMultistepScheduler"
+    | "DEISMultistepScheduler";
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * URL of image to use for image to image
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength to use for image-to-image. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
+   */
+  strength?: number;
 };
 export type SdxlControlnetUnionOutput = {
   /**
@@ -18270,6 +18537,10 @@ export type EndpointTypeMap = {
     input: FluxGeneralRfInversionInput;
     output: FluxGeneralRfInversionOutput;
   };
+  "fal-ai/flux-pulid": {
+    input: FluxPulidInput;
+    output: FluxPulidOutput;
+  };
   "fal-ai/iclight-v2": {
     input: IclightV2Input;
     output: IclightV2Output;
@@ -18773,6 +19044,10 @@ export type EndpointTypeMap = {
   "fal-ai/kolors": {
     input: KolorsInput;
     output: KolorsOutput;
+  };
+  "fal-ai/kolors/image-to-image": {
+    input: KolorsImageToImageInput;
+    output: KolorsImageToImageOutput;
   };
   "fal-ai/sdxl-controlnet-union": {
     input: SdxlControlnetUnionInput;
