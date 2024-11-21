@@ -1,5 +1,5 @@
 import { type RequestHandler } from "@sveltejs/kit";
-import { fromHeaders, handleRequest, responsePassthrough } from "./index";
+import { fromHeaders, handleRequest } from "./index";
 
 type RequestHandlerParams = {
   /**
@@ -37,7 +37,9 @@ export const createRequestHandler = ({
           status,
           headers: responseHeaders,
         }),
-      sendResponse: responsePassthrough,
+      sendResponse: async (res) => {
+        return new Response(res.body, res);
+      },
     });
   };
   return {
