@@ -66,7 +66,8 @@ async function initiateUpload(
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
     method: "POST",
-    targetUrl: `${getRestApiUrl()}/storage/upload/initiate`,
+    // NOTE: We want to test V3 without making it the default at the API level
+    targetUrl: `${getRestApiUrl()}/storage/upload/initiate?storage_type=fal-cdn-v3`,
     input: {
       content_type: contentType,
       file_name: filename,
