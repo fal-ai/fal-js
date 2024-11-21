@@ -83,4 +83,4 @@ jobs:
           cd dist/libs/${{ steps.tag-info.outputs.package }}
           npm publish --access public --tag ${{ steps.tag-info.outputs.npm_tag }} ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
