@@ -121,7 +121,6 @@ async function partUploadRetries(
 
     return (await responseHandler(response)) as MultipartObject;
   } catch (error) {
-    console.error("Part upload failed, retrying", uploadUrl, error);
     return await partUploadRetries(uploadUrl, chunk, config, tries - 1);
   }
 }
@@ -157,11 +156,9 @@ async function multipartUpload(
       responses.push(await partUploadRetries(partUploadUrl, chunk, config));
     }
   } catch (error) {
-    console.error("Multipart upload failed, aborting upload", error);
     throw error;
   }
 
-  console.log("All parts uploaded, completing upload", responses);
   // Complete the upload
   const completeUrl = `${parsedUrl.origin}${parsedUrl.pathname}/complete${parsedUrl.search}`;
   const response = await fetch(completeUrl, {
