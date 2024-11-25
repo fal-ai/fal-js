@@ -97,13 +97,18 @@ async function initiateMultipartUpload(
   });
 }
 
+type MultipartObject = {
+  partNumber: number;
+  etag: string;
+};
+
 async function partUploadRetries(
   uploadUrl: string,
   chunk: Blob,
   config: RequiredConfig,
   cancelled: { current: boolean },
   tries: number,
-) {
+): Promise<MultipartObject> {
   if (cancelled.current) {
     throw new Error("Part upload failed, upload cancelled");
   }
@@ -119,8 +124,8 @@ async function partUploadRetries(
       method: "PUT",
       body: chunk,
     });
-    await responseHandler(response);
-    return response;
+
+    return (await responseHandler(response)) as MultipartObject;
   } catch (error) {
     console.error("Part upload failed, retrying", uploadUrl, error);
     return await partUploadRetries(
@@ -167,7 +172,7 @@ async function multipartUpload(
   // Max 5 parallel uploads
   const limitedParallelUploads = new Sema(3);
 
-  const partPromises: Promise<Response>[] = [];
+  const partPromises: Promise<MultipartObject>[] = [];
 
   // To be able to cancel the upload if any of the parts fail
   const cancelled = { current: false };
@@ -192,7 +197,7 @@ async function multipartUpload(
     );
   }
 
-  let responses: Response[];
+  let responses: MultipartObject[];
   try {
     // Does this wait for all to finish even if an early one fails?
     responses = await Promise.all(partPromises);
@@ -204,6 +209,7 @@ async function multipartUpload(
     throw error;
   }
 
+  console.log("All parts uploaded, completing upload", responses);
   // Complete the upload
   const completeUrl = `${parsedUrl.origin}${parsedUrl.pathname}/complete${parsedUrl.search}`;
   const response = await fetch(completeUrl, {
@@ -212,9 +218,9 @@ async function multipartUpload(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      parts: responses.map((response, index) => ({
-        partNumber: index + 1, // Parts are 1-indexed
-        etag: response.headers.get("ETag"),
+      parts: responses.map((mpart) => ({
+        partNumber: mpart.partNumber,
+        etag: mpart.etag,
       })),
     }),
   });
