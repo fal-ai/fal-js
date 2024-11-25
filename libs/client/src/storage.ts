@@ -1,4 +1,3 @@
-import { Sema } from "async-sema";
 import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
 import { isPlainObject } from "./utils";
@@ -106,13 +105,8 @@ async function partUploadRetries(
   uploadUrl: string,
   chunk: Blob,
   config: RequiredConfig,
-  cancelled: { current: boolean },
-  tries: number,
+  tries: number = 3,
 ): Promise<MultipartObject> {
-  if (cancelled.current) {
-    throw new Error("Part upload failed, upload cancelled");
-  }
-
   if (tries === 0) {
     throw new Error("Part upload failed, retries exhausted");
   }
@@ -128,29 +122,7 @@ async function partUploadRetries(
     return (await responseHandler(response)) as MultipartObject;
   } catch (error) {
     console.error("Part upload failed, retrying", uploadUrl, error);
-    return await partUploadRetries(
-      uploadUrl,
-      chunk,
-      config,
-      cancelled,
-      tries - 1,
-    );
-  }
-}
-
-async function partUpload(
-  uploadUrl: string,
-  chunk: Blob,
-  config: RequiredConfig,
-  parallelUploads: Sema,
-  cancelled: { current: boolean },
-) {
-  await parallelUploads.acquire();
-
-  try {
-    return await partUploadRetries(uploadUrl, chunk, config, cancelled, 3);
-  } finally {
-    parallelUploads.release();
+    return await partUploadRetries(uploadUrl, chunk, config, tries - 1);
   }
 }
 
@@ -169,42 +141,22 @@ async function multipartUpload(
 
   const parsedUrl = new URL(uploadUrl);
 
-  // Max 5 parallel uploads
-  const limitedParallelUploads = new Sema(3);
+  const responses: MultipartObject[] = [];
 
-  const partPromises: Promise<MultipartObject>[] = [];
-
-  // To be able to cancel the upload if any of the parts fail
-  const cancelled = { current: false };
-  for (let i = 0; i < chunks; i++) {
-    const start = i * chunkSize;
-    const end = Math.min(start + chunkSize, file.size);
-
-    const chunk = file.slice(start, end);
-
-    const partNumber = i + 1;
-    // {uploadUrl}/{part_number}?uploadUrlParams=...
-    const partUploadUrl = `${parsedUrl.origin}${parsedUrl.pathname}/${partNumber}${parsedUrl.search}`;
-
-    partPromises.push(
-      partUpload(
-        partUploadUrl,
-        chunk,
-        config,
-        limitedParallelUploads,
-        cancelled,
-      ),
-    );
-  }
-
-  let responses: MultipartObject[];
   try {
-    // Does this wait for all to finish even if an early one fails?
-    responses = await Promise.all(partPromises);
-  } catch (error) {
-    // If any of the parts fail, cancel other uploads
-    cancelled.current = true;
+    for (let i = 0; i < chunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
 
+      const chunk = file.slice(start, end);
+
+      const partNumber = i + 1;
+      // {uploadUrl}/{part_number}?uploadUrlParams=...
+      const partUploadUrl = `${parsedUrl.origin}${parsedUrl.pathname}/${partNumber}${parsedUrl.search}`;
+
+      responses.push(await partUploadRetries(partUploadUrl, chunk, config));
+    }
+  } catch (error) {
     console.error("Multipart upload failed, aborting upload", error);
     throw error;
   }
