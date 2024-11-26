@@ -63,6 +63,11 @@ export type StreamOptions<Input> = {
    * support streaming.
    */
   readonly connectionMode?: StreamingConnectionMode;
+
+  /**
+   * The signal to abort the request.
+   */
+  readonly signal?: AbortSignal;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
@@ -129,6 +134,14 @@ export class FalStream<Input, Output> {
         reject(error);
       });
     });
+    // if a abort signal was passed, sync it with the internal one
+    if (options.signal) {
+      options.signal.addEventListener("abort", () => {
+        this.abortController.abort();
+      });
+    }
+
+    // start the streaming request
     this.start().catch(this.handleError);
   }
 
@@ -345,6 +358,10 @@ export class FalStream<Input, Output> {
 
   /**
    * Gets the `AbortSignal` instance that can be used to listen for abort events.
+   *
+   * **Note:** this signal is internal to the `FalStream` instance. If you pass your
+   * own abort signal, the `FalStream` will listen to it and abort it appropriately.
+   *
    * @returns the `AbortSignal` instance.
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */

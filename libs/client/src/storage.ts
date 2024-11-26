@@ -105,7 +105,7 @@ async function partUploadRetries(
   uploadUrl: string,
   chunk: Blob,
   config: RequiredConfig,
-  tries: number = 3,
+  tries = 3,
 ): Promise<MultipartObject> {
   if (tries === 0) {
     throw new Error("Part upload failed, retries exhausted");
@@ -142,21 +142,17 @@ async function multipartUpload(
 
   const responses: MultipartObject[] = [];
 
-  try {
-    for (let i = 0; i < chunks; i++) {
-      const start = i * chunkSize;
-      const end = Math.min(start + chunkSize, file.size);
+  for (let i = 0; i < chunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, file.size);
 
-      const chunk = file.slice(start, end);
+    const chunk = file.slice(start, end);
 
-      const partNumber = i + 1;
-      // {uploadUrl}/{part_number}?uploadUrlParams=...
-      const partUploadUrl = `${parsedUrl.origin}${parsedUrl.pathname}/${partNumber}${parsedUrl.search}`;
+    const partNumber = i + 1;
+    // {uploadUrl}/{part_number}?uploadUrlParams=...
+    const partUploadUrl = `${parsedUrl.origin}${parsedUrl.pathname}/${partNumber}${parsedUrl.search}`;
 
-      responses.push(await partUploadRetries(partUploadUrl, chunk, config));
-    }
-  } catch (error) {
-    throw error;
+    responses.push(await partUploadRetries(partUploadUrl, chunk, config));
   }
 
   // Complete the upload

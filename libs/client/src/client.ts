@@ -106,6 +106,9 @@ export function createFalClient(userConfig: Config = {}): FalClient {
           ...config,
           responseHandler: resultResponseHandler,
         },
+        options: {
+          signal: options.abortSignal,
+        },
       });
     },
     subscribe: async (endpointId, options) => {

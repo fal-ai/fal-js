@@ -22,6 +22,11 @@ export type RunOptions<Input> = {
    * The HTTP method, defaults to `post`;
    */
   readonly method?: "get" | "post" | "put" | "delete" | string;
+
+  /**
+   * The abort signal to cancel the request.
+   */
+  readonly abortSignal?: AbortSignal;
 };
 
 export type UrlOptions = {
