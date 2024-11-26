@@ -2069,7 +2069,7 @@ export type CreativeUpscalerInput = {
    */
   shape_preservation?: number;
   /**
-   * The suffix to add to the generated prompt. Not used for a custom prompt. This is useful to add a common ending to all prompts such as 'high quality' etc or embedding tokens. Default value: `" high quality, highly detailed, high resolution, sharp"`
+   * The suffix to add to the prompt. This is useful to add a common ending to all prompts such as 'high quality' etc or embedding tokens. Default value: `" high quality, highly detailed, high resolution, sharp"`
    */
   prompt_suffix?: string;
   /**
@@ -6286,6 +6286,91 @@ export type FluxLoraFastTrainingOutput = {
    */
   config_file: File;
 };
+export type FluxLoraFillInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image. Default value: ``
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `30`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * URL of image to use for fill operation
+   */
+  image_url: string | Blob | File;
+  /**
+   * The mask to area to Inpaint in.
+   */
+  mask_url: string | Blob | File;
+};
+export type FluxLoraFillOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
 export type FluxLoraImageToImageInput = {
   /**
    * The prompt to generate an image from.
@@ -6536,6 +6621,55 @@ export type FluxLoraOutput = {
    * The prompt used for generating the image.
    */
   prompt: string;
+};
+export type FluxLoraPortraitTrainerInput = {
+  /**
+   * URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.
+   *
+   * In addition to images the archive can contain text files with captions. Each text file should have the same name as the image file it corresponds to.
+   *
+   * The captions can include a special string `[trigger]`. If a trigger_word is specified, it will replace `[trigger]` in the captions.
+   */
+  images_data_url: string | Blob | File;
+  /**
+   * Trigger phrase to be used in the captions. If None, a trigger word will not be used.
+   * If no captions are provide the trigger_work will be used instead of captions. If captions are provided, the trigger word will replace the `[trigger]` string in the captions.
+   */
+  trigger_phrase?: string;
+  /**
+   * Learning rate to use for training. Default value: `0.00009`
+   */
+  learning_rate?: number;
+  /**
+   * Number of steps to train the LoRA on. Default value: `2500`
+   */
+  steps?: number;
+  /**
+   * If True, multiresolution training will be used. Default value: `true`
+   */
+  multiresolution_training?: boolean;
+  /**
+   * If True, the subject will be cropped from the image. Default value: `true`
+   */
+  subject_crop?: boolean;
+  /**
+   * The format of the archive. If not specified, the format will be inferred from the URL.
+   */
+  data_archive_format?: string;
+  /**
+   * URL to a checkpoint to resume training from. Default value: `""`
+   */
+  resume_from_checkpoint?: string;
+};
+export type FluxLoraPortraitTrainerOutput = {
+  /**
+   * URL to the trained diffusers lora weights.
+   */
+  diffusers_lora_file: File;
+  /**
+   * URL to the training configuration file.
+   */
+  config_file: File;
 };
 export type FluxProCannyControlInput = {
   /**
@@ -11382,44 +11516,23 @@ export type ImageToVideoInput = {
    */
   prompt: string;
   /**
-   * The size of the generated video. Default value: `[object Object]`
-   */
-  video_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The negative prompt to generate video from Default value: `""`
+   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
    */
   negative_prompt?: string;
   /**
-   * The number of inference steps to perform. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
+   * The seed to use for random number generation.
    */
   seed?: number;
   /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related video to show you. Default value: `7`
+   * The number of inference steps to take. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The guidance scale to use. Default value: `3`
    */
   guidance_scale?: number;
   /**
-   * Use RIFE for video interpolation Default value: `true`
-   */
-  use_rife?: boolean;
-  /**
-   * The target FPS of the video Default value: `16`
-   */
-  export_fps?: number;
-  /**
-   * The URL to the image to generate the video from.
+   * The URL of the image to generate the video from.
    */
   image_url: string | Blob | File;
 };
@@ -12805,6 +12918,50 @@ export type IpAdapterFaceIdOutput = {
    * input or the randomly generated that was used in case none was passed.
    */
   seed: number;
+};
+export type KlingVideoV15ProImageToVideoInput = {
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   *
+   */
+  image_url: string | Blob | File;
+  /**
+   * The duration of the generated video in seconds Default value: `"5"`
+   */
+  duration?: "5" | "10";
+  /**
+   * The aspect ratio of the generated video frame Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+};
+export type KlingVideoV15ProImageToVideoOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
+};
+export type KlingVideoV15ProTextToVideoInput = {
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   * The duration of the generated video in seconds Default value: `"5"`
+   */
+  duration?: "5" | "10";
+  /**
+   * The aspect ratio of the generated video frame Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+};
+export type KlingVideoV15ProTextToVideoOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
 };
 export type KlingVideoV1ProImageToVideoInput = {
   /**
@@ -14636,6 +14793,74 @@ export type LoraOutput = {
    * The latents saved for debugging per pass.
    */
   debug_per_pass_latents?: File;
+};
+export type LtxVideoImageToVideoInput = {
+  /**
+   * The prompt to generate the video from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
+   */
+  negative_prompt?: string;
+  /**
+   * The seed to use for random number generation.
+   */
+  seed?: number;
+  /**
+   * The number of inference steps to take. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The guidance scale to use. Default value: `3`
+   */
+  guidance_scale?: number;
+  /**
+   * The URL of the image to generate the video from.
+   */
+  image_url: string | Blob | File;
+};
+export type LtxVideoImageToVideoOutput = {
+  /**
+   * The generated video.
+   */
+  video: File;
+  /**
+   * The seed used for random number generation.
+   */
+  seed: number;
+};
+export type LtxVideoInput = {
+  /**
+   * The prompt to generate the video from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
+   */
+  negative_prompt?: string;
+  /**
+   * The seed to use for random number generation.
+   */
+  seed?: number;
+  /**
+   * The number of inference steps to take. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The guidance scale to use. Default value: `3`
+   */
+  guidance_scale?: number;
+};
+export type LtxVideoOutput = {
+  /**
+   * The generated video.
+   */
+  video: File;
+  /**
+   * The seed used for random number generation.
+   */
+  seed: number;
 };
 export type LumaDreamMachineImageToVideoInput = {
   /**
@@ -18877,6 +19102,28 @@ export type TextToImageTurboInput = {
    */
   expand_prompt?: boolean;
 };
+export type TextToVideoInput = {
+  /**
+   * The prompt to generate the video from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
+   */
+  negative_prompt?: string;
+  /**
+   * The seed to use for random number generation.
+   */
+  seed?: number;
+  /**
+   * The number of inference steps to take. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The guidance scale to use. Default value: `3`
+   */
+  guidance_scale?: number;
+};
 export type TimestepsInput = {
   /**
    * The method to use for the timesteps. If set to 'array', the timesteps will be set based
@@ -19494,6 +19741,10 @@ export type EndpointTypeMap = {
     input: FluxLoraFastTrainingInput;
     output: FluxLoraFastTrainingOutput;
   };
+  "fal-ai/flux-lora-portrait-trainer": {
+    input: FluxLoraPortraitTrainerInput;
+    output: FluxLoraPortraitTrainerOutput;
+  };
   "fal-ai/recraft-v3": {
     input: RecraftV3Input;
     output: RecraftV3Output;
@@ -19517,6 +19768,10 @@ export type EndpointTypeMap = {
   "fal-ai/flux-lora": {
     input: FluxLoraInput;
     output: FluxLoraOutput;
+  };
+  "fal-ai/flux-lora/inpainting": {
+    input: FluxLoraInpaintingInput;
+    output: FluxLoraInpaintingOutput;
   };
   "fal-ai/flux/schnell": {
     input: FluxSchnellInput;
@@ -19590,9 +19845,9 @@ export type EndpointTypeMap = {
     input: FluxRealismInput;
     output: FluxRealismOutput;
   };
-  "fal-ai/flux-lora/inpainting": {
-    input: FluxLoraInpaintingInput;
-    output: FluxLoraInpaintingOutput;
+  "fal-ai/flux-lora-fill": {
+    input: FluxLoraFillInput;
+    output: FluxLoraFillOutput;
   };
   "fal-ai/flux-lora/image-to-image": {
     input: FluxLoraImageToImageInput;
@@ -19694,6 +19949,14 @@ export type EndpointTypeMap = {
     input: KlingVideoV1ProImageToVideoInput;
     output: KlingVideoV1ProImageToVideoOutput;
   };
+  "fal-ai/kling-video/v1.5/pro/image-to-video": {
+    input: KlingVideoV15ProImageToVideoInput;
+    output: KlingVideoV15ProImageToVideoOutput;
+  };
+  "fal-ai/kling-video/v1.5/pro/text-to-video": {
+    input: KlingVideoV15ProTextToVideoInput;
+    output: KlingVideoV15ProTextToVideoOutput;
+  };
   "fal-ai/cogvideox-5b": {
     input: Cogvideox5bInput;
     output: Cogvideox5bOutput;
@@ -19705,6 +19968,14 @@ export type EndpointTypeMap = {
   "fal-ai/cogvideox-5b/image-to-video": {
     input: Cogvideox5bImageToVideoInput;
     output: Cogvideox5bImageToVideoOutput;
+  };
+  "fal-ai/ltx-video": {
+    input: LtxVideoInput;
+    output: LtxVideoOutput;
+  };
+  "fal-ai/ltx-video/image-to-video": {
+    input: LtxVideoImageToVideoInput;
+    output: LtxVideoImageToVideoOutput;
   };
   "fal-ai/stable-video": {
     input: StableVideoInput;
