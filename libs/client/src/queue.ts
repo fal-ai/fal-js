@@ -123,6 +123,11 @@ type BaseQueueOptions = {
    * The unique identifier for the enqueued request.
    */
   requestId: string;
+
+  /**
+   * The signal to abort the request.
+   */
+  abortSignal?: AbortSignal;
 };
 
 export type QueueStatusOptions = BaseQueueOptions & {
@@ -246,11 +251,14 @@ export const createQueueClient = ({
         },
         input: input as Input,
         config,
+        options: {
+          signal: options.abortSignal,
+        },
       });
     },
     async status(
       endpointId: string,
-      { requestId, logs = false }: QueueStatusOptions,
+      { requestId, logs = false, abortSignal }: QueueStatusOptions,
     ): Promise<QueueStatus> {
       const appId = parseEndpointId(endpointId);
       const prefix = appId.namespace ? `${appId.namespace}/` : "";
@@ -262,6 +270,9 @@ export const createQueueClient = ({
           path: `/requests/${requestId}/status`,
         }),
         config,
+        options: {
+          signal: abortSignal,
+        },
       });
     },
 
@@ -379,6 +390,7 @@ export const createQueueClient = ({
             const requestStatus = await ref.status(endpointId, {
               requestId,
               logs: options.logs ?? false,
+              abortSignal: options.abortSignal,
             });
             if (options.onQueueUpdate) {
               options.onQueueUpdate(requestStatus);
@@ -400,7 +412,7 @@ export const createQueueClient = ({
 
     async result<Output>(
       endpointId: string,
-      { requestId }: BaseQueueOptions,
+      { requestId, abortSignal }: BaseQueueOptions,
     ): Promise<Result<Output>> {
       const appId = parseEndpointId(endpointId);
       const prefix = appId.namespace ? `${appId.namespace}/` : "";
@@ -414,12 +426,15 @@ export const createQueueClient = ({
           ...config,
           responseHandler: resultResponseHandler,
         },
+        options: {
+          signal: abortSignal,
+        },
       });
     },
 
     async cancel(
       endpointId: string,
-      { requestId }: BaseQueueOptions,
+      { requestId, abortSignal }: BaseQueueOptions,
     ): Promise<void> {
       const appId = parseEndpointId(endpointId);
       const prefix = appId.namespace ? `${appId.namespace}/` : "";
@@ -430,6 +445,9 @@ export const createQueueClient = ({
           path: `/requests/${requestId}/cancel`,
         }),
         config,
+        options: {
+          signal: abortSignal,
+        },
       });
     },
   };
