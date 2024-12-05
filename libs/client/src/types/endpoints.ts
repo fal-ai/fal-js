@@ -2702,6 +2702,32 @@ export type DwposeOutput = {
    */
   image: Image;
 };
+export type EditImageInput = {
+  /**
+   * The prompt to fill the masked part of the image.
+   */
+  prompt: string;
+  /**
+   * The image URL to generate an image from. Needs to match the dimensions of the mask.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The mask URL to inpaint the image. Needs to match the dimensions of the input image.
+   */
+  mask_url: string | Blob | File;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+};
 export type Era3dInput = {
   /**
    * URL of the image to remove background from
@@ -6347,6 +6373,10 @@ export type FluxLoraFillInput = {
    * The mask to area to Inpaint in.
    */
   mask_url: string | Blob | File;
+  /**
+   * Specifies whether to paste-back the original image onto to the non-inpainted areas of the output Default value: `true`
+   */
+  paste_back?: boolean;
 };
 export type FluxLoraFillOutput = {
   /**
@@ -7675,82 +7705,6 @@ export type FluxPulidOutput = {
    */
   prompt: string;
 };
-export type FluxRealismInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The strength of the model. Default value: `1`
-   */
-  strength?: number;
-  /**
-   * The output image format. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type FluxRealismOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
 export type FluxSchnellInput = {
   /**
    * The prompt to generate an image from.
@@ -7877,6 +7831,82 @@ export type FluxSchnellReduxOutput = {
    */
   prompt: string;
 };
+export type FluxSubjectInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * URL of image of the subject
+   */
+  image_url: string | Blob | File;
+  /**
+   * The size of the generated image. Default value: `square_hd`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `8`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+};
+export type FluxSubjectOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
 export type FooocusImagePromptInput = {
   /**
    * The prompt to use for generating the image. Be as descriptive as possible for best results. Default value: `""`
@@ -7889,7 +7919,7 @@ export type FooocusImagePromptInput = {
    */
   negative_prompt?: string;
   /**
-   * The style to use. Default value: `Fooocus Enhance,Fooocus V2,Fooocus Sharp`
+   * The style to use. Default value: `Fooocus V2,Fooocus Enhance,Fooocus Sharp`
    */
   styles?: Array<
     | "Fooocus V2"
@@ -8314,7 +8344,7 @@ export type FooocusInpaintInput = {
    */
   negative_prompt?: string;
   /**
-   * The style to use. Default value: `Fooocus Enhance,Fooocus V2,Fooocus Sharp`
+   * The style to use. Default value: `Fooocus V2,Fooocus Enhance,Fooocus Sharp`
    */
   styles?: Array<
     | "Fooocus V2"
@@ -8757,7 +8787,7 @@ export type FooocusInput = {
    */
   negative_prompt?: string;
   /**
-   * The style to use. Default value: `Fooocus Enhance,Fooocus V2,Fooocus Sharp`
+   * The style to use. Default value: `Fooocus V2,Fooocus Enhance,Fooocus Sharp`
    */
   styles?: Array<
     | "Fooocus V2"
@@ -9137,7 +9167,7 @@ export type FooocusLegacyInput = {
    */
   negative_prompt?: string;
   /**
-   * The style to use. Default value: `Fooocus Enhance,Fooocus V2,Fooocus Sharp`
+   * The style to use. Default value: `Fooocus V2,Fooocus Enhance,Fooocus Sharp`
    */
   styles?: Array<
     | "Fooocus V2"
@@ -9531,7 +9561,7 @@ export type FooocusUpscaleOrVaryInput = {
    */
   negative_prompt?: string;
   /**
-   * The style to use. Default value: `Fooocus Enhance,Fooocus V2,Fooocus Sharp`
+   * The style to use. Default value: `Fooocus V2,Fooocus Enhance,Fooocus Sharp`
    */
   styles?: Array<
     | "Fooocus V2"
@@ -10011,6 +10041,86 @@ export type HEDOutput = {
    */
   image: Image;
 };
+export type HunyuanVideoInput = {
+  /**
+   * The prompt to generate a video from.
+   */
+  prompt: string;
+  /**
+   * The seed to use for generating the video.
+   */
+  seed?: number;
+};
+export type HunyuanVideoOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
+  /**
+   * The seed used for generating the video.
+   */
+  seed: number;
+};
+export type Hyper3dRodinInput = {
+  /**
+   * A textual prompt to guide model generation. Required for Text-to-3D mode. Optional for Image-to-3D mode. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * URL of images to use while generating the 3D model. Required for Image-to-3D mode. Optional for Text-to-3D mode.
+   */
+  input_image_urls?: Array<string>;
+  /**
+   * For fuse mode, One or more images are required.It will generate a model by extracting and fusing features of objects from multiple images.For concat mode, need to upload multiple multi-view images of the same object and generate the model.(You can upload multi-view images in any order, regardless of the order of view.) Default value: `"concat"`
+   */
+  condition_mode?: "fuse" | "concat";
+  /**
+   * Seed value for randomization, ranging from 0 to 65535. Optional.
+   */
+  seed?: number;
+  /**
+   * Format of the geometry file. Possible values: glb, usdz, fbx, obj, stl. Default is glb. Default value: `"glb"`
+   */
+  geometry_file_format?: "glb" | "usdz" | "fbx" | "obj" | "stl";
+  /**
+   * Material type. Possible values: PBR, Shaded. Default is PBR. Default value: `"PBR"`
+   */
+  material?: "PBR" | "Shaded";
+  /**
+   * Generation quality. Possible values: high, medium, low, extra-low. Default is medium. Default value: `"medium"`
+   */
+  quality?: "high" | "medium" | "low" | "extra-low";
+  /**
+   * Whether to export the model using hyper mode. Default is false.
+   */
+  use_hyper?: boolean;
+  /**
+   * Tier of generation. For Rodin Sketch, set to Sketch. For Rodin Regular, set to Regular. Default value: `"Regular"`
+   */
+  tier?: "Regular" | "Sketch";
+  /**
+   * When generating the human-like model, this parameter control the generation result to T/A Pose.
+   */
+  TAPose?: boolean;
+  /**
+   * An array that specifies the dimensions and scaling factor of the bounding box. Typically, this array contains 3 elements, Length(X-axis), Width(Y-axis) and Height(Z-axis).
+   */
+  bbox_condition?: Array<number>;
+  /**
+   * Generation add-on features. Default is []. Possible values are HighPack. The HighPack option will provide 4K resolution textures instead of the default 1K, as well as models with high-poly. It will cost triple the billable units.
+   */
+  addons?: "HighPack";
+};
+export type Hyper3dRodinOutput = {
+  /**
+   * Generated 3D object file.
+   */
+  model_mesh: File;
+  /**
+   * Seed value used for generation.
+   */
+  seed: number;
+};
 export type HyperSdxlImageToImageInput = {
   /**
    * The URL of the image to use as a starting point for the generation.
@@ -10322,7 +10432,7 @@ export type IclightV2Input = {
    */
   num_images?: number;
   /**
-   * The number of images to generate. Default value: `1`
+   * The Default value: `1`
    */
   cfg?: number;
   /**
@@ -10339,7 +10449,7 @@ export type IclightV2Input = {
   hr_downscale?: number;
   /**
    * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
    */
   guidance_scale?: number;
   /**
@@ -10373,6 +10483,274 @@ export type IclightV2Output = {
    * The prompt used for generating the image.
    */
   prompt: string;
+};
+export type IdeogramV2EditInput = {
+  /**
+   * The prompt to fill the masked part of the image.
+   */
+  prompt: string;
+  /**
+   * The image URL to generate an image from. Needs to match the dimensions of the mask.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The mask URL to inpaint the image. Needs to match the dimensions of the input image.
+   */
+  mask_url: string | Blob | File;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+};
+export type IdeogramV2EditOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramV2Input = {
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   * The aspect ratio of the generated image Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "10:16"
+    | "16:10"
+    | "9:16"
+    | "16:9"
+    | "4:3"
+    | "3:4"
+    | "1:1"
+    | "1:3"
+    | "3:1"
+    | "3:2"
+    | "2:3";
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+  /**
+   * A negative prompt to avoid in the generated image Default value: `""`
+   */
+  negative_prompt?: string;
+};
+export type IdeogramV2Output = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramV2RemixInput = {
+  /**
+   * The prompt to remix the image with
+   */
+  prompt: string;
+  /**
+   * The image URL to remix
+   */
+  image_url: string | Blob | File;
+  /**
+   * The aspect ratio of the generated image Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "10:16"
+    | "16:10"
+    | "9:16"
+    | "16:9"
+    | "4:3"
+    | "3:4"
+    | "1:1"
+    | "1:3"
+    | "3:1"
+    | "3:2"
+    | "2:3";
+  /**
+   * Strength of the input image in the remix Default value: `0.8`
+   */
+  strength?: number;
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+};
+export type IdeogramV2RemixOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramV2TurboEditInput = {
+  /**
+   * The prompt to fill the masked part of the image.
+   */
+  prompt: string;
+  /**
+   * The image URL to generate an image from. Needs to match the dimensions of the mask.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The mask URL to inpaint the image. Needs to match the dimensions of the input image.
+   */
+  mask_url: string | Blob | File;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+};
+export type IdeogramV2TurboEditOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramV2TurboInput = {
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   * The aspect ratio of the generated image Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "10:16"
+    | "16:10"
+    | "9:16"
+    | "16:9"
+    | "4:3"
+    | "3:4"
+    | "1:1"
+    | "1:3"
+    | "3:1"
+    | "3:2"
+    | "2:3";
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+  /**
+   * A negative prompt to avoid in the generated image Default value: `""`
+   */
+  negative_prompt?: string;
+};
+export type IdeogramV2TurboOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramV2TurboRemixInput = {
+  /**
+   * The prompt to remix the image with
+   */
+  prompt: string;
+  /**
+   * The image URL to remix
+   */
+  image_url: string | Blob | File;
+  /**
+   * The aspect ratio of the generated image Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "10:16"
+    | "16:10"
+    | "9:16"
+    | "16:9"
+    | "4:3"
+    | "3:4"
+    | "1:1"
+    | "1:3"
+    | "3:1"
+    | "3:2"
+    | "2:3";
+  /**
+   * Strength of the input image in the remix Default value: `0.8`
+   */
+  strength?: number;
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
+};
+export type IdeogramV2TurboRemixOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
 };
 export type IllusionDiffusionInput = {
   /**
@@ -14910,6 +15288,38 @@ export type LumaDreamMachineOutput = {
    */
   video: File;
 };
+export type LumaPhotonFlashInput = {
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   * The aspect ratio of the generated video Default value: `"1:1"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:3" | "3:4" | "21:9" | "9:21";
+};
+export type LumaPhotonFlashOutput = {
+  /**
+   * The generated image
+   */
+  images: Array<File>;
+};
+export type LumaPhotonInput = {
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   * The aspect ratio of the generated video Default value: `"1:1"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:3" | "3:4" | "21:9" | "9:21";
+};
+export type LumaPhotonOutput = {
+  /**
+   * The generated image
+   */
+  images: Array<File>;
+};
 export type MarigoldDepthMapInput = {
   /**
    * Input image url.
@@ -16283,7 +16693,7 @@ export type RecraftV3Input = {
   /**
    * The ID of the custom style reference (optional)
    */
-  style_id?: string | null;
+  style_id?: string;
 };
 export type RecraftV3Output = {
   /**
@@ -16326,6 +16736,47 @@ export type RemeshingInput = {
    * Preserve UVs during remeshing Default value: `true`
    */
   preserve_uvs?: boolean;
+};
+export type RemixImageInput = {
+  /**
+   * The prompt to remix the image with
+   */
+  prompt: string;
+  /**
+   * The image URL to remix
+   */
+  image_url: string | Blob | File;
+  /**
+   * The aspect ratio of the generated image Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "10:16"
+    | "16:10"
+    | "9:16"
+    | "16:9"
+    | "4:3"
+    | "3:4"
+    | "1:1"
+    | "1:3"
+    | "3:1"
+    | "3:2"
+    | "2:3";
+  /**
+   * Strength of the input image in the remix Default value: `0.8`
+   */
+  strength?: number;
+  /**
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * The style of the generated image Default value: `"auto"`
+   */
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
 };
 export type RemoveBackgroundInput = {
   /**
@@ -16702,6 +17153,16 @@ export type Sam2ImageInput = {
    * Coordinates for boxes Default value: ``
    */
   box_prompts?: Array<BoxPrompt>;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type SAM2ImageInput = {
   /**
@@ -16716,6 +17177,16 @@ export type SAM2ImageInput = {
    * Coordinates for boxes Default value: ``
    */
   box_prompts?: Array<BoxPrompt>;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type Sam2ImageOutput = {
   /**
@@ -16804,6 +17275,84 @@ export type SamOutput = {
    * Image with SAM segmentation map
    */
   image: Image;
+};
+export type SanaInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want
+   * in the image. This could be colors, objects, scenery and even the small details
+   * (e.g. moustache, blurry, low resolution). Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The size of the generated image. Default value: `[object Object]`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `18`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+};
+export type SanaOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
 };
 export type SchnellReduxInput = {
   /**
@@ -17850,17 +18399,6 @@ export type StableDiffusionV35LargeInput = {
    */
   negative_prompt?: string;
   /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
    * The number of inference steps to perform. Default value: `28`
    */
   num_inference_steps?: number;
@@ -17892,6 +18430,30 @@ export type StableDiffusionV35LargeInput = {
    * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * ControlNet for inference.
+   */
+  controlnet?: ControlNet;
+  /**
+   * The size of the generated image. Defaults to landscape_4_3 if no controlnet has been passed, otherwise defaults to the size of the controlnet conditioning image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image. Default value: ``
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * IP-Adapter to use during inference.
+   */
+  ip_adapter?: IPAdapter;
 };
 export type StableDiffusionV35LargeOutput = {
   /**
@@ -19753,6 +20315,10 @@ export type EndpointTypeMap = {
     input: MinimaxVideoImageToVideoInput;
     output: MinimaxVideoImageToVideoOutput;
   };
+  "fal-ai/hyper3d/rodin": {
+    input: Hyper3dRodinInput;
+    output: Hyper3dRodinOutput;
+  };
   "fal-ai/aura-flow": {
     input: AuraFlowInput;
     output: AuraFlowOutput;
@@ -19776,6 +20342,10 @@ export type EndpointTypeMap = {
   "fal-ai/flux/schnell": {
     input: FluxSchnellInput;
     output: FluxSchnellOutput;
+  };
+  "fal-ai/flux-subject": {
+    input: FluxSubjectInput;
+    output: FluxSubjectOutput;
   };
   "fal-ai/flux/schnell/redux": {
     input: FluxSchnellReduxInput;
@@ -19825,6 +20395,10 @@ export type EndpointTypeMap = {
     input: FluxProNewInput;
     output: FluxProNewOutput;
   };
+  "fal-ai/sana": {
+    input: SanaInput;
+    output: SanaOutput;
+  };
   "fal-ai/omnigen-v1": {
     input: OmnigenV1Input;
     output: OmnigenV1Output;
@@ -19841,9 +20415,29 @@ export type EndpointTypeMap = {
     input: RecraftV3CreateStyleInput;
     output: RecraftV3CreateStyleOutput;
   };
-  "fal-ai/flux-realism": {
-    input: FluxRealismInput;
-    output: FluxRealismOutput;
+  "fal-ai/ideogram/v2": {
+    input: IdeogramV2Input;
+    output: IdeogramV2Output;
+  };
+  "fal-ai/ideogram/v2/edit": {
+    input: IdeogramV2EditInput;
+    output: IdeogramV2EditOutput;
+  };
+  "fal-ai/ideogram/v2/remix": {
+    input: IdeogramV2RemixInput;
+    output: IdeogramV2RemixOutput;
+  };
+  "fal-ai/ideogram/v2/turbo": {
+    input: IdeogramV2TurboInput;
+    output: IdeogramV2TurboOutput;
+  };
+  "fal-ai/ideogram/v2/turbo/edit": {
+    input: IdeogramV2TurboEditInput;
+    output: IdeogramV2TurboEditOutput;
+  };
+  "fal-ai/ideogram/v2/turbo/remix": {
+    input: IdeogramV2TurboRemixInput;
+    output: IdeogramV2TurboRemixOutput;
   };
   "fal-ai/flux-lora-fill": {
     input: FluxLoraFillInput;
@@ -19925,6 +20519,10 @@ export type EndpointTypeMap = {
     input: MochiV1Input;
     output: MochiV1Output;
   };
+  "fal-ai/hunyuan-video": {
+    input: HunyuanVideoInput;
+    output: HunyuanVideoOutput;
+  };
   "fal-ai/luma-dream-machine": {
     input: LumaDreamMachineInput;
     output: LumaDreamMachineOutput;
@@ -19932,6 +20530,14 @@ export type EndpointTypeMap = {
   "fal-ai/luma-dream-machine/image-to-video": {
     input: LumaDreamMachineImageToVideoInput;
     output: LumaDreamMachineImageToVideoOutput;
+  };
+  "fal-ai/luma-photon": {
+    input: LumaPhotonInput;
+    output: LumaPhotonOutput;
+  };
+  "fal-ai/luma-photon/flash": {
+    input: LumaPhotonFlashInput;
+    output: LumaPhotonFlashOutput;
   };
   "fal-ai/kling-video/v1/standard/text-to-video": {
     input: KlingVideoV1StandardTextToVideoInput;
