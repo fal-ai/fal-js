@@ -207,7 +207,7 @@ export interface QueueClient {
   result<Id extends EndpointType>(
     endpointId: Id,
     options: BaseQueueOptions,
-  ): Promise<Result<OutputType<EndpointType>>>;
+  ): Promise<Result<OutputType<Id>>>;
 
   /**
    * Cancels a request in the queue.
