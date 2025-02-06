@@ -1,8 +1,8 @@
-import { DEFAULT_PROXY_ROUTE, handleRequest } from "@fal-ai/server-proxy";
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyResultV2,
 } from "aws-lambda";
+import { DEFAULT_PROXY_ROUTE, handleRequest } from "./index";
 
 /**
  * The default API Gateway route for the fal.ai client proxy.
