@@ -319,7 +319,7 @@ export class FalStream<Input, Output> {
     const stopAsyncIterator = () => (running = false);
     this.on("error", stopAsyncIterator);
     this.on("done", stopAsyncIterator);
-    while (running) {
+    while (running || this.buffer.length > 0) {
       const data = this.buffer.shift();
       if (data) {
         yield data;
