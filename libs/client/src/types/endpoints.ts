@@ -1,33 +1,3 @@
-export type AmEnglishRequest = {
-  /**
-   *  Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * Voice ID for the desired voice. Default value: `"af_heart"`
-   */
-  voice?:
-    | "af_heart"
-    | "af_alloy"
-    | "af_aoede"
-    | "af_bella"
-    | "af_jessica"
-    | "af_kore"
-    | "af_nicole"
-    | "af_nova"
-    | "af_river"
-    | "af_sarah"
-    | "af_sky"
-    | "am_adam"
-    | "am_echo"
-    | "am_eric"
-    | "am_fenrir"
-    | "am_liam"
-    | "am_michael"
-    | "am_onyx"
-    | "am_puck"
-    | "am_santa";
-};
 export type Audio = {
   /**
    * Type of media (always 'audio') Default value: `"audio"`
@@ -100,12 +70,6 @@ export type AudioFile = {
    */
   duration: number;
 };
-export type AudioIsolationRequest = {
-  /**
-   * URL of the audio file to isolate voice from
-   */
-  audio_url: string | Blob | File;
-};
 export type AudioTrack = {
   /**
    * Audio codec used (e.g., 'aac', 'mp3')
@@ -123,48 +87,6 @@ export type AudioTrack = {
    * Audio bitrate in bits per second
    */
   bitrate: number;
-};
-export type Ben2InputImage = {
-  /**
-   * URL of image to be used for background removal
-   */
-  image_url: string | Blob | File;
-  /**
-   * Random seed for reproducible generation.
-   */
-  seed?: number;
-};
-export type Ben2InputVideo = {
-  /**
-   * URL of video to be used for background removal.
-   */
-  video_url: string | Blob | File;
-  /**
-   * Random seed for reproducible generation.
-   */
-  seed?: number;
-};
-export type Ben2OutputImage = {
-  /**
-   * The output image after background removal.
-   */
-  image: Image;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-};
-export type Ben2OutputVideo = {
-  /**
-   * The generated video file.
-   */
-  video: File;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
 };
 export type BoundingBox = {
   /**
@@ -194,16 +116,6 @@ export type BoundingBoxes = {
    */
   bboxes: Array<BoundingBox>;
 };
-export type BoundingBoxOutputWithLabels = {
-  /**
-   * Results from the model
-   */
-  results: BoundingBoxes;
-  /**
-   * Processed image
-   */
-  image?: Image;
-};
 export type BoxPrompt = {
   /**
    * X Min Coordinate of the box
@@ -226,34 +138,6 @@ export type BoxPrompt = {
    */
   frame_index?: number;
 };
-export type BrEnglishRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice:
-    | "bf_alice"
-    | "bf_emma"
-    | "bf_isabella"
-    | "bf_lily"
-    | "bm_daniel"
-    | "bm_fable"
-    | "bm_george"
-    | "bm_lewis";
-};
-export type BrPortugueseRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice: "pf_dora" | "pm_alex" | "pm_santa";
-};
 export type CameraControl = {
   /**
    * The type of camera movement
@@ -263,40 +147,6 @@ export type CameraControl = {
    * The value of the camera movement
    */
   movement_value: number;
-};
-export type CollectionToVideoRequest = {
-  /**
-   * List of images to use for video generation
-   */
-  images: Array<PikaImage>;
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-  /**
-   * A negative prompt to guide the model Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:5" | "5:4" | "3:2" | "2:3";
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "720p" | "1080p";
-  /**
-   * The duration of the generated video in seconds Default value: `5`
-   */
-  duration?: number;
-  /**
-   * Mode for integrating multiple images Default value: `"creative"`
-   */
-  ingredients_mode?: "creative" | "precise";
 };
 export type Color = {
   /**
@@ -398,17 +248,6 @@ export type DiarizationSegment = {
    */
   speaker: string;
 };
-export type DocResInputDewarp = {
-  /**
-   * URL of image to be used for relighting
-   */
-  image_url: string | Blob | File;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-};
 export type DynamicMask = {
   /**
    * URL of the image for Dynamic Brush Application Area (Mask image created by users using the motion brush)
@@ -455,123 +294,6 @@ export type FaceDetection = {
    */
   sex?: string;
 };
-export type FastImageToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "360p" | "540p" | "720p";
-  /**
-   * Negative prompt to be used for the generation Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style of the generated video
-   */
-  style?: "anime" | "3d_animation" | "clay" | "comic" | "cyberpunk";
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
-   */
-  seed?: number;
-  /**
-   * URL of the image to use as the first frame
-   */
-  image_url: string | Blob | File;
-};
-export type FastTextToImageRequest = {
-  /**
-   * The prompt you would like to use to generate images.
-   */
-  prompt: string;
-  /**
-   * The negative prompt you would like to use to generate images. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * How many images you would like to generate. When using any Guidance Method, Value is set to 1. Default value: `4`
-   */
-  num_images?: number;
-  /**
-   * The aspect ratio of the image. When a guidance method is being used, the aspect ratio is defined by the guidance image and this parameter is ignored. Default value: `"1:1"`
-   */
-  aspect_ratio?:
-    | "1:1"
-    | "2:3"
-    | "3:2"
-    | "3:4"
-    | "4:3"
-    | "4:5"
-    | "5:4"
-    | "9:16"
-    | "16:9";
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The number of iterations the model goes through to refine the generated image. This parameter is optional. Default value: `8`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * When set to true, enhances the provided prompt by generating additional, more descriptive variations, resulting in more diverse and creative output images.
-   */
-  prompt_enhancement?: boolean;
-  /**
-   * Which medium should be included in your generated images. This parameter is optional.
-   */
-  medium?: "photography" | "art";
-  /**
-   * Guidance images to use for the generation. Up to 4 guidance methods can be combined during a single inference. Default value: ``
-   */
-  guidance?: Array<GuidanceInput>;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-};
-export type FastTextToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "360p" | "540p" | "720p";
-  /**
-   * Negative prompt to be used for the generation Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style of the generated video
-   */
-  style?: "anime" | "3d_animation" | "clay" | "comic" | "cyberpunk";
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
-   */
-  seed?: number;
-};
 export type File = {
   /**
    * The URL where the file can be downloaded from.
@@ -594,255 +316,11 @@ export type File = {
    */
   file_data?: string;
 };
-export type FluxProRedux = {
-  /**
-   * The prompt to generate an image from. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-};
-export type FluxProUltraTextToImageInputRedux = {
-  /**
-   * The prompt to generate an image from. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The aspect ratio of the generated image. Default value: `16:9`
-   */
-  aspect_ratio?:
-    | "21:9"
-    | "16:9"
-    | "4:3"
-    | "3:2"
-    | "1:1"
-    | "2:3"
-    | "3:4"
-    | "9:16"
-    | "9:21"
-    | string;
-  /**
-   * Generate less processed, more natural-looking images.
-   */
-  raw?: boolean;
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength of the image prompt, between 0 and 1. Default value: `0.1`
-   */
-  image_prompt_strength?: number;
-};
 export type Frame = {
   /**
    * URL of the frame
    */
   url: string;
-};
-export type FrenchRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice: "ff_siwis";
-};
-export type HindiRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice: "hf_alpha" | "hf_beta" | "hm_omega" | "hm_psi";
-};
-export type HunyuanT2VRequest = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The seed to use for generating the video.
-   */
-  seed?: number;
-  /**
-   * By default, generations are done with 35 steps. Pro mode does 55 steps which results in higher quality videos but will take more time and cost 2x more billing units.
-   */
-  pro_mode?: boolean;
-  /**
-   * The aspect ratio of the video to generate. Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16";
-  /**
-   * The resolution of the video to generate. Default value: `"720p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The number of frames to generate. Default value: `"129"`
-   */
-  num_frames?: "129" | "85";
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image. Default value: ``
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-};
-export type HunyuanV2VRequest = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The seed to use for generating the video.
-   */
-  seed?: number;
-  /**
-   * By default, generations are done with 35 steps. Pro mode does 55 steps which results in higher quality videos but will take more time and cost 2x more billing units.
-   */
-  pro_mode?: boolean;
-  /**
-   * The aspect ratio of the video to generate. Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16";
-  /**
-   * The resolution of the video to generate. Default value: `"720p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The number of frames to generate. Default value: `"129"`
-   */
-  num_frames?: "129" | "85";
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image. Default value: ``
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * URL of the video input.
-   */
-  video_url: string | Blob | File;
-  /**
-   * Strength for Video-to-Video Default value: `0.85`
-   */
-  strength?: number;
-};
-export type HunyuanVideoRequest = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The number of inference steps to run. Lower gets faster results, higher gets better results. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The seed to use for generating the video.
-   */
-  seed?: number;
-  /**
-   * By default, generations are done with 35 steps. Pro mode does 55 steps which results in higher quality videos but will take more time and cost 2x more billing units.
-   */
-  pro_mode?: boolean;
-  /**
-   * The aspect ratio of the video to generate. Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16";
-  /**
-   * The resolution of the video to generate. Default value: `"720p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The number of frames to generate. Default value: `"129"`
-   */
-  num_frames?: "129" | "85";
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
 };
 export type Image = {
   /**
@@ -902,89 +380,6 @@ export type ImageSize = {
    */
   height?: number;
 };
-export type ImageToVideoDirectorRequest = {
-  /**
-   * Text prompt for video generation. Camera movement instructions can be added using square brackets (e.g. [Pan left] or [Zoom in]). You can use up to 3 combined movements per prompt. Supported movements: Truck left/right, Pan left/right, Push in/Pull out, Pedestal up/down, Tilt up/down, Zoom in/out, Shake, Tracking shot, Static shot. For example: [Truck left, Pan right, Zoom in]. For a more detailed guide, refer https://sixth-switch-2ac.notion.site/T2V-01-Director-Model-Tutorial-with-camera-movement-1886c20a98eb80f395b8e05291ad8645
-   */
-  prompt: string;
-  /**
-   * URL of the image to use as the first frame
-   */
-  image_url: string | Blob | File;
-  /**
-   * Whether to use the model's prompt optimizer Default value: `true`
-   */
-  prompt_optimizer?: boolean;
-};
-export type ImageToVideoRequest = {
-  /**
-   * URL of the image to use as the first frame
-   */
-  image_url: string | Blob | File;
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-  /**
-   * A negative prompt to guide the model Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "720p" | "1080p";
-  /**
-   * The duration of the generated video in seconds Default value: `5`
-   */
-  duration?: number;
-};
-export type InputV2 = {
-  /**
-   * URL of the image to remove background from
-   */
-  image_url: string | Blob | File;
-  /**
-   * Model to use for background removal.
-   * The 'General Use (Light)' model is the original model used in the BiRefNet repository.
-   * The 'General Use (Light)' model is the original model used in the BiRefNet repository but trained with 2K images.
-   * The 'General Use (Heavy)' model is a slower but more accurate model.
-   * The 'Matting' model is a model trained specifically for matting images.
-   * The 'Portrait' model is a model trained specifically for portrait images.
-   * The 'General Use (Light)' model is recommended for most use cases.
-   *
-   * The corresponding models are as follows:
-   * - 'General Use (Light)': BiRefNet-DIS_ep580.pth
-   * - 'General Use (Heavy)': BiRefNet-massive-epoch_240.pth
-   * - 'Portrait': BiRefNet-portrait-TR_P3M_10k-epoch_120.pth Default value: `"General Use (Light)"`
-   */
-  model?:
-    | "General Use (Light)"
-    | "General Use (Light 2K)"
-    | "General Use (Heavy)"
-    | "Matting"
-    | "Portrait"
-    | "High Resolutions";
-  /**
-   * The resolution to operate on. The higher the resolution, the more accurate the output will be for high res input images. Default value: `"1024x1024"`
-   */
-  operating_resolution?: "1024x1024" | "2048x2048";
-  /**
-   * The format of the output image Default value: `"png"`
-   */
-  output_format?: "webp" | "png";
-  /**
-   * Whether to output the mask used to remove the background
-   */
-  output_mask?: boolean;
-  /**
-   * Whether to refine the foreground using the estimated mask Default value: `true`
-   */
-  refine_foreground?: boolean;
-};
 export type IPAdapter = {
   /**
    * URL of the image to be used as the IP adapter.
@@ -1031,26 +426,6 @@ export type IPAdapter = {
    */
   image_projection_shortcut?: boolean;
 };
-export type ItalianRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice: "if_sara" | "im_nicola";
-};
-export type JapaneseRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice: "jf_alpha" | "jf_gongitsune" | "jf_nezumi" | "jf_tebukuro" | "jm_kumo";
-};
 export type Keyframe = {
   /**
    * The timestamp in milliseconds where this keyframe starts
@@ -1080,24 +455,6 @@ export type LoraWeight = {
    */
   force?: boolean;
 };
-export type MandarinRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice:
-    | "zf_xiaobei"
-    | "zf_xiaoni"
-    | "zf_xiaoxiao"
-    | "zf_xiaoyi"
-    | "zm_yunjian"
-    | "zm_yunxi"
-    | "zm_yunxia"
-    | "zm_yunyang";
-};
 export type MoondreamInputParam = {
   /**
    * URL of the image to be processed
@@ -1108,37 +465,11 @@ export type MoondreamInputParam = {
    */
   prompt?: string;
 };
-export type NafnetInputDenoise = {
-  /**
-   * URL of image to be used for relighting
-   */
-  image_url: string | Blob | File;
-  /**
-   * seed to be used for generation
-   */
-  seed?: number;
-};
-export type NafnetOutputDenoise = {
-  /**
-   * The generated image file info.
-   */
-  image: Image;
-};
 export type OCRBoundingBox = {
   /**
    * List of quadrilateral boxes
    */
   quad_boxes: Array<OCRBoundingBoxSingle>;
-};
-export type OCRBoundingBoxOutputWithLabels = {
-  /**
-   * Results from the model
-   */
-  results: OCRBoundingBox;
-  /**
-   * Processed image
-   */
-  image?: Image;
 };
 export type OCRBoundingBoxSingle = {
   /**
@@ -1162,149 +493,11 @@ export type OCRBoundingBoxSingle = {
    */
   label: string;
 };
-export type Pika22ImageToVideoRequest = {
-  /**
-   * URL of the image to use as the first frame
-   */
-  image_url: string | Blob | File;
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-  /**
-   * A negative prompt to guide the model Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "720p" | "1080p";
-  /**
-   * The duration of the generated video in seconds Default value: `5`
-   */
-  duration?: number;
-};
-export type Pika22TextToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-  /**
-   * A negative prompt to guide the model Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:5" | "5:4" | "3:2" | "2:3";
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "720p" | "1080p";
-  /**
-   * The duration of the generated video in seconds Default value: `5`
-   */
-  duration?: number;
-};
-export type PikadditionsRequest = {
-  /**
-   * URL of the input video
-   */
-  video_url: string | Blob | File;
-  /**
-   * URL of the image to add
-   */
-  image_url: string | Blob | File;
-  /**
-   * Text prompt describing what to add
-   */
-  prompt?: string;
-  /**
-   * Negative prompt to guide the model
-   */
-  negative_prompt?: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-};
-export type PikaffectsRequest = {
-  /**
-   * URL of the input image
-   */
-  image_url: string | Blob | File;
-  /**
-   * The Pikaffect to apply
-   */
-  pikaffect:
-    | "Cake-ify"
-    | "Crumble"
-    | "Crush"
-    | "Decapitate"
-    | "Deflate"
-    | "Dissolve"
-    | "Explode"
-    | "Eye-pop"
-    | "Inflate"
-    | "Levitate"
-    | "Melt"
-    | "Peel"
-    | "Poke"
-    | "Squish"
-    | "Ta-da"
-    | "Tear";
-  /**
-   * Text prompt to guide the effect
-   */
-  prompt?: string;
-  /**
-   * Negative prompt to guide the model
-   */
-  negative_prompt?: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-};
 export type PikaImage = {
   /**
    *
    */
   image_url: string | Blob | File;
-};
-export type PikaswapsRequest = {
-  /**
-   * URL of the input video
-   */
-  video_url: string | Blob | File;
-  /**
-   * URL of the image to swap with
-   */
-  image_url?: string | Blob | File;
-  /**
-   * Plaintext description of the object/region to modify
-   */
-  modify_region?: string;
-  /**
-   * Text prompt describing the modification
-   */
-  prompt?: string;
-  /**
-   * Negative prompt to guide the model
-   */
-  negative_prompt?: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
 };
 export type PointPrompt = {
   /**
@@ -1334,113 +527,6 @@ export type Polygon = {
    */
   label: string;
 };
-export type PolygonOutputWithLabels = {
-  /**
-   * Results from the model
-   */
-  results: PolygonOutput;
-  /**
-   * Processed image
-   */
-  image?: Image;
-};
-export type ProImageToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   *
-   */
-  image_url: string | Blob | File;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   * URL of the image to be used for the end of the video Default value: `"false"`
-   */
-  tail_image_url?: string | Blob | File;
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-};
-export type Ray2ImageToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Initial image to start the video from. Can be used together with end_image_url.
-   */
-  image_url?: string | Blob | File;
-  /**
-   * Final image to end the video with. Can be used together with image_url.
-   */
-  end_image_url?: string | Blob | File;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "4:3" | "3:4" | "21:9" | "9:21";
-  /**
-   * Whether the video should loop (end of video is blended with the beginning)
-   */
-  loop?: boolean;
-  /**
-   * The resolution of the generated video (720p costs 2x more, 1080p costs 4x more) Default value: `"540p"`
-   */
-  resolution?: "540p" | "720p" | "1080p";
-  /**
-   * The duration of the generated video Default value: `"5s"`
-   */
-  duration?: "5s";
-};
-export type Ray2TextToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "4:3" | "3:4" | "21:9" | "9:21";
-  /**
-   * Whether the video should loop (end of video is blended with the beginning)
-   */
-  loop?: boolean;
-  /**
-   * The resolution of the generated video (720p costs 2x more, 1080p costs 4x more) Default value: `"540p"`
-   */
-  resolution?: "540p" | "720p" | "1080p";
-  /**
-   * The duration of the generated video (9s costs 2x more) Default value: `"5s"`
-   */
-  duration?: "5s" | "9s";
-};
-export type RecoverUpscaleRequest = {
-  /**
-   * URL of the low-quality video to upscale and recover
-   */
-  video_url: string | Blob | File;
-  /**
-   * Factor to upscale the video by (e.g. 2.0 doubles width and height) Default value: `2`
-   */
-  upscale_factor?: number;
-  /**
-   * Target FPS for the output video. Defaults to source FPS if not specified.
-   */
-  target_fps?: number;
-};
 export type ReferenceFace = {
   /**
    * URL of the reference face image
@@ -1452,28 +538,6 @@ export type ReferenceImage = {
    * URL to the reference image file (PNG format recommended)
    */
   image_url: string | Blob | File;
-};
-export type ReferenceToVideoRequest = {
-  /**
-   * Text prompt for video generation, max 1500 characters
-   */
-  prompt: string;
-  /**
-   * URLs of the reference images to use for consistent subject appearance
-   */
-  reference_image_urls: Array<string>;
-  /**
-   * Random seed for generation
-   */
-  seed?: number;
-  /**
-   * The aspect ratio of the output video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   * The movement amplitude of objects in the frame Default value: `"auto"`
-   */
-  movement_amplitude?: "auto" | "small" | "medium" | "large";
 };
 export type Region = {
   /**
@@ -1521,44 +585,6 @@ export type RGBColor = {
    */
   b?: number;
 };
-export type SlowMotionRequest = {
-  /**
-   * URL of the video to apply slow motion to
-   */
-  video_url: string | Blob | File;
-  /**
-   * Factor to slow down the video by (e.g. 4 means 4x slower) Default value: `4`
-   */
-  slowdown_factor?: number;
-  /**
-   * Optional factor to upscale the video by (e.g. 2.0 doubles width and height)
-   */
-  upscale_factor?: number;
-};
-export type SoundEffectRequest = {
-  /**
-   * The text describing the sound effect to generate
-   */
-  text: string;
-  /**
-   * Duration in seconds (0.5-22). If None, optimal duration will be determined from prompt.
-   */
-  duration_seconds?: number;
-  /**
-   * How closely to follow the prompt (0-1). Higher values mean less variation. Default value: `0.3`
-   */
-  prompt_influence?: number;
-};
-export type SpanishRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Voice ID for the desired voice.
-   */
-  voice: "ef_dora" | "em_alex" | "em_santa";
-};
 export type Speaker = {
   /**
    *
@@ -1572,247 +598,6 @@ export type Speaker = {
    *
    */
   audio_url: string | Blob | File;
-};
-export type SpeechToTextRequest = {
-  /**
-   * URL of the audio file to transcribe
-   */
-  audio_url: string | Blob | File;
-  /**
-   * Language code of the audio
-   */
-  language_code?: string;
-  /**
-   * Tag audio events like laughter, applause, etc. Default value: `true`
-   */
-  tag_audio_events?: boolean;
-  /**
-   * Whether to annotate who is speaking Default value: `true`
-   */
-  diarize?: boolean;
-};
-export type StartEndToVideoRequest = {
-  /**
-   * Text prompt for video generation, max 1500 characters
-   */
-  prompt: string;
-  /**
-   * URL of the image to use as the first frame
-   */
-  start_image_url: string | Blob | File;
-  /**
-   * URL of the image to use as the last frame
-   */
-  end_image_url: string | Blob | File;
-  /**
-   * Random seed for generation
-   */
-  seed?: number;
-  /**
-   * The movement amplitude of objects in the frame Default value: `"auto"`
-   */
-  movement_amplitude?: "auto" | "small" | "medium" | "large";
-};
-export type StrongAIUpscaleRequest = {
-  /**
-   * URL of the AI-generated video to upscale
-   */
-  video_url: string | Blob | File;
-  /**
-   * Target width of the output video Default value: `5120`
-   */
-  target_width?: number;
-  /**
-   * Target height of the output video Default value: `2880`
-   */
-  target_height?: number;
-  /**
-   * Target FPS for the output video. Defaults to source FPS if not specified.
-   */
-  target_fps?: number;
-};
-export type SubjectReferenceRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * URL of the subject reference image to use for consistent subject appearance
-   */
-  subject_reference_image_url: string | Blob | File;
-  /**
-   * Whether to use the model's prompt optimizer Default value: `true`
-   */
-  prompt_optimizer?: boolean;
-};
-export type TemplateToVideoRequest = {
-  /**
-   * AI video template to use. Pricing varies by template: Standard templates (hug, kiss, love_pose, etc.) cost 4 credits ($0.20), Premium templates (lunar_newyear, dynasty_dress, dreamy_wedding, etc.) cost 6 credits ($0.30), and Advanced templates (live_photo) cost 10 credits ($0.50). Default value: `"hug"`
-   */
-  template?:
-    | "dreamy_wedding"
-    | "romantic_lift"
-    | "sweet_proposal"
-    | "couple_arrival"
-    | "cupid_arrow"
-    | "pet_lovers"
-    | "lunar_newyear"
-    | "hug"
-    | "kiss"
-    | "dynasty_dress"
-    | "wish_sender"
-    | "love_pose"
-    | "hair_swap"
-    | "youth_rewind"
-    | "morphlab"
-    | "live_photo"
-    | "emotionlab"
-    | "live_memory"
-    | "interaction"
-    | "christmas";
-  /**
-   * URLs of the images to use with the template. Number of images required varies by template: 'dynasty_dress' and 'shop_frame' accept 1-2 images, 'wish_sender' requires exactly 3 images, all other templates accept only 1 image.
-   */
-  input_image_urls: Array<string>;
-  /**
-   * Text prompt for video generation, max 1500 characters
-   */
-  prompt: string;
-  /**
-   * Random seed for generation
-   */
-  seed?: number;
-  /**
-   * The aspect ratio of the output video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16";
-};
-export type TextToImageRequest = {
-  /**
-   * The prompt you would like to use to generate images.
-   */
-  prompt: string;
-  /**
-   * The negative prompt you would like to use to generate images. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * How many images you would like to generate. When using any Guidance Method, Value is set to 1. Default value: `4`
-   */
-  num_images?: number;
-  /**
-   * The aspect ratio of the image. When a guidance method is being used, the aspect ratio is defined by the guidance image and this parameter is ignored. Default value: `"1:1"`
-   */
-  aspect_ratio?:
-    | "1:1"
-    | "2:3"
-    | "3:2"
-    | "3:4"
-    | "4:3"
-    | "4:5"
-    | "5:4"
-    | "9:16"
-    | "16:9";
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The number of iterations the model goes through to refine the generated image. This parameter is optional. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * When set to true, enhances the provided prompt by generating additional, more descriptive variations, resulting in more diverse and creative output images.
-   */
-  prompt_enhancement?: boolean;
-  /**
-   * Which medium should be included in your generated images. This parameter is optional.
-   */
-  medium?: "photography" | "art";
-  /**
-   * Guidance images to use for the generation. Up to 4 guidance methods can be combined during a single inference. Default value: ``
-   */
-  guidance?: Array<GuidanceInput>;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-};
-export type TextToSpeechRequest = {
-  /**
-   * The text to convert to speech
-   */
-  text: string;
-  /**
-   * The voice to use for speech generation Default value: `"Rachel"`
-   */
-  voice?: string;
-  /**
-   * Voice stability (0-1) Default value: `0.5`
-   */
-  stability?: number;
-  /**
-   * Similarity boost (0-1) Default value: `0.75`
-   */
-  similarity_boost?: number;
-  /**
-   * Style exaggeration (0-1)
-   */
-  style?: number;
-};
-export type TextToVideoDirectorRequest = {
-  /**
-   * Text prompt for video generation. Camera movement instructions can be added using square brackets (e.g. [Pan left] or [Zoom in]). You can use up to 3 combined movements per prompt. Supported movements: Truck left/right, Pan left/right, Push in/Pull out, Pedestal up/down, Tilt up/down, Zoom in/out, Shake, Tracking shot, Static shot. For example: [Truck left, Pan right, Zoom in]. For a more detailed guide, refer https://sixth-switch-2ac.notion.site/T2V-01-Director-Model-Tutorial-with-camera-movement-1886c20a98eb80f395b8e05291ad8645
-   */
-  prompt: string;
-  /**
-   * Whether to use the model's prompt optimizer Default value: `true`
-   */
-  prompt_optimizer?: boolean;
-};
-export type TextToVideoLiveRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * Whether to use the model's prompt optimizer Default value: `true`
-   */
-  prompt_optimizer?: boolean;
-};
-export type TextToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-  /**
-   * A negative prompt to guide the model Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:5" | "5:4" | "3:2" | "2:3";
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "720p" | "1080p";
-  /**
-   * The duration of the generated video in seconds Default value: `5`
-   */
-  duration?: number;
 };
 export type Track = {
   /**
@@ -1869,80 +654,6 @@ export type Turn = {
    *
    */
   text: string;
-};
-export type V1ImageToVideoRequest = {
-  /**
-   * The prompt for the video
-   */
-  prompt: string;
-  /**
-   * URL of the image to be used for the video
-   */
-  image_url: string | Blob | File;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-  /**
-   * URL of the image to be used for the end of the video Default value: `"false"`
-   */
-  tail_image_url?: string | Blob | File;
-  /**
-   * URL of the image for Static Brush Application Area (Mask image created by users using the motion brush)
-   */
-  static_mask_url?: string | Blob | File;
-  /**
-   * List of dynamic masks
-   */
-  dynamic_masks?: Array<DynamicMask>;
-};
-export type V1TextToVideoRequest = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-  /**
-   * Camera control parameters
-   */
-  camera_control?:
-    | "down_back"
-    | "forward_up"
-    | "right_turn_forward"
-    | "left_turn_forward";
-  /**
-   * Advanced Camera control parameters
-   */
-  advanced_camera_control?: CameraControl;
 };
 export type Video = {
   /**
@@ -2014,24 +725,6 @@ export type Video = {
    */
   end_frame_url?: string | Blob | File;
 };
-export type VideoEffectsRequest = {
-  /**
-   * URL of images to be used for hug, kiss or heart_gesture video.
-   */
-  input_image_urls?: Array<string>;
-  /**
-   * URL of the image to be used for the squish and expansion video
-   */
-  image_url: string | Blob | File;
-  /**
-   * The effect scene to use for the video generation
-   */
-  effect_scene: "hug" | "kiss" | "heart_gesture" | "squish" | "expansion";
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-};
 export type VideoFormat = {
   /**
    * Container format of the video
@@ -2057,42 +750,6 @@ export type VideoFormat = {
    * Video bitrate in bits per second
    */
   bitrate: number;
-};
-export type WanProI2VRequest = {
-  /**
-   * The prompt to generate the video
-   */
-  prompt: string;
-  /**
-   * Whether to enable the safety checker Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The URL of the image to generate the video from
-   */
-  image_url: string | Blob | File;
-};
-export type WanProI2VResponse = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type WanProT2VRequest = {
-  /**
-   * The prompt to generate the video
-   */
-  prompt: string;
-  /**
-   * Whether to enable the safety checker Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type WanProT2VResponse = {
-  /**
-   * The generated video
-   */
-  video: File;
 };
 export type WhisperChunk = {
   /**
