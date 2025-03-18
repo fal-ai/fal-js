@@ -40,10 +40,17 @@ export interface FalClient {
   readonly streaming: StreamingClient;
 
   /**
-   * Runs a fal endpoints identified by its `endpointId`.
+   * Runs a fal endpoint identified by its `endpointId`.
    *
-   * @param endpointId the registered function revision id or alias.
-   * @returns the remote function output
+   * @param endpointId The endpoint id, e.g. `fal-ai/fast-sdxl`.
+   * @param options The request options, including the input payload.
+   * @returns A promise that resolves to the result of the request once it's completed.
+   *
+   * @note
+   * We **do not recommend** this use for most use cases as it will block the client
+   * until the response is received. Moreover, if the connection is closed before
+   * the response is received, the request will be lost. Instead, we recommend
+   * using the `subscribe` method for most use cases.
    */
   run<Id extends EndpointType>(
     endpointId: Id,
