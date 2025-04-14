@@ -62,23 +62,23 @@ export type Metrics = {
 interface BaseQueueStatus {
   status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED";
   request_id: string;
+  response_url: string;
+  status_url: string;
+  cancel_url: string;
 }
 
 export interface InQueueQueueStatus extends BaseQueueStatus {
   status: "IN_QUEUE";
   queue_position: number;
-  response_url: string;
 }
 
 export interface InProgressQueueStatus extends BaseQueueStatus {
   status: "IN_PROGRESS";
-  response_url: string;
   logs: RequestLog[];
 }
 
 export interface CompletedQueueStatus extends BaseQueueStatus {
   status: "COMPLETED";
-  response_url: string;
   logs: RequestLog[];
   metrics?: Metrics;
 }
