@@ -94,6 +94,7 @@ export class FalStream<Input, Output> {
   private currentData: Output | undefined = undefined;
   private lastEventTimestamp = 0;
   private streamClosed = false;
+  private _requestId: string | null = null;
   private donePromise: Promise<Output>;
 
   private abortController = new AbortController();
@@ -165,6 +166,7 @@ export class FalStream<Input, Output> {
           body: input && method !== "get" ? JSON.stringify(input) : undefined,
           signal: this.abortController.signal,
         });
+        this._requestId = response.headers.get("x-fal-request-id");
         return await this.handleResponse(response);
       }
       return await dispatchRequest({
@@ -176,7 +178,10 @@ export class FalStream<Input, Output> {
           headers: {
             accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
           },
-          responseHandler: this.handleResponse,
+          responseHandler: async (response) => {
+            this._requestId = response.headers.get("x-fal-request-id");
+            return await this.handleResponse(response);
+          },
           signal: this.abortController.signal,
         },
       });
@@ -367,6 +372,15 @@ export class FalStream<Input, Output> {
    */
   public get signal() {
     return this.abortController.signal;
+  }
+
+  /**
+   * Gets the request id of the streaming request.
+   *
+   * @returns the request id.
+   */
+  public get requestId() {
+    return this._requestId;
   }
 }
 
