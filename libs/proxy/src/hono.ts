@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { type StatusCode } from "hono/utils/http-status";
+import { type ContentfulStatusCode } from "hono/utils/http-status";
 import {
   handleRequest,
   HeaderValue,
@@ -35,7 +35,11 @@ export function createRouteHandler({
       id: "hono",
       method: context.req.method,
       respondWith: (status, data) => {
-        return context.json(data, status as StatusCode, responseHeaders);
+        return context.json(
+          data,
+          status as ContentfulStatusCode,
+          responseHeaders,
+        );
       },
       getHeaders: () => responseHeaders,
       getHeader: (name) => context.req.header(name),
