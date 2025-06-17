@@ -16,16 +16,35 @@ import { parseEndpointId } from "./utils";
 
 export type QueuePriority = "low" | "normal";
 export type QueueStatusSubscriptionOptions = QueueStatusOptions &
-  Omit<QueueSubscribeOptions, "onEnqueue" | "webhookUrl">;
+  QueueModeOptions &
+  Omit<QueueCommonSubscribeOptions, "onEnqueue" | "webhookUrl">;
 
 type TimeoutId = ReturnType<typeof setTimeout> | undefined;
 
 const DEFAULT_POLL_INTERVAL = 500;
 
-/**
- * Options for subscribing to the request queue.
- */
-export type QueueSubscribeOptions = {
+type QueueModeOptions =
+  | {
+      mode?: "polling";
+      /**
+       * The interval (in milliseconds) at which to poll for updates.
+       * If not provided, a default value of `500` will be used.
+       *
+       * This value is ignored if `mode` is set to `streaming`.
+       */
+      pollInterval?: number;
+    }
+  | {
+      mode: "streaming";
+
+      /**
+       * The connection mode to use for streaming updates. It defaults to `server`.
+       * Set to `client` if your server proxy doesn't support streaming.
+       */
+      connectionMode?: StreamingConnectionMode;
+    };
+
+type QueueCommonSubscribeOptions = {
   /**
    * The mode to use for subscribing to updates. It defaults to `polling`.
    * You can also use client-side streaming by setting it to `streaming`.
@@ -79,27 +98,13 @@ export type QueueSubscribeOptions = {
    * @see QueuePriority
    */
   priority?: QueuePriority;
-} & (
-  | {
-      mode?: "polling";
-      /**
-       * The interval (in milliseconds) at which to poll for updates.
-       * If not provided, a default value of `500` will be used.
-       *
-       * This value is ignored if `mode` is set to `streaming`.
-       */
-      pollInterval?: number;
-    }
-  | {
-      mode: "streaming";
+};
 
-      /**
-       * The connection mode to use for streaming updates. It defaults to `server`.
-       * Set to `client` if your server proxy doesn't support streaming.
-       */
-      connectionMode?: StreamingConnectionMode;
-    }
-);
+/**
+ * Options for subscribing to the request queue.
+ */
+export type QueueSubscribeOptions = QueueCommonSubscribeOptions &
+  QueueModeOptions;
 
 /**
  * Options for submitting a request to the queue.
