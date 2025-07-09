@@ -5,6 +5,7 @@ import {
 } from "./middleware";
 import type { ResponseHandler } from "./response";
 import { defaultResponseHandler } from "./response";
+import { DEFAULT_RETRY_OPTIONS, type RetryOptions } from "./retry";
 import { isBrowser } from "./runtime";
 
 export type CredentialsResolver = () => string | undefined;
@@ -59,6 +60,11 @@ export type Config = {
    * the global `fetch` function.
    */
   fetch?: FetchType;
+  /**
+   * Retry configuration for handling transient errors like rate limiting and server errors.
+   * When not specified, a default retry configuration is used.
+   */
+  retry?: Partial<RetryOptions>;
 };
 
 export type RequiredConfig = Required<Config>;
@@ -98,6 +104,7 @@ const DEFAULT_CONFIG: Partial<Config> = {
   suppressLocalCredentialsWarning: false,
   requestMiddleware: (request) => Promise.resolve(request),
   responseHandler: defaultResponseHandler,
+  retry: DEFAULT_RETRY_OPTIONS,
 };
 
 /**
@@ -110,6 +117,11 @@ export function createConfig(config: Config): RequiredConfig {
     ...DEFAULT_CONFIG,
     ...config,
     fetch: config.fetch ?? resolveDefaultFetch(),
+    // Merge retry configuration with defaults
+    retry: {
+      ...DEFAULT_RETRY_OPTIONS,
+      ...(config.retry || {}),
+    },
   } as RequiredConfig;
   if (config.proxyUrl) {
     configuration = {
