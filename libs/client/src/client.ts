@@ -3,35 +3,10 @@ import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
 import { createRealtimeClient, RealtimeClient } from "./realtime";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
-import { type RetryOptions } from "./retry";
 import { createStorageClient, StorageClient } from "./storage";
 import { createStreamingClient, StreamingClient } from "./streaming";
 import { EndpointType, InputType, OutputType } from "./types/client";
 import { Result, RunOptions } from "./types/common";
-
-// Rate limiting specific retry configuration for direct API calls
-const RATE_LIMIT_RETRY_CONFIG: Partial<RetryOptions> = {
-  maxRetries: 3,
-  baseDelay: 5000, // 5 seconds base delay for rate limiting
-  maxDelay: 60000, // 1 minute max delay
-  retryableStatusCodes: [429], // Only retry rate limits for direct API calls
-};
-
-// Server error retry configuration for direct API calls
-const SERVER_ERROR_RETRY_CONFIG: Partial<RetryOptions> = {
-  maxRetries: 2,
-  baseDelay: 1000,
-  maxDelay: 10000, // 10 seconds max delay
-  retryableStatusCodes: [500, 502, 503, 504], // Retry server errors
-};
-
-// Combined retry configuration for general API calls
-const API_RETRY_CONFIG: Partial<RetryOptions> = {
-  maxRetries: 3,
-  baseDelay: 2000,
-  maxDelay: 30000,
-  retryableStatusCodes: [429, 500, 502, 503, 504], // Retry both rate limits and server errors
-};
 
 /**
  * The main client type, it provides access to simple API model usage,
@@ -140,7 +115,11 @@ export function createFalClient(userConfig: Config = {}): FalClient {
         },
         options: {
           signal: options.abortSignal,
-          retry: API_RETRY_CONFIG, // Apply API-specific retry config
+          retry: {
+            maxRetries: 3,
+            baseDelay: 500,
+            maxDelay: 15000,
+          },
         },
       });
     },
