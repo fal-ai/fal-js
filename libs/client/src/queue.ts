@@ -1,6 +1,7 @@
 import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
+import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
 import { StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
 import { EndpointType, InputType, OutputType } from "./types/client";
@@ -121,6 +122,12 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * @see QueuePriority
    */
   priority?: QueuePriority;
+
+  /**
+   * A hint for the runner to use when processing the request.
+   * This will be sent as the `X-Fal-Runner-Hint` header.
+   */
+  hint?: string;
 };
 
 type BaseQueueOptions = {
@@ -149,6 +156,22 @@ export type QueueStatusStreamOptions = QueueStatusOptions & {
    * Set to `client` if your server proxy doesn't support streaming.
    */
   connectionMode?: StreamingConnectionMode;
+};
+
+// Queue operations benefit from more aggressive retry policies
+const QUEUE_RETRY_CONFIG: Partial<RetryOptions> = {
+  maxRetries: 3,
+  baseDelay: 1000,
+  maxDelay: 60000,
+  retryableStatusCodes: DEFAULT_RETRYABLE_STATUS_CODES,
+};
+
+// Status checking can be retried more aggressively since it's read-only
+const QUEUE_STATUS_RETRY_CONFIG: Partial<RetryOptions> = {
+  maxRetries: 5,
+  baseDelay: 1000,
+  maxDelay: 30000,
+  retryableStatusCodes: [...DEFAULT_RETRYABLE_STATUS_CODES, 500],
 };
 
 /**
@@ -240,7 +263,7 @@ export const createQueueClient = ({
       endpointId: string,
       options: SubmitOptions<Input>,
     ): Promise<InQueueQueueStatus> {
-      const { webhookUrl, priority, ...runOptions } = options;
+      const { webhookUrl, priority, hint, ...runOptions } = options;
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
@@ -253,11 +276,13 @@ export const createQueueClient = ({
         }),
         headers: {
           "x-fal-queue-priority": priority ?? "normal",
+          ...(hint && { "x-fal-runner-hint": hint }),
         },
         input: input as Input,
         config,
         options: {
           signal: options.abortSignal,
+          retry: QUEUE_RETRY_CONFIG,
         },
       });
     },
@@ -277,6 +302,7 @@ export const createQueueClient = ({
         config,
         options: {
           signal: abortSignal,
+          retry: QUEUE_STATUS_RETRY_CONFIG,
         },
       });
     },
@@ -433,6 +459,7 @@ export const createQueueClient = ({
         },
         options: {
           signal: abortSignal,
+          retry: QUEUE_STATUS_RETRY_CONFIG,
         },
       });
     },
@@ -452,6 +479,7 @@ export const createQueueClient = ({
         config,
         options: {
           signal: abortSignal,
+          retry: QUEUE_STATUS_RETRY_CONFIG,
         },
       });
     },
