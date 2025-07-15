@@ -111,3 +111,10 @@ export function isReact() {
 export function isPlainObject(value: any): boolean {
   return !!value && Object.getPrototypeOf(value) === Object.prototype;
 }
+
+/**
+ * Utility function to sleep for a given number of milliseconds
+ */
+export async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
