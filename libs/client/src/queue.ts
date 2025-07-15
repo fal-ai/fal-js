@@ -1,7 +1,7 @@
 import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
-import { type RetryOptions, DEFAULT_RETRYABLE_STATUS_CODES } from "./retry";
+import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
 import { StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
 import { EndpointType, InputType, OutputType } from "./types/client";
@@ -17,32 +17,35 @@ import { parseEndpointId } from "./utils";
 
 export type QueuePriority = "low" | "normal";
 export type QueueStatusSubscriptionOptions = QueueStatusOptions &
-  Omit<QueueSubscribeOptions, "onEnqueue" | "webhookUrl">;
+  QueueModeOptions &
+  Omit<QueueCommonSubscribeOptions, "onEnqueue" | "webhookUrl">;
 
 type TimeoutId = ReturnType<typeof setTimeout> | undefined;
 
 const DEFAULT_POLL_INTERVAL = 500;
 
-// Queue operations benefit from more aggressive retry policies
-const QUEUE_RETRY_CONFIG: Partial<RetryOptions> = {
-  maxRetries: 3,
-  baseDelay: 1000,
-  maxDelay: 60000,
-  retryableStatusCodes: DEFAULT_RETRYABLE_STATUS_CODES,
-};
+type QueueModeOptions =
+  | {
+      mode?: "polling";
+      /**
+       * The interval (in milliseconds) at which to poll for updates.
+       * If not provided, a default value of `500` will be used.
+       *
+       * This value is ignored if `mode` is set to `streaming`.
+       */
+      pollInterval?: number;
+    }
+  | {
+      mode: "streaming";
 
-// Status checking can be retried more aggressively since it's read-only
-const QUEUE_STATUS_RETRY_CONFIG: Partial<RetryOptions> = {
-  maxRetries: 5,
-  baseDelay: 1000,
-  maxDelay: 30000,
-  retryableStatusCodes: [...DEFAULT_RETRYABLE_STATUS_CODES, 500],
-};
+      /**
+       * The connection mode to use for streaming updates. It defaults to `server`.
+       * Set to `client` if your server proxy doesn't support streaming.
+       */
+      connectionMode?: StreamingConnectionMode;
+    };
 
-/**
- * Options for subscribing to the request queue.
- */
-export type QueueSubscribeOptions = {
+type QueueCommonSubscribeOptions = {
   /**
    * The mode to use for subscribing to updates. It defaults to `polling`.
    * You can also use client-side streaming by setting it to `streaming`.
@@ -96,27 +99,13 @@ export type QueueSubscribeOptions = {
    * @see QueuePriority
    */
   priority?: QueuePriority;
-} & (
-  | {
-      mode?: "polling";
-      /**
-       * The interval (in milliseconds) at which to poll for updates.
-       * If not provided, a default value of `500` will be used.
-       *
-       * This value is ignored if `mode` is set to `streaming`.
-       */
-      pollInterval?: number;
-    }
-  | {
-      mode: "streaming";
+};
 
-      /**
-       * The connection mode to use for streaming updates. It defaults to `server`.
-       * Set to `client` if your server proxy doesn't support streaming.
-       */
-      connectionMode?: StreamingConnectionMode;
-    }
-);
+/**
+ * Options for subscribing to the request queue.
+ */
+export type QueueSubscribeOptions = QueueCommonSubscribeOptions &
+  QueueModeOptions;
 
 /**
  * Options for submitting a request to the queue.
@@ -167,6 +156,22 @@ export type QueueStatusStreamOptions = QueueStatusOptions & {
    * Set to `client` if your server proxy doesn't support streaming.
    */
   connectionMode?: StreamingConnectionMode;
+};
+
+// Queue operations benefit from more aggressive retry policies
+const QUEUE_RETRY_CONFIG: Partial<RetryOptions> = {
+  maxRetries: 3,
+  baseDelay: 1000,
+  maxDelay: 60000,
+  retryableStatusCodes: DEFAULT_RETRYABLE_STATUS_CODES,
+};
+
+// Status checking can be retried more aggressively since it's read-only
+const QUEUE_STATUS_RETRY_CONFIG: Partial<RetryOptions> = {
+  maxRetries: 5,
+  baseDelay: 1000,
+  maxDelay: 30000,
+  retryableStatusCodes: [...DEFAULT_RETRYABLE_STATUS_CODES, 500],
 };
 
 /**
