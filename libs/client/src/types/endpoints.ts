@@ -3406,7 +3406,7 @@ export type BytedanceSeedanceV1ProImageToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -3446,7 +3446,7 @@ export type BytedanceSeedanceV1ProTextToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30573,7 +30573,7 @@ export type SeedanceImageToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30613,7 +30613,7 @@ export type SeedanceProImageToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30653,7 +30653,7 @@ export type SeedanceProTextToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30679,7 +30679,7 @@ export type SeedanceTextToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
