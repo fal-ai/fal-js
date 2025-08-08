@@ -46,15 +46,15 @@ export type Audio = {
 };
 export type AudioFile = {
   /**
-   *
+   * The URL where the file can be downloaded from.
    */
   url: string;
   /**
-   *  Default value: `"audio/wav"`
+   * The mime type of the file.
    */
   content_type?: string;
   /**
-   *  Default value: `"8535dd59e911496a947daa35c07e67a3_tmplkcy6tut.wav"`
+   * The name of the file. It will be auto-generated if not provided.
    */
   file_name?: string;
   /**
@@ -65,6 +65,10 @@ export type AudioFile = {
    * File data
    */
   file_data?: string;
+  /**
+   * The duration of the audio file in seconds.
+   */
+  duration: number;
 };
 export type AudioSetting = {
   /**
@@ -274,16 +278,6 @@ export type ControlNetUnion = {
    */
   controls: Array<ControlNetUnionInput>;
 };
-export type DiarizationSegment = {
-  /**
-   * Start and end timestamp of the segment
-   */
-  timestamp: Array<void>;
-  /**
-   * Speaker ID of the segment
-   */
-  speaker: string;
-};
 export type DynamicMask = {
   /**
    * URL of the image for Dynamic Brush Application Area (Mask image created by users using the motion brush)
@@ -311,16 +305,6 @@ export type EasyControlWeight = {
    * Control type of the image. Must be one of `spatial` or `subject`.
    */
   image_control_type: "subject" | "spatial";
-};
-export type Embedding = {
-  /**
-   * URL or the path to the embedding weights.
-   */
-  path: string;
-  /**
-   * The list of tokens to use for the embedding.
-   */
-  tokens?: Array<string>;
 };
 export type fal__toolkit__image__image__Image = {
   /**
@@ -369,40 +353,24 @@ export type File = {
    * The size of the file in bytes.
    */
   file_size?: number;
-  /**
-   * File data
-   */
-  file_data?: string;
 };
 export type Image = {
   /**
-   * The URL where the file can be downloaded from.
+   *
    */
   url: string;
   /**
-   * The mime type of the file.
+   *
+   */
+  width: number;
+  /**
+   *
+   */
+  height: number;
+  /**
+   *  Default value: `"image/jpeg"`
    */
   content_type?: string;
-  /**
-   * The name of the file. It will be auto-generated if not provided.
-   */
-  file_name?: string;
-  /**
-   * The size of the file in bytes.
-   */
-  file_size?: number;
-  /**
-   * File data
-   */
-  file_data?: string;
-  /**
-   * The width of the image in pixels.
-   */
-  width?: number;
-  /**
-   * The height of the image in pixels.
-   */
-  height?: number;
 };
 export type ImageCondition = {
   /**
@@ -417,24 +385,6 @@ export type ImageCondition = {
    * The strength of the condition. Default value: `1`
    */
   strength?: number;
-};
-export type ImagePrompt = {
-  /**
-   *  Default value: `"ImagePrompt"`
-   */
-  type?: "ImagePrompt" | "PyraCanny" | "CPDS" | "FaceSwap";
-  /**
-   *
-   */
-  image_url?: string | Blob | File;
-  /**
-   *  Default value: `0.5`
-   */
-  stop_at?: number;
-  /**
-   *  Default value: `1`
-   */
-  weight?: number;
 };
 export type ImageSize = {
   /**
@@ -504,7 +454,7 @@ export type Keyframe = {
 };
 export type LoraWeight = {
   /**
-   * URL or the path to the LoRA weights. Or HF model name.
+   * URL or the path to the LoRA weights.
    */
   path: string;
   /**
@@ -512,10 +462,6 @@ export type LoraWeight = {
    * before merging it with the base model. Default value: `1`
    */
   scale?: number;
-  /**
-   * If set to true, the embedding will be forced to be used.
-   */
-  force?: boolean;
 };
 export type LoRAWeight = {
   /**
@@ -530,6 +476,24 @@ export type LoRAWeight = {
    * Scale of the LoRA weight. This is a multiplier applied to the LoRA weight when loading it. Default value: `1`
    */
   scale?: number;
+};
+export type LoudnessNormalizationSetting = {
+  /**
+   * Enable loudness normalization for the audio Default value: `true`
+   */
+  enabled?: boolean;
+  /**
+   * Target loudness in LUFS (default -18.0) Default value: `-18`
+   */
+  target_loudness?: number;
+  /**
+   * Target loudness range in LU (default 8.0) Default value: `8`
+   */
+  target_range?: number;
+  /**
+   * Target peak level in dBTP (default -0.5). Default value: `-0.5`
+   */
+  target_peak?: number;
 };
 export type LoudnormSummary = {
   /**
@@ -602,24 +566,6 @@ export type PronunciationDict = {
    * List of pronunciation replacements in format ['text/(pronunciation)', ...]. For Chinese, tones are 1-5. Example: ['燕少飞/(yan4)(shao3)(fei1)']
    */
   tone_list?: Array<string>;
-};
-export type RawImage = {
-  /**
-   *
-   */
-  content: string;
-  /**
-   *
-   */
-  width: number;
-  /**
-   *
-   */
-  height: number;
-  /**
-   *  Default value: `"image/jpeg"`
-   */
-  content_type?: string;
 };
 export type ReferenceImage = {
   /**
@@ -895,20 +841,6 @@ export type VoiceSetting = {
    * Enables English text normalization to improve number reading performance, with a slight increase in latency
    */
   english_normalization?: boolean;
-};
-export type WhisperChunk = {
-  /**
-   * Start and end timestamp of the chunk
-   */
-  timestamp: Array<void>;
-  /**
-   * Transcription of the chunk
-   */
-  text: string;
-  /**
-   * Speaker ID of the chunk. Only present if diarization is enabled.
-   */
-  speaker?: string;
 };
 export type WordTime = {
   /**
@@ -1459,13 +1391,17 @@ export type AiAvatarInput = {
    */
   num_frames?: number;
   /**
+   * Resolution of the video to generate. Must be either 480p or 720p. Default value: `"480p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
    * Random seed for reproducibility. If None, a random seed is chosen. Default value: `42`
    */
   seed?: number;
   /**
-   * Whether to use turbo mode. Default value: `true`
+   * The acceleration level to use for generation. Default value: `"regular"`
    */
-  turbo?: boolean;
+  acceleration?: "none" | "regular" | "high";
 };
 export type AiAvatarMultiInput = {
   /**
@@ -1489,13 +1425,21 @@ export type AiAvatarMultiInput = {
    */
   num_frames?: number;
   /**
+   * Resolution of the video to generate. Must be either 480p or 720p. Default value: `"480p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
    * Random seed for reproducibility. If None, a random seed is chosen. Default value: `81`
    */
   seed?: number;
   /**
-   * Whether to use turbo mode. Default value: `true`
+   * Whether to use only the first audio file.
    */
-  turbo?: boolean;
+  use_only_first_audio?: boolean;
+  /**
+   * The acceleration level to use for generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type AiAvatarMultiOutput = {
   /**
@@ -1577,13 +1521,17 @@ export type AiAvatarMultiTextInput = {
    */
   num_frames?: number;
   /**
+   * Resolution of the video to generate. Must be either 480p or 720p. Default value: `"480p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
    * Random seed for reproducibility. If None, a random seed is chosen. Default value: `81`
    */
   seed?: number;
   /**
-   * Whether to use turbo mode. Default value: `true`
+   * The acceleration level to use for generation. Default value: `"regular"`
    */
-  turbo?: boolean;
+  acceleration?: "none" | "regular" | "high";
 };
 export type AiAvatarMultiTextOutput = {
   /**
@@ -1647,13 +1595,17 @@ export type AiAvatarSingleTextInput = {
    */
   num_frames?: number;
   /**
+   * Resolution of the video to generate. Must be either 480p or 720p. Default value: `"480p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
    * Random seed for reproducibility. If None, a random seed is chosen. Default value: `42`
    */
   seed?: number;
   /**
-   * Whether to use turbo mode. Default value: `true`
+   * The acceleration level to use for generation. Default value: `"regular"`
    */
-  turbo?: boolean;
+  acceleration?: "none" | "regular" | "high";
 };
 export type AiAvatarSingleTextOutput = {
   /**
@@ -1671,24 +1623,9 @@ export type AmEngOutput = {
    */
   audio: File;
 };
-export type AnyLlmVisionInput = {
+export type AnyLlmEnterpriseInput = {
   /**
-   * Name of the model to use. Premium models are charged at 3x the rate of standard models, they include: anthropic/claude-3-5-haiku, deepseek/deepseek-r1, google/gemini-pro-1.5, anthropic/claude-3.5-sonnet, anthropic/claude-3.7-sonnet, meta-llama/llama-3.2-90b-vision-instruct, openai/gpt-4o. Default value: `"google/gemini-flash-1.5"`
-   */
-  model?:
-    | "anthropic/claude-3.7-sonnet"
-    | "anthropic/claude-3.5-sonnet"
-    | "anthropic/claude-3-haiku"
-    | "google/gemini-pro-1.5"
-    | "google/gemini-flash-1.5"
-    | "google/gemini-flash-1.5-8b"
-    | "google/gemini-2.0-flash-001"
-    | "openai/gpt-4o"
-    | "meta-llama/llama-3.2-90b-vision-instruct"
-    | "meta-llama/llama-4-maverick"
-    | "meta-llama/llama-4-scout";
-  /**
-   * Prompt to be used for the image
+   * Prompt to be used for the chat completion
    */
   prompt: string;
   /**
@@ -1700,11 +1637,32 @@ export type AnyLlmVisionInput = {
    */
   reasoning?: boolean;
   /**
-   * URL of the image to be processed
+   * Name of the model to use. Premium models are charged at 10x the rate of standard models, they include: anthropic/claude-3.5-sonnet, meta-llama/llama-3.2-90b-vision-instruct, anthropic/claude-3.7-sonnet, openai/o3, openai/gpt-5-chat, anthropic/claude-3-5-haiku, google/gemini-pro-1.5, openai/gpt-4o. Default value: `"google/gemini-flash-1.5"`
    */
-  image_url: string | Blob | File;
+  model?:
+    | "anthropic/claude-3.7-sonnet"
+    | "anthropic/claude-3.5-sonnet"
+    | "anthropic/claude-3-5-haiku"
+    | "anthropic/claude-3-haiku"
+    | "google/gemini-pro-1.5"
+    | "google/gemini-flash-1.5"
+    | "google/gemini-flash-1.5-8b"
+    | "google/gemini-2.0-flash-001"
+    | "meta-llama/llama-3.2-1b-instruct"
+    | "meta-llama/llama-3.2-3b-instruct"
+    | "meta-llama/llama-3.1-8b-instruct"
+    | "meta-llama/llama-3.1-70b-instruct"
+    | "openai/gpt-oss-120b"
+    | "openai/gpt-4o-mini"
+    | "openai/gpt-4o"
+    | "openai/o3"
+    | "openai/gpt-5-chat"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | "meta-llama/llama-4-maverick"
+    | "meta-llama/llama-4-scout";
 };
-export type AnyLlmVisionOutput = {
+export type AnyLlmEnterpriseOutput = {
   /**
    * Generated output
    */
@@ -1768,9 +1726,13 @@ export type AudioInput = {
 };
 export type AudioOutput = {
   /**
-   * The generated audio.
+   * The generated audio file.
    */
   audio: File;
+  /**
+   * The prompt used to generate the audio.
+   */
+  prompt: string;
 };
 export type AuraFlowInput = {
   /**
@@ -1797,6 +1759,12 @@ export type AuraFlowInput = {
    * Whether to perform prompt expansion (recommended) Default value: `true`
    */
   expand_prompt?: boolean;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
 };
 export type AuraFlowOutput = {
   /**
@@ -1811,6 +1779,34 @@ export type AuraFlowOutput = {
    * The expanded prompt
    */
   prompt: string;
+};
+export type AuraSrInput = {
+  /**
+   * URL of the image to upscale.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Upscaling factor. More coming soon. Default value: `"4"`
+   */
+  upscaling_factor?: "4";
+  /**
+   * Whether to use overlapping tiles for upscaling. Setting this to true helps remove seams but doubles the inference time.
+   */
+  overlapping_tiles?: boolean;
+  /**
+   * Checkpoint to use for upscaling. More coming soon. Default value: `"v1"`
+   */
+  checkpoint?: "v1" | "v2";
+};
+export type AuraSrOutput = {
+  /**
+   * Upscaled image
+   */
+  image: Image;
+  /**
+   * Timings for each step in the pipeline.
+   */
+  timings: any;
 };
 export type AutoCaptionInput = {
   /**
@@ -2168,21 +2164,74 @@ export type BagelUnderstandOutput = {
    */
   timings: any;
 };
-export type BaseImageToInput = {
+export type BaseFlux1ImageToInput = {
   /**
    * The URL of the image to generate an image from.
    */
   image_url: string | Blob | File;
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
   /**
    * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
    */
   strength?: number;
   /**
    * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseFlux1Input = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
    */
   num_inference_steps?: number;
   /**
@@ -2210,19 +2259,23 @@ export type BaseImageToInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
-export type BaseInput = {
+export type BaseFlux1ReduxInput = {
   /**
-   * The prompt to generate the video from.
+   * The URL of the image to generate an image from.
    */
-  prompt: string;
+  image_url: string | Blob | File;
   /**
-   * The size of the generated video.
+   * The size of the generated image. Default value: `landscape_4_3`
    */
-  video_size?:
+  image_size?:
     | ImageSize
     | "square_hd"
     | "square"
@@ -2231,39 +2284,150 @@ export type BaseInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The negative prompt to generate video from Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The LoRAs to use for the image generation. We currently support one lora.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The number of inference steps to perform. Default value: `50`
+   * The number of inference steps to perform. Default value: `28`
    */
   num_inference_steps?: number;
   /**
    * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
+   * will output the same image every time.
    */
   seed?: number;
   /**
    * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related video to show you. Default value: `7`
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
    */
   guidance_scale?: number;
   /**
-   * Use RIFE for video interpolation Default value: `true`
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
    */
-  use_rife?: boolean;
+  sync_mode?: boolean;
   /**
-   * The target FPS of the video Default value: `16`
+   * The number of images to generate. Default value: `1`
    */
-  export_fps?: number;
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseImageToInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
+   */
+  strength?: number;
+  /**
+   * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type BaseKontextEditInput = {
   /**
    * The URL of the image to edit.
+   *
+   * Max width: 14142px, Max height: 14142px, Timeout: 20s
    */
   image_url: string | Blob | File;
   /**
@@ -2307,6 +2471,10 @@ export type BaseKontextEditInput = {
    * and they will be merged together to generate the final image.
    */
   loras?: Array<LoraWeight>;
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
   /**
    * Determines how the output resolution is set for image editing.
    * - `auto`: The model selects an optimal resolution from a predefined set that best matches the input image's aspect ratio. This is the recommended setting for most use cases as it's what the model was trained on.
@@ -2373,6 +2541,73 @@ export type BaseKontextImg2ImgInput = {
    * Output format Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKontextInpaintInput = {
+  /**
+   * The URL of the image to be inpainted.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The prompt for the image to image task.
+   */
+  prompt: string;
+  /**
+   * The number of inference steps to perform. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `2.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+  /**
+   * The URL of the reference image for inpainting.
+   */
+  reference_image_url: string | Blob | File;
+  /**
+   * The URL of the mask for inpainting.
+   */
+  mask_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.88`
+   */
+  strength?: number;
 };
 export type BaseKontextInput = {
   /**
@@ -2422,6 +2657,322 @@ export type BaseKontextInput = {
    * Output format Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKreaFlux1ImageToInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
+   */
+  strength?: number;
+  /**
+   * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKreaFlux1Input = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKreaFlux1ReduxInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKreaImageToInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
+   */
+  strength?: number;
+  /**
+   * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKreaInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type BaseKreaReduxInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type BaseReduxInput = {
   /**
@@ -2468,9 +3019,13 @@ export type BaseReduxInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type BaseTextToImageInput = {
   /**
@@ -2679,58 +3234,6 @@ export type BGReplaceOutput = {
    * Seed value used for generation.
    */
   seed: number;
-};
-export type BirefnetV2Input = {
-  /**
-   * URL of the image to remove background from
-   */
-  image_url: string | Blob | File;
-  /**
-   * Model to use for background removal.
-   * The 'General Use (Light)' model is the original model used in the BiRefNet repository.
-   * The 'General Use (Light)' model is the original model used in the BiRefNet repository but trained with 2K images.
-   * The 'General Use (Heavy)' model is a slower but more accurate model.
-   * The 'Matting' model is a model trained specifically for matting images.
-   * The 'Portrait' model is a model trained specifically for portrait images.
-   * The 'General Use (Light)' model is recommended for most use cases.
-   *
-   * The corresponding models are as follows:
-   * - 'General Use (Light)': BiRefNet-DIS_ep580.pth
-   * - 'General Use (Heavy)': BiRefNet-massive-epoch_240.pth
-   * - 'Portrait': BiRefNet-portrait-TR_P3M_10k-epoch_120.pth Default value: `"General Use (Light)"`
-   */
-  model?:
-    | "General Use (Light)"
-    | "General Use (Light 2K)"
-    | "General Use (Heavy)"
-    | "Matting"
-    | "Portrait";
-  /**
-   * The resolution to operate on. The higher the resolution, the more accurate the output will be for high res input images. Default value: `"1024x1024"`
-   */
-  operating_resolution?: "1024x1024" | "2048x2048";
-  /**
-   * The format of the output image Default value: `"png"`
-   */
-  output_format?: "webp" | "png";
-  /**
-   * Whether to output the mask used to remove the background
-   */
-  output_mask?: boolean;
-  /**
-   * Whether to refine the foreground using the estimated mask Default value: `true`
-   */
-  refine_foreground?: boolean;
-};
-export type BirefnetV2Output = {
-  /**
-   * Image with background removed
-   */
-  image: Image;
-  /**
-   * Mask used to remove the background
-   */
-  mask_image?: Image;
 };
 export type BlurInput = {
   /**
@@ -3318,6 +3821,65 @@ export type BrPortugeseOutput = {
    */
   audio: File;
 };
+export type BytedanceDreaminaV31TextToImageInput = {
+  /**
+   * The text prompt used to generate the image
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Width and height must be between 512 and 2048.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * Whether to use an LLM to enhance the prompt
+   */
+  enhance_prompt?: boolean;
+  /**
+   * Number of images to generate Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Random seed to control the stochasticity of image generation.
+   */
+  seed?: number;
+};
+export type BytedanceDreaminaV31TextToImageOutput = {
+  /**
+   * Generated images
+   */
+  images: Array<Image>;
+  /**
+   * Seed used for generation
+   */
+  seed: number;
+};
+export type BytedanceOmnihumanInput = {
+  /**
+   * The URL of the image used to generate the video
+   */
+  image_url: string | Blob | File;
+  /**
+   * The URL of the audio file to generate the video. Audio must be under 30s long.
+   */
+  audio_url: string | Blob | File;
+};
+export type BytedanceOmnihumanOutput = {
+  /**
+   * Generated video file
+   */
+  video: File;
+  /**
+   * Duration of audio input/video output as used for billing.
+   */
+  duration: number;
+};
 export type BytedanceSeedanceV1LiteImageToVideoInput = {
   /**
    * The text prompt used to generate the video
@@ -3330,7 +3892,7 @@ export type BytedanceSeedanceV1LiteImageToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -3366,7 +3928,7 @@ export type BytedanceSeedanceV1LiteTextToVideoInput = {
   /**
    * The aspect ratio of the generated video Default value: `"16:9"`
    */
-  aspect_ratio?: "16:9" | "4:3" | "1:1" | "9:21";
+  aspect_ratio?: "16:9" | "4:3" | "1:1" | "3:4" | "9:16" | "9:21";
   /**
    * Video resolution - 480p for faster generation, 720p for higher quality Default value: `"720p"`
    */
@@ -3374,7 +3936,7 @@ export type BytedanceSeedanceV1LiteTextToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -3400,13 +3962,13 @@ export type BytedanceSeedanceV1ProImageToVideoInput = {
    */
   prompt: string;
   /**
-   * Video resolution - 480p for faster generation, 1080p for higher quality Default value: `"1080p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for higher quality Default value: `"1080p"`
    */
-  resolution?: "480p" | "1080p";
+  resolution?: "480p" | "720p" | "1080p";
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -3440,13 +4002,13 @@ export type BytedanceSeedanceV1ProTextToVideoInput = {
    */
   aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
   /**
-   * Video resolution - 480p for faster generation, 1080p for higher quality Default value: `"1080p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for higher quality Default value: `"1080p"`
    */
-  resolution?: "480p" | "1080p";
+  resolution?: "480p" | "720p" | "1080p";
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -3533,25 +4095,68 @@ export type BytedanceSeedreamV3TextToImageOutput = {
    */
   seed: number;
 };
-export type CannyInput = {
+export type CalligrapherInput = {
   /**
-   * URL of the image to process
+   * Base64-encoded source image with drawn mask layers
    */
-  image_url: string | Blob | File;
+  source_image_url: string | Blob | File;
   /**
-   * Low threshold for the hysteresis procedure. Edges with a strength higher than the low threshold will appear in the output image, if there are strong edges nearby. Default value: `100`
+   * Base64-encoded mask image (optional if using auto_mask_generation)
    */
-  low_threshold?: number;
+  mask_image_url?: string | Blob | File;
   /**
-   * High threshold for the hysteresis procedure. Edges with a strength higher than the high threshold will always appear as edges in the output image. Default value: `200`
+   * Optional base64 reference image for style
    */
-  high_threshold?: number;
+  reference_image_url?: string | Blob | File;
+  /**
+   * Text prompt to inpaint or customize
+   */
+  prompt: string;
+  /**
+   * How many images to generate Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Target image size for generation
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * Guidance or strength scale for the model Default value: `1`
+   */
+  cfg_scale?: number;
+  /**
+   * Number of inference steps (1-100) Default value: `50`
+   */
+  num_inference_steps?: number;
+  /**
+   * Random seed for reproducibility
+   */
+  seed?: number;
+  /**
+   * Whether to prepend context reference to the input Default value: `true`
+   */
+  use_context?: boolean;
+  /**
+   * Whether to automatically generate mask from detected text
+   */
+  auto_mask_generation?: boolean;
+  /**
+   * Source text to replace (if empty, masks all detected text) Default value: `""`
+   */
+  source_text?: string;
 };
-export type CannyOutput = {
+export type CalligrapherOutput = {
   /**
-   * Image with edges detected using the Canny algorithm
+   *
    */
-  image: Image;
+  images: Array<Image>;
 };
 export type CartoonifyInput = {
   /**
@@ -3702,9 +4307,22 @@ export type ChainOfZoomOutput = {
 };
 export type ChatInput = {
   /**
-   * Name of the model to use. Premium models are charged at 10x the rate of standard models, they include: anthropic/claude-3-5-haiku, deepseek/deepseek-r1, google/gemini-pro-1.5, anthropic/claude-3.5-sonnet, anthropic/claude-3.7-sonnet, meta-llama/llama-3.2-90b-vision-instruct, openai/gpt-4o. Default value: `"google/gemini-flash-1.5"`
+   * Prompt to be used for the chat completion
+   */
+  prompt: string;
+  /**
+   * System prompt to provide context or instructions to the model
+   */
+  system_prompt?: string;
+  /**
+   * Should reasoning be the part of the final answer.
+   */
+  reasoning?: boolean;
+  /**
+   * Name of the model to use. Premium models are charged at 10x the rate of standard models, they include: anthropic/claude-3.5-sonnet, google/gemini-pro-1.5, meta-llama/llama-3.2-90b-vision-instruct, deepseek/deepseek-r1, openai/o3, openai/gpt-5-chat, anthropic/claude-3-5-haiku, anthropic/claude-3.7-sonnet, openai/gpt-4o. Default value: `"google/gemini-flash-1.5"`
    */
   model?:
+    | "deepseek/deepseek-r1"
     | "anthropic/claude-3.7-sonnet"
     | "anthropic/claude-3.5-sonnet"
     | "anthropic/claude-3-5-haiku"
@@ -3717,23 +4335,15 @@ export type ChatInput = {
     | "meta-llama/llama-3.2-3b-instruct"
     | "meta-llama/llama-3.1-8b-instruct"
     | "meta-llama/llama-3.1-70b-instruct"
+    | "openai/gpt-oss-120b"
     | "openai/gpt-4o-mini"
     | "openai/gpt-4o"
-    | "deepseek/deepseek-r1"
+    | "openai/o3"
+    | "openai/gpt-5-chat"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
     | "meta-llama/llama-4-maverick"
     | "meta-llama/llama-4-scout";
-  /**
-   * Prompt to be used for the chat completion
-   */
-  prompt: string;
-  /**
-   * System prompt to provide context or instructions to the model
-   */
-  system_prompt?: string;
-  /**
-   * Should reasoning be the part of the final answer.
-   */
-  reasoning?: boolean;
 };
 export type ChatterboxhdSpeechToSpeechInput = {
   /**
@@ -3901,6 +4511,66 @@ export type ChromaticAberrationOutput = {
    */
   images: Array<Image>;
 };
+export type ClarityUpscalerInput = {
+  /**
+   * The URL of the image to upscale.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The prompt to use for generating the image. Be as descriptive as possible for best results. Default value: `"masterpiece, best quality, highres"`
+   */
+  prompt?: string;
+  /**
+   * The upscale factor Default value: `2`
+   */
+  upscale_factor?: number;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want in the image. Default value: `"(worst quality, low quality, normal quality:2)"`
+   */
+  negative_prompt?: string;
+  /**
+   * The creativity of the model. The higher the creativity, the more the model will deviate from the prompt.
+   * Refers to the denoise strength of the sampling. Default value: `0.35`
+   */
+  creativity?: number;
+  /**
+   * The resemblance of the upscaled image to the original image. The higher the resemblance, the more the model will try to keep the original image.
+   * Refers to the strength of the ControlNet. Default value: `0.6`
+   */
+  resemblance?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
+   */
+  guidance_scale?: number;
+  /**
+   * The number of inference steps to perform. Default value: `18`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of Stable Diffusion
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * If set to false, the safety checker will be disabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+};
+export type ClarityUpscalerOutput = {
+  /**
+   * The URL of the generated image.
+   */
+  image: Image;
+  /**
+   * The seed used to generate the image.
+   */
+  seed: number;
+  /**
+   * The timings of the different steps in the workflow.
+   */
+  timings: any;
+};
 export type CodeformerInput = {
   /**
    * URL of image to be used for relighting
@@ -3941,76 +4611,6 @@ export type CodeformerOutput = {
    * input or the randomly generated that was used in case none was passed.
    */
   seed: number;
-};
-export type Cogvideox5bImageToVideoInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated video.
-   */
-  video_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The negative prompt to generate video from Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The LoRAs to use for the image generation. We currently support one lora.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The number of inference steps to perform. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related video to show you. Default value: `7`
-   */
-  guidance_scale?: number;
-  /**
-   * Use RIFE for video interpolation Default value: `true`
-   */
-  use_rife?: boolean;
-  /**
-   * The target FPS of the video Default value: `16`
-   */
-  export_fps?: number;
-  /**
-   * The URL to the image to generate the video from.
-   */
-  image_url: string | Blob | File;
-};
-export type Cogvideox5bImageToVideoOutput = {
-  /**
-   * The URL to the generated video
-   */
-  video: File;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated video. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * The prompt used for generating the video.
-   */
-  prompt: string;
 };
 export type Cogvideox5bInput = {
   /**
@@ -4060,80 +4660,6 @@ export type Cogvideox5bInput = {
   export_fps?: number;
 };
 export type Cogvideox5bOutput = {
-  /**
-   * The URL to the generated video
-   */
-  video: File;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated video. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * The prompt used for generating the video.
-   */
-  prompt: string;
-};
-export type Cogvideox5bVideoToVideoInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated video.
-   */
-  video_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The negative prompt to generate video from Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The LoRAs to use for the image generation. We currently support one lora.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The number of inference steps to perform. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related video to show you. Default value: `7`
-   */
-  guidance_scale?: number;
-  /**
-   * Use RIFE for video interpolation Default value: `true`
-   */
-  use_rife?: boolean;
-  /**
-   * The target FPS of the video Default value: `16`
-   */
-  export_fps?: number;
-  /**
-   * The video to generate the video from.
-   */
-  video_url: string | Blob | File;
-  /**
-   * The strength to use for Video to Video.  1.0 completely remakes the video while 0.0 preserves the original. Default value: `0.8`
-   */
-  strength?: number;
-};
-export type Cogvideox5bVideoToVideoOutput = {
   /**
    * The URL to the generated video
    */
@@ -4383,70 +4909,6 @@ export type ControlNetUnionInput = {
    */
   end_percentage?: number;
 };
-export type ControlnextInput = {
-  /**
-   * URL of the reference image.
-   */
-  image_url: string | Blob | File;
-  /**
-   * URL of the input video.
-   */
-  video_url: string | Blob | File;
-  /**
-   * Height of the output video. Default value: `1024`
-   */
-  height?: number;
-  /**
-   * Width of the output video. Default value: `576`
-   */
-  width?: number;
-  /**
-   * Guidance scale for the diffusion process. Default value: `3`
-   */
-  guidance_scale?: number;
-  /**
-   * Number of inference steps. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * Maximum number of frames to process. Default value: `240`
-   */
-  max_frame_num?: number;
-  /**
-   * Number of frames to process in each batch. Default value: `24`
-   */
-  batch_frames?: number;
-  /**
-   * Number of overlapping frames between batches. Default value: `6`
-   */
-  overlap?: number;
-  /**
-   * Stride for sampling frames from the input video. Default value: `2`
-   */
-  sample_stride?: number;
-  /**
-   * Chunk size for decoding frames. Default value: `2`
-   */
-  decode_chunk_size?: number;
-  /**
-   * Motion bucket ID for the pipeline. Default value: `127`
-   */
-  motion_bucket_id?: number;
-  /**
-   * Frames per second for the output video. Default value: `7`
-   */
-  fps?: number;
-  /**
-   * Condition scale for ControlNeXt. Default value: `1`
-   */
-  controlnext_cond_scale?: number;
-};
-export type ControlnextOutput = {
-  /**
-   * The generated video.
-   */
-  video: File;
-};
 export type CreateVoiceInput = {
   /**
    * Voice name (required, max 255 characters).
@@ -4462,103 +4924,6 @@ export type CreateVoiceOutput = {
    * The S3 URI of the cloned voice.
    */
   voice: string;
-};
-export type CreativeUpscalerInput = {
-  /**
-   * The type of model to use for the upscaling. Default is SD_1_5 Default value: `"SD_1_5"`
-   */
-  model_type?: "SD_1_5" | "SDXL";
-  /**
-   * The image to upscale.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results. If no prompt is provide BLIP2 will be used to generate a prompt.
-   */
-  prompt?: string;
-  /**
-   * The scale of the output image. The higher the scale, the bigger the output image will be. Default value: `2`
-   */
-  scale?: number;
-  /**
-   * How much the output can deviate from the original Default value: `0.5`
-   */
-  creativity?: number;
-  /**
-   * How much detail to add Default value: `1`
-   */
-  detail?: number;
-  /**
-   * How much to preserve the shape of the original image Default value: `0.25`
-   */
-  shape_preservation?: number;
-  /**
-   * The suffix to add to the prompt. This is useful to add a common ending to all prompts such as 'high quality' etc or embedding tokens. Default value: `" high quality, highly detailed, high resolution, sharp"`
-   */
-  prompt_suffix?: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `"blurry, low resolution, bad, ugly, low quality, pixelated, interpolated, compression artifacts, noisey, grainy"`
-   */
-  negative_prompt?: string;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The number of inference steps to use for generating the image. The more steps
-   * the better the image will be but it will also take longer to generate. Default value: `20`
-   */
-  num_inference_steps?: number;
-  /**
-   * If set to true, the resulting image will be checked whether it includes any
-   * potentially unsafe content. If it does, it will be replaced with a black
-   * image. Default value: `true`
-   */
-  enable_safety_checks?: boolean;
-  /**
-   * If set to true, the image will not be processed by the CCSR model before
-   * being processed by the creativity model.
-   */
-  skip_ccsr?: boolean;
-  /**
-   * Allow for large uploads that could take a very long time.
-   */
-  override_size_limits?: boolean;
-  /**
-   * The URL to the base model to use for the upscaling
-   */
-  base_model_url?: string | Blob | File;
-  /**
-   * The URL to the additional LORA model to use for the upscaling. Default is None
-   */
-  additional_lora_url?: string | Blob | File;
-  /**
-   * The scale of the additional LORA model to use for the upscaling. Default is 1.0 Default value: `1`
-   */
-  additional_lora_scale?: number;
-  /**
-   * The URL to the additional embeddings to use for the upscaling. Default is None
-   */
-  additional_embedding_url?: string | Blob | File;
-};
-export type CreativeUpscalerOutput = {
-  /**
-   * The generated image file info.
-   */
-  image: Image;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
 };
 export type Csm1bInput = {
   /**
@@ -4589,18 +4954,6 @@ export type DdcolorInput = {
 export type DdcolorOutput = {
   /**
    * The generated image file info.
-   */
-  image: Image;
-};
-export type DepthAnythingV2Input = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type DepthAnythingV2Output = {
-  /**
-   * Image with depth map
    */
   image: Image;
 };
@@ -5028,6 +5381,37 @@ export type DifferentialDiffusionInput = {
    */
   scheduler?: "euler" | "dpmpp_2m";
   /**
+   * Negative prompt to steer the image generation away from unwanted features.
+   * By default, we will be using NAG for processing the negative prompt. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The scale for NAG. Higher values will result in a image that is more distant
+   * to the negative prompt. Default value: `3`
+   */
+  nag_scale?: number;
+  /**
+   * The tau for NAG. Controls the normalization of the hidden state.
+   * Higher values will result in a less aggressive normalization,
+   * but may also lead to unexpected changes with respect to the original image.
+   * Not recommended to change this value. Default value: `2.5`
+   */
+  nag_tau?: number;
+  /**
+   * The alpha value for NAG. This value is used as a final weighting
+   * factor for steering the normalized guidance (positive and negative prompts)
+   * in the direction of the positive prompt. Higher values will result in less
+   * steering on the normalized guidance where lower values will result in
+   * considering the positive prompt guidance more. Default value: `0.25`
+   */
+  nag_alpha?: number;
+  /**
+   * The proportion of steps to apply NAG. After the specified proportion
+   * of steps has been iterated, the remaining steps will use original
+   * attention processors in FLUX. Default value: `0.25`
+   */
+  nag_end?: number;
+  /**
    * URL of image to use as initial image.
    */
   image_url: string | Blob | File;
@@ -5124,19 +5508,19 @@ export type DistilledExtendVideoInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -5194,19 +5578,19 @@ export type DistilledImageToVideoInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -5264,19 +5648,19 @@ export type DistilledMultiConditioningVideoInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -5338,19 +5722,19 @@ export type DistilledTextToVideoInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -5469,6 +5853,45 @@ export type DrctSuperResolutionOutput = {
    */
   image: Image;
 };
+export type DreaminaInput = {
+  /**
+   * The text prompt used to generate the image
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Width and height must be between 512 and 2048.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * Whether to use an LLM to enhance the prompt
+   */
+  enhance_prompt?: boolean;
+  /**
+   * Number of images to generate Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Random seed to control the stochasticity of image generation.
+   */
+  seed?: number;
+};
+export type DreaminaOutput = {
+  /**
+   * Generated images
+   */
+  images: Array<Image>;
+  /**
+   * Seed used for generation
+   */
+  seed: number;
+};
 export type DreamoInput = {
   /**
    * The prompt to generate an image from.
@@ -5578,52 +6001,6 @@ export type DubbingInput = {
 export type DubbingOutput = {
   /**
    * The generated video with the lip sync.
-   */
-  video: File;
-};
-export type DwposeInput = {
-  /**
-   * URL of the image to be processed
-   */
-  image_url: string | Blob | File;
-  /**
-   * Mode of drawing the pose on the image. Options are: 'full-pose', 'body-pose', 'face-pose', 'hand-pose', 'face-hand-mask', 'face-mask', 'hand-mask'. Default value: `"body-pose"`
-   */
-  draw_mode?:
-    | "full-pose"
-    | "body-pose"
-    | "face-pose"
-    | "hand-pose"
-    | "face-hand-mask"
-    | "face-mask"
-    | "hand-mask";
-};
-export type DwposeOutput = {
-  /**
-   * The predicted pose image
-   */
-  image: Image;
-};
-export type DWPoseVideoInput = {
-  /**
-   * URL of video to be used for pose estimation
-   */
-  video_url: string | Blob | File;
-  /**
-   * Mode of drawing the pose on the video. Options are: 'full-pose', 'body-pose', 'face-pose', 'hand-pose', 'face-hand-mask', 'face-mask', 'hand-mask'. Default value: `"body-pose"`
-   */
-  draw_mode?:
-    | "full-pose"
-    | "body-pose"
-    | "face-pose"
-    | "hand-pose"
-    | "face-hand-mask"
-    | "face-mask"
-    | "hand-mask";
-};
-export type DWPoseVideoOutput = {
-  /**
-   * The output video with pose estimation.
    */
   video: File;
 };
@@ -5982,44 +6359,6 @@ export type EraserOutput = {
    */
   image: Image;
 };
-export type EsrganInput = {
-  /**
-   * Url to input image
-   */
-  image_url: string | Blob | File;
-  /**
-   * Rescaling factor Default value: `2`
-   */
-  scale?: number;
-  /**
-   * Tile size. Default is 0, that is no tile. When encountering the out-of-GPU-memory issue, please specify it, e.g., 400 or 200
-   */
-  tile?: number;
-  /**
-   * Upscaling a face
-   */
-  face?: boolean;
-  /**
-   * Model to use for upscaling Default value: `"RealESRGAN_x4plus"`
-   */
-  model?:
-    | "RealESRGAN_x4plus"
-    | "RealESRGAN_x2plus"
-    | "RealESRGAN_x4plus_anime_6B"
-    | "RealESRGAN_x4_v3"
-    | "RealESRGAN_x4_wdn_v3"
-    | "RealESRGAN_x4_anime_v3";
-  /**
-   * Output image format (png or jpeg) Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg";
-};
-export type EsrganOutput = {
-  /**
-   * Upscaled image
-   */
-  image: Image;
-};
 export type EvfSamInput = {
   /**
    * The prompt to generate segmentation from.
@@ -6131,6 +6470,40 @@ export type ExtendOutput = {
    */
   video: File;
 };
+export type ExtendVideoConditioningInput = {
+  /**
+   * URL of video to use as conditioning
+   */
+  video_url: string | Blob | File;
+  /**
+   * Frame number of the video from which the conditioning starts. Must be a multiple of 8.
+   */
+  start_frame_num?: number;
+  /**
+   * Strength of the conditioning. 0.0 means no conditioning, 1.0 means full conditioning. Default value: `1`
+   */
+  strength?: number;
+  /**
+   * Whether to limit the number of frames used from the video. If True, the `max_num_frames` parameter will be used to limit the number of frames.
+   */
+  limit_num_frames?: boolean;
+  /**
+   * Maximum number of frames to use from the video. If None, all frames will be used. Default value: `1441`
+   */
+  max_num_frames?: number;
+  /**
+   * Whether to resample the video to a specific FPS. If True, the `target_fps` parameter will be used to resample the video.
+   */
+  resample_fps?: boolean;
+  /**
+   * Target FPS to resample the video to. Only relevant if `resample_fps` is True. Default value: `24`
+   */
+  target_fps?: number;
+  /**
+   * Whether to reverse the video. This is useful for tasks where the video conditioning should be applied in reverse order.
+   */
+  reverse_video?: boolean;
+};
 export type ExtendVideoInput = {
   /**
    * Text prompt to guide generation
@@ -6175,38 +6548,6 @@ export type ExtendVideoOutput = {
    */
   seed: number;
 };
-export type F5TtsInput = {
-  /**
-   * The text to be converted to speech.
-   */
-  gen_text: string;
-  /**
-   * The URL of the reference audio file.
-   */
-  ref_audio_url: string | Blob | File;
-  /**
-   * The reference text to be used for TTS. If not provided, an ASR (Automatic Speech Recognition) model will be used to generate the reference text. Default value: `""`
-   */
-  ref_text?: string;
-  /**
-   * The name of the model to be used for TTS.
-   */
-  model_type: "F5-TTS" | "E2-TTS";
-  /**
-   * Whether to remove the silence from the audio file. Default value: `true`
-   */
-  remove_silence?: boolean;
-  /**
-   *
-   */
-  model_config?: any;
-};
-export type F5TtsOutput = {
-  /**
-   * The audio file containing the generated speech.
-   */
-  audio_url: AudioFile;
-};
 export type FaceEnhancementOutput = {
   /**
    *
@@ -6216,6 +6557,54 @@ export type FaceEnhancementOutput = {
    *
    */
   seed: number;
+};
+export type FashionPhotoshootInput = {
+  /**
+   * The garment image to be used for the fashion shoot.
+   */
+  garment_image: Image;
+  /**
+   * The user's face image used for the fashion shoot.
+   */
+  face_image: Image;
+  /**
+   * The model's gender for the fashion shoot.
+   */
+  gender: "male" | "female";
+  /**
+   * The body size for the fashion shoot. Default value: `"S"`
+   */
+  body_size?: "XS" | "S" | "M" | "L" | "XL";
+  /**
+   * Sets the location / background for the fashion shoot. Contact hello@easelapps.ai if you require additional options. Default value: `"park"`
+   */
+  location?: "park" | "city";
+};
+export type FashionPhotoshootOutput = {
+  /**
+   * The resulting image after the fashion shoot.
+   */
+  image: Image;
+};
+export type FashionTryonInput = {
+  /**
+   * The reference person full body image to try clothes on
+   */
+  full_body_image: Image;
+  /**
+   * The clothing item to try on the person
+   */
+  clothing_image: Image;
+  /**
+   * The model's gender for the try-on. Default value: `"female"`
+   */
+  gender?: "male" | "female";
+};
+export type FashionTryonOutput = {
+  /**
+   * The generated try-on result
+   */
+  image: Image;
 };
 export type FashnTryonV15Input = {
   /**
@@ -6325,317 +6714,23 @@ export type FashnTryonV16Output = {
    */
   images: Array<File>;
 };
-export type FastLightningSdxlInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `"4"`
-   */
-  num_inference_steps?: "1" | "2" | "4" | "8";
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The rescale factor for the CFG.
-   */
-  guidance_rescale?: number;
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-};
-export type FastLightningSdxlOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
+export type FastImageToVideoHailuo02Input = {
   /**
    *
    */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
   prompt: string;
-};
-export type FastSdxlImageToImageInput = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-  /**
-   * If set to true, the aspect ratio of the generated image will be preserved even
-   * if the image size is too large. However, if the image is not a multiple of 32
-   * in width or height, it will be resized to the nearest multiple of 32. By default,
-   * this snapping to the nearest multiple of 32 will not preserve the aspect ratio.
-   * Set crop_output to True, to crop the output to the proper aspect ratio
-   * after generating.
-   */
-  preserve_aspect_ratio?: boolean;
-  /**
-   * If set to true, the output cropped to the proper aspect ratio after generating.
-   */
-  crop_output?: boolean;
-};
-export type FastSdxlImageToImageOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
   /**
    *
    */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FastSVDImageInput = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
   image_url: string | Blob | File;
   /**
-   * The motion bucket id determines the motion of the generated video. The
-   * higher the number, the more motion there will be. Default value: `127`
+   * The duration of the video in seconds. 10 seconds videos are not supported for 1080p resolution. Default value: `"6"`
    */
-  motion_bucket_id?: number;
+  duration?: "6" | "10";
   /**
-   * The conditoning augmentation determines the amount of noise that will be
-   * added to the conditioning frame. The higher the number, the more noise
-   * there will be, and the less the video will look like the initial image.
-   * Increase it for more motion. Default value: `0.02`
+   * Whether to use the model's prompt optimizer Default value: `true`
    */
-  cond_aug?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The number of steps to run the model for. The higher the number the better
-   * the quality and longer it will take to generate. Default value: `20`
-   */
-  steps?: number;
-  /**
-   * Enabling [DeepCache](https://github.com/horseee/DeepCache) will make the execution
-   * faster, but might sometimes degrade overall quality. The higher the setting, the
-   * faster the execution will be, but the more quality might be lost. Default value: `"none"`
-   */
-  deep_cache?: "none" | "minimum" | "medium" | "high";
-  /**
-   * The FPS of the generated video. The higher the number, the faster the video will
-   * play. Total video length is 25 frames. Default value: `10`
-   */
-  fps?: number;
-};
-export type FastSvdTextToVideoInput = {
-  /**
-   * The prompt to use as a starting point for the generation.
-   */
-  prompt: string;
-  /**
-   * The motion bucket id determines the motion of the generated video. The
-   * higher the number, the more motion there will be. Default value: `127`
-   */
-  motion_bucket_id?: number;
-  /**
-   * The conditoning augmentation determines the amount of noise that will be
-   * added to the conditioning frame. The higher the number, the more noise
-   * there will be, and the less the video will look like the initial image.
-   * Increase it for more motion. Default value: `0.02`
-   */
-  cond_aug?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The number of steps to run the model for. The higher the number the better
-   * the quality and longer it will take to generate. Default value: `20`
-   */
-  steps?: number;
-  /**
-   * Enabling [DeepCache](https://github.com/horseee/DeepCache) will make the execution
-   * faster, but might sometimes degrade overall quality. The higher the setting, the
-   * faster the execution will be, but the more quality might be lost. Default value: `"none"`
-   */
-  deep_cache?: "none" | "minimum" | "medium" | "high";
-  /**
-   * The FPS of the generated video. The higher the number, the faster the video will
-   * play. Total video length is 25 frames. Default value: `10`
-   */
-  fps?: number;
-  /**
-   * The negative prompt to use as a starting point for the generation. Default value: `"unrealistic, saturated, high contrast, big nose, painting, drawing, sketch, cartoon, anime, manga, render, CG, 3d, watermark, signature, label"`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated video. Default value: `landscape_16_9`
-   */
-  video_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-};
-export type FastSvdTextToVideoOutput = {
-  /**
-   * The generated video file.
-   */
-  video: File;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
+  prompt_optimizer?: boolean;
 };
 export type FfmpegApiComposeInput = {
   /**
@@ -6800,6 +6895,166 @@ export type FfmpegApiWaveformOutput = {
    * Number of decimal places used in the waveform values
    */
   precision: number;
+};
+export type FILMImageInput = {
+  /**
+   * The URL of the first image to use as the starting point for interpolation.
+   */
+  start_image_url: string | Blob | File;
+  /**
+   * The URL of the second image to use as the ending point for interpolation.
+   */
+  end_image_url: string | Blob | File;
+  /**
+   * The type of output to generate; either individual images or a video. Default value: `"images"`
+   */
+  output_type?: "images" | "video";
+  /**
+   * The format of the output images. Only applicable if output_type is 'images'. Default value: `"jpeg"`
+   */
+  output_format?: "png" | "jpeg";
+  /**
+   * The number of frames to generate between the input images. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * Whether to include the start image in the output.
+   */
+  include_start?: boolean;
+  /**
+   * Whether to include the end image in the output.
+   */
+  include_end?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if output_type is 'video'. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the function will wait for images to be generated and uploaded before returning. This will increase the response time but ensures that the images are ready for use immediately without going through the CDN. Does not apply if output_type is 'video'.
+   */
+  sync_mode?: boolean;
+};
+export type FILMImageOutput = {
+  /**
+   * The generated frames as individual images.
+   */
+  images?: Array<Image>;
+  /**
+   * The generated video file, if output_type is 'video'.
+   */
+  video?: File;
+};
+export type FilmInput = {
+  /**
+   * The URL of the first image to use as the starting point for interpolation.
+   */
+  start_image_url: string | Blob | File;
+  /**
+   * The URL of the second image to use as the ending point for interpolation.
+   */
+  end_image_url: string | Blob | File;
+  /**
+   * The type of output to generate; either individual images or a video. Default value: `"images"`
+   */
+  output_type?: "images" | "video";
+  /**
+   * The format of the output images. Only applicable if output_type is 'images'. Default value: `"jpeg"`
+   */
+  output_format?: "png" | "jpeg";
+  /**
+   * The number of frames to generate between the input images. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * Whether to include the start image in the output.
+   */
+  include_start?: boolean;
+  /**
+   * Whether to include the end image in the output.
+   */
+  include_end?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if output_type is 'video'. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the function will wait for images to be generated and uploaded before returning. This will increase the response time but ensures that the images are ready for use immediately without going through the CDN. Does not apply if output_type is 'video'.
+   */
+  sync_mode?: boolean;
+};
+export type FilmOutput = {
+  /**
+   * The generated frames as individual images.
+   */
+  images?: Array<Image>;
+  /**
+   * The generated video file, if output_type is 'video'.
+   */
+  video?: File;
+};
+export type FilmVideoInput = {
+  /**
+   * The URL of the video to use for interpolation.
+   */
+  video_url: string | Blob | File;
+  /**
+   * The number of frames to generate between the input video frames. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * If True, the input video will be split into scenes before interpolation. This removes smear frames between scenes, but can result in false positives if the scene detection is not accurate. If False, the entire video will be treated as a single scene.
+   */
+  use_scene_detection?: boolean;
+  /**
+   * If True, the function will use the calculated FPS of the input video multiplied by the number of frames to determine the output FPS. If False, the passed FPS will be used. Default value: `true`
+   */
+  use_calculated_fps?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if use_calculated_fps is False. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the final frame will be looped back to the first frame to create a seamless loop. If False, the final frame will not loop back.
+   */
+  loop?: boolean;
+};
+export type FILMVideoInput = {
+  /**
+   * The URL of the video to use for interpolation.
+   */
+  video_url: string | Blob | File;
+  /**
+   * The number of frames to generate between the input video frames. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * If True, the input video will be split into scenes before interpolation. This removes smear frames between scenes, but can result in false positives if the scene detection is not accurate. If False, the entire video will be treated as a single scene.
+   */
+  use_scene_detection?: boolean;
+  /**
+   * If True, the function will use the calculated FPS of the input video multiplied by the number of frames to determine the output FPS. If False, the passed FPS will be used. Default value: `true`
+   */
+  use_calculated_fps?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if use_calculated_fps is False. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the final frame will be looped back to the first frame to create a seamless loop. If False, the final frame will not loop back.
+   */
+  loop?: boolean;
+};
+export type FilmVideoOutput = {
+  /**
+   * The generated video file with interpolated frames.
+   */
+  video: File;
+};
+export type FILMVideoOutput = {
+  /**
+   * The generated video file with interpolated frames.
+   */
+  video: File;
 };
 export type FinegrainEraserBboxInput = {
   /**
@@ -7088,10 +7343,6 @@ export type Flux1DevImageToImageInput = {
    */
   image_url: string | Blob | File;
   /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
    * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
    */
   strength?: number;
@@ -7099,6 +7350,10 @@ export type Flux1DevImageToImageInput = {
    * The number of inference steps to perform. Default value: `40`
    */
   num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
   /**
    * The same seed and the same prompt given to the same version of the model
    * will output the same image every time.
@@ -7124,9 +7379,13 @@ export type Flux1DevImageToImageInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type Flux1DevImageToImageOutput = {
   /**
@@ -7196,9 +7455,13 @@ export type Flux1DevInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type Flux1DevOutput = {
   /**
@@ -7268,9 +7531,13 @@ export type Flux1DevReduxInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type Flux1DevReduxOutput = {
   /**
@@ -7295,7 +7562,80 @@ export type Flux1DevReduxOutput = {
    */
   prompt: string;
 };
-export type Flux1SchnellInput = {
+export type Flux1KreaImageToImageInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
+   */
+  strength?: number;
+  /**
+   * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type Flux1KreaImageToImageOutput = {
+  /**
+   * The generated images.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type Flux1KreaInput = {
   /**
    * The prompt to generate an image from.
    */
@@ -7312,7 +7652,7 @@ export type Flux1SchnellInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The number of inference steps to perform. Default value: `4`
+   * The number of inference steps to perform. Default value: `28`
    */
   num_inference_steps?: number;
   /**
@@ -7320,6 +7660,11 @@ export type Flux1SchnellInput = {
    * will output the same image every time.
    */
   seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
   /**
    * If set to true, the function will wait for the image to be generated and uploaded
    * before returning the response. This will increase the latency of the function but
@@ -7335,9 +7680,165 @@ export type Flux1SchnellInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type Flux1KreaOutput = {
+  /**
+   * The generated images.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type Flux1KreaReduxInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type Flux1KreaReduxOutput = {
+  /**
+   * The generated images.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type Flux1SchnellInput = {
+  /**
+   * The number of inference steps to perform. Default value: `4`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type Flux1SchnellOutput = {
   /**
@@ -7368,6 +7869,10 @@ export type Flux1SchnellReduxInput = {
    */
   image_url: string | Blob | File;
   /**
+   * The number of inference steps to perform. Default value: `4`
+   */
+  num_inference_steps?: number;
+  /**
    * The size of the generated image. Default value: `landscape_4_3`
    */
   image_size?:
@@ -7378,10 +7883,6 @@ export type Flux1SchnellReduxInput = {
     | "portrait_16_9"
     | "landscape_4_3"
     | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `4`
-   */
-  num_inference_steps?: number;
   /**
    * The same seed and the same prompt given to the same version of the model
    * will output the same image every time.
@@ -7402,9 +7903,13 @@ export type Flux1SchnellReduxInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type Flux1SchnellReduxOutput = {
   /**
@@ -7790,6 +8295,79 @@ export type FluxControlLoraDepthOutput = {
    */
   prompt: string;
 };
+export type FluxDevImageToImageInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
+   */
+  strength?: number;
+  /**
+   * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type FluxDevImageToImageOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
 export type FluxDevInput = {
   /**
    * The prompt to generate an image from.
@@ -7835,640 +8413,15 @@ export type FluxDevInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type FluxDevOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxDevReduxInput = {
-  /**
-   * The URL of the image to generate an image from.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type FluxDevReduxOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxDifferentialDiffusionInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * URL of image to use as initial image.
-   */
-  image_url: string | Blob | File;
-  /**
-   * URL of change map.
-   */
-  change_map_image_url: string | Blob | File;
-  /**
-   * The strength to use for image-to-image. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type FluxDifferentialDiffusionOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxGeneralDifferentialDiffusionInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The LoRAs to use for the image generation which use a control image. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  control_loras?: Array<ControlLoraWeight>;
-  /**
-   * The controlnets to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnets?: Array<ControlNet>;
-  /**
-   * The controlnet unions to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnet_unions?: Array<ControlNetUnion>;
-  /**
-   * IP-Adapter to use for image generation.
-   */
-  ip_adapters?: Array<IPAdapter>;
-  /**
-   * EasyControl Inputs to use for image generation.
-   */
-  easycontrols?: Array<EasyControlWeight>;
-  /**
-   * Use an image input to influence the generation. Can be used to fill images in masked areas.
-   */
-  fill_image?: ImageFillInput;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  real_cfg_scale?: number;
-  /**
-   * Uses classical CFG as in SD1.5, SDXL, etc. Increases generation times and price when set to be true.
-   * If using XLabs IP-Adapter v1, this will be turned on!.
-   */
-  use_real_cfg?: boolean;
-  /**
-   * Uses CFG-zero init sampling as in https://arxiv.org/abs/2503.18886.
-   */
-  use_cfg_zero?: boolean;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * URL of Image for Reference-Only
-   */
-  reference_image_url?: string | Blob | File;
-  /**
-   * Strength of reference_only generation. Only used if a reference image is provided. Default value: `0.65`
-   */
-  reference_strength?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to bestarted.
-   */
-  reference_start?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to be ended. Default value: `1`
-   */
-  reference_end?: number;
-  /**
-   * Base shift for the scheduled timesteps Default value: `0.5`
-   */
-  base_shift?: number;
-  /**
-   * Max shift for the scheduled timesteps Default value: `1.15`
-   */
-  max_shift?: number;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * Specifies whether beta sigmas ought to be used.
-   */
-  use_beta_schedule?: boolean;
-  /**
-   * Sigmas schedule for the denoising process.
-   */
-  sigma_schedule?: "sgm_uniform";
-  /**
-   * Scheduler for the denoising process. Default value: `"euler"`
-   */
-  scheduler?: "euler" | "dpmpp_2m";
-  /**
-   * URL of image to use as initial image.
-   */
-  image_url: string | Blob | File;
-  /**
-   * URL of change map.
-   */
-  change_map_image_url: string | Blob | File;
-  /**
-   * The strength to use for differential diffusion. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-};
-export type FluxGeneralDifferentialDiffusionOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxGeneralImageToImageInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The LoRAs to use for the image generation which use a control image. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  control_loras?: Array<ControlLoraWeight>;
-  /**
-   * The controlnets to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnets?: Array<ControlNet>;
-  /**
-   * The controlnet unions to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnet_unions?: Array<ControlNetUnion>;
-  /**
-   * IP-Adapter to use for image generation.
-   */
-  ip_adapters?: Array<IPAdapter>;
-  /**
-   * EasyControl Inputs to use for image generation.
-   */
-  easycontrols?: Array<EasyControlWeight>;
-  /**
-   * Use an image input to influence the generation. Can be used to fill images in masked areas.
-   */
-  fill_image?: ImageFillInput;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  real_cfg_scale?: number;
-  /**
-   * Uses classical CFG as in SD1.5, SDXL, etc. Increases generation times and price when set to be true.
-   * If using XLabs IP-Adapter v1, this will be turned on!.
-   */
-  use_real_cfg?: boolean;
-  /**
-   * Uses CFG-zero init sampling as in https://arxiv.org/abs/2503.18886.
-   */
-  use_cfg_zero?: boolean;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * URL of Image for Reference-Only
-   */
-  reference_image_url?: string | Blob | File;
-  /**
-   * Strength of reference_only generation. Only used if a reference image is provided. Default value: `0.65`
-   */
-  reference_strength?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to bestarted.
-   */
-  reference_start?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to be ended. Default value: `1`
-   */
-  reference_end?: number;
-  /**
-   * Base shift for the scheduled timesteps Default value: `0.5`
-   */
-  base_shift?: number;
-  /**
-   * Max shift for the scheduled timesteps Default value: `1.15`
-   */
-  max_shift?: number;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * Specifies whether beta sigmas ought to be used.
-   */
-  use_beta_schedule?: boolean;
-  /**
-   * Sigmas schedule for the denoising process.
-   */
-  sigma_schedule?: "sgm_uniform";
-  /**
-   * Scheduler for the denoising process. Default value: `"euler"`
-   */
-  scheduler?: "euler" | "dpmpp_2m";
-  /**
-   * URL of image to use for inpainting. or img2img
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-};
-export type FluxGeneralImageToImageOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxGeneralInpaintingInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The LoRAs to use for the image generation which use a control image. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  control_loras?: Array<ControlLoraWeight>;
-  /**
-   * The controlnets to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnets?: Array<ControlNet>;
-  /**
-   * The controlnet unions to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnet_unions?: Array<ControlNetUnion>;
-  /**
-   * IP-Adapter to use for image generation.
-   */
-  ip_adapters?: Array<IPAdapter>;
-  /**
-   * EasyControl Inputs to use for image generation.
-   */
-  easycontrols?: Array<EasyControlWeight>;
-  /**
-   * Use an image input to influence the generation. Can be used to fill images in masked areas.
-   */
-  fill_image?: ImageFillInput;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  real_cfg_scale?: number;
-  /**
-   * Uses classical CFG as in SD1.5, SDXL, etc. Increases generation times and price when set to be true.
-   * If using XLabs IP-Adapter v1, this will be turned on!.
-   */
-  use_real_cfg?: boolean;
-  /**
-   * Uses CFG-zero init sampling as in https://arxiv.org/abs/2503.18886.
-   */
-  use_cfg_zero?: boolean;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * URL of Image for Reference-Only
-   */
-  reference_image_url?: string | Blob | File;
-  /**
-   * Strength of reference_only generation. Only used if a reference image is provided. Default value: `0.65`
-   */
-  reference_strength?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to bestarted.
-   */
-  reference_start?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to be ended. Default value: `1`
-   */
-  reference_end?: number;
-  /**
-   * Base shift for the scheduled timesteps Default value: `0.5`
-   */
-  base_shift?: number;
-  /**
-   * Max shift for the scheduled timesteps Default value: `1.15`
-   */
-  max_shift?: number;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * Specifies whether beta sigmas ought to be used.
-   */
-  use_beta_schedule?: boolean;
-  /**
-   * Sigmas schedule for the denoising process.
-   */
-  sigma_schedule?: "sgm_uniform";
-  /**
-   * Scheduler for the denoising process. Default value: `"euler"`
-   */
-  scheduler?: "euler" | "dpmpp_2m";
-  /**
-   * URL of image to use for inpainting. or img2img
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-  /**
-   * The mask to area to Inpaint in.
-   */
-  mask_url: string | Blob | File;
-};
-export type FluxGeneralInpaintingOutput = {
   /**
    * The generated image files info.
    */
@@ -8619,173 +8572,39 @@ export type FluxGeneralInput = {
    * Scheduler for the denoising process. Default value: `"euler"`
    */
   scheduler?: "euler" | "dpmpp_2m";
+  /**
+   * Negative prompt to steer the image generation away from unwanted features.
+   * By default, we will be using NAG for processing the negative prompt. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The scale for NAG. Higher values will result in a image that is more distant
+   * to the negative prompt. Default value: `3`
+   */
+  nag_scale?: number;
+  /**
+   * The tau for NAG. Controls the normalization of the hidden state.
+   * Higher values will result in a less aggressive normalization,
+   * but may also lead to unexpected changes with respect to the original image.
+   * Not recommended to change this value. Default value: `2.5`
+   */
+  nag_tau?: number;
+  /**
+   * The alpha value for NAG. This value is used as a final weighting
+   * factor for steering the normalized guidance (positive and negative prompts)
+   * in the direction of the positive prompt. Higher values will result in less
+   * steering on the normalized guidance where lower values will result in
+   * considering the positive prompt guidance more. Default value: `0.25`
+   */
+  nag_alpha?: number;
+  /**
+   * The proportion of steps to apply NAG. After the specified proportion
+   * of steps has been iterated, the remaining steps will use original
+   * attention processors in FLUX. Default value: `0.25`
+   */
+  nag_end?: number;
 };
 export type FluxGeneralOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxGeneralRfInversionInput = {
-  /**
-   * The prompt to edit the image with
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The LoRAs to use for the image generation which use a control image. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  control_loras?: Array<ControlLoraWeight>;
-  /**
-   * The controlnets to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnets?: Array<ControlNet>;
-  /**
-   * The controlnet unions to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnet_unions?: Array<ControlNetUnion>;
-  /**
-   * EasyControl Inputs to use for image generation.
-   */
-  easycontrols?: Array<EasyControlWeight>;
-  /**
-   * Use an image input to influence the generation. Can be used to fill images in masked areas.
-   */
-  fill_image?: ImageFillInput;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * Uses CFG-zero init sampling as in https://arxiv.org/abs/2503.18886.
-   */
-  use_cfg_zero?: boolean;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * URL of Image for Reference-Only
-   */
-  reference_image_url?: string | Blob | File;
-  /**
-   * Strength of reference_only generation. Only used if a reference image is provided. Default value: `0.65`
-   */
-  reference_strength?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to bestarted.
-   */
-  reference_start?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to be ended. Default value: `1`
-   */
-  reference_end?: number;
-  /**
-   * Base shift for the scheduled timesteps Default value: `0.5`
-   */
-  base_shift?: number;
-  /**
-   * Max shift for the scheduled timesteps Default value: `1.15`
-   */
-  max_shift?: number;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * Specifies whether beta sigmas ought to be used.
-   */
-  use_beta_schedule?: boolean;
-  /**
-   * Sigmas schedule for the denoising process.
-   */
-  sigma_schedule?: "sgm_uniform";
-  /**
-   * Scheduler for the denoising process. Default value: `"euler"`
-   */
-  scheduler?: "euler" | "dpmpp_2m";
-  /**
-   * URL of image to be edited
-   */
-  image_url: string | Blob | File;
-  /**
-   * The controller guidance (gamma) used in the creation of structured noise. Default value: `0.6`
-   */
-  controller_guidance_forward?: number;
-  /**
-   * The controller guidance (eta) used in the denoising process.Using values closer to 1 will result in an image closer to input. Default value: `0.75`
-   */
-  controller_guidance_reverse?: number;
-  /**
-   * Timestep to start guidance during reverse process.
-   */
-  reverse_guidance_start?: number;
-  /**
-   * Timestep to stop guidance during reverse process. Default value: `8`
-   */
-  reverse_guidance_end?: number;
-  /**
-   * Scheduler for applying reverse guidance. Default value: `"constant"`
-   */
-  reverse_guidance_schedule?:
-    | "constant"
-    | "linear_increase"
-    | "linear_decrease";
-};
-export type FluxGeneralRfInversionOutput = {
   /**
    * The generated image files info.
    */
@@ -8849,6 +8668,10 @@ export type FluxKontextDevInput = {
    * Output format Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
   /**
    * Determines how the output resolution is set for image editing.
    * - `auto`: The model selects an optimal resolution from a predefined set that best matches the input image's aspect ratio. This is the recommended setting for most use cases as it's what the model was trained on.
@@ -8944,9 +8767,9 @@ export type FluxKontextInput = {
    */
   image_url: string | Blob | File;
 };
-export type FluxKontextLoraImageToImageInput = {
+export type FluxKontextLoraInpaintInput = {
   /**
-   * The URL of the image for image-to-image.
+   * The URL of the image to be inpainted.
    */
   image_url: string | Blob | File;
   /**
@@ -8991,11 +8814,23 @@ export type FluxKontextLoraImageToImageInput = {
    */
   loras?: Array<LoraWeight>;
   /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+  /**
+   * The URL of the reference image for inpainting.
+   */
+  reference_image_url: string | Blob | File;
+  /**
+   * The URL of the mask for inpainting.
+   */
+  mask_url: string | Blob | File;
+  /**
    * The strength of the initial image. Higher strength values are better for this model. Default value: `0.88`
    */
   strength?: number;
 };
-export type FluxKontextLoraImageToImageOutput = {
+export type FluxKontextLoraInpaintOutput = {
   /**
    * The generated image files info.
    */
@@ -9021,6 +8856,8 @@ export type FluxKontextLoraImageToImageOutput = {
 export type FluxKontextLoraInput = {
   /**
    * The URL of the image to edit.
+   *
+   * Max width: 14142px, Max height: 14142px, Timeout: 20s
    */
   image_url: string | Blob | File;
   /**
@@ -9064,6 +8901,10 @@ export type FluxKontextLoraInput = {
    * and they will be merged together to generate the final image.
    */
   loras?: Array<LoraWeight>;
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
   /**
    * Determines how the output resolution is set for image editing.
    * - `auto`: The model selects an optimal resolution from a predefined set that best matches the input image's aspect ratio. This is the recommended setting for most use cases as it's what the model was trained on.
@@ -9161,6 +9002,10 @@ export type FluxKontextLoraTextToImageInput = {
    * and they will be merged together to generate the final image.
    */
   loras?: Array<LoraWeight>;
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type FluxKontextLoraTextToImageOutput = {
   /**
@@ -9308,6 +9153,606 @@ export type FluxKontextTrainerOutput = {
    */
   config_file: File;
 };
+export type FluxKreaImageToImageInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.95`
+   */
+  strength?: number;
+  /**
+   * The number of inference steps to perform. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type FluxKreaImageToImageOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type FluxKreaLoraImageToImageInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * URL of image to use for inpainting. or img2img
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
+   */
+  strength?: number;
+};
+export type FluxKreaLoraImageToImageOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaLoraInpaintingInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * URL of image to use for inpainting. or img2img
+   */
+  image_url: string | Blob | File;
+  /**
+   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
+   */
+  strength?: number;
+  /**
+   * The mask to area to Inpaint in.
+   */
+  mask_url: string | Blob | File;
+};
+export type FluxKreaLoraInpaintingOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaLoraInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+};
+export type FluxKreaLoraOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaLoraStreamInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+};
+export type FluxKreaLoraStreamOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaOutput = {
+  /**
+   * The generated images.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaReduxInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type FluxKreaReduxOutput = {
+  /**
+   * The generated images.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type FluxKreaTrainerInput = {
+  /**
+   * URL to zip archive with images. Try to use at least 4 images in general the more the better.
+   *
+   * In addition to images the archive can contain text files with captions. Each text file should have the same name as the image file it corresponds to.
+   */
+  images_data_url: string | Blob | File;
+  /**
+   * Trigger word to be used in the captions. If None, a trigger word will not be used.
+   * If no captions are provide the trigger_word will be used instead of captions. If captions are the trigger word will not be used.
+   */
+  trigger_word?: string;
+  /**
+   * If True segmentation masks will be used in the weight the training loss. For people a face mask is used if possible. Default value: `true`
+   */
+  create_masks?: boolean;
+  /**
+   * Number of steps to train the LoRA on.
+   */
+  steps?: number;
+  /**
+   * If True, the training will be for a style. This will deactivate segmentation, captioning and will use trigger word instead. Use the trigger word to specify the style.
+   */
+  is_style?: boolean;
+  /**
+   * Specifies whether the input data is already in a processed format. When set to False (default), the system expects raw input where image files and their corresponding caption files share the same name (e.g., 'photo.jpg' and 'photo.txt'). Set to True if your data is already in a preprocessed format.
+   */
+  is_input_format_already_preprocessed?: boolean;
+  /**
+   * The format of the archive. If not specified, the format will be inferred from the URL.
+   */
+  data_archive_format?: string;
+};
+export type FluxKreaTrainerOutput = {
+  /**
+   * URL to the trained diffusers lora weights.
+   */
+  diffusers_lora_file: File;
+  /**
+   * URL to the training configuration file.
+   */
+  config_file: File;
+  /**
+   * URL to the preprocessed images.
+   */
+  debug_preprocessed_output?: File;
+};
 export type FluxLoraCannyInput = {
   /**
    * The prompt to generate an image from.
@@ -9367,87 +9812,6 @@ export type FluxLoraCannyInput = {
   image_url: string | Blob | File;
 };
 export type FluxLoraCannyOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxLoraDepthInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * URL of image to use for depth input
-   */
-  image_url: string | Blob | File;
-};
-export type FluxLoraDepthOutput = {
   /**
    * The generated image files info.
    */
@@ -9592,180 +9956,6 @@ export type FluxLoraFillInput = {
   resize_to_original?: boolean;
 };
 export type FluxLoraFillOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxLoraImageToImageInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * URL of image to use for inpainting. or img2img
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-};
-export type FluxLoraImageToImageOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxLoraInpaintingInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * URL of image to use for inpainting. or img2img
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-  /**
-   * The mask to area to Inpaint in.
-   */
-  mask_url: string | Blob | File;
-};
-export type FluxLoraInpaintingOutput = {
   /**
    * The generated image files info.
    */
@@ -10580,6 +10770,80 @@ export type FluxProKontextMaxTextToImageOutput = {
    */
   prompt: string;
 };
+export type FluxProKontextMultiInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
+   */
+  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+  /**
+   * The aspect ratio of the generated image.
+   */
+  aspect_ratio?:
+    | "21:9"
+    | "16:9"
+    | "4:3"
+    | "3:2"
+    | "1:1"
+    | "2:3"
+    | "3:4"
+    | "9:16"
+    | "9:21";
+  /**
+   * Image prompt for the omni model.
+   */
+  image_urls: Array<string>;
+};
+export type FluxProKontextMultiOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<registry__image__fast_sdxl__models__Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
 export type FluxProKontextOutput = {
   /**
    * The generated image files info.
@@ -10651,78 +10915,6 @@ export type FluxProKontextTextToImageInput = {
     | "9:21";
 };
 export type FluxProKontextTextToImageOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<registry__image__fast_sdxl__models__Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxProNewInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-};
-export type FluxProNewOutput = {
   /**
    * The generated image files info.
    */
@@ -11173,82 +11365,6 @@ export type FluxProV11Output = {
    */
   prompt: string;
 };
-export type FluxProV11ReduxInput = {
-  /**
-   * The prompt to generate an image from. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-};
-export type FluxProV11ReduxOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<registry__image__fast_sdxl__models__Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
 export type FluxProV11UltraFinetunedInput = {
   /**
    * The prompt to generate an image from.
@@ -11385,88 +11501,6 @@ export type FluxProV11UltraInput = {
   raw?: boolean;
 };
 export type FluxProV11UltraOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<registry__image__fast_sdxl__models__Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxProV11UltraReduxInput = {
-  /**
-   * The prompt to generate an image from. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-  /**
-   * The aspect ratio of the generated image. Default value: `16:9`
-   */
-  aspect_ratio?:
-    | "21:9"
-    | "16:9"
-    | "4:3"
-    | "3:2"
-    | "1:1"
-    | "2:3"
-    | "3:4"
-    | "9:16"
-    | "9:21"
-    | string;
-  /**
-   * Generate less processed, more natural-looking images.
-   */
-  raw?: boolean;
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength of the image prompt, between 0 and 1. Default value: `0.1`
-   */
-  image_prompt_strength?: number;
-};
-export type FluxProV11UltraReduxOutput = {
   /**
    * The generated image files info.
    */
@@ -11883,303 +11917,16 @@ export type FluxProV1FillFinetunedOutput = {
    */
   prompt: string;
 };
-export type FluxProV1FillInput = {
-  /**
-   * The prompt to fill the masked part of the image.
-   */
-  prompt: string;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The mask URL to inpaint the image. Needs to match the dimensions of the input image.
-   */
-  mask_url: string | Blob | File;
-};
-export type FluxProV1FillOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<registry__image__fast_sdxl__models__Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxProV1ReduxInput = {
-  /**
-   * The prompt to generate an image from. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The safety tolerance level for the generated image. 1 being the most strict and 5 being the most permissive. Default value: `"2"`
-   */
-  safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-};
-export type FluxProV1ReduxOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<registry__image__fast_sdxl__models__Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxPulidInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * URL of image to use for inpainting.
-   */
-  reference_image_url: string | Blob | File;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `20`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
-   */
-  guidance_scale?: number;
-  /**
-   * The prompt to generate an image from. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of steps to start the CFG from.
-   */
-  start_step?: number;
-  /**
-   * The weight of the CFG loss. Default value: `1`
-   */
-  true_cfg?: number;
-  /**
-   * The weight of the ID loss. Default value: `1`
-   */
-  id_weight?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The maximum sequence length for the model. Default value: `"128"`
-   */
-  max_sequence_length?: "128" | "256" | "512";
-};
-export type FluxPulidOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type FluxSchnellInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `4`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type FluxSchnellOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
 export type FluxSchnellReduxInput = {
   /**
    * The URL of the image to generate an image from.
    */
   image_url: string | Blob | File;
   /**
+   * The number of inference steps to perform. Default value: `4`
+   */
+  num_inference_steps?: number;
+  /**
    * The size of the generated image. Default value: `landscape_4_3`
    */
   image_size?:
@@ -12190,10 +11937,6 @@ export type FluxSchnellReduxInput = {
     | "portrait_16_9"
     | "landscape_4_3"
     | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `4`
-   */
-  num_inference_steps?: number;
   /**
    * The same seed and the same prompt given to the same version of the model
    * will output the same image every time.
@@ -12214,9 +11957,13 @@ export type FluxSchnellReduxInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type FluxSchnellReduxOutput = {
   /**
@@ -12240,1624 +11987,6 @@ export type FluxSchnellReduxOutput = {
    * The prompt used for generating the image.
    */
   prompt: string;
-};
-export type FooocusImagePromptInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style to use.
-   */
-  styles?: Array<
-    | "Fooocus V2"
-    | "Fooocus Enhance"
-    | "Fooocus Sharp"
-    | "Fooocus Semi Realistic"
-    | "Fooocus Masterpiece"
-    | "Fooocus Photograph"
-    | "Fooocus Negative"
-    | "Fooocus Cinematic"
-    | "SAI 3D Model"
-    | "SAI Analog Film"
-    | "SAI Anime"
-    | "SAI Cinematic"
-    | "SAI Comic Book"
-    | "SAI Craft Clay"
-    | "SAI Digital Art"
-    | "SAI Enhance"
-    | "SAI Fantasy Art"
-    | "SAI Isometric"
-    | "SAI Line Art"
-    | "SAI Lowpoly"
-    | "SAI Neonpunk"
-    | "SAI Origami"
-    | "SAI Photographic"
-    | "SAI Pixel Art"
-    | "SAI Texture"
-    | "MRE Cinematic Dynamic"
-    | "MRE Spontaneous Picture"
-    | "MRE Artistic Vision"
-    | "MRE Dark Dream"
-    | "MRE Gloomy Art"
-    | "MRE Bad Dream"
-    | "MRE Underground"
-    | "MRE Surreal Painting"
-    | "MRE Dynamic Illustration"
-    | "MRE Undead Art"
-    | "MRE Elemental Art"
-    | "MRE Space Art"
-    | "MRE Ancient Illustration"
-    | "MRE Brave Art"
-    | "MRE Heroic Fantasy"
-    | "MRE Dark Cyberpunk"
-    | "MRE Lyrical Geometry"
-    | "MRE Sumi E Symbolic"
-    | "MRE Sumi E Detailed"
-    | "MRE Manga"
-    | "MRE Anime"
-    | "MRE Comic"
-    | "Ads Advertising"
-    | "Ads Automotive"
-    | "Ads Corporate"
-    | "Ads Fashion Editorial"
-    | "Ads Food Photography"
-    | "Ads Gourmet Food Photography"
-    | "Ads Luxury"
-    | "Ads Real Estate"
-    | "Ads Retail"
-    | "Artstyle Abstract"
-    | "Artstyle Abstract Expressionism"
-    | "Artstyle Art Deco"
-    | "Artstyle Art Nouveau"
-    | "Artstyle Constructivist"
-    | "Artstyle Cubist"
-    | "Artstyle Expressionist"
-    | "Artstyle Graffiti"
-    | "Artstyle Hyperrealism"
-    | "Artstyle Impressionist"
-    | "Artstyle Pointillism"
-    | "Artstyle Pop Art"
-    | "Artstyle Psychedelic"
-    | "Artstyle Renaissance"
-    | "Artstyle Steampunk"
-    | "Artstyle Surrealist"
-    | "Artstyle Typography"
-    | "Artstyle Watercolor"
-    | "Futuristic Biomechanical"
-    | "Futuristic Biomechanical Cyberpunk"
-    | "Futuristic Cybernetic"
-    | "Futuristic Cybernetic Robot"
-    | "Futuristic Cyberpunk Cityscape"
-    | "Futuristic Futuristic"
-    | "Futuristic Retro Cyberpunk"
-    | "Futuristic Retro Futurism"
-    | "Futuristic Sci Fi"
-    | "Futuristic Vaporwave"
-    | "Game Bubble Bobble"
-    | "Game Cyberpunk Game"
-    | "Game Fighting Game"
-    | "Game Gta"
-    | "Game Mario"
-    | "Game Minecraft"
-    | "Game Pokemon"
-    | "Game Retro Arcade"
-    | "Game Retro Game"
-    | "Game Rpg Fantasy Game"
-    | "Game Strategy Game"
-    | "Game Streetfighter"
-    | "Game Zelda"
-    | "Misc Architectural"
-    | "Misc Disco"
-    | "Misc Dreamscape"
-    | "Misc Dystopian"
-    | "Misc Fairy Tale"
-    | "Misc Gothic"
-    | "Misc Grunge"
-    | "Misc Horror"
-    | "Misc Kawaii"
-    | "Misc Lovecraftian"
-    | "Misc Macabre"
-    | "Misc Manga"
-    | "Misc Metropolis"
-    | "Misc Minimalist"
-    | "Misc Monochrome"
-    | "Misc Nautical"
-    | "Misc Space"
-    | "Misc Stained Glass"
-    | "Misc Techwear Fashion"
-    | "Misc Tribal"
-    | "Misc Zentangle"
-    | "Papercraft Collage"
-    | "Papercraft Flat Papercut"
-    | "Papercraft Kirigami"
-    | "Papercraft Paper Mache"
-    | "Papercraft Paper Quilling"
-    | "Papercraft Papercut Collage"
-    | "Papercraft Papercut Shadow Box"
-    | "Papercraft Stacked Papercut"
-    | "Papercraft Thick Layered Papercut"
-    | "Photo Alien"
-    | "Photo Film Noir"
-    | "Photo Glamour"
-    | "Photo Hdr"
-    | "Photo Iphone Photographic"
-    | "Photo Long Exposure"
-    | "Photo Neon Noir"
-    | "Photo Silhouette"
-    | "Photo Tilt Shift"
-    | "Cinematic Diva"
-    | "Abstract Expressionism"
-    | "Academia"
-    | "Action Figure"
-    | "Adorable 3D Character"
-    | "Adorable Kawaii"
-    | "Art Deco"
-    | "Art Nouveau"
-    | "Astral Aura"
-    | "Avant Garde"
-    | "Baroque"
-    | "Bauhaus Style Poster"
-    | "Blueprint Schematic Drawing"
-    | "Caricature"
-    | "Cel Shaded Art"
-    | "Character Design Sheet"
-    | "Classicism Art"
-    | "Color Field Painting"
-    | "Colored Pencil Art"
-    | "Conceptual Art"
-    | "Constructivism"
-    | "Cubism"
-    | "Dadaism"
-    | "Dark Fantasy"
-    | "Dark Moody Atmosphere"
-    | "Dmt Art Style"
-    | "Doodle Art"
-    | "Double Exposure"
-    | "Dripping Paint Splatter Art"
-    | "Expressionism"
-    | "Faded Polaroid Photo"
-    | "Fauvism"
-    | "Flat 2d Art"
-    | "Fortnite Art Style"
-    | "Futurism"
-    | "Glitchcore"
-    | "Glo Fi"
-    | "Googie Art Style"
-    | "Graffiti Art"
-    | "Harlem Renaissance Art"
-    | "High Fashion"
-    | "Idyllic"
-    | "Impressionism"
-    | "Infographic Drawing"
-    | "Ink Dripping Drawing"
-    | "Japanese Ink Drawing"
-    | "Knolling Photography"
-    | "Light Cheery Atmosphere"
-    | "Logo Design"
-    | "Luxurious Elegance"
-    | "Macro Photography"
-    | "Mandola Art"
-    | "Marker Drawing"
-    | "Medievalism"
-    | "Minimalism"
-    | "Neo Baroque"
-    | "Neo Byzantine"
-    | "Neo Futurism"
-    | "Neo Impressionism"
-    | "Neo Rococo"
-    | "Neoclassicism"
-    | "Op Art"
-    | "Ornate And Intricate"
-    | "Pencil Sketch Drawing"
-    | "Pop Art 2"
-    | "Rococo"
-    | "Silhouette Art"
-    | "Simple Vector Art"
-    | "Sketchup"
-    | "Steampunk 2"
-    | "Surrealism"
-    | "Suprematism"
-    | "Terragen"
-    | "Tranquil Relaxing Atmosphere"
-    | "Sticker Designs"
-    | "Vibrant Rim Light"
-    | "Volumetric Lighting"
-    | "Watercolor 2"
-    | "Whimsical And Playful"
-    | "Mk Chromolithography"
-    | "Mk Cross Processing Print"
-    | "Mk Dufaycolor Photograph"
-    | "Mk Herbarium"
-    | "Mk Punk Collage"
-    | "Mk Mosaic"
-    | "Mk Van Gogh"
-    | "Mk Coloring Book"
-    | "Mk Singer Sargent"
-    | "Mk Pollock"
-    | "Mk Basquiat"
-    | "Mk Andy Warhol"
-    | "Mk Halftone Print"
-    | "Mk Gond Painting"
-    | "Mk Albumen Print"
-    | "Mk Aquatint Print"
-    | "Mk Anthotype Print"
-    | "Mk Inuit Carving"
-    | "Mk Bromoil Print"
-    | "Mk Calotype Print"
-    | "Mk Color Sketchnote"
-    | "Mk Cibulak Porcelain"
-    | "Mk Alcohol Ink Art"
-    | "Mk One Line Art"
-    | "Mk Blacklight Paint"
-    | "Mk Carnival Glass"
-    | "Mk Cyanotype Print"
-    | "Mk Cross Stitching"
-    | "Mk Encaustic Paint"
-    | "Mk Embroidery"
-    | "Mk Gyotaku"
-    | "Mk Luminogram"
-    | "Mk Lite Brite Art"
-    | "Mk Mokume Gane"
-    | "Pebble Art"
-    | "Mk Palekh"
-    | "Mk Suminagashi"
-    | "Mk Scrimshaw"
-    | "Mk Shibori"
-    | "Mk Vitreous Enamel"
-    | "Mk Ukiyo E"
-    | "Mk Vintage Airline Poster"
-    | "Mk Vintage Travel Poster"
-    | "Mk Bauhaus Style"
-    | "Mk Afrofuturism"
-    | "Mk Atompunk"
-    | "Mk Constructivism"
-    | "Mk Chicano Art"
-    | "Mk De Stijl"
-    | "Mk Dayak Art"
-    | "Mk Fayum Portrait"
-    | "Mk Illuminated Manuscript"
-    | "Mk Kalighat Painting"
-    | "Mk Madhubani Painting"
-    | "Mk Pictorialism"
-    | "Mk Pichwai Painting"
-    | "Mk Patachitra Painting"
-    | "Mk Samoan Art Inspired"
-    | "Mk Tlingit Art"
-    | "Mk Adnate Style"
-    | "Mk Ron English Style"
-    | "Mk Shepard Fairey Style"
-  >;
-  /**
-   * You can choose Speed or Quality Default value: `"Extreme Speed"`
-   */
-  performance?: "Speed" | "Quality" | "Extreme Speed" | "Lightning";
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
-   */
-  guidance_scale?: number;
-  /**
-   * The sharpness of the generated image. Use it to control how sharp the generated
-   * image should be. Higher value means image and texture are sharper. Default value: `2`
-   */
-  sharpness?: number;
-  /**
-   * The size of the generated image. You can choose between some presets or
-   * custom height and width that **must be multiples of 8**. Default value: `"1024x1024"`
-   */
-  aspect_ratio?: string;
-  /**
-   * Number of images to generate in one request Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use up to 5 LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * Refiner (SDXL or SD 1.5) Default value: `"None"`
-   */
-  refiner_model?: "None" | "realisticVisionV60B1_v51VAE.safetensors";
-  /**
-   * Use 0.4 for SD1.5 realistic models; 0.667 for SD1.5 anime models
-   * 0.8 for XL-refiners; or any value for switching two SDXL models. Default value: `0.8`
-   */
-  refiner_switch?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   *
-   */
-  image_prompt_1: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_2?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_3?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_4?: ImagePrompt;
-  /**
-   * The image to use as a reference for inpainting.
-   */
-  inpaint_image_url?: string | Blob | File;
-  /**
-   * The image to use as a mask for the generated image.
-   */
-  mask_image_url?: string | Blob | File;
-  /**
-   * The mode to use for inpainting. Default value: `"Inpaint or Outpaint (default)"`
-   */
-  inpaint_mode?:
-    | "Inpaint or Outpaint (default)"
-    | "Improve Detail (face, hand, eyes, etc.)"
-    | "Modify Content (add objects, change background, etc.)";
-  /**
-   * Describe what you want to inpaint. Default value: `""`
-   */
-  inpaint_additional_prompt?: string;
-  /**
-   * The directions to outpaint.
-   */
-  outpaint_selections?: Array<"Left" | "Right" | "Top" | "Bottom">;
-  /**
-   * Mixing Image Prompt and Inpaint
-   */
-  mixing_image_prompt_and_inpaint?: boolean;
-  /**
-   * The image to upscale or vary.
-   */
-  uov_image_url?: string | Blob | File;
-  /**
-   * The method to use for upscaling or varying. Default value: `"Disabled"`
-   */
-  uov_method?:
-    | "Disabled"
-    | "Vary (Subtle)"
-    | "Vary (Strong)"
-    | "Upscale (1.5x)"
-    | "Upscale (2x)"
-    | "Upscale (Fast 2x)";
-  /**
-   * Mixing Image Prompt and Vary/Upscale
-   */
-  mixing_image_prompt_and_vary_upscale?: boolean;
-  /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type FooocusInpaintInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style to use.
-   */
-  styles?: Array<
-    | "Fooocus V2"
-    | "Fooocus Enhance"
-    | "Fooocus Sharp"
-    | "Fooocus Semi Realistic"
-    | "Fooocus Masterpiece"
-    | "Fooocus Photograph"
-    | "Fooocus Negative"
-    | "Fooocus Cinematic"
-    | "SAI 3D Model"
-    | "SAI Analog Film"
-    | "SAI Anime"
-    | "SAI Cinematic"
-    | "SAI Comic Book"
-    | "SAI Craft Clay"
-    | "SAI Digital Art"
-    | "SAI Enhance"
-    | "SAI Fantasy Art"
-    | "SAI Isometric"
-    | "SAI Line Art"
-    | "SAI Lowpoly"
-    | "SAI Neonpunk"
-    | "SAI Origami"
-    | "SAI Photographic"
-    | "SAI Pixel Art"
-    | "SAI Texture"
-    | "MRE Cinematic Dynamic"
-    | "MRE Spontaneous Picture"
-    | "MRE Artistic Vision"
-    | "MRE Dark Dream"
-    | "MRE Gloomy Art"
-    | "MRE Bad Dream"
-    | "MRE Underground"
-    | "MRE Surreal Painting"
-    | "MRE Dynamic Illustration"
-    | "MRE Undead Art"
-    | "MRE Elemental Art"
-    | "MRE Space Art"
-    | "MRE Ancient Illustration"
-    | "MRE Brave Art"
-    | "MRE Heroic Fantasy"
-    | "MRE Dark Cyberpunk"
-    | "MRE Lyrical Geometry"
-    | "MRE Sumi E Symbolic"
-    | "MRE Sumi E Detailed"
-    | "MRE Manga"
-    | "MRE Anime"
-    | "MRE Comic"
-    | "Ads Advertising"
-    | "Ads Automotive"
-    | "Ads Corporate"
-    | "Ads Fashion Editorial"
-    | "Ads Food Photography"
-    | "Ads Gourmet Food Photography"
-    | "Ads Luxury"
-    | "Ads Real Estate"
-    | "Ads Retail"
-    | "Artstyle Abstract"
-    | "Artstyle Abstract Expressionism"
-    | "Artstyle Art Deco"
-    | "Artstyle Art Nouveau"
-    | "Artstyle Constructivist"
-    | "Artstyle Cubist"
-    | "Artstyle Expressionist"
-    | "Artstyle Graffiti"
-    | "Artstyle Hyperrealism"
-    | "Artstyle Impressionist"
-    | "Artstyle Pointillism"
-    | "Artstyle Pop Art"
-    | "Artstyle Psychedelic"
-    | "Artstyle Renaissance"
-    | "Artstyle Steampunk"
-    | "Artstyle Surrealist"
-    | "Artstyle Typography"
-    | "Artstyle Watercolor"
-    | "Futuristic Biomechanical"
-    | "Futuristic Biomechanical Cyberpunk"
-    | "Futuristic Cybernetic"
-    | "Futuristic Cybernetic Robot"
-    | "Futuristic Cyberpunk Cityscape"
-    | "Futuristic Futuristic"
-    | "Futuristic Retro Cyberpunk"
-    | "Futuristic Retro Futurism"
-    | "Futuristic Sci Fi"
-    | "Futuristic Vaporwave"
-    | "Game Bubble Bobble"
-    | "Game Cyberpunk Game"
-    | "Game Fighting Game"
-    | "Game Gta"
-    | "Game Mario"
-    | "Game Minecraft"
-    | "Game Pokemon"
-    | "Game Retro Arcade"
-    | "Game Retro Game"
-    | "Game Rpg Fantasy Game"
-    | "Game Strategy Game"
-    | "Game Streetfighter"
-    | "Game Zelda"
-    | "Misc Architectural"
-    | "Misc Disco"
-    | "Misc Dreamscape"
-    | "Misc Dystopian"
-    | "Misc Fairy Tale"
-    | "Misc Gothic"
-    | "Misc Grunge"
-    | "Misc Horror"
-    | "Misc Kawaii"
-    | "Misc Lovecraftian"
-    | "Misc Macabre"
-    | "Misc Manga"
-    | "Misc Metropolis"
-    | "Misc Minimalist"
-    | "Misc Monochrome"
-    | "Misc Nautical"
-    | "Misc Space"
-    | "Misc Stained Glass"
-    | "Misc Techwear Fashion"
-    | "Misc Tribal"
-    | "Misc Zentangle"
-    | "Papercraft Collage"
-    | "Papercraft Flat Papercut"
-    | "Papercraft Kirigami"
-    | "Papercraft Paper Mache"
-    | "Papercraft Paper Quilling"
-    | "Papercraft Papercut Collage"
-    | "Papercraft Papercut Shadow Box"
-    | "Papercraft Stacked Papercut"
-    | "Papercraft Thick Layered Papercut"
-    | "Photo Alien"
-    | "Photo Film Noir"
-    | "Photo Glamour"
-    | "Photo Hdr"
-    | "Photo Iphone Photographic"
-    | "Photo Long Exposure"
-    | "Photo Neon Noir"
-    | "Photo Silhouette"
-    | "Photo Tilt Shift"
-    | "Cinematic Diva"
-    | "Abstract Expressionism"
-    | "Academia"
-    | "Action Figure"
-    | "Adorable 3D Character"
-    | "Adorable Kawaii"
-    | "Art Deco"
-    | "Art Nouveau"
-    | "Astral Aura"
-    | "Avant Garde"
-    | "Baroque"
-    | "Bauhaus Style Poster"
-    | "Blueprint Schematic Drawing"
-    | "Caricature"
-    | "Cel Shaded Art"
-    | "Character Design Sheet"
-    | "Classicism Art"
-    | "Color Field Painting"
-    | "Colored Pencil Art"
-    | "Conceptual Art"
-    | "Constructivism"
-    | "Cubism"
-    | "Dadaism"
-    | "Dark Fantasy"
-    | "Dark Moody Atmosphere"
-    | "Dmt Art Style"
-    | "Doodle Art"
-    | "Double Exposure"
-    | "Dripping Paint Splatter Art"
-    | "Expressionism"
-    | "Faded Polaroid Photo"
-    | "Fauvism"
-    | "Flat 2d Art"
-    | "Fortnite Art Style"
-    | "Futurism"
-    | "Glitchcore"
-    | "Glo Fi"
-    | "Googie Art Style"
-    | "Graffiti Art"
-    | "Harlem Renaissance Art"
-    | "High Fashion"
-    | "Idyllic"
-    | "Impressionism"
-    | "Infographic Drawing"
-    | "Ink Dripping Drawing"
-    | "Japanese Ink Drawing"
-    | "Knolling Photography"
-    | "Light Cheery Atmosphere"
-    | "Logo Design"
-    | "Luxurious Elegance"
-    | "Macro Photography"
-    | "Mandola Art"
-    | "Marker Drawing"
-    | "Medievalism"
-    | "Minimalism"
-    | "Neo Baroque"
-    | "Neo Byzantine"
-    | "Neo Futurism"
-    | "Neo Impressionism"
-    | "Neo Rococo"
-    | "Neoclassicism"
-    | "Op Art"
-    | "Ornate And Intricate"
-    | "Pencil Sketch Drawing"
-    | "Pop Art 2"
-    | "Rococo"
-    | "Silhouette Art"
-    | "Simple Vector Art"
-    | "Sketchup"
-    | "Steampunk 2"
-    | "Surrealism"
-    | "Suprematism"
-    | "Terragen"
-    | "Tranquil Relaxing Atmosphere"
-    | "Sticker Designs"
-    | "Vibrant Rim Light"
-    | "Volumetric Lighting"
-    | "Watercolor 2"
-    | "Whimsical And Playful"
-    | "Mk Chromolithography"
-    | "Mk Cross Processing Print"
-    | "Mk Dufaycolor Photograph"
-    | "Mk Herbarium"
-    | "Mk Punk Collage"
-    | "Mk Mosaic"
-    | "Mk Van Gogh"
-    | "Mk Coloring Book"
-    | "Mk Singer Sargent"
-    | "Mk Pollock"
-    | "Mk Basquiat"
-    | "Mk Andy Warhol"
-    | "Mk Halftone Print"
-    | "Mk Gond Painting"
-    | "Mk Albumen Print"
-    | "Mk Aquatint Print"
-    | "Mk Anthotype Print"
-    | "Mk Inuit Carving"
-    | "Mk Bromoil Print"
-    | "Mk Calotype Print"
-    | "Mk Color Sketchnote"
-    | "Mk Cibulak Porcelain"
-    | "Mk Alcohol Ink Art"
-    | "Mk One Line Art"
-    | "Mk Blacklight Paint"
-    | "Mk Carnival Glass"
-    | "Mk Cyanotype Print"
-    | "Mk Cross Stitching"
-    | "Mk Encaustic Paint"
-    | "Mk Embroidery"
-    | "Mk Gyotaku"
-    | "Mk Luminogram"
-    | "Mk Lite Brite Art"
-    | "Mk Mokume Gane"
-    | "Pebble Art"
-    | "Mk Palekh"
-    | "Mk Suminagashi"
-    | "Mk Scrimshaw"
-    | "Mk Shibori"
-    | "Mk Vitreous Enamel"
-    | "Mk Ukiyo E"
-    | "Mk Vintage Airline Poster"
-    | "Mk Vintage Travel Poster"
-    | "Mk Bauhaus Style"
-    | "Mk Afrofuturism"
-    | "Mk Atompunk"
-    | "Mk Constructivism"
-    | "Mk Chicano Art"
-    | "Mk De Stijl"
-    | "Mk Dayak Art"
-    | "Mk Fayum Portrait"
-    | "Mk Illuminated Manuscript"
-    | "Mk Kalighat Painting"
-    | "Mk Madhubani Painting"
-    | "Mk Pictorialism"
-    | "Mk Pichwai Painting"
-    | "Mk Patachitra Painting"
-    | "Mk Samoan Art Inspired"
-    | "Mk Tlingit Art"
-    | "Mk Adnate Style"
-    | "Mk Ron English Style"
-    | "Mk Shepard Fairey Style"
-  >;
-  /**
-   * You can choose Speed or Quality Default value: `"Extreme Speed"`
-   */
-  performance?: "Speed" | "Quality" | "Extreme Speed" | "Lightning";
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
-   */
-  guidance_scale?: number;
-  /**
-   * The sharpness of the generated image. Use it to control how sharp the generated
-   * image should be. Higher value means image and texture are sharper. Default value: `2`
-   */
-  sharpness?: number;
-  /**
-   * The size of the generated image. You can choose between some presets or
-   * custom height and width that **must be multiples of 8**. Default value: `"1024x1024"`
-   */
-  aspect_ratio?: string;
-  /**
-   * Number of images to generate in one request Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use up to 5 LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * Refiner (SDXL or SD 1.5) Default value: `"None"`
-   */
-  refiner_model?: "None" | "realisticVisionV60B1_v51VAE.safetensors";
-  /**
-   * Use 0.4 for SD1.5 realistic models; 0.667 for SD1.5 anime models
-   * 0.8 for XL-refiners; or any value for switching two SDXL models. Default value: `0.8`
-   */
-  refiner_switch?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The image to use as a reference for inpainting.
-   */
-  inpaint_image_url: string | Blob | File;
-  /**
-   * The image to use as a mask for the generated image.
-   */
-  mask_image_url?: string | Blob | File;
-  /**
-   * The mode to use for inpainting. Default value: `"Inpaint or Outpaint (default)"`
-   */
-  inpaint_mode?:
-    | "Inpaint or Outpaint (default)"
-    | "Improve Detail (face, hand, eyes, etc.)"
-    | "Modify Content (add objects, change background, etc.)";
-  /**
-   * Describe what you want to inpaint. Default value: `""`
-   */
-  inpaint_additional_prompt?: string;
-  /**
-   * The directions to outpaint.
-   */
-  outpaint_selections?: Array<"Left" | "Right" | "Top" | "Bottom">;
-  /**
-   * If set to true, the advanced inpaint options ('inpaint_disable_initial_latent',
-   * 'inpaint_engine', 'inpaint_strength', 'inpaint_respective_field',
-   * 'inpaint_erode_or_dilate') will be overridden.
-   * Otherwise, the default values will be used.
-   */
-  override_inpaint_options?: boolean;
-  /**
-   * If set to true, the initial preprocessing will be disabled.
-   */
-  inpaint_disable_initial_latent?: boolean;
-  /**
-   * Version of Fooocus inpaint model Default value: `"v2.6"`
-   */
-  inpaint_engine?: "None" | "v1" | "v2.5" | "v2.6";
-  /**
-   * Same as the denoising strength in A1111 inpaint. Only used in inpaint, not
-   * used in outpaint. (Outpaint always use 1.0) Default value: `1`
-   */
-  inpaint_strength?: number;
-  /**
-   * The area to inpaint. Value 0 is same as "Only Masked" in A1111. Value 1 is
-   * same as "Whole Image" in A1111. Only used in inpaint, not used in outpaint.
-   * (Outpaint always use 1.0) Default value: `0.618`
-   */
-  inpaint_respective_field?: number;
-  /**
-   * Positive value will make white area in the mask larger, negative value will
-   * make white area smaller. (default is 0, always process before any mask
-   * invert)
-   */
-  inpaint_erode_or_dilate?: number;
-  /**
-   * If set to true, the mask will be inverted.
-   */
-  invert_mask?: boolean;
-  /**
-   *
-   */
-  image_prompt_1?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_2?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_3?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_4?: ImagePrompt;
-  /**
-   * Mixing Image Prompt and Inpaint
-   */
-  mixing_image_prompt_and_inpaint?: boolean;
-  /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type FooocusLegacyInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style to use.
-   */
-  styles?: Array<
-    | "Fooocus V2"
-    | "Fooocus Enhance"
-    | "Fooocus Sharp"
-    | "Fooocus Semi Realistic"
-    | "Fooocus Masterpiece"
-    | "Fooocus Photograph"
-    | "Fooocus Negative"
-    | "Fooocus Cinematic"
-    | "SAI 3D Model"
-    | "SAI Analog Film"
-    | "SAI Anime"
-    | "SAI Cinematic"
-    | "SAI Comic Book"
-    | "SAI Craft Clay"
-    | "SAI Digital Art"
-    | "SAI Enhance"
-    | "SAI Fantasy Art"
-    | "SAI Isometric"
-    | "SAI Line Art"
-    | "SAI Lowpoly"
-    | "SAI Neonpunk"
-    | "SAI Origami"
-    | "SAI Photographic"
-    | "SAI Pixel Art"
-    | "SAI Texture"
-    | "MRE Cinematic Dynamic"
-    | "MRE Spontaneous Picture"
-    | "MRE Artistic Vision"
-    | "MRE Dark Dream"
-    | "MRE Gloomy Art"
-    | "MRE Bad Dream"
-    | "MRE Underground"
-    | "MRE Surreal Painting"
-    | "MRE Dynamic Illustration"
-    | "MRE Undead Art"
-    | "MRE Elemental Art"
-    | "MRE Space Art"
-    | "MRE Ancient Illustration"
-    | "MRE Brave Art"
-    | "MRE Heroic Fantasy"
-    | "MRE Dark Cyberpunk"
-    | "MRE Lyrical Geometry"
-    | "MRE Sumi E Symbolic"
-    | "MRE Sumi E Detailed"
-    | "MRE Manga"
-    | "MRE Anime"
-    | "MRE Comic"
-    | "Ads Advertising"
-    | "Ads Automotive"
-    | "Ads Corporate"
-    | "Ads Fashion Editorial"
-    | "Ads Food Photography"
-    | "Ads Gourmet Food Photography"
-    | "Ads Luxury"
-    | "Ads Real Estate"
-    | "Ads Retail"
-    | "Artstyle Abstract"
-    | "Artstyle Abstract Expressionism"
-    | "Artstyle Art Deco"
-    | "Artstyle Art Nouveau"
-    | "Artstyle Constructivist"
-    | "Artstyle Cubist"
-    | "Artstyle Expressionist"
-    | "Artstyle Graffiti"
-    | "Artstyle Hyperrealism"
-    | "Artstyle Impressionist"
-    | "Artstyle Pointillism"
-    | "Artstyle Pop Art"
-    | "Artstyle Psychedelic"
-    | "Artstyle Renaissance"
-    | "Artstyle Steampunk"
-    | "Artstyle Surrealist"
-    | "Artstyle Typography"
-    | "Artstyle Watercolor"
-    | "Futuristic Biomechanical"
-    | "Futuristic Biomechanical Cyberpunk"
-    | "Futuristic Cybernetic"
-    | "Futuristic Cybernetic Robot"
-    | "Futuristic Cyberpunk Cityscape"
-    | "Futuristic Futuristic"
-    | "Futuristic Retro Cyberpunk"
-    | "Futuristic Retro Futurism"
-    | "Futuristic Sci Fi"
-    | "Futuristic Vaporwave"
-    | "Game Bubble Bobble"
-    | "Game Cyberpunk Game"
-    | "Game Fighting Game"
-    | "Game Gta"
-    | "Game Mario"
-    | "Game Minecraft"
-    | "Game Pokemon"
-    | "Game Retro Arcade"
-    | "Game Retro Game"
-    | "Game Rpg Fantasy Game"
-    | "Game Strategy Game"
-    | "Game Streetfighter"
-    | "Game Zelda"
-    | "Misc Architectural"
-    | "Misc Disco"
-    | "Misc Dreamscape"
-    | "Misc Dystopian"
-    | "Misc Fairy Tale"
-    | "Misc Gothic"
-    | "Misc Grunge"
-    | "Misc Horror"
-    | "Misc Kawaii"
-    | "Misc Lovecraftian"
-    | "Misc Macabre"
-    | "Misc Manga"
-    | "Misc Metropolis"
-    | "Misc Minimalist"
-    | "Misc Monochrome"
-    | "Misc Nautical"
-    | "Misc Space"
-    | "Misc Stained Glass"
-    | "Misc Techwear Fashion"
-    | "Misc Tribal"
-    | "Misc Zentangle"
-    | "Papercraft Collage"
-    | "Papercraft Flat Papercut"
-    | "Papercraft Kirigami"
-    | "Papercraft Paper Mache"
-    | "Papercraft Paper Quilling"
-    | "Papercraft Papercut Collage"
-    | "Papercraft Papercut Shadow Box"
-    | "Papercraft Stacked Papercut"
-    | "Papercraft Thick Layered Papercut"
-    | "Photo Alien"
-    | "Photo Film Noir"
-    | "Photo Glamour"
-    | "Photo Hdr"
-    | "Photo Iphone Photographic"
-    | "Photo Long Exposure"
-    | "Photo Neon Noir"
-    | "Photo Silhouette"
-    | "Photo Tilt Shift"
-    | "Cinematic Diva"
-    | "Abstract Expressionism"
-    | "Academia"
-    | "Action Figure"
-    | "Adorable 3D Character"
-    | "Adorable Kawaii"
-    | "Art Deco"
-    | "Art Nouveau"
-    | "Astral Aura"
-    | "Avant Garde"
-    | "Baroque"
-    | "Bauhaus Style Poster"
-    | "Blueprint Schematic Drawing"
-    | "Caricature"
-    | "Cel Shaded Art"
-    | "Character Design Sheet"
-    | "Classicism Art"
-    | "Color Field Painting"
-    | "Colored Pencil Art"
-    | "Conceptual Art"
-    | "Constructivism"
-    | "Cubism"
-    | "Dadaism"
-    | "Dark Fantasy"
-    | "Dark Moody Atmosphere"
-    | "Dmt Art Style"
-    | "Doodle Art"
-    | "Double Exposure"
-    | "Dripping Paint Splatter Art"
-    | "Expressionism"
-    | "Faded Polaroid Photo"
-    | "Fauvism"
-    | "Flat 2d Art"
-    | "Fortnite Art Style"
-    | "Futurism"
-    | "Glitchcore"
-    | "Glo Fi"
-    | "Googie Art Style"
-    | "Graffiti Art"
-    | "Harlem Renaissance Art"
-    | "High Fashion"
-    | "Idyllic"
-    | "Impressionism"
-    | "Infographic Drawing"
-    | "Ink Dripping Drawing"
-    | "Japanese Ink Drawing"
-    | "Knolling Photography"
-    | "Light Cheery Atmosphere"
-    | "Logo Design"
-    | "Luxurious Elegance"
-    | "Macro Photography"
-    | "Mandola Art"
-    | "Marker Drawing"
-    | "Medievalism"
-    | "Minimalism"
-    | "Neo Baroque"
-    | "Neo Byzantine"
-    | "Neo Futurism"
-    | "Neo Impressionism"
-    | "Neo Rococo"
-    | "Neoclassicism"
-    | "Op Art"
-    | "Ornate And Intricate"
-    | "Pencil Sketch Drawing"
-    | "Pop Art 2"
-    | "Rococo"
-    | "Silhouette Art"
-    | "Simple Vector Art"
-    | "Sketchup"
-    | "Steampunk 2"
-    | "Surrealism"
-    | "Suprematism"
-    | "Terragen"
-    | "Tranquil Relaxing Atmosphere"
-    | "Sticker Designs"
-    | "Vibrant Rim Light"
-    | "Volumetric Lighting"
-    | "Watercolor 2"
-    | "Whimsical And Playful"
-    | "Mk Chromolithography"
-    | "Mk Cross Processing Print"
-    | "Mk Dufaycolor Photograph"
-    | "Mk Herbarium"
-    | "Mk Punk Collage"
-    | "Mk Mosaic"
-    | "Mk Van Gogh"
-    | "Mk Coloring Book"
-    | "Mk Singer Sargent"
-    | "Mk Pollock"
-    | "Mk Basquiat"
-    | "Mk Andy Warhol"
-    | "Mk Halftone Print"
-    | "Mk Gond Painting"
-    | "Mk Albumen Print"
-    | "Mk Aquatint Print"
-    | "Mk Anthotype Print"
-    | "Mk Inuit Carving"
-    | "Mk Bromoil Print"
-    | "Mk Calotype Print"
-    | "Mk Color Sketchnote"
-    | "Mk Cibulak Porcelain"
-    | "Mk Alcohol Ink Art"
-    | "Mk One Line Art"
-    | "Mk Blacklight Paint"
-    | "Mk Carnival Glass"
-    | "Mk Cyanotype Print"
-    | "Mk Cross Stitching"
-    | "Mk Encaustic Paint"
-    | "Mk Embroidery"
-    | "Mk Gyotaku"
-    | "Mk Luminogram"
-    | "Mk Lite Brite Art"
-    | "Mk Mokume Gane"
-    | "Pebble Art"
-    | "Mk Palekh"
-    | "Mk Suminagashi"
-    | "Mk Scrimshaw"
-    | "Mk Shibori"
-    | "Mk Vitreous Enamel"
-    | "Mk Ukiyo E"
-    | "Mk Vintage Airline Poster"
-    | "Mk Vintage Travel Poster"
-    | "Mk Bauhaus Style"
-    | "Mk Afrofuturism"
-    | "Mk Atompunk"
-    | "Mk Constructivism"
-    | "Mk Chicano Art"
-    | "Mk De Stijl"
-    | "Mk Dayak Art"
-    | "Mk Fayum Portrait"
-    | "Mk Illuminated Manuscript"
-    | "Mk Kalighat Painting"
-    | "Mk Madhubani Painting"
-    | "Mk Pictorialism"
-    | "Mk Pichwai Painting"
-    | "Mk Patachitra Painting"
-    | "Mk Samoan Art Inspired"
-    | "Mk Tlingit Art"
-    | "Mk Adnate Style"
-    | "Mk Ron English Style"
-    | "Mk Shepard Fairey Style"
-  >;
-  /**
-   * You can choose Speed or Quality Default value: `"Extreme Speed"`
-   */
-  performance?: "Speed" | "Quality" | "Extreme Speed" | "Lightning";
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
-   */
-  guidance_scale?: number;
-  /**
-   * The sharpness of the generated image. Use it to control how sharp the generated
-   * image should be. Higher value means image and texture are sharper. Default value: `2`
-   */
-  sharpness?: number;
-  /**
-   * The size of the generated image. You can choose between some presets or
-   * custom height and width that **must be multiples of 8**. Default value: `"1024x1024"`
-   */
-  aspect_ratio?: string;
-  /**
-   * Number of images to generate in one request Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use up to 5 LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * Refiner (SDXL or SD 1.5) Default value: `"None"`
-   */
-  refiner_model?: "None" | "realisticVisionV60B1_v51VAE.safetensors";
-  /**
-   * Use 0.4 for SD1.5 realistic models; 0.667 for SD1.5 anime models
-   * 0.8 for XL-refiners; or any value for switching two SDXL models. Default value: `0.8`
-   */
-  refiner_switch?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The image to use as a reference for the generated image.
-   */
-  control_image_url?: string | Blob | File;
-  /**
-   * The type of image control Default value: `"PyraCanny"`
-   */
-  control_type?: "ImagePrompt" | "PyraCanny" | "CPDS" | "FaceSwap";
-  /**
-   * The strength of the control image. Use it to control how much the generated image
-   * should look like the control image. Default value: `1`
-   */
-  control_image_weight?: number;
-  /**
-   * The stop at value of the control image. Use it to control how much the generated image
-   * should look like the control image. Default value: `1`
-   */
-  control_image_stop_at?: number;
-  /**
-   * The image to use as a reference for inpainting.
-   */
-  inpaint_image_url?: string | Blob | File;
-  /**
-   * The image to use as a mask for the generated image.
-   */
-  mask_image_url?: string | Blob | File;
-  /**
-   *
-   */
-  mixing_image_prompt_and_inpaint?: boolean;
-  /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type FooocusUpscaleOrVaryInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style to use.
-   */
-  styles?: Array<
-    | "Fooocus V2"
-    | "Fooocus Enhance"
-    | "Fooocus Sharp"
-    | "Fooocus Semi Realistic"
-    | "Fooocus Masterpiece"
-    | "Fooocus Photograph"
-    | "Fooocus Negative"
-    | "Fooocus Cinematic"
-    | "SAI 3D Model"
-    | "SAI Analog Film"
-    | "SAI Anime"
-    | "SAI Cinematic"
-    | "SAI Comic Book"
-    | "SAI Craft Clay"
-    | "SAI Digital Art"
-    | "SAI Enhance"
-    | "SAI Fantasy Art"
-    | "SAI Isometric"
-    | "SAI Line Art"
-    | "SAI Lowpoly"
-    | "SAI Neonpunk"
-    | "SAI Origami"
-    | "SAI Photographic"
-    | "SAI Pixel Art"
-    | "SAI Texture"
-    | "MRE Cinematic Dynamic"
-    | "MRE Spontaneous Picture"
-    | "MRE Artistic Vision"
-    | "MRE Dark Dream"
-    | "MRE Gloomy Art"
-    | "MRE Bad Dream"
-    | "MRE Underground"
-    | "MRE Surreal Painting"
-    | "MRE Dynamic Illustration"
-    | "MRE Undead Art"
-    | "MRE Elemental Art"
-    | "MRE Space Art"
-    | "MRE Ancient Illustration"
-    | "MRE Brave Art"
-    | "MRE Heroic Fantasy"
-    | "MRE Dark Cyberpunk"
-    | "MRE Lyrical Geometry"
-    | "MRE Sumi E Symbolic"
-    | "MRE Sumi E Detailed"
-    | "MRE Manga"
-    | "MRE Anime"
-    | "MRE Comic"
-    | "Ads Advertising"
-    | "Ads Automotive"
-    | "Ads Corporate"
-    | "Ads Fashion Editorial"
-    | "Ads Food Photography"
-    | "Ads Gourmet Food Photography"
-    | "Ads Luxury"
-    | "Ads Real Estate"
-    | "Ads Retail"
-    | "Artstyle Abstract"
-    | "Artstyle Abstract Expressionism"
-    | "Artstyle Art Deco"
-    | "Artstyle Art Nouveau"
-    | "Artstyle Constructivist"
-    | "Artstyle Cubist"
-    | "Artstyle Expressionist"
-    | "Artstyle Graffiti"
-    | "Artstyle Hyperrealism"
-    | "Artstyle Impressionist"
-    | "Artstyle Pointillism"
-    | "Artstyle Pop Art"
-    | "Artstyle Psychedelic"
-    | "Artstyle Renaissance"
-    | "Artstyle Steampunk"
-    | "Artstyle Surrealist"
-    | "Artstyle Typography"
-    | "Artstyle Watercolor"
-    | "Futuristic Biomechanical"
-    | "Futuristic Biomechanical Cyberpunk"
-    | "Futuristic Cybernetic"
-    | "Futuristic Cybernetic Robot"
-    | "Futuristic Cyberpunk Cityscape"
-    | "Futuristic Futuristic"
-    | "Futuristic Retro Cyberpunk"
-    | "Futuristic Retro Futurism"
-    | "Futuristic Sci Fi"
-    | "Futuristic Vaporwave"
-    | "Game Bubble Bobble"
-    | "Game Cyberpunk Game"
-    | "Game Fighting Game"
-    | "Game Gta"
-    | "Game Mario"
-    | "Game Minecraft"
-    | "Game Pokemon"
-    | "Game Retro Arcade"
-    | "Game Retro Game"
-    | "Game Rpg Fantasy Game"
-    | "Game Strategy Game"
-    | "Game Streetfighter"
-    | "Game Zelda"
-    | "Misc Architectural"
-    | "Misc Disco"
-    | "Misc Dreamscape"
-    | "Misc Dystopian"
-    | "Misc Fairy Tale"
-    | "Misc Gothic"
-    | "Misc Grunge"
-    | "Misc Horror"
-    | "Misc Kawaii"
-    | "Misc Lovecraftian"
-    | "Misc Macabre"
-    | "Misc Manga"
-    | "Misc Metropolis"
-    | "Misc Minimalist"
-    | "Misc Monochrome"
-    | "Misc Nautical"
-    | "Misc Space"
-    | "Misc Stained Glass"
-    | "Misc Techwear Fashion"
-    | "Misc Tribal"
-    | "Misc Zentangle"
-    | "Papercraft Collage"
-    | "Papercraft Flat Papercut"
-    | "Papercraft Kirigami"
-    | "Papercraft Paper Mache"
-    | "Papercraft Paper Quilling"
-    | "Papercraft Papercut Collage"
-    | "Papercraft Papercut Shadow Box"
-    | "Papercraft Stacked Papercut"
-    | "Papercraft Thick Layered Papercut"
-    | "Photo Alien"
-    | "Photo Film Noir"
-    | "Photo Glamour"
-    | "Photo Hdr"
-    | "Photo Iphone Photographic"
-    | "Photo Long Exposure"
-    | "Photo Neon Noir"
-    | "Photo Silhouette"
-    | "Photo Tilt Shift"
-    | "Cinematic Diva"
-    | "Abstract Expressionism"
-    | "Academia"
-    | "Action Figure"
-    | "Adorable 3D Character"
-    | "Adorable Kawaii"
-    | "Art Deco"
-    | "Art Nouveau"
-    | "Astral Aura"
-    | "Avant Garde"
-    | "Baroque"
-    | "Bauhaus Style Poster"
-    | "Blueprint Schematic Drawing"
-    | "Caricature"
-    | "Cel Shaded Art"
-    | "Character Design Sheet"
-    | "Classicism Art"
-    | "Color Field Painting"
-    | "Colored Pencil Art"
-    | "Conceptual Art"
-    | "Constructivism"
-    | "Cubism"
-    | "Dadaism"
-    | "Dark Fantasy"
-    | "Dark Moody Atmosphere"
-    | "Dmt Art Style"
-    | "Doodle Art"
-    | "Double Exposure"
-    | "Dripping Paint Splatter Art"
-    | "Expressionism"
-    | "Faded Polaroid Photo"
-    | "Fauvism"
-    | "Flat 2d Art"
-    | "Fortnite Art Style"
-    | "Futurism"
-    | "Glitchcore"
-    | "Glo Fi"
-    | "Googie Art Style"
-    | "Graffiti Art"
-    | "Harlem Renaissance Art"
-    | "High Fashion"
-    | "Idyllic"
-    | "Impressionism"
-    | "Infographic Drawing"
-    | "Ink Dripping Drawing"
-    | "Japanese Ink Drawing"
-    | "Knolling Photography"
-    | "Light Cheery Atmosphere"
-    | "Logo Design"
-    | "Luxurious Elegance"
-    | "Macro Photography"
-    | "Mandola Art"
-    | "Marker Drawing"
-    | "Medievalism"
-    | "Minimalism"
-    | "Neo Baroque"
-    | "Neo Byzantine"
-    | "Neo Futurism"
-    | "Neo Impressionism"
-    | "Neo Rococo"
-    | "Neoclassicism"
-    | "Op Art"
-    | "Ornate And Intricate"
-    | "Pencil Sketch Drawing"
-    | "Pop Art 2"
-    | "Rococo"
-    | "Silhouette Art"
-    | "Simple Vector Art"
-    | "Sketchup"
-    | "Steampunk 2"
-    | "Surrealism"
-    | "Suprematism"
-    | "Terragen"
-    | "Tranquil Relaxing Atmosphere"
-    | "Sticker Designs"
-    | "Vibrant Rim Light"
-    | "Volumetric Lighting"
-    | "Watercolor 2"
-    | "Whimsical And Playful"
-    | "Mk Chromolithography"
-    | "Mk Cross Processing Print"
-    | "Mk Dufaycolor Photograph"
-    | "Mk Herbarium"
-    | "Mk Punk Collage"
-    | "Mk Mosaic"
-    | "Mk Van Gogh"
-    | "Mk Coloring Book"
-    | "Mk Singer Sargent"
-    | "Mk Pollock"
-    | "Mk Basquiat"
-    | "Mk Andy Warhol"
-    | "Mk Halftone Print"
-    | "Mk Gond Painting"
-    | "Mk Albumen Print"
-    | "Mk Aquatint Print"
-    | "Mk Anthotype Print"
-    | "Mk Inuit Carving"
-    | "Mk Bromoil Print"
-    | "Mk Calotype Print"
-    | "Mk Color Sketchnote"
-    | "Mk Cibulak Porcelain"
-    | "Mk Alcohol Ink Art"
-    | "Mk One Line Art"
-    | "Mk Blacklight Paint"
-    | "Mk Carnival Glass"
-    | "Mk Cyanotype Print"
-    | "Mk Cross Stitching"
-    | "Mk Encaustic Paint"
-    | "Mk Embroidery"
-    | "Mk Gyotaku"
-    | "Mk Luminogram"
-    | "Mk Lite Brite Art"
-    | "Mk Mokume Gane"
-    | "Pebble Art"
-    | "Mk Palekh"
-    | "Mk Suminagashi"
-    | "Mk Scrimshaw"
-    | "Mk Shibori"
-    | "Mk Vitreous Enamel"
-    | "Mk Ukiyo E"
-    | "Mk Vintage Airline Poster"
-    | "Mk Vintage Travel Poster"
-    | "Mk Bauhaus Style"
-    | "Mk Afrofuturism"
-    | "Mk Atompunk"
-    | "Mk Constructivism"
-    | "Mk Chicano Art"
-    | "Mk De Stijl"
-    | "Mk Dayak Art"
-    | "Mk Fayum Portrait"
-    | "Mk Illuminated Manuscript"
-    | "Mk Kalighat Painting"
-    | "Mk Madhubani Painting"
-    | "Mk Pictorialism"
-    | "Mk Pichwai Painting"
-    | "Mk Patachitra Painting"
-    | "Mk Samoan Art Inspired"
-    | "Mk Tlingit Art"
-    | "Mk Adnate Style"
-    | "Mk Ron English Style"
-    | "Mk Shepard Fairey Style"
-  >;
-  /**
-   * You can choose Speed or Quality Default value: `"Extreme Speed"`
-   */
-  performance?: "Speed" | "Quality" | "Extreme Speed" | "Lightning";
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
-   */
-  guidance_scale?: number;
-  /**
-   * The sharpness of the generated image. Use it to control how sharp the generated
-   * image should be. Higher value means image and texture are sharper. Default value: `2`
-   */
-  sharpness?: number;
-  /**
-   * The size of the generated image. You can choose between some presets or
-   * custom height and width that **must be multiples of 8**. Default value: `"1024x1024"`
-   */
-  aspect_ratio?: string;
-  /**
-   * Number of images to generate in one request Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The LoRAs to use for the image generation. You can use up to 5 LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * Refiner (SDXL or SD 1.5) Default value: `"None"`
-   */
-  refiner_model?: "None" | "realisticVisionV60B1_v51VAE.safetensors";
-  /**
-   * Use 0.4 for SD1.5 realistic models; 0.667 for SD1.5 anime models
-   * 0.8 for XL-refiners; or any value for switching two SDXL models. Default value: `0.8`
-   */
-  refiner_switch?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The image to upscale or vary.
-   */
-  uov_image_url: string | Blob | File;
-  /**
-   * The method to use for upscaling or varying. Default value: `"Vary (Strong)"`
-   */
-  uov_method?:
-    | "Disabled"
-    | "Vary (Subtle)"
-    | "Vary (Strong)"
-    | "Upscale (1.5x)"
-    | "Upscale (2x)"
-    | "Upscale (Fast 2x)";
-  /**
-   *
-   */
-  image_prompt_1?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_2?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_3?: ImagePrompt;
-  /**
-   *
-   */
-  image_prompt_4?: ImagePrompt;
-  /**
-   * Mixing Image Prompt and Vary/Upscale
-   */
-  mixing_image_prompt_and_vary_upscale?: boolean;
-  /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type FooocusUpscaleOrVaryOutput = {
-  /**
-   * The generated image file info.
-   */
-  images: Array<Image>;
-  /**
-   * The time taken for the generation process.
-   */
-  timings: any;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
 };
 export type FrameInput = {
   /**
@@ -14206,6 +12335,10 @@ export type GptImage1EditImageByokInput = {
    */
   quality?: "auto" | "low" | "medium" | "high";
   /**
+   * How hard to try to preserve distinctive features from the input. Default value: `"low"`
+   */
+  input_fidelity?: "low" | "high";
+  /**
    * The OpenAI API key to use for the image generation. This endpoint is currently powered by bring-your-own-key system.
    */
   openai_api_key: string;
@@ -14353,25 +12486,85 @@ export type HairChangeOutput = {
    */
   seed: number;
 };
-export type HEDInput = {
+export type HidreamE11Input = {
   /**
-   * URL of the image to process
+   * The instruction to edit the image.
+   */
+  edit_instruction?: string;
+  /**
+   * The description of the target image after your edits have been made. Leave this blank to allow the model to use its own imagination.
+   */
+  target_image_description?: string;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want
+   * in the image. This could be colors, objects, scenery and even the small details
+   * (e.g. moustache, blurry, low resolution). Default value: `"low resolution, blur"`
+   */
+  negative_prompt?: string;
+  /**
+   * URL of an input image to edit.
    */
   image_url: string | Blob | File;
   /**
-   * Whether to use the safe version of the HED detector
+   * The number of inference steps to perform. Default value: `50`
    */
-  safe?: boolean;
+  num_inference_steps?: number;
   /**
-   * Whether to use the scribble version of the HED detector
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
    */
-  scribble?: boolean;
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your initial image when looking for a related image to show you. Default value: `2`
+   */
+  image_guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
 };
-export type HEDOutput = {
+export type HidreamE11Output = {
   /**
-   * Image with lines detected using the HED detector
+   * The generated image files info.
    */
-  image: Image;
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
 };
 export type HidreamE1FullInput = {
   /**
@@ -14753,6 +12946,50 @@ export type HindiOutput = {
    * The generated music
    */
   audio: File;
+};
+export type Hunyuan_worldImageToWorldInput = {
+  /**
+   * The URL of the image to convert to a world.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Labels for the first foreground object.
+   */
+  labels_fg1: string;
+  /**
+   * Labels for the second foreground object.
+   */
+  labels_fg2: string;
+  /**
+   * Classes to use for the world generation.
+   */
+  classes: string;
+  /**
+   * Whether to export DRC (Dynamic Resource Configuration).
+   */
+  export_drc?: boolean;
+};
+export type Hunyuan_worldImageToWorldOutput = {
+  /**
+   * The generated world.
+   */
+  world_file: File;
+};
+export type Hunyuan_worldInput = {
+  /**
+   * The URL of the image to convert to a panorama.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The prompt to use for the panorama generation.
+   */
+  prompt: string;
+};
+export type Hunyuan_worldOutput = {
+  /**
+   * The generated panorama image.
+   */
+  image: Image;
 };
 export type Hunyuan3DInput = {
   /**
@@ -15248,40 +13485,6 @@ export type HunyuanVideoImg2vidLoraOutput = {
    */
   seed: number;
 };
-export type HunyuanVideoInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The number of inference steps to run. Lower gets faster results, higher gets better results. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The seed to use for generating the video.
-   */
-  seed?: number;
-  /**
-   * By default, generations are done with 35 steps. Pro mode does 55 steps which results in higher quality videos but will take more time and cost 2x more billing units.
-   */
-  pro_mode?: boolean;
-  /**
-   * The aspect ratio of the video to generate. Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16";
-  /**
-   * The resolution of the video to generate. Default value: `"720p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The number of frames to generate. Default value: `"129"`
-   */
-  num_frames?: "129" | "85";
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-};
 export type HunyuanVideoLoraInput = {
   /**
    * The prompt to generate the video from.
@@ -15418,16 +13621,6 @@ export type HunyuanVideoLoraVideoToVideoOutput = {
    */
   seed: number;
 };
-export type HunyuanVideoOutput = {
-  /**
-   *
-   */
-  video: File;
-  /**
-   * The seed used for generating the video.
-   */
-  seed: number;
-};
 export type HunyuanVideoVideoToVideoInput = {
   /**
    * The prompt to generate the video from.
@@ -15528,7 +13721,7 @@ export type Hyper3dRodinInput = {
   /**
    * Generation add-on features. Default is []. Possible values are HighPack. The HighPack option will provide 4K resolution textures instead of the default 1K, as well as models with high-poly. It will cost triple the billable units.
    */
-  addons?: string;
+  addons?: "HighPack";
 };
 export type Hyper3dRodinOutput = {
   /**
@@ -15562,29 +13755,117 @@ export type I2VOutput = {
    */
   video: File;
 };
-export type IclightV2Input = {
+export type IdeogramCharacterEditInput = {
   /**
-   * The prompt to generate an image from.
+   * A set of images to use as style references (maximum total size 10MB across all style references). The images should be in JPEG, PNG or WebP format
+   */
+  image_urls?: Array<string>;
+  /**
+   * The rendering speed to use. Default value: `"BALANCED"`
+   */
+  rendering_speed?: "TURBO" | "BALANCED" | "QUALITY";
+  /**
+   * A color palette for generation, must EITHER be specified via one of the presets (name) or explicitly via hexadecimal representations of the color with optional weights (members)
+   */
+  color_palette?: ColorPalette;
+  /**
+   * A list of 8 character hexadecimal codes representing the style of the image. Cannot be used in conjunction with style_reference_images or style
+   */
+  style_codes?: Array<string>;
+  /**
+   * The style type to generate with. Cannot be used with style_codes. Default value: `"AUTO"`
+   */
+  style?: "AUTO" | "REALISTIC" | "FICTION";
+  /**
+   * Determine if MagicPrompt should be used in generating the request or not. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The prompt to fill the masked part of the image.
    */
   prompt: string;
   /**
-   * Negative Prompt for the image Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * URL of image to be used for relighting
+   * The image URL to generate an image from. Needs to match the dimensions of the mask.
    */
   image_url: string | Blob | File;
   /**
-   * URL of mask to be used for ic-light conditioning image
+   * The mask URL to inpaint the image. Needs to match the dimensions of the input image.
    */
-  mask_image_url?: string | Blob | File;
+  mask_url: string | Blob | File;
   /**
-   * Threshold for the background removal algorithm. A high threshold will produce sharper masks. Note: This parameter is currently deprecated and has no effect on the output. Default value: `0.67`
+   * A set of images to use as character references. Currently only 1 image is supported, rest will be ignored. (maximum total size 10MB across all character references). The images should be in JPEG, PNG or WebP format
    */
-  background_threshold?: number;
+  reference_image_urls: Array<string>;
+};
+export type IdeogramCharacterEditOutput = {
   /**
-   * The size of the generated image.
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramCharacterInput = {
+  /**
+   * A set of images to use as style references (maximum total size 10MB across all style references). The images should be in JPEG, PNG or WebP format
+   */
+  image_urls?: Array<string>;
+  /**
+   * The rendering speed to use. Default value: `"BALANCED"`
+   */
+  rendering_speed?: "TURBO" | "BALANCED" | "QUALITY";
+  /**
+   * A color palette for generation, must EITHER be specified via one of the presets (name) or explicitly via hexadecimal representations of the color with optional weights (members)
+   */
+  color_palette?: ColorPalette;
+  /**
+   * A list of 8 character hexadecimal codes representing the style of the image. Cannot be used in conjunction with style_reference_images or style
+   */
+  style_codes?: Array<string>;
+  /**
+   * The style type to generate with. Cannot be used with style_codes. Default value: `"AUTO"`
+   */
+  style?: "AUTO" | "REALISTIC" | "FICTION";
+  /**
+   * Determine if MagicPrompt should be used in generating the request or not. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Seed for the random number generator
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The prompt to fill the masked part of the image.
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated image Default value: `square_hd`
    */
   image_size?:
     | ImageSize
@@ -15595,22 +13876,57 @@ export type IclightV2Input = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The number of inference steps to perform. Default value: `28`
+   * Description of what to exclude from an image. Descriptions in the prompt take precedence to descriptions in the negative prompt. Default value: `""`
    */
-  num_inference_steps?: number;
+  negative_prompt?: string;
   /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
+   * A set of images to use as character references. Currently only 1 image is supported, rest will be ignored. (maximum total size 10MB across all character references). The images should be in JPEG, PNG or WebP format
+   */
+  reference_image_urls: Array<string>;
+};
+export type IdeogramCharacterOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * Seed used for the random number generator
+   */
+  seed: number;
+};
+export type IdeogramCharacterRemixInput = {
+  /**
+   * A set of images to use as style references (maximum total size 10MB across all style references). The images should be in JPEG, PNG or WebP format
+   */
+  image_urls?: Array<string>;
+  /**
+   * The rendering speed to use. Default value: `"BALANCED"`
+   */
+  rendering_speed?: "TURBO" | "BALANCED" | "QUALITY";
+  /**
+   * A color palette for generation, must EITHER be specified via one of the presets (name) or explicitly via hexadecimal representations of the color with optional weights (members)
+   */
+  color_palette?: ColorPalette;
+  /**
+   * A list of 8 character hexadecimal codes representing the style of the image. Cannot be used in conjunction with style_reference_images or style
+   */
+  style_codes?: Array<string>;
+  /**
+   * The style type to generate with. Cannot be used with style_codes. Default value: `"AUTO"`
+   */
+  style?: "AUTO" | "REALISTIC" | "FICTION";
+  /**
+   * Determine if MagicPrompt should be used in generating the request or not. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Seed for the random number generator
    */
   seed?: number;
-  /**
-   * Provide lighting conditions for the model Default value: `"None"`
-   */
-  initial_latent?: "None" | "Left" | "Right" | "Top" | "Bottom";
-  /**
-   * Use HR fix
-   */
-  enable_hr_fix?: boolean;
   /**
    * If set to true, the function will wait for the image to be generated and uploaded
    * before returning the response. This will increase the latency of the function but
@@ -15618,61 +13934,46 @@ export type IclightV2Input = {
    */
   sync_mode?: boolean;
   /**
-   * The number of images to generate. Default value: `1`
+   * The prompt to remix the image with
    */
-  num_images?: number;
+  prompt: string;
   /**
-   * The real classifier-free-guidance scale for the generation. Default value: `1`
+   * The image URL to remix
    */
-  cfg?: number;
+  image_url: string | Blob | File;
   /**
-   * Strength for low-resolution pass. Default value: `0.98`
+   * Strength of the input image in the remix Default value: `0.8`
    */
-  lowres_denoise?: number;
+  strength?: number;
   /**
-   * Strength for high-resolution pass. Only used if enable_hr_fix is True. Default value: `0.95`
+   * The resolution of the generated image Default value: `square_hd`
    */
-  highres_denoise?: number;
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
   /**
-   *  Default value: `0.5`
+   * Description of what to exclude from an image. Descriptions in the prompt take precedence to descriptions in the negative prompt. Default value: `""`
    */
-  hr_downscale?: number;
+  negative_prompt?: string;
   /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
+   * A set of images to use as character references. Currently only 1 image is supported, rest will be ignored. (maximum total size 10MB across all character references). The images should be in JPEG, PNG or WebP format
    */
-  guidance_scale?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
+  reference_image_urls: Array<string>;
 };
-export type IclightV2Output = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
+export type IdeogramCharacterRemixOutput = {
   /**
    *
    */
-  timings: any;
+  images: Array<File>;
   /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
+   * Seed used for the random number generator
    */
   seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
 };
 export type IdeogramUpscaleInput = {
   /**
@@ -17397,6 +15698,46 @@ export type ImageEditingReframeOutput = {
    */
   seed: number;
 };
+export type ImageEditingRetouchInput = {
+  /**
+   * URL of the image to retouch.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Number of inference steps for sampling. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to enable the safety checker for the generated image. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The scale factor for the LoRA model. Controls the strength of the LoRA effect. Default value: `1`
+   */
+  lora_scale?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded before returning the response. This will increase the latency of the function but it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+};
+export type ImageEditingRetouchOutput = {
+  /**
+   *
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  seed: number;
+};
 export type ImageEditingSceneCompositionInput = {
   /**
    * Image prompt for the omni model.
@@ -17855,9 +16196,17 @@ export type ImageExpansionOutput = {
 };
 export type ImageFillInput = {
   /**
-   * URLs of images to be filled for redux prompting
+   * URLs of images to be filled into the masked area.
    */
-  fill_image_url?: string | Blob | File | Array<string | Blob | File>;
+  fill_image_url?: Array<string | Blob | File> | string | Blob | File;
+  /**
+   * Uses the provided fill image in context with the base image to fill in more faithfully. Will increase price.
+   */
+  in_context_fill?: boolean;
+  /**
+   * Whether to use the prompt as well in the generation, along with the redux image.
+   */
+  use_prompt?: boolean;
 };
 export type ImageGenInput = {
   /**
@@ -18037,178 +16386,6 @@ export type ImageOutput = {
    * The prompt used for generating the image.
    */
   prompt: string;
-};
-export type ImagePreprocessorsDepthAnythingV2Input = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type ImagePreprocessorsDepthAnythingV2Output = {
-  /**
-   * Image with depth map
-   */
-  image: Image;
-};
-export type ImagePreprocessorsHedInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Whether to use the safe version of the HED detector
-   */
-  safe?: boolean;
-  /**
-   * Whether to use the scribble version of the HED detector
-   */
-  scribble?: boolean;
-};
-export type ImagePreprocessorsHedOutput = {
-  /**
-   * Image with lines detected using the HED detector
-   */
-  image: Image;
-};
-export type ImagePreprocessorsLineartInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Whether to use the coarse model
-   */
-  coarse?: boolean;
-};
-export type ImagePreprocessorsLineartOutput = {
-  /**
-   * Image with edges detected using the Canny algorithm
-   */
-  image: Image;
-};
-export type ImagePreprocessorsMidasInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * A parameter for the MiDaS detector Default value: `6.283185307179586`
-   */
-  a?: number;
-  /**
-   * Background threshold for the MiDaS detector Default value: `0.1`
-   */
-  background_threshold?: number;
-};
-export type ImagePreprocessorsMidasOutput = {
-  /**
-   * Image with MiDaS depth map
-   */
-  depth_map: Image;
-  /**
-   * Image with MiDaS normal map
-   */
-  normal_map: Image;
-};
-export type ImagePreprocessorsMlsdInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Score threshold for the MLSD detector Default value: `0.1`
-   */
-  score_threshold?: number;
-  /**
-   * Distance threshold for the MLSD detector Default value: `0.1`
-   */
-  distance_threshold?: number;
-};
-export type ImagePreprocessorsMlsdOutput = {
-  /**
-   * Image with lines detected using the MLSD detector
-   */
-  image: Image;
-};
-export type ImagePreprocessorsPidiInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Whether to use the safe version of the Pidi detector
-   */
-  safe?: boolean;
-  /**
-   * Whether to use the scribble version of the Pidi detector
-   */
-  scribble?: boolean;
-  /**
-   * Whether to apply the filter to the image.
-   */
-  apply_filter?: boolean;
-};
-export type ImagePreprocessorsPidiOutput = {
-  /**
-   * Image with Pidi lines detected
-   */
-  image: Image;
-};
-export type ImagePreprocessorsSamInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type ImagePreprocessorsSamOutput = {
-  /**
-   * Image with SAM segmentation map
-   */
-  image: Image;
-};
-export type ImagePreprocessorsScribbleInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * The model to use for the Scribble detector Default value: `"HED"`
-   */
-  model?: "HED" | "PiDi";
-  /**
-   * Whether to use the safe version of the Scribble detector
-   */
-  safe?: boolean;
-};
-export type ImagePreprocessorsScribbleOutput = {
-  /**
-   * Image with lines detected using the Scribble detector
-   */
-  image: Image;
-};
-export type ImagePreprocessorsTeedInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type ImagePreprocessorsTeedOutput = {
-  /**
-   * Image with TeeD lines detected
-   */
-  image: Image;
-};
-export type ImagePreprocessorsZoeInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type ImagePreprocessorsZoeOutput = {
-  /**
-   * Image with depth map
-   */
-  image: Image;
 };
 export type ImageProcessingInput = {
   /**
@@ -18520,142 +16697,6 @@ export type ImageTo3dInput = {
    */
   image_url: string | Blob | File;
 };
-export type ImageToImageControlNetUnionInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The scale of the controlnet conditioning. Default value: `0.5`
-   */
-  controlnet_conditioning_scale?: number;
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Leave it none to automatically infer from the control image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `35`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-  /**
-   * The URL of the control image.
-   */
-  openpose_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the openpose image. Default value: `true`
-   */
-  openpose_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  depth_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the depth image. Default value: `true`
-   */
-  depth_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  teed_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the teed image. Default value: `true`
-   */
-  teed_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  canny_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the canny image. Default value: `true`
-   */
-  canny_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  normal_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the normal image. Default value: `true`
-   */
-  normal_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  segmentation_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the segmentation image. Default value: `true`
-   */
-  segmentation_preprocess?: boolean;
-};
 export type ImageToImageInput = {
   /**
    * The prompt to generate an image from.
@@ -18687,49 +16728,10 @@ export type ImageToImageInput = {
    */
   loras?: Array<LoraWeight>;
   /**
-   * The LoRAs to use for the image generation which use a control image. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  control_loras?: Array<ControlLoraWeight>;
-  /**
-   * The controlnets to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnets?: Array<ControlNet>;
-  /**
-   * The controlnet unions to use for the image generation. Only one controlnet is supported at the moment.
-   */
-  controlnet_unions?: Array<ControlNetUnion>;
-  /**
-   * IP-Adapter to use for image generation.
-   */
-  ip_adapters?: Array<IPAdapter>;
-  /**
-   * EasyControl Inputs to use for image generation.
-   */
-  easycontrols?: Array<EasyControlWeight>;
-  /**
-   * Use an image input to influence the generation. Can be used to fill images in masked areas.
-   */
-  fill_image?: ImageFillInput;
-  /**
    * The CFG (Classifier Free Guidance) scale is a measure of how close you want
    * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
    */
   guidance_scale?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  real_cfg_scale?: number;
-  /**
-   * Uses classical CFG as in SD1.5, SDXL, etc. Increases generation times and price when set to be true.
-   * If using XLabs IP-Adapter v1, this will be turned on!.
-   */
-  use_real_cfg?: boolean;
-  /**
-   * Uses CFG-zero init sampling as in https://arxiv.org/abs/2503.18886.
-   */
-  use_cfg_zero?: boolean;
   /**
    * If set to true, the function will wait for the image to be generated and uploaded
    * before returning the response. This will increase the latency of the function but
@@ -18737,7 +16739,7 @@ export type ImageToImageInput = {
    */
   sync_mode?: boolean;
   /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   * The number of images to generate. Default value: `1`
    */
   num_images?: number;
   /**
@@ -18745,45 +16747,17 @@ export type ImageToImageInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * URL of Image for Reference-Only
-   */
-  reference_image_url?: string | Blob | File;
-  /**
-   * Strength of reference_only generation. Only used if a reference image is provided. Default value: `0.65`
-   */
-  reference_strength?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to bestarted.
-   */
-  reference_start?: number;
-  /**
-   * The percentage of the total timesteps when the reference guidance is to be ended. Default value: `1`
-   */
-  reference_end?: number;
-  /**
-   * Base shift for the scheduled timesteps Default value: `0.5`
-   */
-  base_shift?: number;
-  /**
-   * Max shift for the scheduled timesteps Default value: `1.15`
-   */
-  max_shift?: number;
-  /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
   /**
-   * Specifies whether beta sigmas ought to be used.
+   * The image to use for control lora. This is used to control the style of the generated image.
    */
-  use_beta_schedule?: boolean;
+  control_lora_image_url?: string | Blob | File;
   /**
-   * Sigmas schedule for the denoising process.
+   * The strength of the control lora. Default value: `1`
    */
-  sigma_schedule?: "sgm_uniform";
-  /**
-   * Scheduler for the denoising process. Default value: `"euler"`
-   */
-  scheduler?: "euler" | "dpmpp_2m";
+  control_lora_strength?: number;
   /**
    * URL of image to use for inpainting. or img2img
    */
@@ -18793,245 +16767,11 @@ export type ImageToImageInput = {
    */
   strength?: number;
 };
-export type ImageToImageLightningInput = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `"4"`
-   */
-  num_inference_steps?: "1" | "2" | "4" | "8";
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The rescale factor for the CFG.
-   */
-  guidance_rescale?: number;
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-  /**
-   * If set to true, the aspect ratio of the generated image will be preserved even
-   * if the image size is too large. However, if the image is not a multiple of 32
-   * in width or height, it will be resized to the nearest multiple of 32. By default,
-   * this snapping to the nearest multiple of 32 will not preserve the aspect ratio.
-   * Set crop_output to True, to crop the output to the proper aspect ratio
-   * after generating.
-   */
-  preserve_aspect_ratio?: boolean;
-  /**
-   * If set to true, the output cropped to the proper aspect ratio after generating.
-   */
-  crop_output?: boolean;
-};
 export type ImageToImageOutput = {
   /**
    * The generated images
    */
   images: Array<File>;
-};
-export type ImageToImagePlaygroundv25Input = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The rescale factor for the CFG.
-   */
-  guidance_rescale?: number;
-};
-export type ImageToImageSD15Input = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
 };
 export type ImageToImageTurboInput = {
   /**
@@ -19096,6 +16836,12 @@ export type ImageToImageTurboInput = {
    */
   strength?: number;
 };
+export type ImageToVideoHailuo02FastOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
+};
 export type ImageToVideoHailuo02Output = {
   /**
    * The generated video
@@ -19155,13 +16901,9 @@ export type ImageToVideoInput = {
 };
 export type ImageToVideoOutput = {
   /**
-   * The generated video file.
+   * The generated video
    */
   video: File;
-  /**
-   * The seed used for generation.
-   */
-  seed: number;
 };
 export type ImageToVideoPreviewInput = {
   /**
@@ -19169,17 +16911,21 @@ export type ImageToVideoPreviewInput = {
    */
   prompt: string;
   /**
-   * URL of the input image to animate. Should be 720p or higher resolution.
+   * URL of the input image to animate. Should be 720p or higher resolution in 16:9 aspect ratio. If the image is not in 16:9 aspect ratio, it will be cropped to fit.
    */
   image_url: string | Blob | File;
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9";
   /**
    * The duration of the generated video in seconds Default value: `"8s"`
    */
   duration?: "8s";
+  /**
+   * Whether to generate audio for the video. If false, %33 less credits will be used. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Resolution of the generated video Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
 };
 export type ImageToVideoPreviewOutput = {
   /**
@@ -19254,467 +17000,6 @@ export type Img2ImgOutput = {
    */
   prompt: string;
 };
-export type InpaintingControlNetUnionInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The scale of the controlnet conditioning. Default value: `0.5`
-   */
-  controlnet_conditioning_scale?: number;
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the mask to use for inpainting.
-   */
-  mask_url: string | Blob | File;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Leave it none to automatically infer from the control image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `35`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-  /**
-   * The URL of the control image.
-   */
-  openpose_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the openpose image. Default value: `true`
-   */
-  openpose_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  depth_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the depth image. Default value: `true`
-   */
-  depth_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  teed_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the teed image. Default value: `true`
-   */
-  teed_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  canny_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the canny image. Default value: `true`
-   */
-  canny_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  normal_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the normal image. Default value: `true`
-   */
-  normal_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  segmentation_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the segmentation image. Default value: `true`
-   */
-  segmentation_preprocess?: boolean;
-};
-export type InpaintingInput = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the mask to use for inpainting.
-   */
-  mask_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-};
-export type InpaintingLightningInput = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the mask to use for inpainting.
-   */
-  mask_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `"4"`
-   */
-  num_inference_steps?: "1" | "2" | "4" | "8";
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The rescale factor for the CFG.
-   */
-  guidance_rescale?: number;
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-};
-export type InpaintingPlaygroundv25Input = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the mask to use for inpainting.
-   */
-  mask_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The rescale factor for the CFG.
-   */
-  guidance_rescale?: number;
-};
-export type InpaintingSD15Input = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the mask to use for inpainting.
-   */
-  mask_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * determines how much the generated image resembles the initial image Default value: `0.95`
-   */
-  strength?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-};
 export type InpaintInput = {
   /**
    * The prompt to generate an image from.
@@ -19757,7 +17042,7 @@ export type InpaintInput = {
    */
   sync_mode?: boolean;
   /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   * The number of images to generate. Default value: `1`
    */
   num_images?: number;
   /**
@@ -19850,38 +17135,9 @@ export type InpaintTurboInput = {
 };
 export type Input = {
   /**
-   * URL of the image to remove background from
+   * List of tracks to be combined into the final media
    */
-  image_url: string | Blob | File;
-  /**
-   * Model to use for background removal.
-   * The 'General Use (Light)' model is the original model used in the BiRefNet repository.
-   * The 'General Use (Heavy)' model is a slower but more accurate model.
-   * The 'Portrait' model is a model trained specifically for portrait images.
-   * The 'General Use (Light)' model is recommended for most use cases.
-   *
-   * The corresponding models are as follows:
-   * - 'General Use (Light)': BiRefNet-DIS_ep580.pth
-   * - 'General Use (Heavy)': BiRefNet-massive-epoch_240.pth
-   * - 'Portrait': BiRefNet-portrait-TR_P3M_10k-epoch_120.pth Default value: `"General Use (Light)"`
-   */
-  model?: "General Use (Light)" | "General Use (Heavy)" | "Portrait";
-  /**
-   * The resolution to operate on. The higher the resolution, the more accurate the output will be for high res input images. Default value: `"1024x1024"`
-   */
-  operating_resolution?: "1024x1024" | "2048x2048";
-  /**
-   * The format of the output image Default value: `"png"`
-   */
-  output_format?: "webp" | "png";
-  /**
-   * Whether to output the mask used to remove the background
-   */
-  output_mask?: boolean;
-  /**
-   * Whether to refine the foreground using the estimated mask Default value: `true`
-   */
-  refine_foreground?: boolean;
+  tracks: Array<Track>;
 };
 export type InstantCharacterInput = {
   /**
@@ -20581,6 +17837,10 @@ export type KlingV15KolorsVirtualTryOnInput = {
    * Url to the garment image.
    */
   garment_image_url: string | Blob | File;
+  /**
+   * Whether to return the result as a base64 encoded data URI.
+   */
+  sync_mode?: boolean;
 };
 export type KlingV15KolorsVirtualTryOnOutput = {
   /**
@@ -20707,72 +17967,6 @@ export type KlingVideoV15ProEffectsInput = {
   duration?: "5" | "10";
 };
 export type KlingVideoV15ProEffectsOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type KlingVideoV15ProImageToVideoInput = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   *
-   */
-  image_url: string | Blob | File;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   * URL of the image to be used for the end of the video
-   */
-  tail_image_url?: string | Blob | File;
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-};
-export type KlingVideoV15ProImageToVideoOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type KlingVideoV15ProTextToVideoInput = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-};
-export type KlingVideoV15ProTextToVideoOutput = {
   /**
    * The generated video
    */
@@ -21014,76 +18208,6 @@ export type KlingVideoV16StandardTextToVideoOutput = {
    */
   video: File;
 };
-export type KlingVideoV1ProImageToVideoInput = {
-  /**
-   * The prompt for the video
-   */
-  prompt: string;
-  /**
-   * URL of the image to be used for the video
-   */
-  image_url: string | Blob | File;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-  /**
-   * URL of the image to be used for the end of the video
-   */
-  tail_image_url?: string | Blob | File;
-  /**
-   * URL of the image for Static Brush Application Area (Mask image created by users using the motion brush)
-   */
-  static_mask_url?: string | Blob | File;
-  /**
-   * List of dynamic masks
-   */
-  dynamic_masks?: Array<DynamicMask>;
-};
-export type KlingVideoV1ProImageToVideoOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type KlingVideoV1ProTextToVideoInput = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-};
-export type KlingVideoV1ProTextToVideoOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
 export type KlingVideoV1StandardEffectsInput = {
   /**
    * URL of images to be used for hug, kiss or heart_gesture video.
@@ -21107,47 +18231,6 @@ export type KlingVideoV1StandardEffectsInput = {
   duration?: "5" | "10";
 };
 export type KlingVideoV1StandardEffectsOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type KlingVideoV1StandardImageToVideoInput = {
-  /**
-   * The prompt for the video
-   */
-  prompt: string;
-  /**
-   * URL of the image to be used for the video
-   */
-  image_url: string | Blob | File;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-  /**
-   * URL of the image to be used for the end of the video
-   */
-  tail_image_url?: string | Blob | File;
-  /**
-   * URL of the image for Static Brush Application Area (Mask image created by users using the motion brush)
-   */
-  static_mask_url?: string | Blob | File;
-  /**
-   * List of dynamic masks
-   */
-  dynamic_masks?: Array<DynamicMask>;
-};
-export type KlingVideoV1StandardImageToVideoOutput = {
   /**
    * The generated video
    */
@@ -21584,170 +18667,6 @@ export type KokoroSpanishOutput = {
    */
   audio: File;
 };
-export type KolorsImageToImageInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small
-   * details (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show
-   * you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * The number of inference steps to perform. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   * Seed
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and
-   * uploaded before returning the response. This will increase the latency of
-   * the function but it allows you to get the image directly in the response
-   * without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * Enable safety checker. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The scheduler to use for the model. Default value: `"EulerDiscreteScheduler"`
-   */
-  scheduler?:
-    | "EulerDiscreteScheduler"
-    | "EulerAncestralDiscreteScheduler"
-    | "DPMSolverMultistepScheduler"
-    | "DPMSolverMultistepScheduler_SDE_karras"
-    | "UniPCMultistepScheduler"
-    | "DEISMultistepScheduler";
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * URL of image to use for image to image
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength to use for image-to-image. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-};
-export type KolorsImageToImageOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type KolorsInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible
-   * for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small
-   * details (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show
-   * you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * The number of inference steps to perform. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   * Seed
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and
-   * uploaded before returning the response. This will increase the latency of
-   * the function but it allows you to get the image directly in the response
-   * without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * Enable safety checker. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The scheduler to use for the model. Default value: `"EulerDiscreteScheduler"`
-   */
-  scheduler?:
-    | "EulerDiscreteScheduler"
-    | "EulerAncestralDiscreteScheduler"
-    | "DPMSolverMultistepScheduler"
-    | "DPMSolverMultistepScheduler_SDE_karras"
-    | "UniPCMultistepScheduler"
-    | "DEISMultistepScheduler";
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-};
 export type KontextEditOutput = {
   /**
    * The generated image files info.
@@ -21772,6 +18691,29 @@ export type KontextEditOutput = {
   prompt: string;
 };
 export type KontextImg2ImgOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type KontextInpaintOutput = {
   /**
    * The generated image files info.
    */
@@ -21820,6 +18762,52 @@ export type KontextT2IOutput = {
 export type KontextText2ImageOutput = {
   /**
    * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type KreaOutput = {
+  /**
+   * The generated images.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
+export type KreaReduxOutput = {
+  /**
+   * The generated images.
    */
   images: Array<Image>;
   /**
@@ -22010,22 +18998,6 @@ export type LeffaVirtualTryonOutput = {
    */
   has_nsfw_concepts: boolean;
 };
-export type LineartInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Whether to use the coarse model
-   */
-  coarse?: boolean;
-};
-export type LineartOutput = {
-  /**
-   * Image with edges detected using the Canny algorithm
-   */
-  image: Image;
-};
 export type LipsyncA2VOutput = {
   /**
    * The generated video
@@ -22092,246 +19064,6 @@ export type LipSyncV2Output = {
    */
   video: File;
 };
-export type LivePortraitImageInput = {
-  /**
-   * URL of the image to be animated
-   */
-  image_url: string | Blob | File;
-  /**
-   * Amount to blink the eyes
-   */
-  blink?: number;
-  /**
-   * Amount to raise or lower eyebrows
-   */
-  eyebrow?: number;
-  /**
-   * Amount to wink
-   */
-  wink?: number;
-  /**
-   * Amount to move pupils horizontally
-   */
-  pupil_x?: number;
-  /**
-   * Amount to move pupils vertically
-   */
-  pupil_y?: number;
-  /**
-   * Amount to open mouth in 'aaa' shape
-   */
-  aaa?: number;
-  /**
-   * Amount to shape mouth in 'eee' position
-   */
-  eee?: number;
-  /**
-   * Amount to shape mouth in 'woo' position
-   */
-  woo?: number;
-  /**
-   * Amount to smile
-   */
-  smile?: number;
-  /**
-   * Amount to rotate the face in pitch
-   */
-  rotate_pitch?: number;
-  /**
-   * Amount to rotate the face in yaw
-   */
-  rotate_yaw?: number;
-  /**
-   * Amount to rotate the face in roll
-   */
-  rotate_roll?: number;
-  /**
-   * Whether to paste-back/stitch the animated face cropping from the face-cropping space to the original image space. Default value: `true`
-   */
-  flag_pasteback?: boolean;
-  /**
-   * Whether to crop the source portrait to the face-cropping space. Default value: `true`
-   */
-  flag_do_crop?: boolean;
-  /**
-   * Whether to conduct the rotation when flag_do_crop is True. Default value: `true`
-   */
-  flag_do_rot?: boolean;
-  /**
-   * Whether to set the lip to closed state before animation. Only takes effect when flag_eye_retargeting and flag_lip_retargeting are False. Default value: `true`
-   */
-  flag_lip_zero?: boolean;
-  /**
-   * Size of the output image. Default value: `512`
-   */
-  dsize?: number;
-  /**
-   * Scaling factor for the face crop. Default value: `2.3`
-   */
-  scale?: number;
-  /**
-   * Horizontal offset ratio for face crop.
-   */
-  vx_ratio?: number;
-  /**
-   * Vertical offset ratio for face crop. Positive values move up, negative values move down. Default value: `-0.125`
-   */
-  vy_ratio?: number;
-  /**
-   * Whether to enable the safety checker. If enabled, the model will check if the input image contains a face before processing it.
-   * The safety checker will process the input image
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * Output format Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type LivePortraitImageOutput = {
-  /**
-   * The generated image file.
-   */
-  image: Image;
-};
-export type LivePortraitInput = {
-  /**
-   * URL of the video to drive the lip syncing.
-   */
-  video_url: string | Blob | File;
-  /**
-   * URL of the image to be animated
-   */
-  image_url: string | Blob | File;
-  /**
-   * Amount to blink the eyes
-   */
-  blink?: number;
-  /**
-   * Amount to raise or lower eyebrows
-   */
-  eyebrow?: number;
-  /**
-   * Amount to wink
-   */
-  wink?: number;
-  /**
-   * Amount to move pupils horizontally
-   */
-  pupil_x?: number;
-  /**
-   * Amount to move pupils vertically
-   */
-  pupil_y?: number;
-  /**
-   * Amount to open mouth in 'aaa' shape
-   */
-  aaa?: number;
-  /**
-   * Amount to shape mouth in 'eee' position
-   */
-  eee?: number;
-  /**
-   * Amount to shape mouth in 'woo' position
-   */
-  woo?: number;
-  /**
-   * Amount to smile
-   */
-  smile?: number;
-  /**
-   * Whether to set the lip to closed state before animation. Only takes effect when flag_eye_retargeting and flag_lip_retargeting are False. Default value: `true`
-   */
-  flag_lip_zero?: boolean;
-  /**
-   * Amount to rotate the face in pitch
-   */
-  rotate_pitch?: number;
-  /**
-   * Amount to rotate the face in yaw
-   */
-  rotate_yaw?: number;
-  /**
-   * Amount to rotate the face in roll
-   */
-  rotate_roll?: number;
-  /**
-   * Whether to enable eye retargeting.
-   */
-  flag_eye_retargeting?: boolean;
-  /**
-   * Whether to enable lip retargeting.
-   */
-  flag_lip_retargeting?: boolean;
-  /**
-   * Whether to enable stitching. Recommended to set to True. Default value: `true`
-   */
-  flag_stitching?: boolean;
-  /**
-   * Whether to use relative motion. Default value: `true`
-   */
-  flag_relative?: boolean;
-  /**
-   * Whether to paste-back/stitch the animated face cropping from the face-cropping space to the original image space. Default value: `true`
-   */
-  flag_pasteback?: boolean;
-  /**
-   * Whether to crop the source portrait to the face-cropping space. Default value: `true`
-   */
-  flag_do_crop?: boolean;
-  /**
-   * Whether to conduct the rotation when flag_do_crop is True. Default value: `true`
-   */
-  flag_do_rot?: boolean;
-  /**
-   * Size of the output image. Default value: `512`
-   */
-  dsize?: number;
-  /**
-   * Scaling factor for the face crop. Default value: `2.3`
-   */
-  scale?: number;
-  /**
-   * Horizontal offset ratio for face crop.
-   */
-  vx_ratio?: number;
-  /**
-   * Vertical offset ratio for face crop. Positive values move up, negative values move down. Default value: `-0.125`
-   */
-  vy_ratio?: number;
-  /**
-   * Batch size for the model. The larger the batch size, the faster the model will run, but the more memory it will consume. Default value: `32`
-   */
-  batch_size?: number;
-  /**
-   * Whether to enable the safety checker. If enabled, the model will check if the input image contains a face before processing it.
-   * The safety checker will process the input image
-   */
-  enable_safety_checker?: boolean;
-};
-export type LivePortraitOutput = {
-  /**
-   * The generated video file.
-   */
-  video: File;
-};
-export type LivePortraitVideoInput = {
-  /**
-   * URL of the video to drive the lip syncing.
-   */
-  source_video_url: string | Blob | File;
-  /**
-   * URL of the video to drive the lip syncing.
-   */
-  driving_video_url: string | Blob | File;
-  /**
-   * Whether to prioritize source or driving audio. Default value: `"source"`
-   */
-  audio_priority?: "source" | "driving";
-  /**
-   * Whether to filter out NSFW content. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
 export type LoudnormInput = {
   /**
    * URL of the audio file to normalize
@@ -22392,6 +19124,370 @@ export type LoudnormOutput = {
    */
   summary?: LoudnormSummary;
 };
+export type Ltxv13b098DistilledExtendInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * LoRA weights to use for generation
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * The aspect ratio of the video. Default value: `"auto"`
+   */
+  aspect_ratio?: "9:16" | "1:1" | "16:9" | "auto";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * The number of frames in the video. Default value: `121`
+   */
+  num_frames?: number;
+  /**
+   * Number of inference steps during the first pass. Default value: `8`
+   */
+  first_pass_num_inference_steps?: number;
+  /**
+   * Number of inference steps during the second pass. Default value: `8`
+   */
+  second_pass_num_inference_steps?: number;
+  /**
+   * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
+   */
+  second_pass_skip_initial_steps?: number;
+  /**
+   * The frame rate of the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Whether to expand the prompt using a language model.
+   */
+  expand_prompt?: boolean;
+  /**
+   * Whether to reverse the video.
+   */
+  reverse_video?: boolean;
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to use a detail pass. If True, the model will perform a second pass to refine the video and enhance details. This incurs a 2.0x cost multiplier on the base price.
+   */
+  enable_detail_pass?: boolean;
+  /**
+   * The factor for adaptive instance normalization (AdaIN) applied to generated video chunks after the first. This can help deal with a gradual increase in saturation/contrast in the generated video by normalizing the color distribution across the video. A high value will ensure the color distribution is more consistent across the video, while a low value will allow for more variation in color distribution. Default value: `0.5`
+   */
+  temporal_adain_factor?: number;
+  /**
+   * The compression ratio for tone mapping. This is used to compress the dynamic range of the video to improve visual quality. A value of 0.0 means no compression, while a value of 1.0 means maximum compression.
+   */
+  tone_map_compression_ratio?: number;
+  /**
+   * The constant rate factor (CRF) to compress input media with. Compressed input media more closely matches the model's training data, which can improve motion quality. Default value: `29`
+   */
+  constant_rate_factor?: number;
+  /**
+   * Video to be extended.
+   */
+  video: ExtendVideoConditioningInput;
+};
+export type Ltxv13b098DistilledExtendOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The prompt used for generation.
+   */
+  prompt: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type Ltxv13b098DistilledImageToVideoInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * LoRA weights to use for generation
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * The aspect ratio of the video. Default value: `"auto"`
+   */
+  aspect_ratio?: "9:16" | "1:1" | "16:9" | "auto";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * The number of frames in the video. Default value: `121`
+   */
+  num_frames?: number;
+  /**
+   * Number of inference steps during the first pass. Default value: `8`
+   */
+  first_pass_num_inference_steps?: number;
+  /**
+   * Number of inference steps during the second pass. Default value: `8`
+   */
+  second_pass_num_inference_steps?: number;
+  /**
+   * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
+   */
+  second_pass_skip_initial_steps?: number;
+  /**
+   * The frame rate of the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Whether to expand the prompt using a language model.
+   */
+  expand_prompt?: boolean;
+  /**
+   * Whether to reverse the video.
+   */
+  reverse_video?: boolean;
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to use a detail pass. If True, the model will perform a second pass to refine the video and enhance details. This incurs a 2.0x cost multiplier on the base price.
+   */
+  enable_detail_pass?: boolean;
+  /**
+   * The factor for adaptive instance normalization (AdaIN) applied to generated video chunks after the first. This can help deal with a gradual increase in saturation/contrast in the generated video by normalizing the color distribution across the video. A high value will ensure the color distribution is more consistent across the video, while a low value will allow for more variation in color distribution. Default value: `0.5`
+   */
+  temporal_adain_factor?: number;
+  /**
+   * The compression ratio for tone mapping. This is used to compress the dynamic range of the video to improve visual quality. A value of 0.0 means no compression, while a value of 1.0 means maximum compression.
+   */
+  tone_map_compression_ratio?: number;
+  /**
+   * The constant rate factor (CRF) to compress input media with. Compressed input media more closely matches the model's training data, which can improve motion quality. Default value: `29`
+   */
+  constant_rate_factor?: number;
+  /**
+   * Image URL for Image-to-Video task
+   */
+  image_url: string | Blob | File;
+};
+export type Ltxv13b098DistilledImageToVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The prompt used for generation.
+   */
+  prompt: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type Ltxv13b098DistilledInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * LoRA weights to use for generation
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "1:1" | "16:9";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * The number of frames in the video. Default value: `121`
+   */
+  num_frames?: number;
+  /**
+   * Number of inference steps during the first pass. Default value: `8`
+   */
+  first_pass_num_inference_steps?: number;
+  /**
+   * Number of inference steps during the second pass. Default value: `8`
+   */
+  second_pass_num_inference_steps?: number;
+  /**
+   * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
+   */
+  second_pass_skip_initial_steps?: number;
+  /**
+   * The frame rate of the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Whether to expand the prompt using a language model.
+   */
+  expand_prompt?: boolean;
+  /**
+   * Whether to reverse the video.
+   */
+  reverse_video?: boolean;
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to use a detail pass. If True, the model will perform a second pass to refine the video and enhance details. This incurs a 2.0x cost multiplier on the base price.
+   */
+  enable_detail_pass?: boolean;
+  /**
+   * The factor for adaptive instance normalization (AdaIN) applied to generated video chunks after the first. This can help deal with a gradual increase in saturation/contrast in the generated video by normalizing the color distribution across the video. A high value will ensure the color distribution is more consistent across the video, while a low value will allow for more variation in color distribution. Default value: `0.5`
+   */
+  temporal_adain_factor?: number;
+  /**
+   * The compression ratio for tone mapping. This is used to compress the dynamic range of the video to improve visual quality. A value of 0.0 means no compression, while a value of 1.0 means maximum compression.
+   */
+  tone_map_compression_ratio?: number;
+};
+export type Ltxv13b098DistilledMulticonditioningInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * LoRA weights to use for generation
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * The aspect ratio of the video. Default value: `"auto"`
+   */
+  aspect_ratio?: "9:16" | "1:1" | "16:9" | "auto";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * The number of frames in the video. Default value: `121`
+   */
+  num_frames?: number;
+  /**
+   * Number of inference steps during the first pass. Default value: `8`
+   */
+  first_pass_num_inference_steps?: number;
+  /**
+   * Number of inference steps during the second pass. Default value: `8`
+   */
+  second_pass_num_inference_steps?: number;
+  /**
+   * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
+   */
+  second_pass_skip_initial_steps?: number;
+  /**
+   * The frame rate of the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Whether to expand the prompt using a language model.
+   */
+  expand_prompt?: boolean;
+  /**
+   * Whether to reverse the video.
+   */
+  reverse_video?: boolean;
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to use a detail pass. If True, the model will perform a second pass to refine the video and enhance details. This incurs a 2.0x cost multiplier on the base price.
+   */
+  enable_detail_pass?: boolean;
+  /**
+   * The factor for adaptive instance normalization (AdaIN) applied to generated video chunks after the first. This can help deal with a gradual increase in saturation/contrast in the generated video by normalizing the color distribution across the video. A high value will ensure the color distribution is more consistent across the video, while a low value will allow for more variation in color distribution. Default value: `0.5`
+   */
+  temporal_adain_factor?: number;
+  /**
+   * The compression ratio for tone mapping. This is used to compress the dynamic range of the video to improve visual quality. A value of 0.0 means no compression, while a value of 1.0 means maximum compression.
+   */
+  tone_map_compression_ratio?: number;
+  /**
+   * The constant rate factor (CRF) to compress input media with. Compressed input media more closely matches the model's training data, which can improve motion quality. Default value: `29`
+   */
+  constant_rate_factor?: number;
+  /**
+   * URL of images to use as conditioning
+   */
+  images?: Array<ImageConditioningInput>;
+  /**
+   * Videos to use as conditioning
+   */
+  videos?: Array<VideoConditioningInput>;
+};
+export type Ltxv13b098DistilledMulticonditioningOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The prompt used for generation.
+   */
+  prompt: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type Ltxv13b098DistilledOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The prompt used for generation.
+   */
+  prompt: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
 export type LtxVideo13bDevExtendInput = {
   /**
    * Text prompt to guide generation
@@ -22420,19 +19516,19 @@ export type LtxVideo13bDevExtendInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `30`
+   * Number of inference steps during the first pass. Default value: `30`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `3`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `30`
+   * Number of inference steps during the second pass. Default value: `30`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `17`
    */
@@ -22504,19 +19600,19 @@ export type LtxVideo13bDevImageToVideoInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `30`
+   * Number of inference steps during the first pass. Default value: `30`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `3`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `30`
+   * Number of inference steps during the second pass. Default value: `30`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `17`
    */
@@ -22588,19 +19684,19 @@ export type LtxVideo13bDevInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `30`
+   * Number of inference steps during the first pass. Default value: `30`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `3`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `30`
+   * Number of inference steps during the second pass. Default value: `30`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `17`
    */
@@ -22650,19 +19746,19 @@ export type LtxVideo13bDevMulticonditioningInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `30`
+   * Number of inference steps during the first pass. Default value: `30`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `3`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `30`
+   * Number of inference steps during the second pass. Default value: `30`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `17`
    */
@@ -22752,19 +19848,19 @@ export type LtxVideo13bDistilledExtendInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -22836,19 +19932,19 @@ export type LtxVideo13bDistilledImageToVideoInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -22920,19 +20016,19 @@ export type LtxVideo13bDistilledInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -22982,19 +20078,19 @@ export type LtxVideo13bDistilledMulticonditioningInput = {
   /**
    * The number of frames in the video. Default value: `121`
    */
-  number_of_frames?: number;
+  num_frames?: number;
   /**
-   * Number of inference steps during the first pass Default value: `8`
+   * Number of inference steps during the first pass. Default value: `8`
    */
-  first_pass_number_of_steps?: number;
+  first_pass_num_inference_steps?: number;
   /**
    * Number of inference steps to skip in the final steps of the first pass. By skipping some steps at the end, the first pass can focus on larger changes instead of smaller details. Default value: `1`
    */
   first_pass_skip_final_steps?: number;
   /**
-   * Number of inference steps during the second pass Default value: `8`
+   * Number of inference steps during the second pass. Default value: `8`
    */
-  second_pass_number_of_steps?: number;
+  second_pass_num_inference_steps?: number;
   /**
    * The number of inference steps to skip in the initial steps of the second pass. By skipping some steps at the beginning, the second pass can focus on smaller details instead of larger changes. Default value: `5`
    */
@@ -23055,64 +20151,6 @@ export type LtxVideo13bDistilledOutput = {
    * The seed used for generation.
    */
   seed: number;
-};
-export type LtxVideoImageToVideoInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
-   */
-  negative_prompt?: string;
-  /**
-   * The seed to use for random number generation.
-   */
-  seed?: number;
-  /**
-   * The number of inference steps to take. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The guidance scale to use. Default value: `3`
-   */
-  guidance_scale?: number;
-  /**
-   * The URL of the image to generate the video from.
-   */
-  image_url: string | Blob | File;
-};
-export type LtxVideoImageToVideoOutput = {
-  /**
-   * The generated video.
-   */
-  video: File;
-  /**
-   * The seed used for random number generation.
-   */
-  seed: number;
-};
-export type LtxVideoInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
-   */
-  negative_prompt?: string;
-  /**
-   * The seed to use for random number generation.
-   */
-  seed?: number;
-  /**
-   * The number of inference steps to take. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The guidance scale to use. Default value: `3`
-   */
-  guidance_scale?: number;
 };
 export type LtxVideoLoraImageToVideoInput = {
   /**
@@ -23181,6 +20219,56 @@ export type LtxVideoLoraImageToVideoOutput = {
    * The generated video.
    */
   video: File;
+};
+export type LtxVideoLoraInput = {
+  /**
+   * The prompt to generate the video from.
+   */
+  prompt: string;
+  /**
+   * The negative prompt to use. Default value: `"blurry, low quality, low resolution, inconsistent motion, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * The LoRA weights to use for generation.
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * The resolution of the video. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * The aspect ratio of the video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "1:1" | "9:16";
+  /**
+   * The number of frames in the video. Default value: `89`
+   */
+  number_of_frames?: number;
+  /**
+   * The number of inference steps to use. Default value: `30`
+   */
+  number_of_steps?: number;
+  /**
+   * The frame rate of the video. Default value: `25`
+   */
+  frame_rate?: number;
+  /**
+   * The seed to use for generation.
+   */
+  seed?: number;
+  /**
+   * Whether to expand the prompt using the LLM.
+   */
+  expand_prompt?: boolean;
+  /**
+   * Whether to reverse the video.
+   */
+  reverse_video?: boolean;
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
 };
 export type LtxVideoLoraMulticonditioningInput = {
   /**
@@ -23254,15 +20342,19 @@ export type LtxVideoLoraMulticonditioningOutput = {
    */
   video: File;
 };
-export type LtxVideoOutput = {
+export type LtxVideoLoraOutput = {
+  /**
+   * The prompt used for generation.
+   */
+  prompt: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
   /**
    * The generated video.
    */
   video: File;
-  /**
-   * The seed used for random number generation.
-   */
-  seed: number;
 };
 export type LtxVideoTrainerInput = {
   /**
@@ -23398,6 +20490,50 @@ export type LtxVideoV095ExtendOutput = {
    */
   seed: number;
 };
+export type LtxVideoV095ImageToVideoInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * Resolution of the generated video (480p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "16:9";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * Number of inference steps Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to expand the prompt using the model's own capabilities. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Image URL for Image-to-Video task
+   */
+  image_url: string | Blob | File;
+};
+export type LtxVideoV095ImageToVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
 export type LtxVideoV095Input = {
   /**
    * Text prompt to guide generation
@@ -23486,6 +20622,182 @@ export type LtxVideoV095Output = {
    */
   seed: number;
 };
+export type LtxVideoV097ExtendInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * Resolution of the generated video (480p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "16:9";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * Number of inference steps Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to expand the prompt using the model's own capabilities. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Video to be extended.
+   */
+  video: VideoConditioningInput;
+};
+export type LtxVideoV097ExtendOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type LtxVideoV097ImageToVideoInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * Resolution of the generated video (480p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "16:9";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * Number of inference steps Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to expand the prompt using the model's own capabilities. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * Image URL for Image-to-Video task
+   */
+  image_url: string | Blob | File;
+};
+export type LtxVideoV097ImageToVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type LtxVideoV097Input = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * Resolution of the generated video (480p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "16:9";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * Number of inference steps Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to expand the prompt using the model's own capabilities. Default value: `true`
+   */
+  expand_prompt?: boolean;
+};
+export type LtxVideoV097MulticonditioningInput = {
+  /**
+   * Text prompt to guide generation
+   */
+  prompt: string;
+  /**
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
+   */
+  negative_prompt?: string;
+  /**
+   * Resolution of the generated video (480p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "16:9";
+  /**
+   * Random seed for generation
+   */
+  seed?: number;
+  /**
+   * Number of inference steps Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to expand the prompt using the model's own capabilities. Default value: `true`
+   */
+  expand_prompt?: boolean;
+  /**
+   * URL of images to use as conditioning
+   */
+  images?: Array<ImageConditioningInput>;
+  /**
+   * Videos to use as conditioning
+   */
+  videos?: Array<VideoConditioningInput>;
+};
+export type LtxVideoV097MulticonditioningOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type LtxVideoV097Output = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
 export type LumaDreamMachineInput = {
   /**
    *
@@ -23534,7 +20846,7 @@ export type LumaDreamMachineRay2FlashImageToVideoInput = {
   /**
    * The duration of the generated video Default value: `"5s"`
    */
-  duration?: "5s";
+  duration?: "5s" | "9s";
 };
 export type LumaDreamMachineRay2FlashImageToVideoOutput = {
   /**
@@ -23563,6 +20875,39 @@ export type LumaDreamMachineRay2FlashInput = {
    * The duration of the generated video (9s costs 2x more) Default value: `"5s"`
    */
   duration?: "5s" | "9s";
+};
+export type LumaDreamMachineRay2FlashModifyInput = {
+  /**
+   * URL of the input video to modify
+   */
+  video_url: string | Blob | File;
+  /**
+   * Optional URL of the first frame image for modification
+   */
+  image_url?: string | Blob | File;
+  /**
+   * Instruction for modifying the video
+   */
+  prompt?: string;
+  /**
+   * Amount of modification to apply to the video, adhere_1 is the least amount of modification, reimagine_3 is the most Default value: `"flex_1"`
+   */
+  mode?:
+    | "adhere_1"
+    | "adhere_2"
+    | "adhere_3"
+    | "flex_1"
+    | "flex_2"
+    | "flex_3"
+    | "reimagine_1"
+    | "reimagine_2"
+    | "reimagine_3";
+};
+export type LumaDreamMachineRay2FlashModifyOutput = {
+  /**
+   * URL of the modified video
+   */
+  video: File;
 };
 export type LumaDreamMachineRay2FlashOutput = {
   /**
@@ -23646,7 +20991,7 @@ export type LumaDreamMachineRay2ImageToVideoInput = {
   /**
    * The duration of the generated video Default value: `"5s"`
    */
-  duration?: "5s";
+  duration?: "5s" | "9s";
 };
 export type LumaDreamMachineRay2ImageToVideoOutput = {
   /**
@@ -24329,29 +21674,29 @@ export type MetadataOutput = {
    */
   media: Video | Audio;
 };
-export type MiDaSInput = {
+export type MinimaxHailuo02FastImageToVideoInput = {
   /**
-   * URL of the image to process
+   *
+   */
+  prompt: string;
+  /**
+   *
    */
   image_url: string | Blob | File;
   /**
-   * A parameter for the MiDaS detector Default value: `6.283185307179586`
+   * The duration of the video in seconds. 10 seconds videos are not supported for 1080p resolution. Default value: `"6"`
    */
-  a?: number;
+  duration?: "6" | "10";
   /**
-   * Background threshold for the MiDaS detector Default value: `0.1`
+   * Whether to use the model's prompt optimizer Default value: `true`
    */
-  background_threshold?: number;
+  prompt_optimizer?: boolean;
 };
-export type MiDaSOutput = {
+export type MinimaxHailuo02FastImageToVideoOutput = {
   /**
-   * Image with MiDaS depth map
+   * The generated video
    */
-  depth_map: Image;
-  /**
-   * Image with MiDaS normal map
-   */
-  normal_map: Image;
+  video: File;
 };
 export type MinimaxHailuo02ProImageToVideoInput = {
   /**
@@ -24406,6 +21751,10 @@ export type MinimaxHailuo02StandardImageToVideoInput = {
    * Whether to use the model's prompt optimizer Default value: `true`
    */
   prompt_optimizer?: boolean;
+  /**
+   * The resolution of the generated video. Default value: `"768P"`
+   */
+  resolution?: "512P" | "768P";
 };
 export type MinimaxHailuo02StandardImageToVideoOutput = {
   /**
@@ -24803,6 +22152,26 @@ export type MinimaxVoiceCloneOutput = {
    */
   audio?: File;
 };
+export type MinimaxVoiceDesignInput = {
+  /**
+   * Voice description prompt for generating a personalized voice
+   */
+  prompt: string;
+  /**
+   * Text for audio preview. Limited to 500 characters. A fee of $30 per 1M characters will be charged for the generation of the preview audio.
+   */
+  preview_text: string;
+};
+export type MinimaxVoiceDesignOutput = {
+  /**
+   * The voice_id of the generated voice
+   */
+  custom_voice_id: string;
+  /**
+   * The preview audio using the generated voice
+   */
+  audio: File;
+};
 export type MixDehazeNetInput = {
   /**
    * URL of image to be used for image enhancement
@@ -24820,26 +22189,6 @@ export type MixDehazeNetInput = {
 export type MixDehazeNetOutput = {
   /**
    * The generated image file info.
-   */
-  image: Image;
-};
-export type MLSDInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Score threshold for the MLSD detector Default value: `0.1`
-   */
-  score_threshold?: number;
-  /**
-   * Distance threshold for the MLSD detector Default value: `0.1`
-   */
-  distance_threshold?: number;
-};
-export type MLSDOutput = {
-  /**
-   * Image with lines detected using the MLSD detector
    */
   image: Image;
 };
@@ -24918,30 +22267,6 @@ export type MmaudioV2TextToAudioOutput = {
    * The generated audio.
    */
   audio: File;
-};
-export type MochiV1Input = {
-  /**
-   * The prompt to generate a video from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt for the video. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The seed to use for generating the video.
-   */
-  seed?: number;
-  /**
-   * Whether to enable prompt expansion. Default value: `true`
-   */
-  enable_prompt_expansion?: boolean;
-};
-export type MochiV1Output = {
-  /**
-   * The generated video
-   */
-  video: File;
 };
 export type ModifyOutput = {
   /**
@@ -25242,6 +22567,20 @@ export type MulticonditioningVideoOutput = {
    * The generated video file.
    */
   video: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type MultiConditioningVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The prompt used for generation.
+   */
+  prompt: string;
   /**
    * The seed used for generation.
    */
@@ -25680,6 +23019,26 @@ export type OmnigenV2Output = {
    */
   prompt: string;
 };
+export type OmniHumanInput = {
+  /**
+   * The URL of the image used to generate the video
+   */
+  image_url: string | Blob | File;
+  /**
+   * The URL of the audio file to generate the video. Audio must be under 30s long.
+   */
+  audio_url: string | Blob | File;
+};
+export type OmniHumanOutput = {
+  /**
+   * Generated video file
+   */
+  video: File;
+  /**
+   * Duration of audio input/video output as used for billing.
+   */
+  duration: number;
+};
 export type OrpheusTtsInput = {
   /**
    * The text to be converted to speech. You can additionally add the following emotive tags: <laugh>, <chuckle>, <sigh>, <cough>, <sniffle>, <groan>, <yawn>, <gasp>
@@ -25914,83 +23273,6 @@ export type PhotoLoraInpaintInput = {
    */
   mask_url: string | Blob | File;
 };
-export type PhotomakerInput = {
-  /**
-   * The URL of the image archive containing the images you want to use.
-   */
-  image_archive_url: string | Blob | File;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The base pipeline to use for generating the image. Default value: `"photomaker"`
-   */
-  base_pipeline?: "photomaker" | "photomaker-style";
-  /**
-   * Optional initial image for img2img
-   */
-  initial_image_url?: string | Blob | File;
-  /**
-   * How much noise to add to the latent image. O for no noise, 1 for maximum noise. Default value: `0.5`
-   */
-  initial_image_strength?: number;
-  /**
-   *  Default value: `"Photographic"`
-   */
-  style?:
-    | "(No style)"
-    | "Cinematic"
-    | "Disney Character"
-    | "Digital Art"
-    | "Photographic"
-    | "Fantasy art"
-    | "Neonpunk"
-    | "Enhance"
-    | "Comic book"
-    | "Lowpoly"
-    | "Line art";
-  /**
-   * The negative prompt to use.Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * Increasing the amount of steps tells Stable Diffusion that it should take more steps
-   * to generate your final result which can increase the amount of detail in your image. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   *  Default value: `20`
-   */
-  style_strength?: number;
-  /**
-   * Number of images to generate in one request. Note that the higher the batch size,
-   * the longer it will take to generate the images. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-};
-export type PhotomakerOutput = {
-  /**
-   *
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  seed: number;
-};
 export type PhotoRestorationInput = {
   /**
    * URL of the old or damaged photo to restore.
@@ -26043,30 +23325,6 @@ export type PhotoRestorationOutput = {
    *
    */
   seed: number;
-};
-export type PiDiInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * Whether to use the safe version of the Pidi detector
-   */
-  safe?: boolean;
-  /**
-   * Whether to use the scribble version of the Pidi detector
-   */
-  scribble?: boolean;
-  /**
-   * Whether to apply the filter to the image.
-   */
-  apply_filter?: boolean;
-};
-export type PiDiOutput = {
-  /**
-   * Image with Pidi lines detected
-   */
-  image: Image;
 };
 export type Pika22ImageToVideoOutput = {
   /**
@@ -26373,98 +23631,6 @@ export type PikaV2TurboTextToVideoOutput = {
    * The generated video
    */
   video: File;
-};
-export type PixartSigmaInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The style to apply to the image. Default value: `"(No style)"`
-   */
-  style?:
-    | "(No style)"
-    | "Cinematic"
-    | "Photographic"
-    | "Anime"
-    | "Manga"
-    | "Digital Art"
-    | "Pixel art"
-    | "Fantasy art"
-    | "Neonpunk"
-    | "3D Model";
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `35`
-   */
-  num_inference_steps?: number;
-  /**
-   * The scheduler to use for the model. Default value: `"DPM-SOLVER"`
-   */
-  scheduler?: "DPM-SOLVER" | "SA-SOLVER";
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-};
-export type PixartSigmaOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   * The timings of the different steps of the generation process.
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
 };
 export type PixverseExtendFastInput = {
   /**
@@ -27440,94 +24606,6 @@ export type PlayDiffusionTTSOutput = {
    */
   audio: AudioFile;
 };
-export type PlaygroundV25Input = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3`
-   */
-  guidance_scale?: number;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The rescale factor for the CFG.
-   */
-  guidance_rescale?: number;
-};
-export type PlaygroundV25Output = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
 export type PlushieStyleInput = {
   /**
    * URL of the image to convert to plushie style.
@@ -28449,6 +25527,86 @@ export type QueryInput = {
    */
   max_tokens?: number;
 };
+export type QwenImageInput = {
+  /**
+   * The prompt to generate the image with
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `2.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The negative prompt for the generation Default value: `" "`
+   */
+  negative_prompt?: string;
+  /**
+   * Acceleration level for image generation. Options: 'none', 'regular', 'high'. Higher acceleration increases speed. 'regular' balances speed and quality. 'high' is recommended for images without text. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type QwenImageOutput = {
+  /**
+   * The generated image files info.
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  timings: any;
+  /**
+   * Seed of the generated Image. It will be the same value of the one passed in the
+   * input or the randomly generated that was used in case none was passed.
+   */
+  seed: number;
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The prompt used for generating the image.
+   */
+  prompt: string;
+};
 export type Ray2I2VOutput = {
   /**
    * URL of the generated video
@@ -28500,30 +25658,6 @@ export type RealismOutput = {
    *
    */
   seed: number;
-};
-export type RealtimeOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<RawImage>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
 };
 export type Recraft20bInput = {
   /**
@@ -29260,6 +26394,46 @@ export type RemixImageInput = {
    */
   sync_mode?: boolean;
 };
+export type RetouchInput = {
+  /**
+   * URL of the image to retouch.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Number of inference steps for sampling. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * Whether to enable the safety checker for the generated image. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The scale factor for the LoRA model. Controls the strength of the LoRA effect. Default value: `1`
+   */
+  lora_scale?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded before returning the response. This will increase the latency of the function but it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+};
+export type RetouchOutput = {
+  /**
+   *
+   */
+  images: Array<Image>;
+  /**
+   *
+   */
+  seed: number;
+};
 export type RFInversionInput = {
   /**
    * The prompt to edit the image with
@@ -29375,6 +26549,37 @@ export type RFInversionInput = {
    */
   scheduler?: "euler" | "dpmpp_2m";
   /**
+   * Negative prompt to steer the image generation away from unwanted features.
+   * By default, we will be using NAG for processing the negative prompt. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The scale for NAG. Higher values will result in a image that is more distant
+   * to the negative prompt. Default value: `3`
+   */
+  nag_scale?: number;
+  /**
+   * The tau for NAG. Controls the normalization of the hidden state.
+   * Higher values will result in a less aggressive normalization,
+   * but may also lead to unexpected changes with respect to the original image.
+   * Not recommended to change this value. Default value: `2.5`
+   */
+  nag_tau?: number;
+  /**
+   * The alpha value for NAG. This value is used as a final weighting
+   * factor for steering the normalized guidance (positive and negative prompts)
+   * in the direction of the positive prompt. Higher values will result in less
+   * steering on the normalized guidance where lower values will result in
+   * considering the positive prompt guidance more. Default value: `0.25`
+   */
+  nag_alpha?: number;
+  /**
+   * The proportion of steps to apply NAG. After the specified proportion
+   * of steps has been iterated, the remaining steps will use original
+   * attention processors in FLUX. Default value: `0.25`
+   */
+  nag_end?: number;
+  /**
    * URL of image to be edited
    */
   image_url: string | Blob | File;
@@ -29401,6 +26606,166 @@ export type RFInversionInput = {
     | "constant"
     | "linear_increase"
     | "linear_decrease";
+};
+export type RIFEImageInput = {
+  /**
+   * The URL of the first image to use as the starting point for interpolation.
+   */
+  start_image_url: string | Blob | File;
+  /**
+   * The URL of the second image to use as the ending point for interpolation.
+   */
+  end_image_url: string | Blob | File;
+  /**
+   * The type of output to generate; either individual images or a video. Default value: `"images"`
+   */
+  output_type?: "images" | "video";
+  /**
+   * The format of the output images. Only applicable if output_type is 'images'. Default value: `"jpeg"`
+   */
+  output_format?: "png" | "jpeg";
+  /**
+   * The number of frames to generate between the input images. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * Whether to include the start image in the output.
+   */
+  include_start?: boolean;
+  /**
+   * Whether to include the end image in the output.
+   */
+  include_end?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if output_type is 'video'. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the function will wait for images to be generated and uploaded before returning. This will increase the response time but ensures that the images are ready for use immediately without going through the CDN. Does not apply if output_type is 'video'.
+   */
+  sync_mode?: boolean;
+};
+export type RIFEImageOutput = {
+  /**
+   * The generated frames as individual images.
+   */
+  images?: Array<Image>;
+  /**
+   * The generated video file, if output_type is 'video'.
+   */
+  video?: File;
+};
+export type RifeInput = {
+  /**
+   * The URL of the first image to use as the starting point for interpolation.
+   */
+  start_image_url: string | Blob | File;
+  /**
+   * The URL of the second image to use as the ending point for interpolation.
+   */
+  end_image_url: string | Blob | File;
+  /**
+   * The type of output to generate; either individual images or a video. Default value: `"images"`
+   */
+  output_type?: "images" | "video";
+  /**
+   * The format of the output images. Only applicable if output_type is 'images'. Default value: `"jpeg"`
+   */
+  output_format?: "png" | "jpeg";
+  /**
+   * The number of frames to generate between the input images. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * Whether to include the start image in the output.
+   */
+  include_start?: boolean;
+  /**
+   * Whether to include the end image in the output.
+   */
+  include_end?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if output_type is 'video'. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the function will wait for images to be generated and uploaded before returning. This will increase the response time but ensures that the images are ready for use immediately without going through the CDN. Does not apply if output_type is 'video'.
+   */
+  sync_mode?: boolean;
+};
+export type RifeOutput = {
+  /**
+   * The generated frames as individual images.
+   */
+  images?: Array<Image>;
+  /**
+   * The generated video file, if output_type is 'video'.
+   */
+  video?: File;
+};
+export type RifeVideoInput = {
+  /**
+   * The URL of the video to use for interpolation.
+   */
+  video_url: string | Blob | File;
+  /**
+   * The number of frames to generate between the input video frames. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * If True, the input video will be split into scenes before interpolation. This removes smear frames between scenes, but can result in false positives if the scene detection is not accurate. If False, the entire video will be treated as a single scene.
+   */
+  use_scene_detection?: boolean;
+  /**
+   * If True, the function will use the calculated FPS of the input video multiplied by the number of frames to determine the output FPS. If False, the passed FPS will be used. Default value: `true`
+   */
+  use_calculated_fps?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if use_calculated_fps is False. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the final frame will be looped back to the first frame to create a seamless loop. If False, the final frame will not loop back.
+   */
+  loop?: boolean;
+};
+export type RIFEVideoInput = {
+  /**
+   * The URL of the video to use for interpolation.
+   */
+  video_url: string | Blob | File;
+  /**
+   * The number of frames to generate between the input video frames. Default value: `1`
+   */
+  num_frames?: number;
+  /**
+   * If True, the input video will be split into scenes before interpolation. This removes smear frames between scenes, but can result in false positives if the scene detection is not accurate. If False, the entire video will be treated as a single scene.
+   */
+  use_scene_detection?: boolean;
+  /**
+   * If True, the function will use the calculated FPS of the input video multiplied by the number of frames to determine the output FPS. If False, the passed FPS will be used. Default value: `true`
+   */
+  use_calculated_fps?: boolean;
+  /**
+   * Frames per second for the output video. Only applicable if use_calculated_fps is False. Default value: `8`
+   */
+  fps?: number;
+  /**
+   * If True, the final frame will be looped back to the first frame to create a seamless loop. If False, the final frame will not loop back.
+   */
+  loop?: boolean;
+};
+export type RifeVideoOutput = {
+  /**
+   * The generated video file with interpolated frames.
+   */
+  video: File;
+};
+export type RIFEVideoOutput = {
+  /**
+   * The generated video file with interpolated frames.
+   */
+  video: File;
 };
 export type RundiffusionPhotoFluxInput = {
   /**
@@ -29649,48 +27014,6 @@ export type SadtalkerReferenceOutput = {
    */
   video: File;
 };
-export type SAM2AutomaticSegmentationInput = {
-  /**
-   * URL of the image to be automatically segmented
-   */
-  image_url: string | Blob | File;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * Number of points to sample along each side of the image. Default value: `32`
-   */
-  points_per_side?: number;
-  /**
-   * Threshold for predicted IOU score. Default value: `0.88`
-   */
-  pred_iou_thresh?: number;
-  /**
-   * Threshold for stability score. Default value: `0.95`
-   */
-  stability_score_thresh?: number;
-  /**
-   * Minimum area of a mask region. Default value: `100`
-   */
-  min_mask_region_area?: number;
-};
-export type SAM2AutomaticSegmentationOutput = {
-  /**
-   * Combined segmentation mask.
-   */
-  combined_mask: Image;
-  /**
-   * Individual segmentation masks.
-   */
-  individual_masks: Array<Image>;
-};
 export type Sam2AutoSegmentInput = {
   /**
    * URL of the image to be automatically segmented
@@ -29733,34 +27056,6 @@ export type Sam2AutoSegmentOutput = {
    */
   individual_masks: Array<Image>;
 };
-export type Sam2ImageInput = {
-  /**
-   * URL of the image to be segmented
-   */
-  image_url: string | Blob | File;
-  /**
-   * List of prompts to segment the image
-   */
-  prompts?: Array<PointPrompt>;
-  /**
-   * Coordinates for boxes
-   */
-  box_prompts?: Array<BoxPrompt>;
-  /**
-   * Apply the mask on the image.
-   */
-  apply_mask?: boolean;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-};
 export type SAM2ImageInput = {
   /**
    * URL of the image to be segmented
@@ -29789,12 +27084,6 @@ export type SAM2ImageInput = {
    */
   output_format?: "jpeg" | "png";
 };
-export type Sam2ImageOutput = {
-  /**
-   * Segmented image.
-   */
-  image: Image;
-};
 export type SAM2ImageOutput = {
   /**
    * Segmented image.
@@ -29812,34 +27101,6 @@ export type SAM2RLEOutput = {
    * Run Length Encoding of the mask.
    */
   rle: string | Array<string>;
-};
-export type Sam2VideoInput = {
-  /**
-   * The URL of the video to be segmented.
-   */
-  video_url: string | Blob | File;
-  /**
-   * The URL of the mask to be applied initially.
-   */
-  mask_url?: string | Blob | File;
-  /**
-   * List of prompts to segment the video
-   */
-  prompts?: Array<PointPrompt>;
-  /**
-   * Coordinates for boxes
-   */
-  box_prompts?: Array<BoxPrompt>;
-  /**
-   * Apply the mask on the video.
-   */
-  apply_mask?: boolean;
-};
-export type Sam2VideoOutput = {
-  /**
-   * The segmented video.
-   */
-  video: File;
 };
 export type SAM2VideoOutput = {
   /**
@@ -29868,110 +27129,6 @@ export type SAM2VideoRLEInput = {
    * Apply the mask on the video.
    */
   apply_mask?: boolean;
-};
-export type SamInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type SamOutput = {
-  /**
-   * Image with SAM segmentation map
-   */
-  image: Image;
-};
-export type SanaInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `18`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The style to generate the image in. Default value: `"(No style)"`
-   */
-  style_name?:
-    | "(No style)"
-    | "Cinematic"
-    | "Photographic"
-    | "Anime"
-    | "Manga"
-    | "Digital Art"
-    | "Pixel art"
-    | "Fantasy art"
-    | "Neonpunk"
-    | "3D Model";
-};
-export type SanaOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
 };
 export type SanaSprintInput = {
   /**
@@ -30306,6 +27463,107 @@ export type SceneCompositionOutput = {
    */
   seed: number;
 };
+export type SchnellFlux1ReduxInput = {
+  /**
+   * The URL of the image to generate an image from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The number of inference steps to perform. Default value: `4`
+   */
+  num_inference_steps?: number;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type SchnellFlux1TextToImageInput = {
+  /**
+   * The number of inference steps to perform. Default value: `4`
+   */
+  num_inference_steps?: number;
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
 export type SchnellReduxInput = {
   /**
    * The URL of the image to generate an image from.
@@ -30348,6 +27606,10 @@ export type SchnellReduxInput = {
 };
 export type SchnellTextToImageInput = {
   /**
+   * The number of inference steps to perform. Default value: `4`
+   */
+  num_inference_steps?: number;
+  /**
    * The prompt to generate an image from.
    */
   prompt: string;
@@ -30363,91 +27625,13 @@ export type SchnellTextToImageInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The number of inference steps to perform. Default value: `4`
-   */
-  num_inference_steps?: number;
-  /**
    * The same seed and the same prompt given to the same version of the model
    * will output the same image every time.
    */
   seed?: number;
   /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type ScribbleInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-  /**
-   * The model to use for the Scribble detector Default value: `"HED"`
-   */
-  model?: "HED" | "PiDi";
-  /**
-   * Whether to use the safe version of the Scribble detector
-   */
-  safe?: boolean;
-};
-export type ScribbleOutput = {
-  /**
-   * Image with lines detected using the Scribble detector
-   */
-  image: Image;
-};
-export type SdxlControlnetUnionInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The scale of the controlnet conditioning. Default value: `0.5`
-   */
-  controlnet_conditioning_scale?: number;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Leave it none to automatically infer from the control image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `35`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
    * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
    */
   guidance_scale?: number;
   /**
@@ -30461,105 +27645,17 @@ export type SdxlControlnetUnionInput = {
    */
   num_images?: number;
   /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
    * If set to true, the safety checker will be enabled. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
    * The format of the generated image. Default value: `"jpeg"`
    */
-  format?: "jpeg" | "png";
+  output_format?: "jpeg" | "png";
   /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
    */
-  request_id?: string;
-  /**
-   * The URL of the control image.
-   */
-  openpose_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the openpose image. Default value: `true`
-   */
-  openpose_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  depth_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the depth image. Default value: `true`
-   */
-  depth_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  teed_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the teed image. Default value: `true`
-   */
-  teed_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  canny_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the canny image. Default value: `true`
-   */
-  canny_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  normal_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the normal image. Default value: `true`
-   */
-  normal_preprocess?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  segmentation_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the segmentation image. Default value: `true`
-   */
-  segmentation_preprocess?: boolean;
-};
-export type SdxlControlnetUnionOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
+  acceleration?: "none" | "regular" | "high";
 };
 export type SeedanceImageToVideoInput = {
   /**
@@ -30573,7 +27669,7 @@ export type SeedanceImageToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30607,13 +27703,13 @@ export type SeedanceProImageToVideoInput = {
    */
   prompt: string;
   /**
-   * Video resolution - 480p for faster generation, 1080p for higher quality Default value: `"1080p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for higher quality Default value: `"1080p"`
    */
-  resolution?: "480p" | "1080p";
+  resolution?: "480p" | "720p" | "1080p";
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30647,13 +27743,13 @@ export type SeedanceProTextToVideoInput = {
    */
   aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
   /**
-   * Video resolution - 480p for faster generation, 1080p for higher quality Default value: `"1080p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for higher quality Default value: `"1080p"`
    */
-  resolution?: "480p" | "1080p";
+  resolution?: "480p" | "720p" | "1080p";
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30671,7 +27767,7 @@ export type SeedanceTextToVideoInput = {
   /**
    * The aspect ratio of the generated video Default value: `"16:9"`
    */
-  aspect_ratio?: "16:9" | "4:3" | "1:1" | "9:21";
+  aspect_ratio?: "16:9" | "4:3" | "1:1" | "3:4" | "9:16" | "9:21";
   /**
    * Video resolution - 480p for faster generation, 720p for higher quality Default value: `"720p"`
    */
@@ -30679,7 +27775,7 @@ export type SeedanceTextToVideoInput = {
   /**
    * Duration of the video in seconds Default value: `"5"`
    */
-  duration?: "5" | "10";
+  duration?: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
    * Whether to fix the camera position
    */
@@ -30810,6 +27906,57 @@ export type SharpenOutput = {
    */
   images: Array<Image>;
 };
+export type SkyRaccoonInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `"bright colors, overexposed, static, blurred details, subtitles, style, artwork, painting, picture, still, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, malformed limbs, fused fingers, still picture, cluttered background, three legs, many people in the background, walking backwards"`
+   */
+  negative_prompt?: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * If set to true, the safety checker will be enabled.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * If true, the video will be generated faster with no noticeable degradation in the visual quality.
+   */
+  turbo_mode?: boolean;
+};
+export type SkyRaccoonOutput = {
+  /**
+   * The generated image file.
+   */
+  image: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
 export type SkyreelsI2vInput = {
   /**
    * The prompt to generate the video from.
@@ -30885,64 +28032,6 @@ export type SolarizeOutput = {
    * The processed images with solarize effect
    */
   images: Array<Image>;
-};
-export type SoteDiffusionInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * Number of steps to run the first stage for. Default value: `25`
-   */
-  first_stage_steps?: number;
-  /**
-   * Number of steps to run the second stage for. Default value: `10`
-   */
-  second_stage_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `8`
-   */
-  guidance_scale?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `2`
-   */
-  second_stage_guidance_scale?: number;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The same seed and the same prompt given to the same version of Stable Cascade
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the image will be returned as base64 encoded string.
-   */
-  sync_mode?: boolean;
 };
 export type SoundEffectOutput = {
   /**
@@ -31111,177 +28200,6 @@ export type SprintInput = {
     | "Neonpunk"
     | "3D Model";
 };
-export type StableCascadeInput = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * Number of steps to run the first stage for. Default value: `20`
-   */
-  first_stage_steps?: number;
-  /**
-   * Number of steps to run the second stage for. Default value: `10`
-   */
-  second_stage_steps?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
-   */
-  guidance_scale?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you.
-   */
-  second_stage_guidance_scale?: number;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The same seed and the same prompt given to the same version of Stable Cascade
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the image will be returned as base64 encoded string.
-   */
-  sync_mode?: boolean;
-};
-export type StableCascadeOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type StableDiffusionV15Input = {
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `square`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-};
-export type StableDiffusionV15Output = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
 export type StableDiffusionV35LargeInput = {
   /**
    * The prompt to generate an image from.
@@ -31373,201 +28291,6 @@ export type StableDiffusionV35LargeOutput = {
    */
   prompt: string;
 };
-export type StableDiffusionV35MediumInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `40`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type StableDiffusionV35MediumOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type StableDiffusionV3MediumInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to generate an image from. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * If set to true, prompt will be upsampled with more details.
-   */
-  prompt_expansion?: boolean;
-  /**
-   * The size of the generated image. Default value: `square_hd`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * If set to true, the function will wait for the image to be generated and uploaded
-   * before returning the response. This will increase the latency of the function but
-   * it allows you to get the image directly in the response without going through the CDN.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type StableDiffusionV3MediumOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-  /**
-   * The number of images generated.
-   */
-  num_images: number;
-};
-export type StableVideoInput = {
-  /**
-   * The URL of the image to use as a starting point for the generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The motion bucket id determines the motion of the generated video. The
-   * higher the number, the more motion there will be. Default value: `127`
-   */
-  motion_bucket_id?: number;
-  /**
-   * The conditoning augmentation determines the amount of noise that will be
-   * added to the conditioning frame. The higher the number, the more noise
-   * there will be, and the less the video will look like the initial image.
-   * Increase it for more motion. Default value: `0.02`
-   */
-  cond_aug?: number;
-  /**
-   * The frames per second of the generated video. Default value: `25`
-   */
-  fps?: number;
-};
-export type StableVideoOutput = {
-  /**
-   * Generated video
-   */
-  video: File;
-  /**
-   * Seed for random number generator
-   */
-  seed: number;
-};
 export type StandardImageToVideoHailuo02Input = {
   /**
    *
@@ -31585,6 +28308,10 @@ export type StandardImageToVideoHailuo02Input = {
    * Whether to use the model's prompt optimizer Default value: `true`
    */
   prompt_optimizer?: boolean;
+  /**
+   * The resolution of the generated video. Default value: `"768P"`
+   */
+  resolution?: "512P" | "768P";
 };
 export type StandardTextToVideoHailuo02Input = {
   /**
@@ -31796,6 +28523,55 @@ export type StreamingFastTextToImageInput = {
    */
   output_format?: "jpeg" | "png";
 };
+export type StreamingFlux1Input = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
 export type StreamingFullTextToImageInput = {
   /**
    * The prompt to generate an image from.
@@ -31892,9 +28668,13 @@ export type StreamingInput = {
    */
   enable_safety_checker?: boolean;
   /**
-   * The format of the generated image. Default value: `"png"`
+   * The format of the generated image. Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type StreamingKontextEditInput = {
   /**
@@ -31927,6 +28707,10 @@ export type StreamingKontextEditInput = {
    * Output format Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
   /**
    * Determines how the output resolution is set for image editing.
    * - `auto`: The model selects an optimal resolution from a predefined set that best matches the input image's aspect ratio. This is the recommended setting for most use cases as it's what the model was trained on.
@@ -31983,6 +28767,69 @@ export type StreamingKontextImg2ImgInput = {
    * Output format Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type StreamingKontextInpaintInput = {
+  /**
+   * The URL of the image to be inpainted.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The prompt for the image to image task.
+   */
+  prompt: string;
+  /**
+   * The number of inference steps to perform. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `2.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+  /**
+   * The URL of the reference image for inpainting.
+   */
+  reference_image_url: string | Blob | File;
+  /**
+   * The URL of the mask for inpainting.
+   */
+  mask_url: string | Blob | File;
+  /**
+   * The strength of the initial image. Higher strength values are better for this model. Default value: `0.88`
+   */
+  strength?: number;
 };
 export type StreamingKontextInput = {
   /**
@@ -32022,6 +28869,108 @@ export type StreamingKontextInput = {
    * Output format Default value: `"jpeg"`
    */
   output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type StreamingKreaFlux1Input = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+};
+export type StreamingKreaInput = {
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The size of the generated image. Default value: `landscape_4_3`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * If set to true, the function will wait for the image to be generated and uploaded
+   * before returning the response. This will increase the latency of the function but
+   * it allows you to get the image directly in the response without going through the CDN.
+   */
+  sync_mode?: boolean;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The speed of the generation. The higher the speed, the faster the generation. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
 };
 export type StreamingTextToImageInput = {
   /**
@@ -32585,18 +29534,6 @@ export type TavusHummingbirdLipsyncV0Output = {
    */
   video: File;
 };
-export type TeeDInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type TeeDOutput = {
-  /**
-   * Image with TeeD lines detected
-   */
-  image: Image;
-};
 export type TemplateToVideoOutput = {
   /**
    * The generated video using a predefined template
@@ -32640,44 +29577,6 @@ export type Text2VideoInput = {
    *
    */
   text: string;
-};
-export type TextInput = {
-  /**
-   * The prompt to use as a starting point for the generation.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to use as a starting point for the generation. Default value: `"unrealistic, saturated, high contrast, big nose, painting, drawing, sketch, cartoon, anime, manga, render, CG, 3d, watermark, signature, label"`
-   */
-  negative_prompt?: string;
-  /**
-   * The size of the generated video. Default value: `landscape_16_9`
-   */
-  video_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The motion bucket id determines the motion of the generated video. The
-   * higher the number, the more motion there will be. Default value: `127`
-   */
-  motion_bucket_id?: number;
-  /**
-   * The conditoning augmentation determines the amount of noise that will be
-   * added to the conditioning frame. The higher the number, the more noise
-   * there will be, and the less the video will look like the initial image.
-   * Increase it for more motion. Default value: `0.02`
-   */
-  cond_aug?: number;
 };
 export type TextOutput = {
   /**
@@ -32859,40 +29758,36 @@ export type TextToImage32Output = {
 };
 export type TextToImageInput = {
   /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
+   *
    */
   prompt: string;
   /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
+   * The aspect ratio of the generated image Default value: `"1:1"`
    */
-  negative_prompt?: string;
+  aspect_ratio?:
+    | "10:16"
+    | "16:10"
+    | "9:16"
+    | "16:9"
+    | "4:3"
+    | "3:4"
+    | "1:1"
+    | "1:3"
+    | "3:1"
+    | "3:2"
+    | "2:3";
   /**
-   * The size of the generated image. Default value: `square_hd`
+   * Whether to expand the prompt with MagicPrompt functionality. Default value: `true`
    */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
+  expand_prompt?: boolean;
   /**
-   * The number of inference steps to perform. Default value: `25`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
+   * Seed for the random number generator
    */
   seed?: number;
   /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
+   * The style of the generated image Default value: `"auto"`
    */
-  guidance_scale?: number;
+  style?: "auto" | "general" | "realistic" | "design" | "render_3D" | "anime";
   /**
    * If set to true, the function will wait for the image to be generated and uploaded
    * before returning the response. This will increase the latency of the function but
@@ -32900,38 +29795,9 @@ export type TextToImageInput = {
    */
   sync_mode?: boolean;
   /**
-   * The number of images to generate. Default value: `1`
+   * A negative prompt to avoid in the generated image Default value: `""`
    */
-  num_images?: number;
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
+  negative_prompt?: string;
 };
 export type TextToImageOutput = {
   /**
@@ -33078,25 +29944,33 @@ export type TextToVideoHailuo02Output = {
 };
 export type TextToVideoInput = {
   /**
-   * The prompt to generate the video from.
+   * Text prompt to guide generation
    */
   prompt: string;
   /**
-   * The negative prompt to generate the video from. Default value: `"low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"`
+   * Negative prompt for generation Default value: `"worst quality, inconsistent motion, blurry, jittery, distorted"`
    */
   negative_prompt?: string;
   /**
-   * The seed to use for random number generation.
+   * Resolution of the generated video (480p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "9:16" | "16:9";
+  /**
+   * Random seed for generation
    */
   seed?: number;
   /**
-   * The number of inference steps to take. Default value: `30`
+   * Number of inference steps Default value: `40`
    */
   num_inference_steps?: number;
   /**
-   * The guidance scale to use. Default value: `3`
+   * Whether to expand the prompt using the model's own capabilities. Default value: `true`
    */
-  guidance_scale?: number;
+  expand_prompt?: boolean;
 };
 export type TextToVideoOutput = {
   /**
@@ -33107,6 +29981,46 @@ export type TextToVideoOutput = {
    * The seed used for generation.
    */
   seed: number;
+};
+export type TextToVideoPreviewInput = {
+  /**
+   * The text prompt describing the video you want to generate
+   */
+  prompt: string;
+  /**
+   * The aspect ratio of the generated video. If it is not set to 16:9, the video will be outpainted. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * The duration of the generated video in seconds Default value: `"8s"`
+   */
+  duration?: "8s";
+  /**
+   * A negative prompt to guide the video generation
+   */
+  negative_prompt?: string;
+  /**
+   * Whether to enhance the video generation Default value: `true`
+   */
+  enhance_prompt?: boolean;
+  /**
+   * A seed to use for the video generation
+   */
+  seed?: number;
+  /**
+   * The resolution of the generated video Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+  /**
+   * Whether to generate audio for the video. If false, %33 less credits will be used. Default value: `true`
+   */
+  generate_audio?: boolean;
+};
+export type TextToVideoPreviewOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
 };
 export type TextToVideoV21MasterOutput = {
   /**
@@ -33947,13 +30861,9 @@ export type Veo2ImageToVideoInput = {
    */
   prompt: string;
   /**
-   * URL of the input image to animate. Should be 720p or higher resolution.
+   * URL of the input image to animate. Should be 720p or higher resolution in 16:9 aspect ratio. If the image is not in 16:9 aspect ratio, it will be cropped to fit.
    */
   image_url: string | Blob | File;
-  /**
-   * The aspect ratio of the generated video Default value: `"auto"`
-   */
-  aspect_ratio?: "auto" | "auto_prefer_portrait" | "16:9" | "9:16";
   /**
    * The duration of the generated video in seconds Default value: `"5s"`
    */
@@ -33997,13 +30907,41 @@ export type Veo2Output = {
    */
   video: File;
 };
+export type Veo3FastImageToVideoInput = {
+  /**
+   * The text prompt describing how the image should be animated
+   */
+  prompt: string;
+  /**
+   * URL of the input image to animate. Should be 720p or higher resolution in 16:9 aspect ratio. If the image is not in 16:9 aspect ratio, it will be cropped to fit.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The duration of the generated video in seconds Default value: `"8s"`
+   */
+  duration?: "8s";
+  /**
+   * Whether to generate audio for the video. If false, %33 less credits will be used. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Resolution of the generated video Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+};
+export type Veo3FastImageToVideoOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
+};
 export type Veo3FastInput = {
   /**
    * The text prompt describing the video you want to generate
    */
   prompt: string;
   /**
-   * The aspect ratio of the generated video. If it is not set to 16:9, the video will be outpainted with Luma Ray 2 Reframe functionality. Default value: `"16:9"`
+   * The aspect ratio of the generated video. If it is not set to 16:9, the video will be outpainted. Default value: `"16:9"`
    */
   aspect_ratio?: "16:9" | "9:16" | "1:1";
   /**
@@ -34022,6 +30960,10 @@ export type Veo3FastInput = {
    * A seed to use for the video generation
    */
   seed?: number;
+  /**
+   * The resolution of the generated video Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
   /**
    * Whether to generate audio for the video. If false, %33 less credits will be used. Default value: `true`
    */
@@ -34033,13 +30975,41 @@ export type Veo3FastOutput = {
    */
   video: File;
 };
+export type Veo3ImageToVideoInput = {
+  /**
+   * The text prompt describing how the image should be animated
+   */
+  prompt: string;
+  /**
+   * URL of the input image to animate. Should be 720p or higher resolution in 16:9 aspect ratio. If the image is not in 16:9 aspect ratio, it will be cropped to fit.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The duration of the generated video in seconds Default value: `"8s"`
+   */
+  duration?: "8s";
+  /**
+   * Whether to generate audio for the video. If false, %33 less credits will be used. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Resolution of the generated video Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+};
+export type Veo3ImageToVideoOutput = {
+  /**
+   * The generated video
+   */
+  video: File;
+};
 export type Veo3Input = {
   /**
    * The text prompt describing the video you want to generate
    */
   prompt: string;
   /**
-   * The aspect ratio of the generated video. If it is not set to 16:9, the video will be outpainted with Luma Ray 2 Reframe functionality. Default value: `"16:9"`
+   * The aspect ratio of the generated video. If it is not set to 16:9, the video will be outpainted. Default value: `"16:9"`
    */
   aspect_ratio?: "16:9" | "9:16" | "1:1";
   /**
@@ -34058,6 +31028,10 @@ export type Veo3Input = {
    * A seed to use for the video generation
    */
   seed?: number;
+  /**
+   * The resolution of the generated video Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
   /**
    * Whether to generate audio for the video. If false, %33 less credits will be used. Default value: `true`
    */
@@ -34643,6 +31617,40 @@ export type VignetteOutput = {
    */
   images: Array<Image>;
 };
+export type VisionInput = {
+  /**
+   * Prompt to be used for the image
+   */
+  prompt: string;
+  /**
+   * System prompt to provide context or instructions to the model
+   */
+  system_prompt?: string;
+  /**
+   * Should reasoning be the part of the final answer.
+   */
+  reasoning?: boolean;
+  /**
+   * Name of the model to use. Premium models are charged at 3x the rate of standard models, they include: openai/gpt-5-chat, anthropic/claude-3.5-sonnet, google/gemini-pro-1.5, meta-llama/llama-3.2-90b-vision-instruct, anthropic/claude-3.7-sonnet, openai/gpt-4o. Default value: `"google/gemini-flash-1.5"`
+   */
+  model?:
+    | "anthropic/claude-3.7-sonnet"
+    | "anthropic/claude-3.5-sonnet"
+    | "anthropic/claude-3-haiku"
+    | "google/gemini-pro-1.5"
+    | "google/gemini-flash-1.5"
+    | "google/gemini-flash-1.5-8b"
+    | "google/gemini-2.0-flash-001"
+    | "openai/gpt-4o"
+    | "openai/gpt-5-chat"
+    | "meta-llama/llama-3.2-90b-vision-instruct"
+    | "meta-llama/llama-4-maverick"
+    | "meta-llama/llama-4-scout";
+  /**
+   * URL of the image to be processed
+   */
+  image_url: string | Blob | File;
+};
 export type VoiceCloneOutput = {
   /**
    * The cloned voice ID for use with TTS
@@ -34664,6 +31672,16 @@ export type VoiceDeleteOutput = {
    * The voice_id of the voice that was deleted
    */
   voice_id: string;
+};
+export type VoiceDesignOutput = {
+  /**
+   * The voice_id of the generated voice
+   */
+  custom_voice_id: string;
+  /**
+   * The preview audio using the generated voice
+   */
+  audio: File;
 };
 export type VTONInput = {
   /**
@@ -35366,35 +32384,25 @@ export type WanTrainerT2vOutput = {
    */
   config_file: File;
 };
-export type WanV2113bTextToVideoInput = {
+export type WanV225bImageToVideoInput = {
   /**
-   * Text prompt for generating the video
+   * URL of the input image. If the input image does not match the chosen aspect ratio, it is resized and center cropped.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt to guide video generation.
    */
   prompt: string;
   /**
-   * Video resolution aspect ratio Default value: `"16:9"`
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
    */
-  aspect_ratio?: "16:9" | "9:16";
+  num_frames?: number;
   /**
-   * Noise schedule shift parameter. Affects temporal dynamics. Default value: `5`
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `24`
    */
-  shift?: number;
+  frames_per_second?: number;
   /**
-   * The sampler to use for generation. Default value: `"unipc"`
-   */
-  sampler?: "unipc" | "dpm++";
-  /**
-   * Diffusion sampling steps (1-40) Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * Guidance scale (1-20) Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small
-   * details (e.g. moustache, blurry, low resolution). Default value: `""`
+   * Negative prompt for video generation. Default value: `""`
    */
   negative_prompt?: string;
   /**
@@ -35402,19 +32410,920 @@ export type WanV2113bTextToVideoInput = {
    */
   seed?: number;
   /**
-   * Whether to enable prompt expansion.
+   * Resolution of the generated video (580p or 720p). Default value: `"720p"`
+   */
+  resolution?: "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input image. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
    */
-  enable_safety_checker?: boolean;
+  guidance_scale?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4.
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
 };
-export type WanV2113bTextToVideoOutput = {
+export type WanV225bImageToVideoOutput = {
   /**
    * The generated video file.
    */
   video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV225bTextToImageInput = {
+  /**
+   * The text prompt to guide image generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Shift value for the image. Must be between 1.0 and 10.0. Default value: `2`
+   */
+  shift?: number;
+  /**
+   * The size of the generated image. Default value: `square_hd`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+};
+export type WanV225bTextToImageOutput = {
+  /**
+   * The generated image file.
+   */
+  image: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV225bTextToVideoDistillInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `24`
+   */
+  frames_per_second?: number;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (580p or 720p). Default value: `"720p"`
+   */
+  resolution?: "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `1`
+   */
+  guidance_scale?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4.
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+};
+export type WanV225bTextToVideoDistillOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV225bTextToVideoFastWanInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `24`
+   */
+  frames_per_second?: number;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (580p or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4.
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+};
+export type WanV225bTextToVideoFastWanOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV225bTextToVideoInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `24`
+   */
+  frames_per_second?: number;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (580p or 720p). Default value: `"720p"`
+   */
+  resolution?: "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `40`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4.
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+};
+export type WanV225bTextToVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bImageToVideoLoraInput = {
+  /**
+   * URL of the input image. If the input image does not match the chosen aspect ratio, it is resized and center cropped.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `16`
+   */
+  frames_per_second?: number;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input image. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4. Default value: `1`
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+  /**
+   * LoRA weights to be used in the inference.
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * If true, the video will be reversed.
+   */
+  reverse_video?: boolean;
+};
+export type WanV22A14bImageToVideoLoraOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bImageToVideoTurboInput = {
+  /**
+   * URL of the input image. If the input image does not match the chosen aspect ratio, it is resized and center cropped.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input image. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+};
+export type WanV22A14bImageToVideoTurboOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bTextToImageInput = {
+  /**
+   * The text prompt to guide image generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * Shift value for the image. Must be between 1.0 and 10.0. Default value: `2`
+   */
+  shift?: number;
+  /**
+   * The size of the generated image. Default value: `square_hd`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+};
+export type WanV22A14bTextToImageLoraInput = {
+  /**
+   * The text prompt to guide image generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * Shift value for the image. Must be between 1.0 and 10.0. Default value: `2`
+   */
+  shift?: number;
+  /**
+   * LoRA weights to be used in the inference.
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * If true, the video will be reversed.
+   */
+  reverse_video?: boolean;
+  /**
+   * The size of the generated image. Default value: `square_hd`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+};
+export type WanV22A14bTextToImageLoraOutput = {
+  /**
+   * The generated image file.
+   */
+  image: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bTextToImageOutput = {
+  /**
+   * The generated image file.
+   */
+  image: File;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bTextToVideoInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `16`
+   */
+  frames_per_second?: number;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4. Default value: `1`
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+};
+export type WanV22A14bTextToVideoLoraInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `16`
+   */
+  frames_per_second?: number;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4. Default value: `1`
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+  /**
+   * LoRA weights to be used in the inference.
+   */
+  loras?: Array<LoRAWeight>;
+  /**
+   * If true, the video will be reversed.
+   */
+  reverse_video?: boolean;
+};
+export type WanV22A14bTextToVideoLoraOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bTextToVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bTextToVideoTurboInput = {
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16" | "1:1";
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+};
+export type WanV22A14bTextToVideoTurboOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+};
+export type WanV22A14bVideoToVideoInput = {
+  /**
+   * URL of the input video.
+   */
+  video_url: string | Blob | File;
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Strength of the video transformation. A value of 1.0 means the output will be completely based on the prompt, while a value of 0.0 means the output will be identical to the input video. Default value: `0.9`
+   */
+  strength?: number;
+  /**
+   * Number of frames to generate. Must be between 81 to 121 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `16`
+   */
+  frames_per_second?: number;
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input video. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'none'. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4. Default value: `1`
+   */
+  num_interpolated_frames?: number;
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+  /**
+   * If true, the video will be resampled to the passed frames per second. If false, the video will not be resampled.
+   */
+  resample_fps?: boolean;
+};
+export type WanV22A14bVideoToVideoOutput = {
+  /**
+   * The generated video file.
+   */
+  video: File;
+  /**
+   * The text prompt used for video generation. Default value: `""`
+   */
+  prompt?: string;
   /**
    * The seed used for generation.
    */
@@ -35634,6 +33543,10 @@ export type WanVace14bInpaintingInput = {
    */
   mask_video_url: string | Blob | File;
   /**
+   * URL to the guiding mask file. If provided, the model will use this mask as a reference to create masked video using salient mask tracking. Will be ignored if mask_video_url is provided.
+   */
+  mask_image_url?: string | Blob | File;
+  /**
    * Urls to source reference image. If provided, the model will use this image as reference.
    */
   ref_image_urls?: Array<string>;
@@ -35645,6 +33558,10 @@ export type WanVace14bInpaintingInput = {
    * Whether to enable prompt expansion.
    */
   enable_prompt_expansion?: boolean;
+  /**
+   * Whether to preprocess the input video.
+   */
+  preprocess?: boolean;
   /**
    * Acceleration to use for inference. Options are 'none' or 'regular'. Accelerated inference will very slightly affect output, but will be significantly faster.
    */
@@ -36197,267 +34114,6 @@ export type WeatherEffectOutput = {
    */
   seed: number;
 };
-export type WhisperInput = {
-  /**
-   * URL of the audio file to transcribe. Supported formats: mp3, mp4, mpeg, mpga, m4a, wav or webm.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * Task to perform on the audio file. Either transcribe or translate. Default value: `"transcribe"`
-   */
-  task?: "transcribe" | "translate";
-  /**
-   * Language of the audio file. If set to null, the language will be
-   * automatically detected. Defaults to null.
-   *
-   * If translate is selected as the task, the audio will be translated to
-   * English, regardless of the language selected.
-   */
-  language?:
-    | "af"
-    | "am"
-    | "ar"
-    | "as"
-    | "az"
-    | "ba"
-    | "be"
-    | "bg"
-    | "bn"
-    | "bo"
-    | "br"
-    | "bs"
-    | "ca"
-    | "cs"
-    | "cy"
-    | "da"
-    | "de"
-    | "el"
-    | "en"
-    | "es"
-    | "et"
-    | "eu"
-    | "fa"
-    | "fi"
-    | "fo"
-    | "fr"
-    | "gl"
-    | "gu"
-    | "ha"
-    | "haw"
-    | "he"
-    | "hi"
-    | "hr"
-    | "ht"
-    | "hu"
-    | "hy"
-    | "id"
-    | "is"
-    | "it"
-    | "ja"
-    | "jw"
-    | "ka"
-    | "kk"
-    | "km"
-    | "kn"
-    | "ko"
-    | "la"
-    | "lb"
-    | "ln"
-    | "lo"
-    | "lt"
-    | "lv"
-    | "mg"
-    | "mi"
-    | "mk"
-    | "ml"
-    | "mn"
-    | "mr"
-    | "ms"
-    | "mt"
-    | "my"
-    | "ne"
-    | "nl"
-    | "nn"
-    | "no"
-    | "oc"
-    | "pa"
-    | "pl"
-    | "ps"
-    | "pt"
-    | "ro"
-    | "ru"
-    | "sa"
-    | "sd"
-    | "si"
-    | "sk"
-    | "sl"
-    | "sn"
-    | "so"
-    | "sq"
-    | "sr"
-    | "su"
-    | "sv"
-    | "sw"
-    | "ta"
-    | "te"
-    | "tg"
-    | "th"
-    | "tk"
-    | "tl"
-    | "tr"
-    | "tt"
-    | "uk"
-    | "ur"
-    | "uz"
-    | "vi"
-    | "yi"
-    | "yo"
-    | "zh";
-  /**
-   * Whether to diarize the audio file. Defaults to false. Setting to true will add costs proportional to diarization inference time.
-   */
-  diarize?: boolean;
-  /**
-   * Level of the chunks to return. Either segment or word. Default value: `"segment"`
-   */
-  chunk_level?: "segment" | "word";
-  /**
-   * Version of the model to use. All of the models are the Whisper large variant. Default value: `"3"`
-   */
-  version?: "3";
-  /**
-   *  Default value: `64`
-   */
-  batch_size?: number;
-  /**
-   * Prompt to use for generation. Defaults to an empty string. Default value: `""`
-   */
-  prompt?: string;
-  /**
-   * Number of speakers in the audio file. Defaults to null.
-   * If not provided, the number of speakers will be automatically
-   * detected.
-   */
-  num_speakers?: number;
-};
-export type WhisperOutput = {
-  /**
-   * Transcription of the audio file
-   */
-  text: string;
-  /**
-   * Timestamp chunks of the audio file
-   */
-  chunks?: Array<WhisperChunk>;
-  /**
-   * List of languages that the audio file is inferred to be. Defaults to null.
-   */
-  inferred_languages: Array<
-    | "af"
-    | "am"
-    | "ar"
-    | "as"
-    | "az"
-    | "ba"
-    | "be"
-    | "bg"
-    | "bn"
-    | "bo"
-    | "br"
-    | "bs"
-    | "ca"
-    | "cs"
-    | "cy"
-    | "da"
-    | "de"
-    | "el"
-    | "en"
-    | "es"
-    | "et"
-    | "eu"
-    | "fa"
-    | "fi"
-    | "fo"
-    | "fr"
-    | "gl"
-    | "gu"
-    | "ha"
-    | "haw"
-    | "he"
-    | "hi"
-    | "hr"
-    | "ht"
-    | "hu"
-    | "hy"
-    | "id"
-    | "is"
-    | "it"
-    | "ja"
-    | "jw"
-    | "ka"
-    | "kk"
-    | "km"
-    | "kn"
-    | "ko"
-    | "la"
-    | "lb"
-    | "ln"
-    | "lo"
-    | "lt"
-    | "lv"
-    | "mg"
-    | "mi"
-    | "mk"
-    | "ml"
-    | "mn"
-    | "mr"
-    | "ms"
-    | "mt"
-    | "my"
-    | "ne"
-    | "nl"
-    | "nn"
-    | "no"
-    | "oc"
-    | "pa"
-    | "pl"
-    | "ps"
-    | "pt"
-    | "ro"
-    | "ru"
-    | "sa"
-    | "sd"
-    | "si"
-    | "sk"
-    | "sl"
-    | "sn"
-    | "so"
-    | "sq"
-    | "sr"
-    | "su"
-    | "sv"
-    | "sw"
-    | "ta"
-    | "te"
-    | "tg"
-    | "th"
-    | "tk"
-    | "tl"
-    | "tr"
-    | "tt"
-    | "uk"
-    | "ur"
-    | "uz"
-    | "vi"
-    | "yi"
-    | "yo"
-    | "zh"
-  >;
-  /**
-   * Speaker diarization segments of the audio file. Only present if diarization is enabled.
-   */
-  diarization_segments: Array<DiarizationSegment>;
-};
 export type WojakStyleInput = {
   /**
    * URL of the image to convert to wojak style.
@@ -36497,6 +34153,18 @@ export type WojakStyleOutput = {
    *
    */
   seed: number;
+};
+export type XAilabNsfwInput = {
+  /**
+   * List of image URLs to check. If more than 10 images are provided, only the first 10 will be checked.
+   */
+  image_urls: Array<string>;
+};
+export type XAilabNsfwOutput = {
+  /**
+   * List of booleans indicating if the image has an NSFW concept
+   */
+  has_nsfw_concepts: Array<boolean>;
 };
 export type YouTubeThumbnailsInput = {
   /**
@@ -36558,18 +34226,6 @@ export type YueOutput = {
    */
   audio: File;
 };
-export type ZoeInput = {
-  /**
-   * URL of the image to process
-   */
-  image_url: string | Blob | File;
-};
-export type ZoeOutput = {
-  /**
-   * Image with depth map
-   */
-  image: Image;
-};
 export type ZonosInput = {
   /**
    * The reference audio.
@@ -36599,14 +34255,6 @@ export type EndpointTypeMap = {
     input: Imagen4PreviewInput;
     output: Imagen4PreviewOutput;
   };
-  "fal-ai/pixverse/v4.5/image-to-video": {
-    input: PixverseV45ImageToVideoInput;
-    output: PixverseV45ImageToVideoOutput;
-  };
-  "fal-ai/recraft/v3/text-to-image": {
-    input: RecraftV3TextToImageInput;
-    output: RecraftV3TextToImageOutput;
-  };
   "fal-ai/kling-video/v2/master/image-to-video": {
     input: KlingVideoV2MasterImageToVideoInput;
     output: KlingVideoV2MasterImageToVideoOutput;
@@ -36622,10 +34270,6 @@ export type EndpointTypeMap = {
   "fal-ai/veo2/image-to-video": {
     input: Veo2ImageToVideoInput;
     output: Veo2ImageToVideoOutput;
-  };
-  "fal-ai/wan-i2v": {
-    input: WanI2vInput;
-    output: WanI2vOutput;
   };
   "fal-ai/kling-video/v1.6/pro/image-to-video": {
     input: KlingVideoV16ProImageToVideoInput;
@@ -36643,17 +34287,341 @@ export type EndpointTypeMap = {
     input: FluxProV11UltraInput;
     output: FluxProV11UltraOutput;
   };
-  "fal-ai/post-processing/parabolize": {
-    input: PostProcessingParabolizeInput;
-    output: PostProcessingParabolizeOutput;
+  "fal-ai/recraft/v3/text-to-image": {
+    input: RecraftV3TextToImageInput;
+    output: RecraftV3TextToImageOutput;
   };
   "fal-ai/minimax/video-01/image-to-video": {
     input: MinimaxVideo01ImageToVideoInput;
     output: MinimaxVideo01ImageToVideoOutput;
   };
+  "fal-ai/flux-krea-trainer": {
+    input: FluxKreaTrainerInput;
+    output: FluxKreaTrainerOutput;
+  };
   "fal-ai/veo3/fast": {
     input: Veo3FastInput;
     output: Veo3FastOutput;
+  };
+  "bria/video/background-removal": {
+    input: VideoBackgroundRemovalInput;
+    output: VideoBackgroundRemovalOutput;
+  };
+  "fal-ai/flux-kontext-trainer": {
+    input: FluxKontextTrainerInput;
+    output: FluxKontextTrainerOutput;
+  };
+  "fal-ai/minimax/hailuo-02/standard/image-to-video": {
+    input: MinimaxHailuo02StandardImageToVideoInput;
+    output: MinimaxHailuo02StandardImageToVideoOutput;
+  };
+  "fal-ai/minimax/hailuo-02/standard/text-to-video": {
+    input: MinimaxHailuo02StandardTextToVideoInput;
+    output: MinimaxHailuo02StandardTextToVideoOutput;
+  };
+  "bria/text-to-image/3.2": {
+    input: TextToImage32Input;
+    output: TextToImage32Output;
+  };
+  "fal-ai/bytedance/seedance/v1/pro/image-to-video": {
+    input: BytedanceSeedanceV1ProImageToVideoInput;
+    output: BytedanceSeedanceV1ProImageToVideoOutput;
+  };
+  "fal-ai/veo3": {
+    input: Veo3Input;
+    output: Veo3Output;
+  };
+  "fal-ai/kling-video/v2.1/standard/image-to-video": {
+    input: KlingVideoV21StandardImageToVideoInput;
+    output: KlingVideoV21StandardImageToVideoOutput;
+  };
+  "fal-ai/pixverse/v4.5/image-to-video": {
+    input: PixverseV45ImageToVideoInput;
+    output: PixverseV45ImageToVideoOutput;
+  };
+  "fal-ai/tavus/hummingbird-lipsync/v0": {
+    input: TavusHummingbirdLipsyncV0Input;
+    output: TavusHummingbirdLipsyncV0Output;
+  };
+  "fal-ai/kling-video/v2/master/text-to-video": {
+    input: KlingVideoV2MasterTextToVideoInput;
+    output: KlingVideoV2MasterTextToVideoOutput;
+  };
+  "fal-ai/hidream-i1-full": {
+    input: HidreamI1FullInput;
+    output: any;
+  };
+  "fal-ai/hidream-i1-dev": {
+    input: HidreamI1DevInput;
+    output: HidreamI1DevOutput;
+  };
+  "fal-ai/hidream-i1-fast": {
+    input: HidreamI1FastInput;
+    output: HidreamI1FastOutput;
+  };
+  "fal-ai/flux/dev": {
+    input: FluxDevInput;
+    output: FluxDevOutput;
+  };
+  "fal-ai/wan-i2v": {
+    input: WanI2vInput;
+    output: WanI2vOutput;
+  };
+  "fal-ai/mmaudio-v2": {
+    input: MmaudioV2Input;
+    output: MmaudioV2Output;
+  };
+  "fal-ai/ideogram/v2": {
+    input: IdeogramV2Input;
+    output: IdeogramV2Output;
+  };
+  "fal-ai/flux-lora-portrait-trainer": {
+    input: FluxLoraPortraitTrainerInput;
+    output: FluxLoraPortraitTrainerOutput;
+  };
+  "fal-ai/stable-diffusion-v35-large": {
+    input: StableDiffusionV35LargeInput;
+    output: StableDiffusionV35LargeOutput;
+  };
+  "fal-ai/flux-general": {
+    input: FluxGeneralInput;
+    output: FluxGeneralOutput;
+  };
+  "fal-ai/flux-lora": {
+    input: FluxLoraInput;
+    output: FluxLoraOutput;
+  };
+  "fal-ai/flux/dev/image-to-image": {
+    input: FluxDevImageToImageInput;
+    output: FluxDevImageToImageOutput;
+  };
+  "fal-ai/aura-sr": {
+    input: AuraSrInput;
+    output: AuraSrOutput;
+  };
+  "fal-ai/clarity-upscaler": {
+    input: ClarityUpscalerInput;
+    output: ClarityUpscalerOutput;
+  };
+  "fal-ai/ideogram/character/edit": {
+    input: IdeogramCharacterEditInput;
+    output: IdeogramCharacterEditOutput;
+  };
+  "fal-ai/ideogram/character": {
+    input: IdeogramCharacterInput;
+    output: IdeogramCharacterOutput;
+  };
+  "fal-ai/ideogram/character/remix": {
+    input: IdeogramCharacterRemixInput;
+    output: IdeogramCharacterRemixOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/text-to-video/lora": {
+    input: WanV22A14bTextToVideoLoraInput;
+    output: WanV22A14bTextToVideoLoraOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/image-to-video/lora": {
+    input: WanV22A14bImageToVideoLoraInput;
+    output: WanV22A14bImageToVideoLoraOutput;
+  };
+  "fal-ai/wan/v2.2-5b/text-to-video/distill": {
+    input: WanV225bTextToVideoDistillInput;
+    output: WanV225bTextToVideoDistillOutput;
+  };
+  "fal-ai/minimax/hailuo-02-fast/image-to-video": {
+    input: MinimaxHailuo02FastImageToVideoInput;
+    output: MinimaxHailuo02FastImageToVideoOutput;
+  };
+  "fal-ai/bytedance/dreamina/v3.1/text-to-image": {
+    input: BytedanceDreaminaV31TextToImageInput;
+    output: BytedanceDreaminaV31TextToImageOutput;
+  };
+  "fal-ai/wan/v2.2-5b/text-to-video/fast-wan": {
+    input: WanV225bTextToVideoFastWanInput;
+    output: WanV225bTextToVideoFastWanOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/text-to-image/lora": {
+    input: WanV22A14bTextToImageLoraInput;
+    output: WanV22A14bTextToImageLoraOutput;
+  };
+  "fal-ai/wan/v2.2-5b/text-to-image": {
+    input: WanV225bTextToImageInput;
+    output: WanV225bTextToImageOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/text-to-image": {
+    input: WanV22A14bTextToImageInput;
+    output: WanV22A14bTextToImageOutput;
+  };
+  "fal-ai/qwen-image": {
+    input: QwenImageInput;
+    output: QwenImageOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/video-to-video": {
+    input: WanV22A14bVideoToVideoInput;
+    output: WanV22A14bVideoToVideoOutput;
+  };
+  "fal-ai/flux-krea-lora/stream": {
+    input: FluxKreaLoraStreamInput;
+    output: FluxKreaLoraStreamOutput;
+  };
+  "fal-ai/flux-krea-lora/inpainting": {
+    input: FluxKreaLoraInpaintingInput;
+    output: FluxKreaLoraInpaintingOutput;
+  };
+  "fal-ai/flux-krea-lora": {
+    input: FluxKreaLoraInput;
+    output: FluxKreaLoraOutput;
+  };
+  "fal-ai/flux-krea-lora/image-to-image": {
+    input: FluxKreaLoraImageToImageInput;
+    output: FluxKreaLoraImageToImageOutput;
+  };
+  "easel-ai/fashion-tryon": {
+    input: FashionTryonInput;
+    output: FashionTryonOutput;
+  };
+  "fal-ai/veo3/image-to-video": {
+    input: Veo3ImageToVideoInput;
+    output: Veo3ImageToVideoOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/image-to-video/turbo": {
+    input: WanV22A14bImageToVideoTurboInput;
+    output: WanV22A14bImageToVideoTurboOutput;
+  };
+  "fal-ai/wan/v2.2-a14b/text-to-video/turbo": {
+    input: WanV22A14bTextToVideoTurboInput;
+    output: WanV22A14bTextToVideoTurboOutput;
+  };
+  "fal-ai/flux/krea/image-to-image": {
+    input: FluxKreaImageToImageInput;
+    output: FluxKreaImageToImageOutput;
+  };
+  "fal-ai/flux/krea/redux": {
+    input: FluxKreaReduxInput;
+    output: FluxKreaReduxOutput;
+  };
+  "fal-ai/flux/krea": {
+    input: FluxKreaInput;
+    output: FluxKreaOutput;
+  };
+  "fal-ai/flux-1/krea/image-to-image": {
+    input: Flux1KreaImageToImageInput;
+    output: Flux1KreaImageToImageOutput;
+  };
+  "fal-ai/flux-1/krea/redux": {
+    input: Flux1KreaReduxInput;
+    output: Flux1KreaReduxOutput;
+  };
+  "fal-ai/flux-1/krea": {
+    input: Flux1KreaInput;
+    output: Flux1KreaOutput;
+  };
+  "fal-ai/wan/v2.2-5b/image-to-video": {
+    input: WanV225bImageToVideoInput;
+    output: WanV225bImageToVideoOutput;
+  };
+  "fal-ai/flux-kontext-lora/inpaint": {
+    input: FluxKontextLoraInpaintInput;
+    output: FluxKontextLoraInpaintOutput;
+  };
+  "fal-ai/wan/v2.2-5b/text-to-video": {
+    input: WanV225bTextToVideoInput;
+    output: WanV225bTextToVideoOutput;
+  };
+  "fal-ai/wan/v2.2-a14B/image-to-video": {
+    input: any;
+    output: any;
+  };
+  "fal-ai/wan/v2.2-a14b/text-to-video": {
+    input: WanV22A14bTextToVideoInput;
+    output: WanV22A14bTextToVideoOutput;
+  };
+  "fal-ai/hunyuan_world": {
+    input: Hunyuan_worldInput;
+    output: Hunyuan_worldOutput;
+  };
+  "fal-ai/hunyuan_world/image-to-world": {
+    input: Hunyuan_worldImageToWorldInput;
+    output: Hunyuan_worldImageToWorldOutput;
+  };
+  "fal-ai/x-ailab/nsfw": {
+    input: XAilabNsfwInput;
+    output: XAilabNsfwOutput;
+  };
+  "fal-ai/bytedance/omnihuman": {
+    input: BytedanceOmnihumanInput;
+    output: BytedanceOmnihumanOutput;
+  };
+  "fal-ai/sky-raccoon": {
+    input: SkyRaccoonInput;
+    output: SkyRaccoonOutput;
+  };
+  "fal-ai/image-editing/retouch": {
+    input: ImageEditingRetouchInput;
+    output: ImageEditingRetouchOutput;
+  };
+  "fal-ai/hidream-e1-1": {
+    input: HidreamE11Input;
+    output: HidreamE11Output;
+  };
+  "fal-ai/ltxv-13b-098-distilled/extend": {
+    input: Ltxv13b098DistilledExtendInput;
+    output: Ltxv13b098DistilledExtendOutput;
+  };
+  "fal-ai/rife/video": {
+    input: RifeVideoInput;
+    output: RifeVideoOutput;
+  };
+  "fal-ai/rife": {
+    input: RifeInput;
+    output: RifeOutput;
+  };
+  "fal-ai/film/video": {
+    input: FilmVideoInput;
+    output: FilmVideoOutput;
+  };
+  "fal-ai/film": {
+    input: FilmInput;
+    output: FilmOutput;
+  };
+  "fal-ai/minimax/voice-design": {
+    input: MinimaxVoiceDesignInput;
+    output: MinimaxVoiceDesignOutput;
+  };
+  "creatify/lipsync": {
+    input: LipsyncInput;
+    output: LipsyncOutput;
+  };
+  "fal-ai/luma-dream-machine/ray-2-flash/modify": {
+    input: LumaDreamMachineRay2FlashModifyInput;
+    output: LumaDreamMachineRay2FlashModifyOutput;
+  };
+  "fal-ai/ltxv-13b-098-distilled/image-to-video": {
+    input: Ltxv13b098DistilledImageToVideoInput;
+    output: Ltxv13b098DistilledImageToVideoOutput;
+  };
+  "fal-ai/ltxv-13b-098-distilled": {
+    input: Ltxv13b098DistilledInput;
+    output: Ltxv13b098DistilledOutput;
+  };
+  "fal-ai/ltxv-13b-098-distilled/multiconditioning": {
+    input: Ltxv13b098DistilledMulticonditioningInput;
+    output: Ltxv13b098DistilledMulticonditioningOutput;
+  };
+  "fal-ai/any-llm/enterprise": {
+    input: AnyLlmEnterpriseInput;
+    output: AnyLlmEnterpriseOutput;
+  };
+  "easel-ai/fashion-photoshoot": {
+    input: FashionPhotoshootInput;
+    output: FashionPhotoshootOutput;
+  };
+  "fal-ai/calligrapher": {
+    input: CalligrapherInput;
+    output: CalligrapherOutput;
+  };
+  "fal-ai/veo3/fast/image-to-video": {
+    input: Veo3FastImageToVideoInput;
+    output: Veo3FastImageToVideoOutput;
   };
   "fal-ai/ffmpeg-api/loudnorm": {
     input: FfmpegApiLoudnormInput;
@@ -36694,6 +34662,10 @@ export type EndpointTypeMap = {
   "fal-ai/post-processing/sharpen": {
     input: PostProcessingSharpenInput;
     output: PostProcessingSharpenOutput;
+  };
+  "fal-ai/post-processing/parabolize": {
+    input: PostProcessingParabolizeInput;
+    output: PostProcessingParabolizeOutput;
   };
   "fal-ai/post-processing/grain": {
     input: PostProcessingGrainInput;
@@ -36743,10 +34715,6 @@ export type EndpointTypeMap = {
     input: ImageEditingYoutubeThumbnailsInput;
     output: ImageEditingYoutubeThumbnailsOutput;
   };
-  "bria/video/background-removal": {
-    input: VideoBackgroundRemovalInput;
-    output: VideoBackgroundRemovalOutput;
-  };
   "fal-ai/luma-dream-machine/ray-2/modify": {
     input: LumaDreamMachineRay2ModifyInput;
     output: LumaDreamMachineRay2ModifyOutput;
@@ -36754,14 +34722,6 @@ export type EndpointTypeMap = {
   "fal-ai/bytedance/seededit/v3/edit-image": {
     input: BytedanceSeededitV3EditImageInput;
     output: BytedanceSeededitV3EditImageOutput;
-  };
-  "fal-ai/ffmpeg-api/extract-frame": {
-    input: FfmpegApiExtractFrameInput;
-    output: FfmpegApiExtractFrameOutput;
-  };
-  "fal-ai/flux-kontext-trainer": {
-    input: FluxKontextTrainerInput;
-    output: FluxKontextTrainerOutput;
   };
   "fal-ai/image-editing/broccoli-haircut": {
     input: ImageEditingBroccoliHaircutInput;
@@ -36774,10 +34734,6 @@ export type EndpointTypeMap = {
   "fal-ai/image-editing/plushie-style": {
     input: ImageEditingPlushieStyleInput;
     output: ImageEditingPlushieStyleOutput;
-  };
-  "fal-ai/flux-kontext-lora/image-to-image": {
-    input: FluxKontextLoraImageToImageInput;
-    output: FluxKontextLoraImageToImageOutput;
   };
   "fal-ai/flux-kontext-lora/text-to-image": {
     input: FluxKontextLoraTextToImageInput;
@@ -36843,10 +34799,6 @@ export type EndpointTypeMap = {
     input: TripoV25MultiviewTo3dInput;
     output: TripoV25MultiviewTo3dOutput;
   };
-  "fal-ai/minimax/hailuo-02/standard/image-to-video": {
-    input: MinimaxHailuo02StandardImageToVideoInput;
-    output: MinimaxHailuo02StandardImageToVideoOutput;
-  };
   "fal-ai/minimax/hailuo-02/pro/image-to-video": {
     input: MinimaxHailuo02ProImageToVideoInput;
     output: MinimaxHailuo02ProImageToVideoOutput;
@@ -36855,17 +34807,9 @@ export type EndpointTypeMap = {
     input: MinimaxHailuo02ProTextToVideoInput;
     output: MinimaxHailuo02ProTextToVideoOutput;
   };
-  "fal-ai/minimax/hailuo-02/standard/text-to-video": {
-    input: MinimaxHailuo02StandardTextToVideoInput;
-    output: MinimaxHailuo02StandardTextToVideoOutput;
-  };
   "fal-ai/pasd": {
     input: PasdInput;
     output: PasdOutput;
-  };
-  "bria/text-to-image/3.2": {
-    input: TextToImage32Input;
-    output: TextToImage32Output;
   };
   "fal-ai/object-removal/bbox": {
     input: ObjectRemovalBboxInput;
@@ -36882,10 +34826,6 @@ export type EndpointTypeMap = {
   "fal-ai/bytedance/seedance/v1/pro/text-to-video": {
     input: BytedanceSeedanceV1ProTextToVideoInput;
     output: BytedanceSeedanceV1ProTextToVideoOutput;
-  };
-  "fal-ai/bytedance/seedance/v1/pro/image-to-video": {
-    input: BytedanceSeedanceV1ProImageToVideoInput;
-    output: BytedanceSeedanceV1ProImageToVideoOutput;
   };
   "fal-ai/hunyuan3d-v21": {
     input: Hunyuan3dV21Input;
@@ -36923,6 +34863,10 @@ export type EndpointTypeMap = {
     input: BytedanceSeedreamV3TextToImageInput;
     output: BytedanceSeedreamV3TextToImageOutput;
   };
+  "fal-ai/ffmpeg-api/extract-frame": {
+    input: FfmpegApiExtractFrameInput;
+    output: FfmpegApiExtractFrameOutput;
+  };
   "fal-ai/ffmpeg-api/merge-audio-video": {
     input: FfmpegApiMergeAudioVideoInput;
     output: FfmpegApiMergeAudioVideoOutput;
@@ -36934,10 +34878,6 @@ export type EndpointTypeMap = {
   "fal-ai/luma-photon/modify": {
     input: LumaPhotonModifyInput;
     output: LumaPhotonModifyOutput;
-  };
-  "fal-ai/veo3": {
-    input: Veo3Input;
-    output: Veo3Output;
   };
   "fal-ai/image-editing/reframe": {
     input: ImageEditingReframeInput;
@@ -37071,6 +35011,10 @@ export type EndpointTypeMap = {
     input: FluxProKontextMaxMultiInput;
     output: FluxProKontextMaxMultiOutput;
   };
+  "fal-ai/flux-pro/kontext/multi": {
+    input: FluxProKontextMultiInput;
+    output: FluxProKontextMultiOutput;
+  };
   "fal-ai/hunyuan-avatar": {
     input: HunyuanAvatarInput;
     output: HunyuanAvatarOutput;
@@ -37090,10 +35034,6 @@ export type EndpointTypeMap = {
   "fal-ai/kling-video/v2.1/pro/image-to-video": {
     input: KlingVideoV21ProImageToVideoInput;
     output: KlingVideoV21ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.1/standard/image-to-video": {
-    input: KlingVideoV21StandardImageToVideoInput;
-    output: KlingVideoV21StandardImageToVideoOutput;
   };
   "fal-ai/flux-pro/kontext/text-to-image": {
     input: FluxProKontextTextToImageInput;
@@ -37139,10 +35079,6 @@ export type EndpointTypeMap = {
     input: Lyria2Input;
     output: Lyria2Output;
   };
-  "fal-ai/vidu/q1/image-to-video": {
-    input: ViduQ1ImageToVideoInput;
-    output: ViduQ1ImageToVideoOutput;
-  };
   "fal-ai/imagen4/preview/ultra": {
     input: Imagen4PreviewUltraInput;
     output: Imagen4PreviewUltraOutput;
@@ -37170,10 +35106,6 @@ export type EndpointTypeMap = {
   "fal-ai/ltx-video-13b-distilled/image-to-video": {
     input: LtxVideo13bDistilledImageToVideoInput;
     output: LtxVideo13bDistilledImageToVideoOutput;
-  };
-  "fal-ai/ace-step": {
-    input: AceStepInput;
-    output: AceStepOutput;
   };
   "fal-ai/ltx-video-13b-dev/multiconditioning": {
     input: LtxVideo13bDevMulticonditioningInput;
@@ -37203,10 +35135,6 @@ export type EndpointTypeMap = {
     input: FluxLoraStreamInput;
     output: FluxLoraStreamOutput;
   };
-  "fal-ai/ltx-video-trainer": {
-    input: LtxVideoTrainerInput;
-    output: LtxVideoTrainerOutput;
-  };
   "fal-ai/ltx-video-lora/multiconditioning": {
     input: LtxVideoLoraMulticonditioningInput;
     output: LtxVideoLoraMulticonditioningOutput;
@@ -37214,6 +35142,10 @@ export type EndpointTypeMap = {
   "fal-ai/ltx-video-lora/image-to-video": {
     input: LtxVideoLoraImageToVideoInput;
     output: LtxVideoLoraImageToVideoOutput;
+  };
+  "fal-ai/ltx-video-lora": {
+    input: LtxVideoLoraInput;
+    output: LtxVideoLoraOutput;
   };
   "fal-ai/pixverse/v4.5/transition": {
     input: PixverseV45TransitionInput;
@@ -37271,6 +35203,18 @@ export type EndpointTypeMap = {
     input: ViduQ1TextToVideoInput;
     output: ViduQ1TextToVideoOutput;
   };
+  "fal-ai/vidu/q1/image-to-video": {
+    input: ViduQ1ImageToVideoInput;
+    output: ViduQ1ImageToVideoOutput;
+  };
+  "fal-ai/ace-step": {
+    input: AceStepInput;
+    output: AceStepOutput;
+  };
+  "fal-ai/ltx-video-trainer": {
+    input: LtxVideoTrainerInput;
+    output: LtxVideoTrainerOutput;
+  };
   "fal-ai/recraft/upscale/creative": {
     input: RecraftUpscaleCreativeInput;
     output: RecraftUpscaleCreativeOutput;
@@ -37287,6 +35231,10 @@ export type EndpointTypeMap = {
     input: RecraftV3ImageToImageInput;
     output: RecraftV3ImageToImageOutput;
   };
+  "fal-ai/ltx-video-v097/extend": {
+    input: LtxVideoV097ExtendInput;
+    output: LtxVideoV097ExtendOutput;
+  };
   "easel-ai/easel-avatar": {
     input: EaselAvatarInput;
     output: EaselAvatarOutput;
@@ -37299,9 +35247,21 @@ export type EndpointTypeMap = {
     input: MinimaxSpeech02TurboInput;
     output: MinimaxSpeech02TurboOutput;
   };
+  "fal-ai/ltx-video-v097/multiconditioning": {
+    input: LtxVideoV097MulticonditioningInput;
+    output: LtxVideoV097MulticonditioningOutput;
+  };
   "fal-ai/minimax/speech-02-hd": {
     input: MinimaxSpeech02HdInput;
     output: MinimaxSpeech02HdOutput;
+  };
+  "fal-ai/ltx-video-v097": {
+    input: LtxVideoV097Input;
+    output: LtxVideoV097Output;
+  };
+  "fal-ai/ltx-video-v097/image-to-video": {
+    input: LtxVideoV097ImageToVideoInput;
+    output: LtxVideoV097ImageToVideoOutput;
   };
   "fal-ai/minimax/image-01/subject-reference": {
     input: MinimaxImage01SubjectReferenceInput;
@@ -37335,10 +35295,6 @@ export type EndpointTypeMap = {
     input: IdeogramV3RemixInput;
     output: IdeogramV3RemixOutput;
   };
-  "fal-ai/moondream2/object-detection": {
-    input: Moondream2ObjectDetectionInput;
-    output: Moondream2ObjectDetectionOutput;
-  };
   "fal-ai/ideogram/v3/edit": {
     input: IdeogramV3EditInput;
     output: IdeogramV3EditOutput;
@@ -37366,6 +35322,10 @@ export type EndpointTypeMap = {
   "fal-ai/moondream2/point-object-detection": {
     input: Moondream2PointObjectDetectionInput;
     output: Moondream2PointObjectDetectionOutput;
+  };
+  "fal-ai/moondream2/object-detection": {
+    input: Moondream2ObjectDetectionInput;
+    output: Moondream2ObjectDetectionOutput;
   };
   "fal-ai/step1x-edit": {
     input: Step1xEditInput;
@@ -37463,14 +35423,6 @@ export type EndpointTypeMap = {
     input: FramepackInput;
     output: FramepackOutput;
   };
-  "fal-ai/tavus/hummingbird-lipsync/v0": {
-    input: TavusHummingbirdLipsyncV0Input;
-    output: TavusHummingbirdLipsyncV0Output;
-  };
-  "fal-ai/kling-video/v2/master/text-to-video": {
-    input: KlingVideoV2MasterTextToVideoInput;
-    output: KlingVideoV2MasterTextToVideoOutput;
-  };
   "fal-ai/cartoonify": {
     input: CartoonifyInput;
     output: CartoonifyOutput;
@@ -37478,22 +35430,6 @@ export type EndpointTypeMap = {
   "fal-ai/wan-vace": {
     input: WanVaceInput;
     output: WanVaceOutput;
-  };
-  "fal-ai/hidream-i1-full": {
-    input: HidreamI1FullInput;
-    output: any;
-  };
-  "fal-ai/speech-to-text/stream": {
-    input: SpeechToTextStreamInput;
-    output: any;
-  };
-  "fal-ai/hidream-i1-dev": {
-    input: HidreamI1DevInput;
-    output: HidreamI1DevOutput;
-  };
-  "fal-ai/hidream-i1-fast": {
-    input: HidreamI1FastInput;
-    output: HidreamI1FastOutput;
   };
   "fal-ai/finegrain-eraser/mask": {
     input: FinegrainEraserMaskInput;
@@ -37519,6 +35455,10 @@ export type EndpointTypeMap = {
     input: SpeechToTextTurboStreamInput;
     output: any;
   };
+  "fal-ai/speech-to-text/stream": {
+    input: SpeechToTextStreamInput;
+    output: any;
+  };
   "fal-ai/speech-to-text": {
     input: SpeechToTextInput;
     output: SpeechToTextOutput;
@@ -37526,230 +35466,6 @@ export type EndpointTypeMap = {
   "cassetteai/sound-effects-generator": {
     input: SoundEffectsGeneratorInput;
     output: SoundEffectsGeneratorOutput;
-  };
-  "fal-ai/flux/dev": {
-    input: FluxDevInput;
-    output: FluxDevOutput;
-  };
-  "fal-ai/pixverse/v3.5/effects": {
-    input: PixverseV35EffectsInput;
-    output: PixverseV35EffectsOutput;
-  };
-  "fal-ai/pixverse/v3.5/transition": {
-    input: PixverseV35TransitionInput;
-    output: PixverseV35TransitionOutput;
-  };
-  "fal-ai/pixverse/v4/text-to-video/fast": {
-    input: PixverseV4TextToVideoFastInput;
-    output: PixverseV4TextToVideoFastOutput;
-  };
-  "fal-ai/gemini-flash-edit": {
-    input: GeminiFlashEditInput;
-    output: GeminiFlashEditOutput;
-  };
-  "CassetteAI/music-generator": {
-    input: MusicGeneratorInput;
-    output: MusicGeneratorOutput;
-  };
-  "fal-ai/kling-video/lipsync/audio-to-video": {
-    input: KlingVideoLipsyncAudioToVideoInput;
-    output: KlingVideoLipsyncAudioToVideoOutput;
-  };
-  "fal-ai/kling-video/lipsync/text-to-video": {
-    input: KlingVideoLipsyncTextToVideoInput;
-    output: KlingVideoLipsyncTextToVideoOutput;
-  };
-  "fal-ai/latentsync": {
-    input: LatentsyncInput;
-    output: LatentsyncOutput;
-  };
-  "fal-ai/wan-trainer": {
-    input: WanTrainerInput;
-    output: WanTrainerOutput;
-  };
-  "fal-ai/gemini-flash-edit/multi": {
-    input: GeminiFlashEditMultiInput;
-    output: GeminiFlashEditMultiOutput;
-  };
-  "fal-ai/wan-pro/text-to-video": {
-    input: WanProTextToVideoInput;
-    output: WanProTextToVideoOutput;
-  };
-  "fal-ai/wan-i2v-lora": {
-    input: WanI2vLoraInput;
-    output: WanI2vLoraOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/effects": {
-    input: KlingVideoV16StandardEffectsInput;
-    output: KlingVideoV16StandardEffectsOutput;
-  };
-  "fal-ai/kling-video/v1/standard/effects": {
-    input: KlingVideoV1StandardEffectsInput;
-    output: KlingVideoV1StandardEffectsOutput;
-  };
-  "fal-ai/kling-video/v1.6/pro/effects": {
-    input: KlingVideoV16ProEffectsInput;
-    output: KlingVideoV16ProEffectsOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/effects": {
-    input: KlingVideoV15ProEffectsInput;
-    output: KlingVideoV15ProEffectsOutput;
-  };
-  "fal-ai/wan/v2.1/1.3b/text-to-video": {
-    input: WanV2113bTextToVideoInput;
-    output: WanV2113bTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.6/pro/text-to-video": {
-    input: KlingVideoV16ProTextToVideoInput;
-    output: KlingVideoV16ProTextToVideoOutput;
-  };
-  "fal-ai/wan-t2v": {
-    input: WanT2vInput;
-    output: WanT2vOutput;
-  };
-  "fal-ai/veo2": {
-    input: Veo2Input;
-    output: Veo2Output;
-  };
-  "fal-ai/post-processing": {
-    input: PostProcessingInput;
-    output: PostProcessingOutput;
-  };
-  "fal-ai/ben/v2/image": {
-    input: BenV2ImageInput;
-    output: BenV2ImageOutput;
-  };
-  "fal-ai/lumina-image/v2": {
-    input: LuminaImageV2Input;
-    output: LuminaImageV2Output;
-  };
-  "fal-ai/ffmpeg-api/compose": {
-    input: FfmpegApiComposeInput;
-    output: FfmpegApiComposeOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/text-to-video": {
-    input: KlingVideoV16StandardTextToVideoInput;
-    output: KlingVideoV16StandardTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/image-to-video": {
-    input: KlingVideoV16StandardImageToVideoInput;
-    output: KlingVideoV16StandardImageToVideoOutput;
-  };
-  "fal-ai/bria/genfill": {
-    input: BriaGenfillInput;
-    output: BriaGenfillOutput;
-  };
-  "fal-ai/bria/background/remove": {
-    input: BriaBackgroundRemoveInput;
-    output: BriaBackgroundRemoveOutput;
-  };
-  "fal-ai/cat-vton": {
-    input: CatVtonInput;
-    output: CatVtonOutput;
-  };
-  "fal-ai/trellis": {
-    input: TrellisInput;
-    output: TrellisOutput;
-  };
-  "fal-ai/mmaudio-v2": {
-    input: MmaudioV2Input;
-    output: MmaudioV2Output;
-  };
-  "fal-ai/aura-flow": {
-    input: AuraFlowInput;
-    output: AuraFlowOutput;
-  };
-  "fal-ai/omnigen-v1": {
-    input: OmnigenV1Input;
-    output: OmnigenV1Output;
-  };
-  "fal-ai/flux/schnell": {
-    input: FluxSchnellInput;
-    output: FluxSchnellOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/text-to-video": {
-    input: KlingVideoV15ProTextToVideoInput;
-    output: KlingVideoV15ProTextToVideoOutput;
-  };
-  "fal-ai/flux/dev/redux": {
-    input: FluxDevReduxInput;
-    output: FluxDevReduxOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/image-to-video": {
-    input: KlingVideoV15ProImageToVideoInput;
-    output: KlingVideoV15ProImageToVideoOutput;
-  };
-  "fal-ai/stable-video": {
-    input: StableVideoInput;
-    output: StableVideoOutput;
-  };
-  "fal-ai/flux-general": {
-    input: FluxGeneralInput;
-    output: FluxGeneralOutput;
-  };
-  "fal-ai/stable-diffusion-v3-medium": {
-    input: StableDiffusionV3MediumInput;
-    output: StableDiffusionV3MediumOutput;
-  };
-  "fal-ai/flux-lora": {
-    input: FluxLoraInput;
-    output: FluxLoraOutput;
-  };
-  "fal-ai/sdxl-controlnet-union": {
-    input: SdxlControlnetUnionInput;
-    output: SdxlControlnetUnionOutput;
-  };
-  "fal-ai/stable-cascade": {
-    input: StableCascadeInput;
-    output: StableCascadeOutput;
-  };
-  "fal-ai/dwpose": {
-    input: DwposeInput;
-    output: DwposeOutput;
-  };
-  "fal-ai/playground-v25": {
-    input: PlaygroundV25Input;
-    output: PlaygroundV25Output;
-  };
-  "fal-ai/fast-lightning-sdxl": {
-    input: FastLightningSdxlInput;
-    output: FastLightningSdxlOutput;
-  };
-  "fal-ai/photomaker": {
-    input: PhotomakerInput;
-    output: PhotomakerOutput;
-  };
-  "fal-ai/creative-upscaler": {
-    input: CreativeUpscalerInput;
-    output: CreativeUpscalerOutput;
-  };
-  "fal-ai/topaz/upscale/video": {
-    input: TopazUpscaleVideoInput;
-    output: TopazUpscaleVideoOutput;
-  };
-  "fal-ai/whisper": {
-    input: WhisperInput;
-    output: WhisperOutput;
-  };
-  "fal-ai/esrgan": {
-    input: EsrganInput;
-    output: EsrganOutput;
-  };
-  "fal-ai/orpheus-tts": {
-    input: OrpheusTtsInput;
-    output: OrpheusTtsOutput;
-  };
-  "fal-ai/sana/sprint": {
-    input: SanaSprintInput;
-    output: SanaSprintOutput;
-  };
-  "fal-ai/sana/v1.5/1.6b": {
-    input: SanaV1516bInput;
-    output: SanaV1516bOutput;
-  };
-  "fal-ai/hunyuan-video": {
-    input: HunyuanVideoInput;
-    output: HunyuanVideoOutput;
   };
   "fal-ai/sync-lipsync/v2": {
     input: SyncLipsyncV2Input;
@@ -37767,21 +35483,65 @@ export type EndpointTypeMap = {
     input: PixverseV4ImageToVideoInput;
     output: PixverseV4ImageToVideoOutput;
   };
+  "fal-ai/pixverse/v3.5/effects": {
+    input: PixverseV35EffectsInput;
+    output: PixverseV35EffectsOutput;
+  };
   "fal-ai/pixverse/v4/text-to-video": {
     input: PixverseV4TextToVideoInput;
     output: PixverseV4TextToVideoOutput;
+  };
+  "fal-ai/pixverse/v3.5/transition": {
+    input: PixverseV35TransitionInput;
+    output: PixverseV35TransitionOutput;
+  };
+  "fal-ai/pixverse/v4/text-to-video/fast": {
+    input: PixverseV4TextToVideoFastInput;
+    output: PixverseV4TextToVideoFastOutput;
   };
   "fal-ai/ghiblify": {
     input: GhiblifyInput;
     output: GhiblifyOutput;
   };
+  "fal-ai/orpheus-tts": {
+    input: OrpheusTtsInput;
+    output: OrpheusTtsOutput;
+  };
+  "fal-ai/sana/v1.5/1.6b": {
+    input: SanaV1516bInput;
+    output: SanaV1516bOutput;
+  };
   "fal-ai/sana/v1.5/4.8b": {
     input: SanaV1548bInput;
     output: SanaV1548bOutput;
   };
+  "fal-ai/sana/sprint": {
+    input: SanaSprintInput;
+    output: SanaSprintOutput;
+  };
+  "CassetteAI/music-generator": {
+    input: MusicGeneratorInput;
+    output: MusicGeneratorOutput;
+  };
+  "fal-ai/kling-video/lipsync/text-to-video": {
+    input: KlingVideoLipsyncTextToVideoInput;
+    output: KlingVideoLipsyncTextToVideoOutput;
+  };
+  "fal-ai/kling-video/lipsync/audio-to-video": {
+    input: KlingVideoLipsyncAudioToVideoInput;
+    output: KlingVideoLipsyncAudioToVideoOutput;
+  };
+  "fal-ai/latentsync": {
+    input: LatentsyncInput;
+    output: LatentsyncOutput;
+  };
   "fal-ai/wan-t2v-lora": {
     input: WanT2vLoraInput;
     output: WanT2vLoraOutput;
+  };
+  "fal-ai/wan-trainer": {
+    input: WanTrainerInput;
+    output: WanTrainerOutput;
   };
   "fal-ai/thera": {
     input: TheraInput;
@@ -37795,6 +35555,18 @@ export type EndpointTypeMap = {
     input: Hunyuan3dV2MultiViewTurboInput;
     output: Hunyuan3dV2MultiViewTurboOutput;
   };
+  "fal-ai/gemini-flash-edit": {
+    input: GeminiFlashEditInput;
+    output: GeminiFlashEditOutput;
+  };
+  "fal-ai/hunyuan3d/v2": {
+    input: Hunyuan3dV2Input;
+    output: Hunyuan3dV2Output;
+  };
+  "fal-ai/hunyuan3d/v2/multi-view": {
+    input: Hunyuan3dV2MultiViewInput;
+    output: Hunyuan3dV2MultiViewOutput;
+  };
   "fal-ai/hunyuan3d/v2/mini": {
     input: Hunyuan3dV2MiniInput;
     output: Hunyuan3dV2MiniOutput;
@@ -37803,53 +35575,21 @@ export type EndpointTypeMap = {
     input: Hunyuan3dV2TurboInput;
     output: Hunyuan3dV2TurboOutput;
   };
-  "fal-ai/hunyuan3d/v2/multi-view": {
-    input: Hunyuan3dV2MultiViewInput;
-    output: Hunyuan3dV2MultiViewOutput;
-  };
-  "fal-ai/hunyuan3d/v2": {
-    input: Hunyuan3dV2Input;
-    output: Hunyuan3dV2Output;
-  };
   "fal-ai/hunyuan3d/v2/mini/turbo": {
     input: Hunyuan3dV2MiniTurboInput;
     output: Hunyuan3dV2MiniTurboOutput;
   };
-  "fal-ai/luma-dream-machine/ray-2-flash": {
-    input: LumaDreamMachineRay2FlashInput;
-    output: LumaDreamMachineRay2FlashOutput;
+  "fal-ai/gemini-flash-edit/multi": {
+    input: GeminiFlashEditMultiInput;
+    output: GeminiFlashEditMultiOutput;
   };
   "fal-ai/luma-dream-machine/ray-2-flash/image-to-video": {
     input: LumaDreamMachineRay2FlashImageToVideoInput;
     output: LumaDreamMachineRay2FlashImageToVideoOutput;
   };
-  "fal-ai/pika/v2.1/text-to-video": {
-    input: PikaV21TextToVideoInput;
-    output: PikaV21TextToVideoOutput;
-  };
-  "fal-ai/pika/v2.2/pikascenes": {
-    input: PikaV22PikascenesInput;
-    output: PikaV22PikascenesOutput;
-  };
-  "fal-ai/pika/v2.2/text-to-video": {
-    input: PikaV22TextToVideoInput;
-    output: PikaV22TextToVideoOutput;
-  };
-  "fal-ai/invisible-watermark": {
-    input: InvisibleWatermarkInput;
-    output: InvisibleWatermarkOutput;
-  };
-  "fal-ai/pika/v2.2/image-to-video": {
-    input: PikaV22ImageToVideoInput;
-    output: PikaV22ImageToVideoOutput;
-  };
-  "fal-ai/pika/v2.1/image-to-video": {
-    input: PikaV21ImageToVideoInput;
-    output: PikaV21ImageToVideoOutput;
-  };
-  "fal-ai/pika/v2/turbo/text-to-video": {
-    input: PikaV2TurboTextToVideoInput;
-    output: PikaV2TurboTextToVideoOutput;
+  "fal-ai/luma-dream-machine/ray-2-flash": {
+    input: LumaDreamMachineRay2FlashInput;
+    output: LumaDreamMachineRay2FlashOutput;
   };
   "fal-ai/pika/v1.5/pikaffects": {
     input: PikaV15PikaffectsInput;
@@ -37859,73 +35599,129 @@ export type EndpointTypeMap = {
     input: PikaV2TurboImageToVideoInput;
     output: PikaV2TurboImageToVideoOutput;
   };
+  "fal-ai/invisible-watermark": {
+    input: InvisibleWatermarkInput;
+    output: InvisibleWatermarkOutput;
+  };
+  "fal-ai/pika/v2.1/text-to-video": {
+    input: PikaV21TextToVideoInput;
+    output: PikaV21TextToVideoOutput;
+  };
+  "fal-ai/pika/v2/turbo/text-to-video": {
+    input: PikaV2TurboTextToVideoInput;
+    output: PikaV2TurboTextToVideoOutput;
+  };
+  "fal-ai/pika/v2.2/image-to-video": {
+    input: PikaV22ImageToVideoInput;
+    output: PikaV22ImageToVideoOutput;
+  };
+  "fal-ai/pika/v2.2/text-to-video": {
+    input: PikaV22TextToVideoInput;
+    output: PikaV22TextToVideoOutput;
+  };
+  "fal-ai/pika/v2.2/pikascenes": {
+    input: PikaV22PikascenesInput;
+    output: PikaV22PikascenesOutput;
+  };
+  "fal-ai/pika/v2.1/image-to-video": {
+    input: PikaV21ImageToVideoInput;
+    output: PikaV21ImageToVideoOutput;
+  };
   "fal-ai/csm-1b": {
     input: Csm1bInput;
     output: Csm1bOutput;
-  };
-  "fal-ai/vidu/reference-to-video": {
-    input: ViduReferenceToVideoInput;
-    output: ViduReferenceToVideoOutput;
-  };
-  "fal-ai/vidu/start-end-to-video": {
-    input: ViduStartEndToVideoInput;
-    output: ViduStartEndToVideoOutput;
   };
   "fal-ai/vidu/image-to-video": {
     input: ViduImageToVideoInput;
     output: ViduImageToVideoOutput;
   };
+  "fal-ai/vidu/start-end-to-video": {
+    input: ViduStartEndToVideoInput;
+    output: ViduStartEndToVideoOutput;
+  };
+  "fal-ai/vidu/reference-to-video": {
+    input: ViduReferenceToVideoInput;
+    output: ViduReferenceToVideoOutput;
+  };
   "fal-ai/vidu/template-to-video": {
     input: ViduTemplateToVideoInput;
     output: ViduTemplateToVideoOutput;
+  };
+  "fal-ai/wan-pro/text-to-video": {
+    input: WanProTextToVideoInput;
+    output: WanProTextToVideoOutput;
   };
   "easel-ai/advanced-face-swap": {
     input: AdvancedFaceSwapInput;
     output: AdvancedFaceSwapOutput;
   };
+  "fal-ai/wan-i2v-lora": {
+    input: WanI2vLoraInput;
+    output: WanI2vLoraOutput;
+  };
+  "fal-ai/kling-video/v1/standard/effects": {
+    input: KlingVideoV1StandardEffectsInput;
+    output: KlingVideoV1StandardEffectsOutput;
+  };
+  "fal-ai/kling-video/v1.6/pro/effects": {
+    input: KlingVideoV16ProEffectsInput;
+    output: KlingVideoV16ProEffectsOutput;
+  };
+  "fal-ai/kling-video/v1.5/pro/effects": {
+    input: KlingVideoV15ProEffectsInput;
+    output: KlingVideoV15ProEffectsOutput;
+  };
+  "fal-ai/kling-video/v1.6/standard/effects": {
+    input: KlingVideoV16StandardEffectsInput;
+    output: KlingVideoV16StandardEffectsOutput;
+  };
   "fal-ai/hunyuan-video-image-to-video": {
     input: HunyuanVideoImageToVideoInput;
     output: HunyuanVideoImageToVideoOutput;
   };
-  "rundiffusion-fal/juggernaut-flux/base": {
-    input: JuggernautFluxBaseInput;
-    output: JuggernautFluxBaseOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux-lora": {
-    input: JuggernautFluxLoraInput;
-    output: JuggernautFluxLoraOutput;
+  "rundiffusion-fal/juggernaut-flux/lightning": {
+    input: JuggernautFluxLightningInput;
+    output: JuggernautFluxLightningOutput;
   };
   "rundiffusion-fal/rundiffusion-photo-flux": {
     input: RundiffusionPhotoFluxInput;
     output: RundiffusionPhotoFluxOutput;
   };
-  "fal-ai/ltx-video-v095": {
-    input: LtxVideoV095Input;
-    output: LtxVideoV095Output;
-  };
-  "fal-ai/ltx-video-v095/multiconditioning": {
-    input: LtxVideoV095MulticonditioningInput;
-    output: LtxVideoV095MulticonditioningOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/pro": {
-    input: JuggernautFluxProInput;
-    output: JuggernautFluxProOutput;
-  };
   "rundiffusion-fal/juggernaut-flux/pro/image-to-image": {
     input: JuggernautFluxProImageToImageInput;
     output: JuggernautFluxProImageToImageOutput;
   };
-  "fal-ai/ltx-video-v095/extend": {
-    input: LtxVideoV095ExtendInput;
-    output: LtxVideoV095ExtendOutput;
+  "rundiffusion-fal/juggernaut-flux-lora": {
+    input: JuggernautFluxLoraInput;
+    output: JuggernautFluxLoraOutput;
+  };
+  "fal-ai/ltx-video-v095/image-to-video": {
+    input: LtxVideoV095ImageToVideoInput;
+    output: LtxVideoV095ImageToVideoOutput;
   };
   "rundiffusion-fal/juggernaut-flux/base/image-to-image": {
     input: JuggernautFluxBaseImageToImageInput;
     output: JuggernautFluxBaseImageToImageOutput;
   };
-  "rundiffusion-fal/juggernaut-flux/lightning": {
-    input: JuggernautFluxLightningInput;
-    output: JuggernautFluxLightningOutput;
+  "fal-ai/ltx-video-v095/extend": {
+    input: LtxVideoV095ExtendInput;
+    output: LtxVideoV095ExtendOutput;
+  };
+  "fal-ai/ltx-video-v095/multiconditioning": {
+    input: LtxVideoV095MulticonditioningInput;
+    output: LtxVideoV095MulticonditioningOutput;
+  };
+  "fal-ai/ltx-video-v095": {
+    input: LtxVideoV095Input;
+    output: LtxVideoV095Output;
+  };
+  "rundiffusion-fal/juggernaut-flux/pro": {
+    input: JuggernautFluxProInput;
+    output: JuggernautFluxProOutput;
+  };
+  "rundiffusion-fal/juggernaut-flux/base": {
+    input: JuggernautFluxBaseInput;
+    output: JuggernautFluxBaseOutput;
   };
   "fal-ai/cogview4": {
     input: Cogview4Input;
@@ -37935,17 +35731,29 @@ export type EndpointTypeMap = {
     input: DiffrhythmInput;
     output: DiffrhythmOutput;
   };
-  "fal-ai/docres": {
-    input: DocresInput;
-    output: DocresOutput;
+  "fal-ai/topaz/upscale/video": {
+    input: TopazUpscaleVideoInput;
+    output: TopazUpscaleVideoOutput;
   };
   "fal-ai/docres/dewarp": {
     input: DocresDewarpInput;
     output: DocresDewarpOutput;
   };
+  "fal-ai/docres": {
+    input: DocresInput;
+    output: DocresOutput;
+  };
   "fal-ai/swin2sr": {
     input: Swin2srInput;
     output: Swin2srOutput;
+  };
+  "fal-ai/ideogram/v2a/remix": {
+    input: IdeogramV2aRemixInput;
+    output: IdeogramV2aRemixOutput;
+  };
+  "fal-ai/kling-video/v1.6/pro/text-to-video": {
+    input: KlingVideoV16ProTextToVideoInput;
+    output: KlingVideoV16ProTextToVideoOutput;
   };
   "fal-ai/ideogram/v2a/turbo/remix": {
     input: IdeogramV2aTurboRemixInput;
@@ -37959,18 +35767,6 @@ export type EndpointTypeMap = {
     input: IdeogramV2aTurboInput;
     output: IdeogramV2aTurboOutput;
   };
-  "fal-ai/ideogram/v2a": {
-    input: IdeogramV2aInput;
-    output: IdeogramV2aOutput;
-  };
-  "fal-ai/ideogram/v2a/remix": {
-    input: IdeogramV2aRemixInput;
-    output: IdeogramV2aRemixOutput;
-  };
-  "fal-ai/elevenlabs/sound-effects": {
-    input: ElevenlabsSoundEffectsInput;
-    output: ElevenlabsSoundEffectsOutput;
-  };
   "fal-ai/elevenlabs/audio-isolation": {
     input: ElevenlabsAudioIsolationInput;
     output: ElevenlabsAudioIsolationOutput;
@@ -37983,6 +35779,14 @@ export type EndpointTypeMap = {
     input: ElevenlabsSpeechToTextInput;
     output: ElevenlabsSpeechToTextOutput;
   };
+  "fal-ai/elevenlabs/sound-effects": {
+    input: ElevenlabsSoundEffectsInput;
+    output: ElevenlabsSoundEffectsOutput;
+  };
+  "fal-ai/ideogram/v2a": {
+    input: IdeogramV2aInput;
+    output: IdeogramV2aOutput;
+  };
   "fal-ai/evf-sam": {
     input: EvfSamInput;
     output: EvfSamOutput;
@@ -37991,13 +35795,17 @@ export type EndpointTypeMap = {
     input: DdcolorInput;
     output: DdcolorOutput;
   };
-  "fal-ai/sam2/auto-segment": {
-    input: Sam2AutoSegmentInput;
-    output: Sam2AutoSegmentOutput;
+  "fal-ai/wan-t2v": {
+    input: WanT2vInput;
+    output: WanT2vOutput;
   };
   "fal-ai/video-prompt-generator": {
     input: VideoPromptGeneratorInput;
     output: VideoPromptGeneratorOutput;
+  };
+  "fal-ai/sam2/auto-segment": {
+    input: Sam2AutoSegmentInput;
+    output: Sam2AutoSegmentOutput;
   };
   "fal-ai/minimax/video-01-director/image-to-video": {
     input: MinimaxVideo01DirectorImageToVideoInput;
@@ -38007,37 +35815,61 @@ export type EndpointTypeMap = {
     input: DrctSuperResolutionInput;
     output: DrctSuperResolutionOutput;
   };
-  "fal-ai/nafnet/denoise": {
-    input: NafnetDenoiseInput;
-    output: NafnetDenoiseOutput;
+  "fal-ai/veo2": {
+    input: Veo2Input;
+    output: Veo2Output;
   };
   "fal-ai/nafnet/deblur": {
     input: NafnetDeblurInput;
     output: NafnetDeblurOutput;
   };
+  "fal-ai/nafnet/denoise": {
+    input: NafnetDenoiseInput;
+    output: NafnetDenoiseOutput;
+  };
+  "fal-ai/post-processing": {
+    input: PostProcessingInput;
+    output: PostProcessingOutput;
+  };
   "fal-ai/skyreels-i2v": {
     input: SkyreelsI2vInput;
     output: SkyreelsI2vOutput;
   };
-  "fal-ai/kokoro/spanish": {
-    input: KokoroSpanishInput;
-    output: KokoroSpanishOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2/image-to-video": {
-    input: LumaDreamMachineRay2ImageToVideoInput;
-    output: LumaDreamMachineRay2ImageToVideoOutput;
-  };
-  "fal-ai/kokoro/brazilian-portuguese": {
-    input: KokoroBrazilianPortugueseInput;
-    output: KokoroBrazilianPortugueseOutput;
+  "fal-ai/flowedit": {
+    input: FloweditInput;
+    output: FloweditOutput;
   };
   "fal-ai/kokoro/hindi": {
     input: KokoroHindiInput;
     output: KokoroHindiOutput;
   };
+  "fal-ai/kokoro/mandarin-chinese": {
+    input: KokoroMandarinChineseInput;
+    output: KokoroMandarinChineseOutput;
+  };
+  "fal-ai/kokoro/brazilian-portuguese": {
+    input: KokoroBrazilianPortugueseInput;
+    output: KokoroBrazilianPortugueseOutput;
+  };
+  "fal-ai/kokoro/spanish": {
+    input: KokoroSpanishInput;
+    output: KokoroSpanishOutput;
+  };
+  "fal-ai/kokoro/french": {
+    input: KokoroFrenchInput;
+    output: KokoroFrenchOutput;
+  };
   "fal-ai/kokoro/japanese": {
     input: KokoroJapaneseInput;
     output: KokoroJapaneseOutput;
+  };
+  "fal-ai/kokoro/british-english": {
+    input: KokoroBritishEnglishInput;
+    output: KokoroBritishEnglishOutput;
+  };
+  "fal-ai/kokoro/american-english": {
+    input: KokoroAmericanEnglishInput;
+    output: KokoroAmericanEnglishOutput;
   };
   "fal-ai/zonos": {
     input: ZonosInput;
@@ -38047,33 +35879,13 @@ export type EndpointTypeMap = {
     input: KokoroItalianInput;
     output: KokoroItalianOutput;
   };
-  "fal-ai/kokoro/american-english": {
-    input: KokoroAmericanEnglishInput;
-    output: KokoroAmericanEnglishOutput;
-  };
-  "fal-ai/kokoro/british-english": {
-    input: KokoroBritishEnglishInput;
-    output: KokoroBritishEnglishOutput;
-  };
-  "fal-ai/flowedit": {
-    input: FloweditInput;
-    output: FloweditOutput;
-  };
-  "fal-ai/kokoro/mandarin-chinese": {
-    input: KokoroMandarinChineseInput;
-    output: KokoroMandarinChineseOutput;
-  };
-  "fal-ai/kokoro/french": {
-    input: KokoroFrenchInput;
-    output: KokoroFrenchOutput;
+  "fal-ai/luma-dream-machine/ray-2/image-to-video": {
+    input: LumaDreamMachineRay2ImageToVideoInput;
+    output: LumaDreamMachineRay2ImageToVideoOutput;
   };
   "fal-ai/got-ocr/v2": {
     input: GotOcrV2Input;
     output: GotOcrV2Output;
-  };
-  "fal-ai/minimax/video-01-director": {
-    input: MinimaxVideo01DirectorInput;
-    output: MinimaxVideo01DirectorOutput;
   };
   "fal-ai/flux-control-lora-canny/image-to-image": {
     input: FluxControlLoraCannyImageToImageInput;
@@ -38082,6 +35894,10 @@ export type EndpointTypeMap = {
   "fal-ai/flux-control-lora-depth/image-to-image": {
     input: FluxControlLoraDepthImageToImageInput;
     output: FluxControlLoraDepthImageToImageOutput;
+  };
+  "fal-ai/ben/v2/image": {
+    input: BenV2ImageInput;
+    output: BenV2ImageOutput;
   };
   "fal-ai/flux-control-lora-canny": {
     input: FluxControlLoraCannyInput;
@@ -38094,6 +35910,10 @@ export type EndpointTypeMap = {
   "fal-ai/ben/v2/video": {
     input: BenV2VideoInput;
     output: BenV2VideoOutput;
+  };
+  "fal-ai/minimax/video-01-director": {
+    input: MinimaxVideo01DirectorInput;
+    output: MinimaxVideo01DirectorOutput;
   };
   "fal-ai/imagen3": {
     input: Imagen3Input;
@@ -38115,6 +35935,10 @@ export type EndpointTypeMap = {
     input: CodeformerInput;
     output: CodeformerOutput;
   };
+  "fal-ai/lumina-image/v2": {
+    input: LuminaImageV2Input;
+    output: LuminaImageV2Output;
+  };
   "fal-ai/hunyuan-video/video-to-video": {
     input: HunyuanVideoVideoToVideoInput;
     output: HunyuanVideoVideoToVideoOutput;
@@ -38123,33 +35947,29 @@ export type EndpointTypeMap = {
     input: HunyuanVideoLoraVideoToVideoInput;
     output: HunyuanVideoLoraVideoToVideoOutput;
   };
-  "fal-ai/pixverse/v3.5/image-to-video": {
-    input: PixverseV35ImageToVideoInput;
-    output: PixverseV35ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v3.5/text-to-video/fast": {
-    input: PixverseV35TextToVideoFastInput;
-    output: PixverseV35TextToVideoFastOutput;
+  "fal-ai/pixverse/v3.5/text-to-video": {
+    input: PixverseV35TextToVideoInput;
+    output: PixverseV35TextToVideoOutput;
   };
   "fal-ai/pixverse/v3.5/image-to-video/fast": {
     input: PixverseV35ImageToVideoFastInput;
     output: PixverseV35ImageToVideoFastOutput;
   };
-  "fal-ai/pixverse/v3.5/text-to-video": {
-    input: PixverseV35TextToVideoInput;
-    output: PixverseV35TextToVideoOutput;
+  "fal-ai/pixverse/v3.5/text-to-video/fast": {
+    input: PixverseV35TextToVideoFastInput;
+    output: PixverseV35TextToVideoFastOutput;
   };
-  "fal-ai/yue": {
-    input: YueInput;
-    output: YueOutput;
+  "fal-ai/pixverse/v3.5/image-to-video": {
+    input: PixverseV35ImageToVideoInput;
+    output: PixverseV35ImageToVideoOutput;
   };
   "fal-ai/janus": {
     input: JanusInput;
     output: JanusOutput;
   };
-  "fal-ai/image-preprocessors/pidi": {
-    input: ImagePreprocessorsPidiInput;
-    output: ImagePreprocessorsPidiOutput;
+  "fal-ai/yue": {
+    input: YueInput;
+    output: YueOutput;
   };
   "fal-ai/luma-dream-machine/ray-2": {
     input: LumaDreamMachineRay2Input;
@@ -38159,13 +35979,17 @@ export type EndpointTypeMap = {
     input: KlingV15KolorsVirtualTryOnInput;
     output: KlingV15KolorsVirtualTryOnOutput;
   };
+  "fal-ai/ffmpeg-api/metadata": {
+    input: FfmpegApiMetadataInput;
+    output: FfmpegApiMetadataOutput;
+  };
   "fal-ai/ffmpeg-api/waveform": {
     input: FfmpegApiWaveformInput;
     output: FfmpegApiWaveformOutput;
   };
-  "fal-ai/ffmpeg-api/metadata": {
-    input: FfmpegApiMetadataInput;
-    output: FfmpegApiMetadataOutput;
+  "fal-ai/ffmpeg-api/compose": {
+    input: FfmpegApiComposeInput;
+    output: FfmpegApiComposeOutput;
   };
   "fal-ai/minimax/video-01-subject-reference": {
     input: MinimaxVideo01SubjectReferenceInput;
@@ -38175,49 +35999,49 @@ export type EndpointTypeMap = {
     input: MoondreamNextBatchInput;
     output: MoondreamNextBatchOutput;
   };
-  "fal-ai/flux-pro/v1/canny-finetuned": {
-    input: FluxProV1CannyFinetunedInput;
-    output: FluxProV1CannyFinetunedOutput;
+  "fal-ai/flux-pro/v1/canny": {
+    input: FluxProV1CannyInput;
+    output: FluxProV1CannyOutput;
   };
   "fal-ai/flux-pro/v1/depth": {
     input: FluxProV1DepthInput;
     output: FluxProV1DepthOutput;
   };
-  "fal-ai/flux-pro/v1.1-ultra-finetuned": {
-    input: FluxProV11UltraFinetunedInput;
-    output: FluxProV11UltraFinetunedOutput;
-  };
-  "fal-ai/flux-pro/v1/canny": {
-    input: FluxProV1CannyInput;
-    output: FluxProV1CannyOutput;
-  };
-  "fal-ai/flux-pro/v1/depth-finetuned": {
-    input: FluxProV1DepthFinetunedInput;
-    output: FluxProV1DepthFinetunedOutput;
-  };
-  "fal-ai/flux-pro/v1/fill-finetuned": {
-    input: FluxProV1FillFinetunedInput;
-    output: FluxProV1FillFinetunedOutput;
-  };
-  "fal-ai/flux-pro-trainer": {
-    input: FluxProTrainerInput;
-    output: FluxProTrainerOutput;
-  };
-  "fal-ai/hunyuan-video-lora": {
-    input: HunyuanVideoLoraInput;
-    output: HunyuanVideoLoraOutput;
-  };
-  "fal-ai/sa2va/4b/image": {
-    input: Sa2va4bImageInput;
-    output: Sa2va4bImageOutput;
+  "fal-ai/flux-pro/v1/canny-finetuned": {
+    input: FluxProV1CannyFinetunedInput;
+    output: FluxProV1CannyFinetunedOutput;
   };
   "fal-ai/flux-lora-canny": {
     input: FluxLoraCannyInput;
     output: FluxLoraCannyOutput;
   };
+  "fal-ai/flux-pro-trainer": {
+    input: FluxProTrainerInput;
+    output: FluxProTrainerOutput;
+  };
   "fal-ai/flux-pro/v1.1": {
     input: FluxProV11Input;
     output: FluxProV11Output;
+  };
+  "fal-ai/flux-pro/v1.1-ultra-finetuned": {
+    input: FluxProV11UltraFinetunedInput;
+    output: FluxProV11UltraFinetunedOutput;
+  };
+  "fal-ai/flux-pro/v1/fill-finetuned": {
+    input: FluxProV1FillFinetunedInput;
+    output: FluxProV1FillFinetunedOutput;
+  };
+  "fal-ai/flux-pro/v1/depth-finetuned": {
+    input: FluxProV1DepthFinetunedInput;
+    output: FluxProV1DepthFinetunedOutput;
+  };
+  "fal-ai/hunyuan-video-lora": {
+    input: HunyuanVideoLoraInput;
+    output: HunyuanVideoLoraOutput;
+  };
+  "fal-ai/cogvideox-5b": {
+    input: Cogvideox5bInput;
+    output: Cogvideox5bOutput;
   };
   "fal-ai/transpixar": {
     input: TranspixarInput;
@@ -38227,25 +36051,25 @@ export type EndpointTypeMap = {
     input: HunyuanVideoLoraTrainingInput;
     output: HunyuanVideoLoraTrainingOutput;
   };
-  "fal-ai/cogvideox-5b": {
-    input: Cogvideox5bInput;
-    output: Cogvideox5bOutput;
-  };
-  "fal-ai/sa2va/8b/image": {
-    input: Sa2va8bImageInput;
-    output: Sa2va8bImageOutput;
+  "fal-ai/sync-lipsync": {
+    input: SyncLipsyncInput;
+    output: SyncLipsyncOutput;
   };
   "fal-ai/sa2va/8b/video": {
     input: Sa2va8bVideoInput;
     output: Sa2va8bVideoOutput;
   };
-  "fal-ai/sync-lipsync": {
-    input: SyncLipsyncInput;
-    output: SyncLipsyncOutput;
-  };
   "fal-ai/sa2va/4b/video": {
     input: Sa2va4bVideoInput;
     output: Sa2va4bVideoOutput;
+  };
+  "fal-ai/sa2va/4b/image": {
+    input: Sa2va4bImageInput;
+    output: Sa2va4bImageOutput;
+  };
+  "fal-ai/sa2va/8b/image": {
+    input: Sa2va8bImageInput;
+    output: Sa2va8bImageOutput;
   };
   "fal-ai/moondream-next": {
     input: MoondreamNextInput;
@@ -38255,17 +36079,29 @@ export type EndpointTypeMap = {
     input: MoondreamNextDetectionInput;
     output: MoondreamNextDetectionOutput;
   };
+  "fal-ai/kling-video/v1.6/standard/image-to-video": {
+    input: KlingVideoV16StandardImageToVideoInput;
+    output: KlingVideoV16StandardImageToVideoOutput;
+  };
+  "fal-ai/kling-video/v1.6/standard/text-to-video": {
+    input: KlingVideoV16StandardTextToVideoInput;
+    output: KlingVideoV16StandardTextToVideoOutput;
+  };
   "fal-ai/auto-caption": {
     input: AutoCaptionInput;
     output: AutoCaptionOutput;
+  };
+  "fal-ai/switti": {
+    input: SwittiInput;
+    output: SwittiOutput;
   };
   "fal-ai/switti/512": {
     input: Switti512Input;
     output: Switti512Output;
   };
-  "fal-ai/switti": {
-    input: SwittiInput;
-    output: SwittiOutput;
+  "fal-ai/mmaudio-v2/text-to-audio": {
+    input: MmaudioV2TextToAudioInput;
+    output: MmaudioV2TextToAudioOutput;
   };
   "fal-ai/sadtalker/reference": {
     input: SadtalkerReferenceInput;
@@ -38275,81 +36111,93 @@ export type EndpointTypeMap = {
     input: DubbingInput;
     output: DubbingOutput;
   };
-  "fal-ai/mmaudio-v2/text-to-audio": {
-    input: MmaudioV2TextToAudioInput;
-    output: MmaudioV2TextToAudioOutput;
-  };
-  "fal-ai/bria/eraser": {
-    input: BriaEraserInput;
-    output: BriaEraserOutput;
-  };
-  "fal-ai/bria/text-to-image/base": {
-    input: BriaTextToImageBaseInput;
-    output: BriaTextToImageBaseOutput;
-  };
-  "fal-ai/playai/tts/v3": {
-    input: PlayaiTtsV3Input;
-    output: PlayaiTtsV3Output;
+  "fal-ai/bria/text-to-image/fast": {
+    input: BriaTextToImageFastInput;
+    output: BriaTextToImageFastOutput;
   };
   "fal-ai/bria/expand": {
     input: BriaExpandInput;
     output: BriaExpandOutput;
   };
-  "fal-ai/bria/background/replace": {
-    input: BriaBackgroundReplaceInput;
-    output: BriaBackgroundReplaceOutput;
+  "fal-ai/bria/text-to-image/base": {
+    input: BriaTextToImageBaseInput;
+    output: BriaTextToImageBaseOutput;
   };
-  "fal-ai/bria/text-to-image/hd": {
-    input: BriaTextToImageHdInput;
-    output: BriaTextToImageHdOutput;
+  "fal-ai/bria/genfill": {
+    input: BriaGenfillInput;
+    output: BriaGenfillOutput;
+  };
+  "fal-ai/playai/tts/v3": {
+    input: PlayaiTtsV3Input;
+    output: PlayaiTtsV3Output;
   };
   "fal-ai/flux-lora-fill": {
     input: FluxLoraFillInput;
     output: FluxLoraFillOutput;
   };
+  "fal-ai/bria/background/replace": {
+    input: BriaBackgroundReplaceInput;
+    output: BriaBackgroundReplaceOutput;
+  };
+  "fal-ai/bria/eraser": {
+    input: BriaEraserInput;
+    output: BriaEraserOutput;
+  };
+  "fal-ai/bria/text-to-image/hd": {
+    input: BriaTextToImageHdInput;
+    output: BriaTextToImageHdOutput;
+  };
   "fal-ai/bria/product-shot": {
     input: BriaProductShotInput;
     output: BriaProductShotOutput;
   };
-  "fal-ai/luma-dream-machine": {
-    input: LumaDreamMachineInput;
-    output: LumaDreamMachineOutput;
+  "fal-ai/bria/background/remove": {
+    input: BriaBackgroundRemoveInput;
+    output: BriaBackgroundRemoveOutput;
   };
-  "fal-ai/bria/text-to-image/fast": {
-    input: BriaTextToImageFastInput;
-    output: BriaTextToImageFastOutput;
-  };
-  "fal-ai/leffa/virtual-tryon": {
-    input: LeffaVirtualTryonInput;
-    output: LeffaVirtualTryonOutput;
-  };
-  "fal-ai/minimax-music": {
-    input: MinimaxMusicInput;
-    output: MinimaxMusicOutput;
+  "fal-ai/cat-vton": {
+    input: CatVtonInput;
+    output: CatVtonOutput;
   };
   "fal-ai/leffa/pose-transfer": {
     input: LeffaPoseTransferInput;
     output: LeffaPoseTransferOutput;
   };
-  "fal-ai/minimax/video-01-live/image-to-video": {
-    input: MinimaxVideo01LiveImageToVideoInput;
-    output: MinimaxVideo01LiveImageToVideoOutput;
+  "fal-ai/minimax-music": {
+    input: MinimaxMusicInput;
+    output: MinimaxMusicOutput;
+  };
+  "fal-ai/leffa/virtual-tryon": {
+    input: LeffaVirtualTryonInput;
+    output: LeffaVirtualTryonOutput;
   };
   "fal-ai/recraft-20b": {
     input: Recraft20bInput;
     output: Recraft20bOutput;
   };
-  "fal-ai/minimax/video-01-live": {
-    input: MinimaxVideo01LiveInput;
-    output: MinimaxVideo01LiveOutput;
+  "fal-ai/minimax/video-01-live/image-to-video": {
+    input: MinimaxVideo01LiveImageToVideoInput;
+    output: MinimaxVideo01LiveImageToVideoOutput;
   };
   "fal-ai/hyper3d/rodin": {
     input: Hyper3dRodinInput;
     output: Hyper3dRodinOutput;
   };
+  "fal-ai/minimax/video-01-live": {
+    input: MinimaxVideo01LiveInput;
+    output: MinimaxVideo01LiveOutput;
+  };
   "fal-ai/ideogram/v2/edit": {
     input: IdeogramV2EditInput;
     output: IdeogramV2EditOutput;
+  };
+  "fal-ai/trellis": {
+    input: TrellisInput;
+    output: TrellisOutput;
+  };
+  "fal-ai/luma-dream-machine": {
+    input: LumaDreamMachineInput;
+    output: LumaDreamMachineOutput;
   };
   "fal-ai/ideogram/v2/turbo/edit": {
     input: IdeogramV2TurboEditInput;
@@ -38359,21 +36207,17 @@ export type EndpointTypeMap = {
     input: IdeogramV2TurboRemixInput;
     output: IdeogramV2TurboRemixOutput;
   };
-  "fal-ai/ideogram/v2/remix": {
-    input: IdeogramV2RemixInput;
-    output: IdeogramV2RemixOutput;
-  };
   "fal-ai/ideogram/v2/turbo": {
     input: IdeogramV2TurboInput;
     output: IdeogramV2TurboOutput;
   };
-  "fal-ai/ideogram/v2": {
-    input: IdeogramV2Input;
-    output: IdeogramV2Output;
-  };
   "fal-ai/video-upscaler": {
     input: VideoUpscalerInput;
     output: VideoUpscalerOutput;
+  };
+  "fal-ai/ideogram/v2/remix": {
+    input: IdeogramV2RemixInput;
+    output: IdeogramV2RemixOutput;
   };
   "fal-ai/kling-video/v1/standard/text-to-video": {
     input: KlingVideoV1StandardTextToVideoInput;
@@ -38383,204 +36227,16 @@ export type EndpointTypeMap = {
     input: LumaPhotonFlashInput;
     output: LumaPhotonFlashOutput;
   };
+  "fal-ai/aura-flow": {
+    input: AuraFlowInput;
+    output: AuraFlowOutput;
+  };
+  "fal-ai/omnigen-v1": {
+    input: OmnigenV1Input;
+    output: OmnigenV1Output;
+  };
   "fal-ai/flux/schnell/redux": {
     input: FluxSchnellReduxInput;
     output: FluxSchnellReduxOutput;
-  };
-  "fal-ai/flux-lora-depth": {
-    input: FluxLoraDepthInput;
-    output: FluxLoraDepthOutput;
-  };
-  "fal-ai/flux-pro/v1.1-ultra/redux": {
-    input: FluxProV11UltraReduxInput;
-    output: FluxProV11UltraReduxOutput;
-  };
-  "fal-ai/ltx-video/image-to-video": {
-    input: LtxVideoImageToVideoInput;
-    output: LtxVideoImageToVideoOutput;
-  };
-  "fal-ai/flux-pro/v1/redux": {
-    input: FluxProV1ReduxInput;
-    output: FluxProV1ReduxOutput;
-  };
-  "fal-ai/flux-pro/v1.1/redux": {
-    input: FluxProV11ReduxInput;
-    output: FluxProV11ReduxOutput;
-  };
-  "fal-ai/birefnet/v2": {
-    input: BirefnetV2Input;
-    output: BirefnetV2Output;
-  };
-  "fal-ai/flux-pro/v1/fill": {
-    input: FluxProV1FillInput;
-    output: FluxProV1FillOutput;
-  };
-  "fal-ai/kolors/image-to-image": {
-    input: KolorsImageToImageInput;
-    output: KolorsImageToImageOutput;
-  };
-  "fal-ai/iclight-v2": {
-    input: IclightV2Input;
-    output: IclightV2Output;
-  };
-  "fal-ai/mochi-v1": {
-    input: MochiV1Input;
-    output: MochiV1Output;
-  };
-  "fal-ai/flux-lora-portrait-trainer": {
-    input: FluxLoraPortraitTrainerInput;
-    output: FluxLoraPortraitTrainerOutput;
-  };
-  "fal-ai/flux-differential-diffusion": {
-    input: FluxDifferentialDiffusionInput;
-    output: FluxDifferentialDiffusionOutput;
-  };
-  "fal-ai/flux-pulid": {
-    input: FluxPulidInput;
-    output: FluxPulidOutput;
-  };
-  "fal-ai/ltx-video": {
-    input: LtxVideoInput;
-    output: LtxVideoOutput;
-  };
-  "fal-ai/stable-diffusion-v35-medium": {
-    input: StableDiffusionV35MediumInput;
-    output: StableDiffusionV35MediumOutput;
-  };
-  "fal-ai/stable-diffusion-v35-large": {
-    input: StableDiffusionV35LargeInput;
-    output: StableDiffusionV35LargeOutput;
-  };
-  "fal-ai/f5-tts": {
-    input: F5TtsInput;
-    output: F5TtsOutput;
-  };
-  "fal-ai/cogvideox-5b/video-to-video": {
-    input: Cogvideox5bVideoToVideoInput;
-    output: Cogvideox5bVideoToVideoOutput;
-  };
-  "fal-ai/cogvideox-5b/image-to-video": {
-    input: Cogvideox5bImageToVideoInput;
-    output: Cogvideox5bImageToVideoOutput;
-  };
-  "fal-ai/any-llm/vision": {
-    input: AnyLlmVisionInput;
-    output: AnyLlmVisionOutput;
-  };
-  "fal-ai/kling-video/v1/standard/image-to-video": {
-    input: KlingVideoV1StandardImageToVideoInput;
-    output: KlingVideoV1StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v1/pro/image-to-video": {
-    input: KlingVideoV1ProImageToVideoInput;
-    output: KlingVideoV1ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v1/pro/text-to-video": {
-    input: KlingVideoV1ProTextToVideoInput;
-    output: KlingVideoV1ProTextToVideoOutput;
-  };
-  "fal-ai/flux-pro/new": {
-    input: FluxProNewInput;
-    output: FluxProNewOutput;
-  };
-  "fal-ai/live-portrait/image": {
-    input: LivePortraitImageInput;
-    output: LivePortraitImageOutput;
-  };
-  "fal-ai/flux-lora/inpainting": {
-    input: FluxLoraInpaintingInput;
-    output: FluxLoraInpaintingOutput;
-  };
-  "fal-ai/flux-general/rf-inversion": {
-    input: FluxGeneralRfInversionInput;
-    output: FluxGeneralRfInversionOutput;
-  };
-  "fal-ai/image-preprocessors/mlsd": {
-    input: ImagePreprocessorsMlsdInput;
-    output: ImagePreprocessorsMlsdOutput;
-  };
-  "fal-ai/image-preprocessors/zoe": {
-    input: ImagePreprocessorsZoeInput;
-    output: ImagePreprocessorsZoeOutput;
-  };
-  "fal-ai/fast-svd/text-to-video": {
-    input: FastSvdTextToVideoInput;
-    output: FastSvdTextToVideoOutput;
-  };
-  "fal-ai/image-preprocessors/hed": {
-    input: ImagePreprocessorsHedInput;
-    output: ImagePreprocessorsHedOutput;
-  };
-  "fal-ai/image-preprocessors/scribble": {
-    input: ImagePreprocessorsScribbleInput;
-    output: ImagePreprocessorsScribbleOutput;
-  };
-  "fal-ai/image-preprocessors/midas": {
-    input: ImagePreprocessorsMidasInput;
-    output: ImagePreprocessorsMidasOutput;
-  };
-  "fal-ai/image-preprocessors/sam": {
-    input: ImagePreprocessorsSamInput;
-    output: ImagePreprocessorsSamOutput;
-  };
-  "fal-ai/image-preprocessors/depth-anything/v2": {
-    input: ImagePreprocessorsDepthAnythingV2Input;
-    output: ImagePreprocessorsDepthAnythingV2Output;
-  };
-  "fal-ai/image-preprocessors/teed": {
-    input: ImagePreprocessorsTeedInput;
-    output: ImagePreprocessorsTeedOutput;
-  };
-  "fal-ai/image-preprocessors/lineart": {
-    input: ImagePreprocessorsLineartInput;
-    output: ImagePreprocessorsLineartOutput;
-  };
-  "fal-ai/controlnext": {
-    input: ControlnextInput;
-    output: ControlnextOutput;
-  };
-  "fal-ai/sam2/video": {
-    input: Sam2VideoInput;
-    output: Sam2VideoOutput;
-  };
-  "fal-ai/sam2/image": {
-    input: Sam2ImageInput;
-    output: Sam2ImageOutput;
-  };
-  "fal-ai/stable-diffusion-v15": {
-    input: StableDiffusionV15Input;
-    output: StableDiffusionV15Output;
-  };
-  "fal-ai/flux-general/image-to-image": {
-    input: FluxGeneralImageToImageInput;
-    output: FluxGeneralImageToImageOutput;
-  };
-  "fal-ai/flux-general/inpainting": {
-    input: FluxGeneralInpaintingInput;
-    output: FluxGeneralInpaintingOutput;
-  };
-  "fal-ai/flux-general/differential-diffusion": {
-    input: FluxGeneralDifferentialDiffusionInput;
-    output: FluxGeneralDifferentialDiffusionOutput;
-  };
-  "fal-ai/flux-lora/image-to-image": {
-    input: FluxLoraImageToImageInput;
-    output: FluxLoraImageToImageOutput;
-  };
-  "fal-ai/fooocus/upscale-or-vary": {
-    input: FooocusUpscaleOrVaryInput;
-    output: FooocusUpscaleOrVaryOutput;
-  };
-  "fal-ai/fast-sdxl/image-to-image": {
-    input: FastSdxlImageToImageInput;
-    output: FastSdxlImageToImageOutput;
-  };
-  "fal-ai/sana": {
-    input: SanaInput;
-    output: SanaOutput;
-  };
-  "fal-ai/pixart-sigma": {
-    input: PixartSigmaInput;
-    output: PixartSigmaOutput;
   };
 };
