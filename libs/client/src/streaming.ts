@@ -229,6 +229,7 @@ export class FalStream<Input, Output> {
             this.emit("done", this.currentData);
             return;
           }
+          this.buffer.push(value as Output);
           this.currentData = value as Output;
           this.emit("data", value);
           emitRawChunk();
