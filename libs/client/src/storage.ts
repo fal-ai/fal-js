@@ -1,6 +1,52 @@
 import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
 import { isPlainObject } from "./utils";
+
+/**
+ * Configuration for object lifecycle and storage behavior.
+ */
+export interface ObjectLifecyclePreference {
+  /**
+   * Duration in seconds before the object expires and is deleted.
+   * Set to a large value (e.g., 31536000000) for effectively unlimited storage.
+   *
+   * Common values:
+   * - 604800: 7 days
+   * - 2592000: 30 days
+   * - 31536000: 1 year
+   * - 31536000000: ~1000 years (effectively unlimited)
+   */
+  expiration_duration_seconds?: number;
+
+  /**
+   * Whether to allow I/O storage for this object.
+   * @default undefined (uses account default)
+   */
+  allow_io_storage?: boolean;
+}
+
+/**
+ * Helper constants for common lifecycle durations.
+ */
+export const LIFECYCLE_DURATIONS = {
+  ONE_DAY: 86400,
+  ONE_WEEK: 604800,
+  ONE_MONTH: 2592000,
+  ONE_YEAR: 31536000,
+  UNLIMITED: 31536000000, // ~1000 years
+} as const;
+
+/**
+ * Options for uploading a file.
+ */
+export type UploadOptions = {
+  /**
+   * Custom lifecycle configuration for the uploaded file.
+   * This object will be sent as the X-Fal-Object-Lifecycle header.
+   */
+  lifecycle?: ObjectLifecyclePreference;
+};
+
 /**
  * File support for the client. This interface establishes the contract for
  * uploading files to the server and transforming the input to replace file
@@ -10,10 +56,10 @@ export interface StorageClient {
   /**
    * Upload a file to the server. Returns the URL of the uploaded file.
    * @param file the file to upload
-   * @param options optional parameters, such as custom file name
+   * @param options optional parameters, such as lifecycle configuration
    * @returns the URL of the uploaded file
    */
-  upload: (file: Blob) => Promise<string>;
+  upload: (file: Blob, options?: UploadOptions) => Promise<string>;
 
   /**
    * Transform the input to replace file objects with URLs. This is used
@@ -45,7 +91,7 @@ type InitiateUploadData = {
  * @returns the file extension or `bin` if the content type is not recognized.
  */
 function getExtensionFromContentType(contentType: string): string {
-  const [_, fileType] = contentType.split("/");
+  const [, fileType] = contentType.split("/");
   return fileType.split(/[-;]/)[0] ?? "bin";
 }
 
@@ -57,9 +103,15 @@ async function initiateUpload(
   file: Blob,
   config: RequiredConfig,
   contentType: string,
+  lifecycle?: ObjectLifecyclePreference,
 ): Promise<InitiateUploadResult> {
   const filename =
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
+
+  const headers: Record<string, string> = {};
+  if (lifecycle) {
+    headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycle);
+  }
 
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
     method: "POST",
@@ -70,6 +122,7 @@ async function initiateUpload(
       file_name: filename,
     },
     config,
+    headers,
   });
 }
 
@@ -81,9 +134,15 @@ async function initiateMultipartUpload(
   file: Blob,
   config: RequiredConfig,
   contentType: string,
+  lifecycle?: ObjectLifecyclePreference,
 ): Promise<InitiateUploadResult> {
   const filename =
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
+
+  const headers: Record<string, string> = {};
+  if (lifecycle) {
+    headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycle);
+  }
 
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
     method: "POST",
@@ -93,6 +152,7 @@ async function initiateMultipartUpload(
       file_name: filename,
     },
     config,
+    headers,
   });
 }
 
@@ -128,11 +188,12 @@ async function partUploadRetries(
 async function multipartUpload(
   file: Blob,
   config: RequiredConfig,
+  lifecycle?: ObjectLifecyclePreference,
 ): Promise<string> {
   const { fetch, responseHandler } = config;
   const contentType = file.type || "application/octet-stream";
   const { upload_url: uploadUrl, file_url: url } =
-    await initiateMultipartUpload(file, config, contentType);
+    await initiateMultipartUpload(file, config, contentType, lifecycle);
 
   // Break the file into 10MB chunks
   const chunkSize = 10 * 1024 * 1024;
@@ -185,10 +246,12 @@ export function createStorageClient({
   config,
 }: StorageClientDependencies): StorageClient {
   const ref: StorageClient = {
-    upload: async (file: Blob) => {
+    upload: async (file: Blob, options?: UploadOptions) => {
+      const lifecycle = options?.lifecycle;
+
       // Check for 90+ MB file size to do multipart upload
       if (file.size > 90 * 1024 * 1024) {
-        return await multipartUpload(file, config);
+        return await multipartUpload(file, config, lifecycle);
       }
 
       const contentType = file.type || "application/octet-stream";
@@ -198,6 +261,7 @@ export function createStorageClient({
         file,
         config,
         contentType,
+        lifecycle,
       );
       const response = await fetch(uploadUrl, {
         method: "PUT",
