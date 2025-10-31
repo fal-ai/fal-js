@@ -120,6 +120,7 @@ export class FalStream<Input, Output> {
             message: "Streaming connection is already closed.",
             status: 400,
             body: undefined,
+            requestId: this._requestId || undefined,
           }),
         );
       }
@@ -210,6 +211,7 @@ export class FalStream<Input, Output> {
           message: "Response body is empty.",
           status: 400,
           body: undefined,
+          requestId: this._requestId || undefined,
         }),
       );
       return;
@@ -271,6 +273,7 @@ export class FalStream<Input, Output> {
           new ApiError({
             message: `Event stream timed out after ${(timeout / 1000).toFixed(0)} seconds with no messages.`,
             status: 408,
+            requestId: this._requestId || undefined,
           }),
         );
       }
@@ -300,6 +303,7 @@ export class FalStream<Input, Output> {
         : new ApiError({
             message: error.message ?? "An unknown error occurred",
             status: 500,
+            requestId: this._requestId || undefined,
           });
     this.emit("error", apiError);
     return;
