@@ -14,16 +14,19 @@ type ApiErrorArgs = {
   status: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
+  requestId?: string;
 };
 
 export class ApiError<Body> extends Error {
   public readonly status: number;
   public readonly body: Body;
-  constructor({ message, status, body }: ApiErrorArgs) {
+  public readonly requestId: string;
+  constructor({ message, status, body, requestId }: ApiErrorArgs) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.body = body;
+    this.requestId = requestId || "";
   }
 }
 
@@ -64,6 +67,7 @@ export async function defaultResponseHandler<Output>(
 ): Promise<Output> {
   const { status, statusText } = response;
   const contentType = response.headers.get("Content-Type") ?? "";
+  const requestId = response.headers.get(REQUEST_ID_HEADER) || undefined;
   if (!response.ok) {
     if (contentType.includes("application/json")) {
       const body = await response.json();
@@ -72,9 +76,14 @@ export async function defaultResponseHandler<Output>(
         message: body.message || statusText,
         status,
         body,
+        requestId,
       });
     }
-    throw new ApiError({ message: `HTTP ${status}: ${statusText}`, status });
+    throw new ApiError({
+      message: `HTTP ${status}: ${statusText}`,
+      status,
+      requestId,
+    });
   }
   if (contentType.includes("application/json")) {
     return response.json() as Promise<Output>;
