@@ -6035,6 +6035,10 @@ export type BytedanceSeedreamV4TextToImageInput = {
    * If set to true, the safety checker will be enabled. Default value: `true`
    */
   enable_safety_checker?: boolean;
+  /**
+   * The mode to use for enhancing prompt enhancement. Standard mode provides higher quality results but takes longer to generate. Fast mode provides average quality results but takes less time to generate. Default value: `"standard"`
+   */
+  enhance_prompt_mode?: "standard" | "fast";
 };
 export type BytedanceSeedreamV4TextToImageOutput = {
   /**
