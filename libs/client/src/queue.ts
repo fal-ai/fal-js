@@ -99,6 +99,12 @@ type QueueCommonSubscribeOptions = {
    * @see QueuePriority
    */
   priority?: QueuePriority;
+
+  /**
+   * Additional HTTP headers to include in the submit request.
+   * Note: `x-fal-queue-priority` and `x-fal-runner-hint` will override any conflicting keys.
+   */
+  headers?: Record<string, string>;
 };
 
 /**
@@ -128,6 +134,12 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * This will be sent as the `X-Fal-Runner-Hint` header.
    */
   hint?: string;
+
+  /**
+   * Additional HTTP headers to include in the submit request.
+   * Note: `x-fal-queue-priority` and `x-fal-runner-hint` will override any conflicting keys.
+   */
+  headers?: Record<string, string>;
 };
 
 type BaseQueueOptions = {
@@ -263,7 +275,8 @@ export const createQueueClient = ({
       endpointId: string,
       options: SubmitOptions<Input>,
     ): Promise<InQueueQueueStatus> {
-      const { webhookUrl, priority, hint, ...runOptions } = options;
+      const { webhookUrl, priority, hint, headers: extraHeaders, ...runOptions } =
+        options;
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
@@ -275,6 +288,7 @@ export const createQueueClient = ({
           query: webhookUrl ? { fal_webhook: webhookUrl } : undefined,
         }),
         headers: {
+          ...(extraHeaders ?? {}),
           "x-fal-queue-priority": priority ?? "normal",
           ...(hint && { "x-fal-runner-hint": hint }),
         },
