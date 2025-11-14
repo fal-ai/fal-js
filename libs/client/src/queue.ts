@@ -288,7 +288,7 @@ export const createQueueClient = ({
           query: webhookUrl ? { fal_webhook: webhookUrl } : undefined,
         }),
         headers: {
-          ...(extraHeaders ?? {}),
+          ...extraHeaders,
           "x-fal-queue-priority": priority ?? "normal",
           ...(hint && { "x-fal-runner-hint": hint }),
         },
