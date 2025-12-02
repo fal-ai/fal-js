@@ -2,10 +2,27 @@ import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
 import { isPlainObject } from "./utils";
 
+type ObjectExpiration =
+  | "never"
+  | "immediate"
+  | "1h"
+  | "1d"
+  | "7d"
+  | "30d"
+  | "1y"
+  | number;
+
 /**
  * Configuration for object lifecycle and storage behavior.
  */
 export interface ObjectLifecyclePreference {
+  /**
+   * The expiration time for the object. You can specify one of the enumerated values or a number of seconds.
+   */
+  expiresIn: ObjectExpiration;
+}
+
+type UploadLifecycleConfig = {
   /**
    * Duration in seconds before the object expires and is deleted.
    * Set to a large value (e.g., 31536000000) for effectively unlimited storage.
@@ -14,7 +31,6 @@ export interface ObjectLifecyclePreference {
    * - 604800: 7 days
    * - 2592000: 30 days
    * - 31536000: 1 year
-   * - 31536000000: ~1000 years (effectively unlimited)
    */
   expiration_duration_seconds?: number;
 
@@ -23,18 +39,17 @@ export interface ObjectLifecyclePreference {
    * @default undefined (uses account default)
    */
   allow_io_storage?: boolean;
-}
+};
 
-/**
- * Helper constants for common lifecycle durations.
- */
-export const LIFECYCLE_DURATIONS = {
-  ONE_DAY: 86400,
-  ONE_WEEK: 604800,
-  ONE_MONTH: 2592000,
-  ONE_YEAR: 31536000,
-  UNLIMITED: 31536000000, // ~1000 years
-} as const;
+const EXPIRATION_VALUES: Record<ObjectExpiration, number | undefined> = {
+  never: 3153600000, // 100 years
+  immediate: undefined,
+  "1h": 3600,
+  "1d": 86400,
+  "7d": 604800,
+  "30d": 2592000,
+  "1y": 31536000,
+};
 
 /**
  * Options for uploading a file.
@@ -110,7 +125,15 @@ async function initiateUpload(
 
   const headers: Record<string, string> = {};
   if (lifecycle) {
-    headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycle);
+    const { expiresIn } = lifecycle;
+    const lifecycleConfig: UploadLifecycleConfig = {
+      expiration_duration_seconds:
+        typeof expiresIn === "number"
+          ? expiresIn
+          : EXPIRATION_VALUES[expiresIn],
+      allow_io_storage: expiresIn !== "immediate",
+    };
+    headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycleConfig);
   }
 
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
