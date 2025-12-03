@@ -1,5 +1,5 @@
-import { createQueueClient } from "./queue";
 import { createConfig, type RequiredConfig } from "./config";
+import { createQueueClient } from "./queue";
 import type { StorageClient } from "./storage";
 
 jest.mock("./request", () => {
@@ -74,5 +74,3 @@ describe("queue.submit headers", () => {
     expect(call.headers["x-fal-runner-hint"]).toBeUndefined();
   });
 });
-
-

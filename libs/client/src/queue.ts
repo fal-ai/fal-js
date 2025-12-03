@@ -275,8 +275,13 @@ export const createQueueClient = ({
       endpointId: string,
       options: SubmitOptions<Input>,
     ): Promise<InQueueQueueStatus> {
-      const { webhookUrl, priority, hint, headers: extraHeaders, ...runOptions } =
-        options;
+      const {
+        webhookUrl,
+        priority,
+        hint,
+        headers: extraHeaders,
+        ...runOptions
+      } = options;
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
