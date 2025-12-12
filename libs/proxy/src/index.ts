@@ -8,7 +8,7 @@ const FAL_KEY_SECRET = process.env.FAL_KEY_SECRET;
 
 export type HeaderValue = string | string[] | undefined | null;
 
-const FAL_URL_REG_EXP = /(\.|^)fal\.(run|ai)$/;
+const FAL_URL_REG_EXP = /(\.|^)fal\.(run|ai|dev)$/;
 
 /**
  * The proxy behavior that is passed to the proxy handler. This is a subset of
