@@ -880,7 +880,7 @@ export type MoondreamInputParam = {
    */
   prompt?: string;
 };
-export type Object = {
+export type BoundingBoxObject = {
   /**
    * Left boundary of detection box in normalized format (0 to 1)
    */
@@ -46345,7 +46345,7 @@ export type Moondream3PreviewDetectOutput = {
   /**
    * List of detected objects with their bounding boxes
    */
-  objects: Array<Object>;
+  objects: Array<BoundingBoxObject>;
   /**
    * Image with bounding boxes drawn around detected objects
    */
@@ -46472,7 +46472,7 @@ export type Moondream3PreviewSegmentOutput = {
   /**
    * Bounding box of the segmented object. If not detected, will be null.
    */
-  bbox?: Object;
+  bbox?: BoundingBoxObject;
 };
 export type MoondreamBatchedInput = {
   /**
@@ -46580,7 +46580,7 @@ export type MoondreamDetectOutput = {
   /**
    * List of detected objects with their bounding boxes
    */
-  objects: Array<Object>;
+  objects: Array<BoundingBoxObject>;
   /**
    * Image with bounding boxes drawn around detected objects
    */
@@ -46815,7 +46815,7 @@ export type MoondreamSegementationOutput = {
   /**
    * Bounding box of the segmented object. If not detected, will be null.
    */
-  bbox?: Object;
+  bbox?: BoundingBoxObject;
 };
 export type MulticonditioningVideoInput = {
   /**
