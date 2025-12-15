@@ -6721,104 +6721,6 @@ export type BytedanceSeedreamV3TextToImageOutput = {
    */
   seed: number;
 };
-export type BytedanceSeedreamV45EditInput = {
-  /**
-   * The text prompt used to edit the image
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Width and height must be between 1920 and 4096, or total number of pixels must be between 2560*1440 and 4096*4096.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9"
-    | "auto_2K"
-    | "auto_4K";
-  /**
-   * Number of separate model generations to be run with the prompt. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to a number greater than one, enables multi-image generation. The model will potentially return up to `max_images` images every generation, and in total, `num_images` generations will be carried out. In total, the number of images generated will be between `num_images` and `max_images*num_images`. The total number of images (image inputs + image outputs) must not exceed 15 Default value: `1`
-   */
-  max_images?: number;
-  /**
-   * Random seed to control the stochasticity of image generation.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * List of URLs of input images for editing. Presently, up to 10 image inputs are allowed. If over 10 images are sent, only the last 10 will be used.
-   */
-  image_urls: Array<string>;
-};
-export type BytedanceSeedreamV45EditOutput = {
-  /**
-   * Generated images
-   */
-  images: Array<Image>;
-};
-export type BytedanceSeedreamV45TextToImageInput = {
-  /**
-   * The text prompt used to generate the image
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Width and height must be between 1920 and 4096, or total number of pixels must be between 2560*1440 and 4096*4096.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9"
-    | "auto_2K"
-    | "auto_4K";
-  /**
-   * Number of separate model generations to be run with the prompt. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to a number greater than one, enables multi-image generation. The model will potentially return up to `max_images` images every generation, and in total, `num_images` generations will be carried out. In total, the number of images generated will be between `num_images` and `max_images*num_images`. Default value: `1`
-   */
-  max_images?: number;
-  /**
-   * Random seed to control the stochasticity of image generation.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-};
-export type BytedanceSeedreamV45TextToImageOutput = {
-  /**
-   * Generated images
-   */
-  images: Array<Image>;
-  /**
-   * Seed used for generation
-   */
-  seed: number;
-};
 export type BytedanceSeedreamV4EditInput = {
   /**
    * The text prompt used to edit the image
@@ -8710,38 +8612,6 @@ export type controlnextOutput = {
    * The generated video.
    */
   video: File;
-};
-export type CreatifyAuroraInput = {
-  /**
-   * The URL of the image file to be used for video generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the audio file to be used for video generation.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * A text prompt to guide the video generation process.
-   */
-  prompt?: string;
-  /**
-   * Guidance scale to be used for text prompt adherence. Default value: `1`
-   */
-  guidance_scale?: number;
-  /**
-   * Guidance scale to be used for audio adherence. Default value: `2`
-   */
-  audio_guidance_scale?: number;
-  /**
-   * The resolution of the generated video. Default value: `"720p"`
-   */
-  resolution?: "480p" | "720p";
-};
-export type CreatifyAuroraOutput = {
-  /**
-   * The generated video file.
-   */
-  video: VideoFile;
 };
 export type CreativeUpscalerInput = {
   /**
@@ -11812,50 +11682,6 @@ export type Fabric10Input = {
   resolution: "720p" | "480p";
 };
 export type Fabric10Output = {
-  /**
-   *
-   */
-  video: File;
-};
-export type Fabric10TextInput = {
-  /**
-   *
-   */
-  image_url: string | Blob | File;
-  /**
-   *
-   */
-  text: string;
-  /**
-   * Optional additional voice description. The primary voice description is auto-generated from the image. You can use simple descriptors like 'British accent' or 'Confident' or provide a detailed description like 'Confident male voice, mid-20s, with notes of...'
-   */
-  voice_description?: string;
-  /**
-   * Resolution
-   */
-  resolution: "720p" | "480p";
-};
-export type Fabric10TextOutput = {
-  /**
-   *
-   */
-  video: File;
-};
-export type FabricOneLipsyncInput = {
-  /**
-   *
-   */
-  image_url: string | Blob | File;
-  /**
-   *
-   */
-  audio_url: string | Blob | File;
-  /**
-   * Resolution
-   */
-  resolution: "720p" | "480p";
-};
-export type FabricOneOutput = {
   /**
    *
    */
@@ -36477,54 +36303,6 @@ export type KlingV1I2VOutput = {
    */
   video: File;
 };
-export type KlingVideoAiAvatarV2ProInput = {
-  /**
-   * The URL of the image to use as your avatar
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the audio file.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * The prompt to use for the video generation. Default value: `"."`
-   */
-  prompt?: string;
-};
-export type KlingVideoAiAvatarV2ProOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-  /**
-   * Duration of the output video in seconds.
-   */
-  duration: number;
-};
-export type KlingVideoAiAvatarV2StandardInput = {
-  /**
-   * The URL of the image to use as your avatar
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the audio file.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * The prompt to use for the video generation. Default value: `"."`
-   */
-  prompt?: string;
-};
-export type KlingVideoAiAvatarV2StandardOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-  /**
-   * Duration of the output video in seconds.
-   */
-  duration: number;
-};
 export type KlingVideoLipsyncAudioToVideoInput = {
   /**
    * The URL of the video to generate the lip sync for. Supports .mp4/.mov, ≤100MB, 2–10s, 720p/1080p only, width/height 720–1920px.
@@ -37543,67 +37321,6 @@ export type KlingVideoV25TurboStandardImageToVideoInput = {
   cfg_scale?: number;
 };
 export type KlingVideoV25TurboStandardImageToVideoOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type KlingVideoV26ProImageToVideoInput = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * URL of the image to be used for the video
-   */
-  image_url: string | Blob | File;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * Whether to generate native audio for the video. Supports Chinese and English voice output. Other languages are automatically translated to English. For English speech, use lowercase letters; for acronyms or proper nouns, use uppercase. Default value: `true`
-   */
-  generate_audio?: boolean;
-};
-export type KlingVideoV26ProImageToVideoOutput = {
-  /**
-   * The generated video
-   */
-  video: File;
-};
-export type KlingVideoV26ProTextToVideoInput = {
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * The aspect ratio of the generated video frame Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1";
-  /**
-   *  Default value: `"blur, distort, and low quality"`
-   */
-  negative_prompt?: string;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt. Default value: `0.5`
-   */
-  cfg_scale?: number;
-  /**
-   * Whether to generate native audio for the video. Supports Chinese and English voice output. Other languages are automatically translated to English. For English speech, use lowercase letters; for acronyms or proper nouns, use uppercase. Default value: `true`
-   */
-  generate_audio?: boolean;
-};
-export type KlingVideoV26ProTextToVideoOutput = {
   /**
    * The generated video
    */
@@ -39654,145 +39371,6 @@ export type Llavav1513bOutput = {
    * Whether the output is partial
    */
   partial?: boolean;
-};
-export type LongcatImageEditInput = {
-  /**
-   * The prompt to edit the image with.
-   */
-  prompt: string;
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The guidance scale to use for the image generation. Default value: `4.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * The acceleration level to use. Default value: `"regular"`
-   */
-  acceleration?: "none" | "regular" | "high";
-  /**
-   * The URL of the image to edit.
-   */
-  image_url: string | Blob | File;
-};
-export type LongcatImageEditOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type LongcatImageInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `landscape_4_3`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The guidance scale to use for the image generation. Default value: `4.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * The acceleration level to use. Default value: `"regular"`
-   */
-  acceleration?: "none" | "regular" | "high";
-};
-export type LongcatImageOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
 };
 export type LongcatVideoDistilledImageToVideo480pInput = {
   /**
@@ -44321,62 +43899,6 @@ export type MaskInput = {
    */
   mask_expansion?: number;
 };
-export type MayaBatchInput = {
-  /**
-   * List of texts to synthesize into speech. You can embed emotion tags in each text using the format <emotion_name>.
-   */
-  texts: Array<string>;
-  /**
-   * List of voice descriptions for each text. Must match the length of texts list. Each describes the voice/character attributes.
-   */
-  prompts: Array<string>;
-  /**
-   * Sampling temperature for all generations. Default value: `0.4`
-   */
-  temperature?: number;
-  /**
-   * Nucleus sampling parameter for all generations. Default value: `0.9`
-   */
-  top_p?: number;
-  /**
-   * Maximum SNAC tokens per generation. Default value: `2000`
-   */
-  max_tokens?: number;
-  /**
-   * Repetition penalty for all generations. Default value: `1.1`
-   */
-  repetition_penalty?: number;
-  /**
-   * Output audio sample rate for all generations. 48 kHz provides higher quality, 24 kHz is faster. Default value: `"48 kHz"`
-   */
-  sample_rate?: "48 kHz" | "24 kHz";
-  /**
-   * Output audio format for all generated speech files Default value: `"wav"`
-   */
-  output_format?: "wav" | "mp3";
-};
-export type MayaBatchOutput = {
-  /**
-   * List of generated audio files
-   */
-  audios: Array<File>;
-  /**
-   * Duration of each generated audio in seconds
-   */
-  durations: Array<number>;
-  /**
-   * Sample rate of all generated audio files
-   */
-  sample_rate: string;
-  /**
-   * Total time taken to generate all audio files in seconds
-   */
-  total_generation_time: number;
-  /**
-   * Average real-time factor across all generations
-   */
-  average_rtf: number;
-};
 export type mayaInput = {
   /**
    * The text to synthesize into speech. You can embed emotion tags anywhere in the text using the format <emotion_name>. Available emotions: laugh, laugh_harder, sigh, chuckle, gasp, angry, excited, whisper, cry, scream, sing, snort, exhale, gulp, giggle, sarcastic, curious. Example: 'Hello world! <excited> This is amazing!' or 'I can't believe this <sigh> happened again.'
@@ -44433,40 +43955,6 @@ export type mayaOutput = {
    */
   rtf: number;
 };
-export type MayaStreamInput = {
-  /**
-   * The text to synthesize into speech. You can embed emotion tags anywhere in the text using the format <emotion_name>. Available emotions: laugh, laugh_harder, sigh, chuckle, gasp, angry, excited, whisper, cry, scream, sing, snort, exhale, gulp, giggle, sarcastic, curious. Example: 'Hello world! <excited> This is amazing!' or 'I can't believe this <sigh> happened again.'
-   */
-  text: string;
-  /**
-   * Description of the voice/character. Includes attributes like age, accent, pitch, timbre, pacing, tone, and intensity. See examples for format.
-   */
-  prompt: string;
-  /**
-   * Sampling temperature. Lower values (0.2-0.5) produce more stable/consistent audio. Higher values add variation. Default value: `0.4`
-   */
-  temperature?: number;
-  /**
-   * Nucleus sampling parameter. Controls diversity of token selection. Default value: `0.9`
-   */
-  top_p?: number;
-  /**
-   * Maximum number of SNAC tokens to generate (7 tokens per frame). Controls maximum audio length. Default value: `2000`
-   */
-  max_tokens?: number;
-  /**
-   * Penalty for repeating tokens. Higher values reduce repetition artifacts. Default value: `1.1`
-   */
-  repetition_penalty?: number;
-  /**
-   * Output audio sample rate. 48 kHz uses upsampling for higher quality audio, 24 kHz is native SNAC output (faster, lower latency). Default value: `"24 kHz"`
-   */
-  sample_rate?: "48 kHz" | "24 kHz";
-  /**
-   * Output audio format. 'mp3' for browser-playable audio, 'wav' for uncompressed audio, 'pcm' for raw PCM (lowest latency, requires client-side decoding). Default value: `"mp3"`
-   */
-  output_format?: "mp3" | "wav" | "pcm";
-};
 export type MayaVoiceBatchInput = {
   /**
    * List of texts to synthesize into speech. You can embed emotion tags in each text using the format <emotion_name>.
@@ -44522,62 +44010,6 @@ export type MayaVoiceBatchOutput = {
    * Average real-time factor across all generations
    */
   average_rtf: number;
-};
-export type MayaVoiceInput = {
-  /**
-   * The text to synthesize into speech. You can embed emotion tags anywhere in the text using the format <emotion_name>. Available emotions: laugh, laugh_harder, sigh, chuckle, gasp, angry, excited, whisper, cry, scream, sing, snort, exhale, gulp, giggle, sarcastic, curious. Example: 'Hello world! <excited> This is amazing!' or 'I can't believe this <sigh> happened again.'
-   */
-  text: string;
-  /**
-   * Description of the voice/character. Includes attributes like age, accent, pitch, timbre, pacing, tone, and intensity. See examples for format.
-   */
-  prompt: string;
-  /**
-   * Sampling temperature. Lower values (0.2-0.5) produce more stable/consistent audio. Higher values add variation. Default value: `0.4`
-   */
-  temperature?: number;
-  /**
-   * Nucleus sampling parameter. Controls diversity of token selection. Default value: `0.9`
-   */
-  top_p?: number;
-  /**
-   * Maximum number of SNAC tokens to generate (7 tokens per frame). Controls maximum audio length. Default value: `2000`
-   */
-  max_tokens?: number;
-  /**
-   * Penalty for repeating tokens. Higher values reduce repetition artifacts. Default value: `1.1`
-   */
-  repetition_penalty?: number;
-  /**
-   * Output audio sample rate. 48 kHz provides higher quality audio, 24 kHz is faster. Default value: `"48 kHz"`
-   */
-  sample_rate?: "48 kHz" | "24 kHz";
-  /**
-   * Output audio format for the generated speech Default value: `"wav"`
-   */
-  output_format?: "wav" | "mp3";
-};
-export type MayaVoiceOutput = {
-  /**
-   * The generated audio file containing the speech (WAV or MP3 format, 24kHz or 48kHz mono depending on upsampler)
-   */
-  audio: File;
-  /**
-   * Duration of the generated audio in seconds
-   */
-  duration: number;
-  /**
-   * Sample rate of the generated audio
-   */
-  sample_rate: string;
-  /**
-   * Time taken to generate the audio in seconds
-   */
-  generation_time: number;
-  /**
-   * Real-time factor (generation_time / audio_duration). Lower is better.
-   */
-  rtf: number;
 };
 export type MayaVoiceStreamingInput = {
   /**
@@ -46426,53 +45858,6 @@ export type Moondream3PreviewQueryOutput = {
    * Detailed reasoning behind the answer, if enabled
    */
   reasoning?: string;
-};
-export type Moondream3PreviewSegmentInput = {
-  /**
-   * URL of the image to be processed
-   *
-   * Max width: 7000px, Max height: 7000px, Timeout: 20.0s
-   */
-  image_url: string | Blob | File;
-  /**
-   * Object to be segmented in the image
-   */
-  object: string;
-  /**
-   * Spatial references to guide the segmentation. By feeding in references you can help the segmentation process. Must be either list of Point object with x and y members, or list of arrays containing either 2 floats (x,y) or 4 floats (x1,y1,x2,y2).
-   * **NOTE**: You can also use the [**point endpoint**](https://fal.ai/models/fal-ai/moondream3-preview/point) to get points for the objects, and pass them in here.
-   */
-  spatial_references?: Array<Point | Array<number>>;
-  /**
-   * Sampling settings for the segmentation model
-   */
-  settings?: SegmentSamplingSettings;
-  /**
-   * Whether to preview the output and return a binary mask of the image
-   */
-  preview?: boolean;
-};
-export type Moondream3PreviewSegmentOutput = {
-  /**
-   * Reason for finishing the output generation
-   */
-  finish_reason: string;
-  /**
-   * Usage information for the request
-   */
-  usage_info: UsageInfo;
-  /**
-   * Segmentation mask image. If no object detected or preview not requested, will be null.
-   */
-  image?: ImageFile;
-  /**
-   * SVG path data representing the segmentation mask. If not detected, will be null.
-   */
-  path?: string;
-  /**
-   * Bounding box of the segmented object. If not detected, will be null.
-   */
-  bbox?: BoundingBoxObject;
 };
 export type MoondreamBatchedInput = {
   /**
@@ -48351,86 +47736,6 @@ export type OmniZeroOutput = {
    */
   image: Image;
 };
-export type OneToAllAnimation13bInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to generate the video from.
-   */
-  negative_prompt: string;
-  /**
-   * The URL of the image to use as a reference for the video generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the video to use as a reference for the video generation.
-   */
-  video_url: string | Blob | File;
-  /**
-   * The resolution of the video to generate. Default value: `"480p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The number of inference steps to use for the video generation. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The image guidance scale to use for the video generation. Default value: `2`
-   */
-  image_guidance_scale?: number;
-  /**
-   * The pose guidance scale to use for the video generation. Default value: `1.5`
-   */
-  pose_guidance_scale?: number;
-};
-export type OneToAllAnimation13bOutput = {
-  /**
-   * The generated video file.
-   */
-  video: File;
-};
-export type OneToAllAnimation14bInput = {
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The negative prompt to generate the video from.
-   */
-  negative_prompt: string;
-  /**
-   * The URL of the image to use as a reference for the video generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The URL of the video to use as a reference for the video generation.
-   */
-  video_url: string | Blob | File;
-  /**
-   * The resolution of the video to generate. Default value: `"480p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The number of inference steps to use for the video generation. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The image guidance scale to use for the video generation. Default value: `2`
-   */
-  image_guidance_scale?: number;
-  /**
-   * The pose guidance scale to use for the video generation. Default value: `1.5`
-   */
-  pose_guidance_scale?: number;
-};
-export type OneToAllAnimation14bOutput = {
-  /**
-   * The generated video file.
-   */
-  video: File;
-};
 export type OrpheusTtsInput = {
   /**
    * The text to be converted to speech. You can additionally add the following emotive tags: <laugh>, <chuckle>, <sigh>, <cough>, <sniffle>, <groan>, <yawn>, <gasp>
@@ -49524,34 +48829,6 @@ export type PikaV22TextToVideoInput = {
 export type PikaV22TextToVideoOutput = {
   /**
    * The generated video
-   */
-  video: File;
-};
-export type PikaV2PikadditionsInput = {
-  /**
-   * URL of the input video
-   */
-  video_url: string | Blob | File;
-  /**
-   * URL of the image to add
-   */
-  image_url: string | Blob | File;
-  /**
-   * Text prompt describing what to add
-   */
-  prompt?: string;
-  /**
-   * Negative prompt to guide the model
-   */
-  negative_prompt?: string;
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-};
-export type PikaV2PikadditionsOutput = {
-  /**
-   * The generated video with added objects/images
    */
   video: File;
 };
@@ -53525,69 +52802,6 @@ export type QwenImageEditPlusLoraGalleryIntegrateProductInput = {
   lora_scale?: number;
 };
 export type QwenImageEditPlusLoraGalleryIntegrateProductOutput = {
-  /**
-   * The generated/edited images
-   */
-  images: Array<Image>;
-  /**
-   * The seed used for generation
-   */
-  seed: number;
-};
-export type QwenImageEditPlusLoraGalleryLightingRestorationInput = {
-  /**
-   * The URL of the image to restore lighting for.
-   */
-  image_urls: Array<string>;
-  /**
-   * The size of the generated image. If not provided, the size of the final input image will be used.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The CFG (Classifier Free Guidance) scale. Controls how closely the model follows the prompt. Default value: `1`
-   */
-  guidance_scale?: number;
-  /**
-   * The number of inference steps to perform. Default value: `6`
-   */
-  num_inference_steps?: number;
-  /**
-   * Acceleration level for image generation. 'regular' balances speed and quality. Default value: `"regular"`
-   */
-  acceleration?: "none" | "regular";
-  /**
-   * The negative prompt for the generation Default value: `" "`
-   */
-  negative_prompt?: string;
-  /**
-   * Random seed for reproducibility. Same seed with same prompt will produce same result.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and won't be saved in history.
-   */
-  sync_mode?: boolean;
-  /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the output image Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-};
-export type QwenImageEditPlusLoraGalleryLightingRestorationOutput = {
   /**
    * The generated/edited images
    */
@@ -60628,6 +59842,30 @@ export type SigmasInput = {
    */
   array?: Array<number>;
 };
+export type SimaUpscalerInput = {
+  /**
+   * URL of the image to upscale
+   */
+  image_url: string | Blob | File;
+  /**
+   * Upscaling factor (2x or 4x) Default value: `4`
+   */
+  scale?: number;
+};
+export type SimaUpscalerOutput = {
+  /**
+   * The upscaled image
+   */
+  image: ImageOutput;
+  /**
+   * Original image dimensions (width, height)
+   */
+  original_size: [number, number];
+  /**
+   * Upscaled image dimensions (width, height)
+   */
+  upscaled_size: [number, number];
+};
 export type SimaVideoUpscalerLiteInput = {
   /**
    * URL of the video to upscale
@@ -62299,94 +61537,6 @@ export type StarVectorOutput = {
    */
   seed: number;
 };
-export type SteadyDancerInput = {
-  /**
-   * URL of the reference image to animate. This is the person/character whose appearance will be preserved. Default value: `"https://v3b.fal.media/files/b/0a85edaa/GDUCMPrdvOMcI5JpEcU7f.png"`
-   */
-  image_url?: string | Blob | File;
-  /**
-   * URL of the driving pose video. The motion from this video will be transferred to the reference image. Default value: `"https://v3b.fal.media/files/b/0a84de68/jXDWywjhagRfR-GuZjoRs_video.mp4"`
-   */
-  video_url?: string | Blob | File;
-  /**
-   * Text prompt describing the desired animation. Default value: `"A person dancing with smooth and natural movements."`
-   */
-  prompt?: string;
-  /**
-   * Negative prompt for video generation. Default value: `"blurred, distorted face, bad anatomy, extra limbs, poorly drawn hands, poorly drawn feet, disfigured, out of frame, duplicate, watermark, signature, text"`
-   */
-  negative_prompt?: string;
-  /**
-   * Frames per second of the generated video. Must be between 5 to 24. Default value: `16`
-   */
-  frames_per_second?: number;
-  /**
-   * Random seed for reproducibility. If None, a random seed is chosen.
-   */
-  seed?: number;
-  /**
-   * Resolution of the generated video. 576p is default, 720p for higher quality. 480p is lower quality. Default value: `"576p"`
-   */
-  resolution?: "480p" | "576p" | "720p";
-  /**
-   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * Classifier-free guidance scale for prompt adherence. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * Pose guidance scale for pose control strength. Default value: `1`
-   */
-  pose_guidance_scale?: number;
-  /**
-   * Shift parameter for video generation. Default value: `5`
-   */
-  shift?: number;
-  /**
-   * Start ratio for pose guidance. Controls when pose guidance begins. Default value: `0.1`
-   */
-  pose_guidance_start?: number;
-  /**
-   * End ratio for pose guidance. Controls when pose guidance ends. Default value: `0.4`
-   */
-  pose_guidance_end?: number;
-  /**
-   * Acceleration levels. Default value: `"aggressive"`
-   */
-  acceleration?: "light" | "moderate" | "aggressive";
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * Aspect ratio of the generated video. If 'auto', will be determined from the reference image. Default value: `"auto"`
-   */
-  aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
-  /**
-   * Number of frames to generate. Will be adjusted to nearest valid value (must satisfy 4k+1 pattern). Default value: `81`
-   */
-  num_frames?: number;
-  /**
-   * If enabled, copies audio from the input driving video to the output video. Default value: `true`
-   */
-  preserve_audio?: boolean;
-};
-export type SteadyDancerOutput = {
-  /**
-   * The generated dance animation video.
-   */
-  video: File;
-  /**
-   * The seed used for generation.
-   */
-  seed: number;
-  /**
-   * The actual number of frames generated (aligned to 4k+1 pattern).
-   */
-  num_frames: number;
-};
 export type Step1xEditInput = {
   /**
    * The prompt to generate an image from.
@@ -62453,90 +61603,6 @@ export type Step1xEditOutput = {
    * The prompt used for generating the image.
    */
   prompt: string;
-};
-export type StepxEdit2Input = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The image URL to generate an image from. Needs to match the dimensions of the mask.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The true CFG scale. Controls how closely the model follows the prompt. Default value: `6`
-   */
-  guidance_scale?: number;
-  /**
-   * The number of inference steps to perform. Recommended: 50. Default value: `50`
-   */
-  num_inference_steps?: number;
-  /**
-   * Enable thinking mode. Uses multimodal language model knowledge to interpret abstract editing instructions. Default value: `true`
-   */
-  enable_thinking_mode?: boolean;
-  /**
-   * Enable reflection mode. Reviews outputs, corrects unintended changes, and determines when editing is complete. Default value: `true`
-   */
-  enable_reflection_mode?: boolean;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-};
-export type StepxEdit2Output = {
-  /**
-   * The generated images
-   */
-  images: Array<Image>;
-  /**
-   *
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the
-   * input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-  /**
-   * The model's interpretation of your instruction (only available when thinking mode is enabled).
-   */
-  reformat_prompt?: string;
-  /**
-   * Reasoning process details (only available when thinking mode is enabled).
-   */
-  think_info?: Array<string>;
-  /**
-   * Reflection analysis (only available when reflection mode is enabled).
-   */
-  best_info?: Array<any>;
 };
 export type StreamingDevTextToImageInput = {
   /**
@@ -63845,41 +62911,6 @@ export type SyncLipsyncOutput = {
    * The generated video
    */
   video: File;
-};
-export type SyncLipsyncReact1Input = {
-  /**
-   * URL to the input video. Must be **15 seconds or shorter**.
-   */
-  video_url: string | Blob | File;
-  /**
-   * URL to the input audio. Must be **15 seconds or shorter**.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * Emotion prompt for the generation. Currently supports single-word emotions only.
-   */
-  emotion: "happy" | "angry" | "sad" | "neutral" | "disgusted" | "surprised";
-  /**
-   * Controls the edit region and movement scope for the model. Available options:
-   * - `lips`: Only lipsync using react-1 (minimal facial changes).
-   * - `face`: Lipsync + facial expressions without head movements.
-   * - `head`: Lipsync + facial expressions + natural talking head movements. Default value: `"face"`
-   */
-  model_mode?: "lips" | "face" | "head";
-  /**
-   * Lipsync mode when audio and video durations are out of sync. Default value: `"bounce"`
-   */
-  lipsync_mode?: "cut_off" | "loop" | "bounce" | "silence" | "remap";
-  /**
-   * Controls the expresiveness of the lipsync. Default value: `0.5`
-   */
-  temperature?: number;
-};
-export type SyncLipsyncReact1Output = {
-  /**
-   * The generated video with synchronized lip and facial movements.
-   */
-  video: VideoFile;
 };
 export type SyncLipsyncV2Input = {
   /**
@@ -73029,46 +72060,6 @@ export type WanVaceOutput = {
    */
   seed: number;
 };
-export type WanVisionEnhancerInput = {
-  /**
-   * The URL of the video to enhance with Wan Video. Maximum 200MB file size. Videos longer than 500 frames will have only the first 500 frames processed (~8-21 seconds depending on fps).
-   */
-  video_url: string | Blob | File;
-  /**
-   * Target output resolution for the enhanced video. 720p (native, fast) or 1080p (upscaled, slower). Processing is always done at 720p, then upscaled if 1080p selected. Default value: `"720p"`
-   */
-  target_resolution?: "720p" | "1080p";
-  /**
-   * Controls how much the model enhances/changes the video. 0 = Minimal change (preserves original), 1 = Subtle enhancement (default), 2 = Medium enhancement, 3 = Strong enhancement, 4 = Maximum enhancement. Default value: `1`
-   */
-  creativity?: number;
-  /**
-   * Optional prompt to prepend to the VLM-generated description. Leave empty to use only the auto-generated description from the video.
-   */
-  prompt?: string;
-  /**
-   * Negative prompt to avoid unwanted features. Default value: `"oversaturated, overexposed, static, blurry details, subtitles, stylized, artwork, painting, still frame, overall gray, worst quality, low quality, JPEG artifacts, ugly, mutated, extra fingers, poorly drawn hands, poorly drawn face, deformed, disfigured, malformed limbs, fused fingers, static motion, cluttered background, three legs, crowded background, walking backwards"`
-   */
-  negative_prompt?: string;
-  /**
-   * Random seed for reproducibility. If not provided, a random seed will be used.
-   */
-  seed?: number;
-};
-export type WanVisionEnhancerOutput = {
-  /**
-   * The enhanced video file.
-   */
-  video: File;
-  /**
-   * The seed used for generation.
-   */
-  seed: number;
-  /**
-   * The timings of the different steps in the workflow.
-   */
-  timings: any;
-};
 export type WaveformInput = {
   /**
    * URL of the audio file to analyze
@@ -73983,119 +72974,6 @@ export type yueOutput = {
    */
   audio: File;
 };
-export type ZImageTrainerInput = {
-  /**
-   * URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.
-   *
-   * The zip can also contain a text file for each image. The text file should be named:
-   * ROOT.txt
-   * For example:
-   * photo.txt
-   *
-   * This text file can be used to specify the edit instructions for the image pair.
-   *
-   * If no text file is provided, the default_caption will be used.
-   *
-   * If no default_caption is provided, the training will fail.
-   */
-  image_data_url: string | Blob | File;
-  /**
-   * Total number of training steps. Default value: `1000`
-   */
-  steps?: number;
-  /**
-   * Learning rate applied to trainable parameters. Default value: `0.0001`
-   */
-  learning_rate?: number;
-  /**
-   * Default caption to use when caption files are missing. If None, missing captions will cause an error.
-   */
-  default_caption?: string;
-  /**
-   * Type of training to perform. Use 'content' to focus on the content of the images, 'style' to focus on the style of the images, and 'balanced' to focus on a combination of both. Default value: `"balanced"`
-   */
-  training_type?: "content" | "style" | "balanced";
-};
-export type ZImageTrainerOutput = {
-  /**
-   * URL to the trained diffusers lora weights.
-   */
-  diffusers_lora_file: File;
-  /**
-   * URL to the configuration file for the trained model.
-   */
-  config_file: File;
-};
-export type ZImageTurboControlnetInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `auto`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9"
-    | "auto";
-  /**
-   * The number of inference steps to perform. Default value: `8`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * Whether to enable prompt expansion. Note: this will increase the price by 0.0025 credits per request.
-   */
-  enable_prompt_expansion?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * The acceleration level to use. Default value: `"none"`
-   */
-  acceleration?: "none" | "regular" | "high";
-  /**
-   * URL of Image for ControlNet generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The scale of the controlnet conditioning. Default value: `0.9`
-   */
-  control_scale?: number;
-  /**
-   * The start of the controlnet conditioning.
-   */
-  control_start?: number;
-  /**
-   * The end of the controlnet conditioning. Default value: `0.4`
-   */
-  control_end?: number;
-  /**
-   * What kind of preprocessing to apply to the image, if any. Default value: `"none"`
-   */
-  preprocess?: "none" | "canny" | "depth" | "pose";
-};
 export type ZImageTurboControlNetInput = {
   /**
    * The prompt to generate an image from.
@@ -74165,80 +73043,6 @@ export type ZImageTurboControlNetInput = {
    * What kind of preprocessing to apply to the image, if any. Default value: `"none"`
    */
   preprocess?: "none" | "canny" | "depth" | "pose";
-};
-export type ZImageTurboControlnetLoraInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `auto`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9"
-    | "auto";
-  /**
-   * The number of inference steps to perform. Default value: `8`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * Whether to enable prompt expansion. Note: this will increase the price by 0.0025 credits per request.
-   */
-  enable_prompt_expansion?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * The acceleration level to use. Default value: `"none"`
-   */
-  acceleration?: "none" | "regular" | "high";
-  /**
-   * URL of Image for ControlNet generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The scale of the controlnet conditioning. Default value: `0.9`
-   */
-  control_scale?: number;
-  /**
-   * The start of the controlnet conditioning.
-   */
-  control_start?: number;
-  /**
-   * The end of the controlnet conditioning. Default value: `0.4`
-   */
-  control_end?: number;
-  /**
-   * What kind of preprocessing to apply to the image, if any. Default value: `"none"`
-   */
-  preprocess?: "none" | "canny" | "depth" | "pose";
-  /**
-   * List of LoRA weights to apply (maximum 3).
-   */
-  loras?: Array<LoRAInput>;
 };
 export type ZImageTurboControlNetLoRAInput = {
   /**
@@ -74313,50 +73117,6 @@ export type ZImageTurboControlNetLoRAInput = {
    * List of LoRA weights to apply (maximum 3).
    */
   loras?: Array<LoRAInput>;
-};
-export type ZImageTurboControlnetLoraOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<ImageFile>;
-  /**
-   * The timings of the generation process.
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-};
-export type ZImageTurboControlnetOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<ImageFile>;
-  /**
-   * The timings of the generation process.
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
 };
 export type ZImageTurboControlNetOutput = {
   /**
@@ -74438,68 +73198,6 @@ export type ZImageTurboImageToImageInput = {
    */
   strength?: number;
 };
-export type ZImageTurboImageToImageLoraInput = {
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The size of the generated image. Default value: `auto`
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9"
-    | "auto";
-  /**
-   * The number of inference steps to perform. Default value: `8`
-   */
-  num_inference_steps?: number;
-  /**
-   * The same seed and the same prompt given to the same version of the model will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * Whether to enable prompt expansion. Note: this will increase the price by 0.0025 credits per request.
-   */
-  enable_prompt_expansion?: boolean;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * The acceleration level to use. Default value: `"none"`
-   */
-  acceleration?: "none" | "regular" | "high";
-  /**
-   * URL of Image for Image-to-Image generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The strength of the image-to-image conditioning. Default value: `0.6`
-   */
-  strength?: number;
-  /**
-   * List of LoRA weights to apply (maximum 3).
-   */
-  loras?: Array<LoRAInput>;
-};
 export type ZImageTurboImageToImageLoRAInput = {
   /**
    * The prompt to generate an image from.
@@ -74561,28 +73259,6 @@ export type ZImageTurboImageToImageLoRAInput = {
    * List of LoRA weights to apply (maximum 3).
    */
   loras?: Array<LoRAInput>;
-};
-export type ZImageTurboImageToImageLoraOutput = {
-  /**
-   * The generated image files info.
-   */
-  images: Array<ImageFile>;
-  /**
-   * The timings of the generation process.
-   */
-  timings: any;
-  /**
-   * Seed of the generated Image. It will be the same value of the one passed in the input or the randomly generated that was used in case none was passed.
-   */
-  seed: number;
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
 };
 export type ZImageTurboImageToImageOutput = {
   /**
@@ -74895,13 +73571,13 @@ export type EndpointTypeMap = {
     input: WanEffectsInput;
     output: WanEffectsOutput;
   };
-  "fal-ai/wan-pro/image-to-video": {
-    input: WanProImageToVideoInput;
-    output: WanProImageToVideoOutput;
-  };
   "fal-ai/veo2/image-to-video": {
     input: Veo2ImageToVideoInput;
     output: Veo2ImageToVideoOutput;
+  };
+  "fal-ai/wan-pro/image-to-video": {
+    input: WanProImageToVideoInput;
+    output: WanProImageToVideoOutput;
   };
   "fal-ai/kling-video/v1.6/pro/image-to-video": {
     input: KlingVideoV16ProImageToVideoInput;
@@ -74942,6 +73618,10 @@ export type EndpointTypeMap = {
   "fal-ai/flux-2-pro/edit": {
     input: Flux2ProEditInput;
     output: Flux2ProEditOutput;
+  };
+  "simalabs/sima-upscaler": {
+    input: SimaUpscalerInput;
+    output: SimaUpscalerOutput;
   };
   "fal-ai/minimax/hailuo-2.3/pro/image-to-video": {
     input: MinimaxHailuo23ProImageToVideoInput;
@@ -75079,98 +73759,6 @@ export type EndpointTypeMap = {
     input: ClarityUpscalerInput;
     output: ClarityUpscalerOutput;
   };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/lighting-restoration": {
-    input: QwenImageEditPlusLoraGalleryLightingRestorationInput;
-    output: QwenImageEditPlusLoraGalleryLightingRestorationOutput;
-  };
-  "fal-ai/maya/batch": {
-    input: MayaBatchInput;
-    output: MayaBatchOutput;
-  };
-  "fal-ai/maya/stream": {
-    input: MayaStreamInput;
-    output: any;
-  };
-  "fal-ai/moondream3-preview/segment": {
-    input: Moondream3PreviewSegmentInput;
-    output: Moondream3PreviewSegmentOutput;
-  };
-  "veed/fabric-1.0/text": {
-    input: Fabric10TextInput;
-    output: Fabric10TextOutput;
-  };
-  "fal-ai/steady-dancer": {
-    input: SteadyDancerInput;
-    output: SteadyDancerOutput;
-  };
-  "fal-ai/one-to-all-animation/1.3b": {
-    input: OneToAllAnimation13bInput;
-    output: OneToAllAnimation13bOutput;
-  };
-  "fal-ai/one-to-all-animation/14b": {
-    input: OneToAllAnimation14bInput;
-    output: OneToAllAnimation14bOutput;
-  };
-  "fal-ai/creatify/aurora": {
-    input: CreatifyAuroraInput;
-    output: CreatifyAuroraOutput;
-  };
-  "fal-ai/wan-vision-enhancer": {
-    input: WanVisionEnhancerInput;
-    output: WanVisionEnhancerOutput;
-  };
-  "fal-ai/sync-lipsync/react-1": {
-    input: SyncLipsyncReact1Input;
-    output: SyncLipsyncReact1Output;
-  };
-  "fal-ai/stepx-edit2": {
-    input: StepxEdit2Input;
-    output: StepxEdit2Output;
-  };
-  "fal-ai/z-image/turbo/controlnet/lora": {
-    input: ZImageTurboControlnetLoraInput;
-    output: ZImageTurboControlnetLoraOutput;
-  };
-  "fal-ai/z-image/turbo/controlnet": {
-    input: ZImageTurboControlnetInput;
-    output: ZImageTurboControlnetOutput;
-  };
-  "fal-ai/z-image/turbo/image-to-image/lora": {
-    input: ZImageTurboImageToImageLoraInput;
-    output: ZImageTurboImageToImageLoraOutput;
-  };
-  "fal-ai/z-image/turbo/image-to-image": {
-    input: ZImageTurboImageToImageInput;
-    output: ZImageTurboImageToImageOutput;
-  };
-  "fal-ai/longcat-image/edit": {
-    input: LongcatImageEditInput;
-    output: LongcatImageEditOutput;
-  };
-  "fal-ai/longcat-image": {
-    input: LongcatImageInput;
-    output: LongcatImageOutput;
-  };
-  "fal-ai/kling-video/ai-avatar/v2/pro": {
-    input: KlingVideoAiAvatarV2ProInput;
-    output: KlingVideoAiAvatarV2ProOutput;
-  };
-  "fal-ai/kling-video/ai-avatar/v2/standard": {
-    input: KlingVideoAiAvatarV2StandardInput;
-    output: KlingVideoAiAvatarV2StandardOutput;
-  };
-  "fal-ai/z-image-trainer": {
-    input: ZImageTrainerInput;
-    output: ZImageTrainerOutput;
-  };
-  "fal-ai/bytedance/seedream/v4.5/text-to-image": {
-    input: BytedanceSeedreamV45TextToImageInput;
-    output: BytedanceSeedreamV45TextToImageOutput;
-  };
-  "fal-ai/bytedance/seedream/v4.5/edit": {
-    input: BytedanceSeedreamV45EditInput;
-    output: BytedanceSeedreamV45EditOutput;
-  };
   "fal-ai/sam-3/3d-align": {
     input: Sam33dAlignInput;
     output: Sam33dAlignOutput;
@@ -75190,14 +73778,6 @@ export type EndpointTypeMap = {
   "fal-ai/vidu/q2/text-to-image": {
     input: ViduQ2TextToImageInput;
     output: ViduQ2TextToImageOutput;
-  };
-  "fal-ai/kling-video/v2.6/pro/text-to-video": {
-    input: KlingVideoV26ProTextToVideoInput;
-    output: KlingVideoV26ProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.6/pro/image-to-video": {
-    input: KlingVideoV26ProImageToVideoInput;
-    output: KlingVideoV26ProImageToVideoOutput;
   };
   "fal-ai/pixverse/v5.5/effects": {
     input: PixverseV55EffectsInput;
@@ -76419,6 +74999,10 @@ export type EndpointTypeMap = {
     input: WanV22A14bTextToVideoInput;
     output: WanV22A14bTextToVideoOutput;
   };
+  "fal-ai/wan/v2.2-a14B/image-to-video": {
+    input: any;
+    output: any;
+  };
   "fal-ai/hunyuan_world": {
     input: HunyuanWorldInput;
     output: HunyuanWorldOutput;
@@ -77391,33 +75975,33 @@ export type EndpointTypeMap = {
     input: ghiblifyInput;
     output: ghiblifyOutput;
   };
-  "fal-ai/orpheus-tts": {
-    input: OrpheusTtsInput;
-    output: OrpheusTtsOutput;
-  };
   "fal-ai/sana/sprint": {
     input: SanaSprintInput;
     output: SanaSprintOutput;
   };
-  "fal-ai/sana/v1.5/4.8b": {
-    input: SanaV1548bInput;
-    output: SanaV1548bOutput;
+  "fal-ai/orpheus-tts": {
+    input: OrpheusTtsInput;
+    output: OrpheusTtsOutput;
   };
   "fal-ai/sana/v1.5/1.6b": {
     input: SanaV1516bInput;
     output: SanaV1516bOutput;
   };
+  "fal-ai/sana/v1.5/4.8b": {
+    input: SanaV1548bInput;
+    output: SanaV1548bOutput;
+  };
   "CassetteAI/music-generator": {
     input: MusicGeneratorInput;
     output: MusicGeneratorOutput;
   };
-  "fal-ai/kling-video/lipsync/text-to-video": {
-    input: KlingVideoLipsyncTextToVideoInput;
-    output: KlingVideoLipsyncTextToVideoOutput;
-  };
   "fal-ai/kling-video/lipsync/audio-to-video": {
     input: KlingVideoLipsyncAudioToVideoInput;
     output: KlingVideoLipsyncAudioToVideoOutput;
+  };
+  "fal-ai/kling-video/lipsync/text-to-video": {
+    input: KlingVideoLipsyncTextToVideoInput;
+    output: KlingVideoLipsyncTextToVideoOutput;
   };
   "fal-ai/latentsync": {
     input: latentsyncInput;
@@ -77439,37 +76023,37 @@ export type EndpointTypeMap = {
     input: MixDehazeNetInput;
     output: MixDehazeNetOutput;
   };
+  "fal-ai/hunyuan3d/v2/multi-view/turbo": {
+    input: Hunyuan3dV2MultiViewTurboInput;
+    output: Hunyuan3dV2MultiViewTurboOutput;
+  };
   "fal-ai/gemini-flash-edit": {
     input: GeminiFlashEditInput;
     output: GeminiFlashEditOutput;
   };
-  "fal-ai/gemini-flash-edit/multi": {
-    input: GeminiFlashEditMultiInput;
-    output: GeminiFlashEditMultiOutput;
-  };
-  "fal-ai/hunyuan3d/v2/turbo": {
-    input: Hunyuan3dV2TurboInput;
-    output: Hunyuan3dV2TurboOutput;
+  "fal-ai/hunyuan3d/v2/multi-view": {
+    input: Hunyuan3dV2MultiViewInput;
+    output: Hunyuan3dV2MultiViewOutput;
   };
   "fal-ai/hunyuan3d/v2/mini/turbo": {
     input: Hunyuan3dV2MiniTurboInput;
     output: Hunyuan3dV2MiniTurboOutput;
   };
-  "fal-ai/hunyuan3d/v2/multi-view/turbo": {
-    input: Hunyuan3dV2MultiViewTurboInput;
-    output: Hunyuan3dV2MultiViewTurboOutput;
+  "fal-ai/hunyuan3d/v2/turbo": {
+    input: Hunyuan3dV2TurboInput;
+    output: Hunyuan3dV2TurboOutput;
   };
-  "fal-ai/hunyuan3d/v2": {
-    input: Hunyuan3dV2Input;
-    output: Hunyuan3dV2Output;
+  "fal-ai/gemini-flash-edit/multi": {
+    input: GeminiFlashEditMultiInput;
+    output: GeminiFlashEditMultiOutput;
   };
   "fal-ai/hunyuan3d/v2/mini": {
     input: Hunyuan3dV2MiniInput;
     output: Hunyuan3dV2MiniOutput;
   };
-  "fal-ai/hunyuan3d/v2/multi-view": {
-    input: Hunyuan3dV2MultiViewInput;
-    output: Hunyuan3dV2MultiViewOutput;
+  "fal-ai/hunyuan3d/v2": {
+    input: Hunyuan3dV2Input;
+    output: Hunyuan3dV2Output;
   };
   "fal-ai/luma-dream-machine/ray-2-flash": {
     input: LumaDreamMachineRay2FlashInput;
@@ -77479,21 +76063,33 @@ export type EndpointTypeMap = {
     input: LumaDreamMachineRay2FlashImageToVideoInput;
     output: LumaDreamMachineRay2FlashImageToVideoOutput;
   };
-  "fal-ai/pika/v2.2/pikascenes": {
-    input: PikaV22PikascenesInput;
-    output: PikaV22PikascenesOutput;
+  "fal-ai/pika/v1.5/pikaffects": {
+    input: PikaV15PikaffectsInput;
+    output: PikaV15PikaffectsOutput;
   };
   "fal-ai/pika/v2.1/text-to-video": {
     input: PikaV21TextToVideoInput;
     output: PikaV21TextToVideoOutput;
   };
+  "fal-ai/invisible-watermark": {
+    input: InvisibleWatermarkInput;
+    output: InvisibleWatermarkOutput;
+  };
   "fal-ai/pika/v2.2/text-to-video": {
     input: PikaV22TextToVideoInput;
     output: PikaV22TextToVideoOutput;
   };
-  "fal-ai/pika/v2/pikadditions": {
-    input: PikaV2PikadditionsInput;
-    output: PikaV2PikadditionsOutput;
+  "fal-ai/pika/v2.2/pikascenes": {
+    input: PikaV22PikascenesInput;
+    output: PikaV22PikascenesOutput;
+  };
+  "fal-ai/pika/v2/turbo/text-to-video": {
+    input: PikaV2TurboTextToVideoInput;
+    output: PikaV2TurboTextToVideoOutput;
+  };
+  "fal-ai/pika/v2.2/image-to-video": {
+    input: PikaV22ImageToVideoInput;
+    output: PikaV22ImageToVideoOutput;
   };
   "fal-ai/pika/v2.1/image-to-video": {
     input: PikaV21ImageToVideoInput;
@@ -77503,33 +76099,9 @@ export type EndpointTypeMap = {
     input: PikaV2TurboImageToVideoInput;
     output: PikaV2TurboImageToVideoOutput;
   };
-  "fal-ai/pika/v2/turbo/text-to-video": {
-    input: PikaV2TurboTextToVideoInput;
-    output: PikaV2TurboTextToVideoOutput;
-  };
-  "fal-ai/pika/v1.5/pikaffects": {
-    input: PikaV15PikaffectsInput;
-    output: PikaV15PikaffectsOutput;
-  };
-  "fal-ai/pika/v2.2/image-to-video": {
-    input: PikaV22ImageToVideoInput;
-    output: PikaV22ImageToVideoOutput;
-  };
-  "fal-ai/invisible-watermark": {
-    input: InvisibleWatermarkInput;
-    output: InvisibleWatermarkOutput;
-  };
   "fal-ai/csm-1b": {
     input: Csm1bInput;
     output: Csm1bOutput;
-  };
-  "fal-ai/vidu/start-end-to-video": {
-    input: ViduStartEndToVideoInput;
-    output: ViduStartEndToVideoOutput;
-  };
-  "fal-ai/vidu/template-to-video": {
-    input: ViduTemplateToVideoInput;
-    output: ViduTemplateToVideoOutput;
   };
   "fal-ai/vidu/image-to-video": {
     input: ViduImageToVideoInput;
@@ -77538,6 +76110,14 @@ export type EndpointTypeMap = {
   "fal-ai/vidu/reference-to-video": {
     input: ViduReferenceToVideoInput;
     output: ViduReferenceToVideoOutput;
+  };
+  "fal-ai/vidu/start-end-to-video": {
+    input: ViduStartEndToVideoInput;
+    output: ViduStartEndToVideoOutput;
+  };
+  "fal-ai/vidu/template-to-video": {
+    input: ViduTemplateToVideoInput;
+    output: ViduTemplateToVideoOutput;
   };
   "fal-ai/wan-pro/text-to-video": {
     input: WanProTextToVideoInput;
@@ -77555,25 +76135,37 @@ export type EndpointTypeMap = {
     input: KlingVideoV16StandardEffectsInput;
     output: KlingVideoV16StandardEffectsOutput;
   };
+  "fal-ai/hunyuan-video-image-to-video": {
+    input: HunyuanVideoImageToVideoInput;
+    output: HunyuanVideoImageToVideoOutput;
+  };
   "fal-ai/kling-video/v1/standard/effects": {
     input: KlingVideoV1StandardEffectsInput;
     output: KlingVideoV1StandardEffectsOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/effects": {
-    input: KlingVideoV15ProEffectsInput;
-    output: KlingVideoV15ProEffectsOutput;
   };
   "fal-ai/kling-video/v1.6/pro/effects": {
     input: KlingVideoV16ProEffectsInput;
     output: KlingVideoV16ProEffectsOutput;
   };
-  "fal-ai/hunyuan-video-image-to-video": {
-    input: HunyuanVideoImageToVideoInput;
-    output: HunyuanVideoImageToVideoOutput;
+  "fal-ai/kling-video/v1.5/pro/effects": {
+    input: KlingVideoV15ProEffectsInput;
+    output: KlingVideoV15ProEffectsOutput;
+  };
+  "rundiffusion-fal/juggernaut-flux/base": {
+    input: JuggernautFluxBaseInput;
+    output: JuggernautFluxBaseOutput;
+  };
+  "rundiffusion-fal/rundiffusion-photo-flux": {
+    input: RundiffusionPhotoFluxInput;
+    output: RundiffusionPhotoFluxOutput;
   };
   "fal-ai/ltx-video-v095/image-to-video": {
     input: LtxVideoV095ImageToVideoInput;
     output: LtxVideoV095ImageToVideoOutput;
+  };
+  "rundiffusion-fal/juggernaut-flux-lora": {
+    input: JuggernautFluxLoraInput;
+    output: JuggernautFluxLoraOutput;
   };
   "fal-ai/ltx-video-v095/multiconditioning": {
     input: LtxVideoV095MulticonditioningInput;
@@ -77583,29 +76175,17 @@ export type EndpointTypeMap = {
     input: JuggernautFluxLightningInput;
     output: JuggernautFluxLightningOutput;
   };
-  "rundiffusion-fal/juggernaut-flux/base/image-to-image": {
-    input: JuggernautFluxBaseImageToImageInput;
-    output: JuggernautFluxBaseImageToImageOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/base": {
-    input: JuggernautFluxBaseInput;
-    output: JuggernautFluxBaseOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux-lora": {
-    input: JuggernautFluxLoraInput;
-    output: JuggernautFluxLoraOutput;
-  };
-  "rundiffusion-fal/rundiffusion-photo-flux": {
-    input: RundiffusionPhotoFluxInput;
-    output: RundiffusionPhotoFluxOutput;
+  "fal-ai/ltx-video-v095/extend": {
+    input: LtxVideoV095ExtendInput;
+    output: LtxVideoV095ExtendOutput;
   };
   "rundiffusion-fal/juggernaut-flux/pro": {
     input: JuggernautFluxProInput;
     output: JuggernautFluxProOutput;
   };
-  "fal-ai/ltx-video-v095/extend": {
-    input: LtxVideoV095ExtendInput;
-    output: LtxVideoV095ExtendOutput;
+  "rundiffusion-fal/juggernaut-flux/base/image-to-image": {
+    input: JuggernautFluxBaseImageToImageInput;
+    output: JuggernautFluxBaseImageToImageOutput;
   };
   "fal-ai/ltx-video-v095": {
     input: LtxVideoV095Input;
@@ -77615,33 +76195,29 @@ export type EndpointTypeMap = {
     input: JuggernautFluxProImageToImageInput;
     output: JuggernautFluxProImageToImageOutput;
   };
-  "fal-ai/topaz/upscale/video": {
-    input: TopazUpscaleVideoInput;
-    output: TopazUpscaleVideoOutput;
-  };
   "fal-ai/diffrhythm": {
     input: diffrhythmInput;
     output: diffrhythmOutput;
+  };
+  "fal-ai/topaz/upscale/video": {
+    input: TopazUpscaleVideoInput;
+    output: TopazUpscaleVideoOutput;
   };
   "fal-ai/cogview4": {
     input: cogview4Input;
     output: cogview4Output;
   };
-  "fal-ai/docres/dewarp": {
-    input: DocresDewarpInput;
-    output: DocresDewarpOutput;
-  };
   "fal-ai/docres": {
     input: docresInput;
     output: docresOutput;
   };
+  "fal-ai/docres/dewarp": {
+    input: DocresDewarpInput;
+    output: DocresDewarpOutput;
+  };
   "fal-ai/swin2sr": {
     input: swin2srInput;
     output: swin2srOutput;
-  };
-  "fal-ai/ideogram/v2a": {
-    input: IdeogramV2aInput;
-    output: IdeogramV2aOutput;
   };
   "fal-ai/wan/v2.1/1.3b/text-to-video": {
     input: any;
@@ -77651,26 +76227,6 @@ export type EndpointTypeMap = {
     input: KlingVideoV16ProTextToVideoInput;
     output: KlingVideoV16ProTextToVideoOutput;
   };
-  "fal-ai/ideogram/v2a/turbo": {
-    input: IdeogramV2aTurboInput;
-    output: IdeogramV2aTurboOutput;
-  };
-  "fal-ai/elevenlabs/tts/multilingual-v2": {
-    input: ElevenlabsTtsMultilingualV2Input;
-    output: ElevenlabsTtsMultilingualV2Output;
-  };
-  "fal-ai/ideogram/v2a/turbo/remix": {
-    input: IdeogramV2aTurboRemixInput;
-    output: IdeogramV2aTurboRemixOutput;
-  };
-  "fal-ai/elevenlabs/tts/turbo-v2.5": {
-    input: ElevenlabsTtsTurboV25Input;
-    output: ElevenlabsTtsTurboV25Output;
-  };
-  "fal-ai/elevenlabs/speech-to-text": {
-    input: ElevenlabsSpeechToTextInput;
-    output: ElevenlabsSpeechToTextOutput;
-  };
   "fal-ai/elevenlabs/audio-isolation": {
     input: ElevenlabsAudioIsolationInput;
     output: ElevenlabsAudioIsolationOutput;
@@ -77678,6 +76234,30 @@ export type EndpointTypeMap = {
   "fal-ai/ideogram/v2a/remix": {
     input: IdeogramV2aRemixInput;
     output: IdeogramV2aRemixOutput;
+  };
+  "fal-ai/elevenlabs/speech-to-text": {
+    input: ElevenlabsSpeechToTextInput;
+    output: ElevenlabsSpeechToTextOutput;
+  };
+  "fal-ai/ideogram/v2a/turbo": {
+    input: IdeogramV2aTurboInput;
+    output: IdeogramV2aTurboOutput;
+  };
+  "fal-ai/ideogram/v2a": {
+    input: IdeogramV2aInput;
+    output: IdeogramV2aOutput;
+  };
+  "fal-ai/elevenlabs/tts/turbo-v2.5": {
+    input: ElevenlabsTtsTurboV25Input;
+    output: ElevenlabsTtsTurboV25Output;
+  };
+  "fal-ai/ideogram/v2a/turbo/remix": {
+    input: IdeogramV2aTurboRemixInput;
+    output: IdeogramV2aTurboRemixOutput;
+  };
+  "fal-ai/elevenlabs/tts/multilingual-v2": {
+    input: ElevenlabsTtsMultilingualV2Input;
+    output: ElevenlabsTtsMultilingualV2Output;
   };
   "fal-ai/ddcolor": {
     input: ddcolorInput;
@@ -77699,13 +76279,13 @@ export type EndpointTypeMap = {
     input: Sam2AutoSegmentInput;
     output: Sam2AutoSegmentOutput;
   };
-  "fal-ai/minimax/video-01-director/image-to-video": {
-    input: MinimaxVideo01DirectorImageToVideoInput;
-    output: MinimaxVideo01DirectorImageToVideoOutput;
-  };
   "fal-ai/drct-super-resolution": {
     input: DrctSuperResolutionInput;
     output: DrctSuperResolutionOutput;
+  };
+  "fal-ai/minimax/video-01-director/image-to-video": {
+    input: MinimaxVideo01DirectorImageToVideoInput;
+    output: MinimaxVideo01DirectorImageToVideoOutput;
   };
   "fal-ai/veo2": {
     input: veo2Input;
@@ -77727,93 +76307,93 @@ export type EndpointTypeMap = {
     input: SkyreelsI2vInput;
     output: SkyreelsI2vOutput;
   };
-  "fal-ai/flowedit": {
-    input: floweditInput;
-    output: floweditOutput;
-  };
-  "fal-ai/kokoro/french": {
-    input: KokoroFrenchInput;
-    output: KokoroFrenchOutput;
-  };
-  "fal-ai/kokoro/hindi": {
-    input: KokoroHindiInput;
-    output: KokoroHindiOutput;
-  };
-  "fal-ai/kokoro/spanish": {
-    input: KokoroSpanishInput;
-    output: KokoroSpanishOutput;
-  };
-  "fal-ai/kokoro/brazilian-portuguese": {
-    input: KokoroBrazilianPortugueseInput;
-    output: KokoroBrazilianPortugueseOutput;
-  };
-  "fal-ai/kokoro/italian": {
-    input: KokoroItalianInput;
-    output: KokoroItalianOutput;
+  "fal-ai/luma-dream-machine/ray-2/image-to-video": {
+    input: LumaDreamMachineRay2ImageToVideoInput;
+    output: LumaDreamMachineRay2ImageToVideoOutput;
   };
   "fal-ai/kokoro/mandarin-chinese": {
     input: KokoroMandarinChineseInput;
     output: KokoroMandarinChineseOutput;
   };
-  "fal-ai/kokoro/japanese": {
-    input: KokoroJapaneseInput;
-    output: KokoroJapaneseOutput;
-  };
   "fal-ai/zonos": {
     input: zonosInput;
     output: zonosOutput;
   };
-  "fal-ai/luma-dream-machine/ray-2/image-to-video": {
-    input: LumaDreamMachineRay2ImageToVideoInput;
-    output: LumaDreamMachineRay2ImageToVideoOutput;
+  "fal-ai/kokoro/french": {
+    input: KokoroFrenchInput;
+    output: KokoroFrenchOutput;
   };
   "fal-ai/kokoro/american-english": {
     input: KokoroAmericanEnglishInput;
     output: KokoroAmericanEnglishOutput;
   };
+  "fal-ai/kokoro/hindi": {
+    input: KokoroHindiInput;
+    output: KokoroHindiOutput;
+  };
+  "fal-ai/kokoro/italian": {
+    input: KokoroItalianInput;
+    output: KokoroItalianOutput;
+  };
   "fal-ai/kokoro/british-english": {
     input: KokoroBritishEnglishInput;
     output: KokoroBritishEnglishOutput;
+  };
+  "fal-ai/kokoro/spanish": {
+    input: KokoroSpanishInput;
+    output: KokoroSpanishOutput;
+  };
+  "fal-ai/kokoro/japanese": {
+    input: KokoroJapaneseInput;
+    output: KokoroJapaneseOutput;
+  };
+  "fal-ai/flowedit": {
+    input: floweditInput;
+    output: floweditOutput;
+  };
+  "fal-ai/kokoro/brazilian-portuguese": {
+    input: KokoroBrazilianPortugueseInput;
+    output: KokoroBrazilianPortugueseOutput;
   };
   "fal-ai/got-ocr/v2": {
     input: GotOcrV2Input;
     output: GotOcrV2Output;
   };
-  "fal-ai/ben/v2/image": {
-    input: BenV2ImageInput;
-    output: BenV2ImageOutput;
+  "fal-ai/flux-control-lora-depth": {
+    input: FluxControlLoraDepthInput;
+    output: FluxControlLoraDepthOutput;
   };
   "fal-ai/flux-control-lora-canny": {
     input: FluxControlLoraCannyInput;
     output: FluxControlLoraCannyOutput;
   };
-  "fal-ai/minimax/video-01-director": {
-    input: MinimaxVideo01DirectorInput;
-    output: MinimaxVideo01DirectorOutput;
-  };
   "fal-ai/ben/v2/video": {
     input: BenV2VideoInput;
     output: BenV2VideoOutput;
-  };
-  "fal-ai/flux-control-lora-depth/image-to-image": {
-    input: FluxControlLoraDepthImageToImageInput;
-    output: FluxControlLoraDepthImageToImageOutput;
   };
   "fal-ai/flux-control-lora-canny/image-to-image": {
     input: FluxControlLoraCannyImageToImageInput;
     output: FluxControlLoraCannyImageToImageOutput;
   };
-  "fal-ai/flux-control-lora-depth": {
-    input: FluxControlLoraDepthInput;
-    output: FluxControlLoraDepthOutput;
+  "fal-ai/flux-control-lora-depth/image-to-image": {
+    input: FluxControlLoraDepthImageToImageInput;
+    output: FluxControlLoraDepthImageToImageOutput;
   };
-  "fal-ai/imagen3/fast": {
-    input: Imagen3FastInput;
-    output: Imagen3FastOutput;
+  "fal-ai/ben/v2/image": {
+    input: BenV2ImageInput;
+    output: BenV2ImageOutput;
+  };
+  "fal-ai/minimax/video-01-director": {
+    input: MinimaxVideo01DirectorInput;
+    output: MinimaxVideo01DirectorOutput;
   };
   "fal-ai/imagen3": {
     input: imagen3Input;
     output: imagen3Output;
+  };
+  "fal-ai/imagen3/fast": {
+    input: Imagen3FastInput;
+    output: Imagen3FastOutput;
   };
   "fal-ai/ideogram/upscale": {
     input: IdeogramUpscaleInput;
@@ -77823,37 +76403,37 @@ export type EndpointTypeMap = {
     input: HunyuanVideoImg2vidLoraInput;
     output: HunyuanVideoImg2vidLoraOutput;
   };
-  "fal-ai/lumina-image/v2": {
-    input: LuminaImageV2Input;
-    output: LuminaImageV2Output;
-  };
   "fal-ai/codeformer": {
     input: codeformerInput;
     output: codeformerOutput;
   };
-  "fal-ai/hunyuan-video-lora/video-to-video": {
-    input: HunyuanVideoLoraVideoToVideoInput;
-    output: HunyuanVideoLoraVideoToVideoOutput;
+  "fal-ai/lumina-image/v2": {
+    input: LuminaImageV2Input;
+    output: LuminaImageV2Output;
   };
   "fal-ai/hunyuan-video/video-to-video": {
     input: HunyuanVideoVideoToVideoInput;
     output: HunyuanVideoVideoToVideoOutput;
   };
-  "fal-ai/pixverse/v3.5/image-to-video": {
-    input: PixverseV35ImageToVideoInput;
-    output: PixverseV35ImageToVideoOutput;
+  "fal-ai/hunyuan-video-lora/video-to-video": {
+    input: HunyuanVideoLoraVideoToVideoInput;
+    output: HunyuanVideoLoraVideoToVideoOutput;
   };
   "fal-ai/pixverse/v3.5/text-to-video": {
     input: PixverseV35TextToVideoInput;
     output: PixverseV35TextToVideoOutput;
   };
-  "fal-ai/pixverse/v3.5/image-to-video/fast": {
-    input: PixverseV35ImageToVideoFastInput;
-    output: PixverseV35ImageToVideoFastOutput;
+  "fal-ai/pixverse/v3.5/image-to-video": {
+    input: PixverseV35ImageToVideoInput;
+    output: PixverseV35ImageToVideoOutput;
   };
   "fal-ai/pixverse/v3.5/text-to-video/fast": {
     input: PixverseV35TextToVideoFastInput;
     output: PixverseV35TextToVideoFastOutput;
+  };
+  "fal-ai/pixverse/v3.5/image-to-video/fast": {
+    input: PixverseV35ImageToVideoFastInput;
+    output: PixverseV35ImageToVideoFastOutput;
   };
   "fal-ai/yue": {
     input: yueInput;
@@ -77871,10 +76451,6 @@ export type EndpointTypeMap = {
     input: KlingV15KolorsVirtualTryOnInput;
     output: KlingV15KolorsVirtualTryOnOutput;
   };
-  "fal-ai/ffmpeg-api/compose": {
-    input: FfmpegApiComposeInput;
-    output: FfmpegApiComposeOutput;
-  };
   "fal-ai/ffmpeg-api/waveform": {
     input: FfmpegApiWaveformInput;
     output: FfmpegApiWaveformOutput;
@@ -77882,6 +76458,10 @@ export type EndpointTypeMap = {
   "fal-ai/ffmpeg-api/metadata": {
     input: FfmpegApiMetadataInput;
     output: FfmpegApiMetadataOutput;
+  };
+  "fal-ai/ffmpeg-api/compose": {
+    input: FfmpegApiComposeInput;
+    output: FfmpegApiComposeOutput;
   };
   "fal-ai/minimax/video-01-subject-reference": {
     input: MinimaxVideo01SubjectReferenceInput;
@@ -77895,29 +76475,29 @@ export type EndpointTypeMap = {
     input: FluxProV11UltraFinetunedInput;
     output: FluxProV11UltraFinetunedOutput;
   };
-  "fal-ai/flux-lora-canny": {
-    input: FluxLoraCannyInput;
-    output: FluxLoraCannyOutput;
-  };
   "fal-ai/flux-pro/v1/fill-finetuned": {
     input: FluxProV1FillFinetunedInput;
     output: FluxProV1FillFinetunedOutput;
   };
-  "fal-ai/flux-pro/v1.1": {
-    input: FluxProV11Input;
-    output: FluxProV11Output;
+  "fal-ai/flux-lora-canny": {
+    input: FluxLoraCannyInput;
+    output: FluxLoraCannyOutput;
   };
   "fal-ai/hunyuan-video-lora": {
     input: HunyuanVideoLoraInput;
     output: HunyuanVideoLoraOutput;
   };
-  "fal-ai/cogvideox-5b": {
-    input: Cogvideox5bInput;
-    output: Cogvideox5bOutput;
+  "fal-ai/flux-pro/v1.1": {
+    input: FluxProV11Input;
+    output: FluxProV11Output;
   };
   "fal-ai/hunyuan-video-lora-training": {
     input: HunyuanVideoLoraTrainingInput;
     output: HunyuanVideoLoraTrainingOutput;
+  };
+  "fal-ai/cogvideox-5b": {
+    input: Cogvideox5bInput;
+    output: Cogvideox5bOutput;
   };
   "fal-ai/transpixar": {
     input: transpixarInput;
@@ -77927,9 +76507,9 @@ export type EndpointTypeMap = {
     input: Sa2va4bVideoInput;
     output: Sa2va4bVideoOutput;
   };
-  "fal-ai/sa2va/8b/video": {
-    input: Sa2va8bVideoInput;
-    output: Sa2va8bVideoOutput;
+  "fal-ai/sync-lipsync": {
+    input: SyncLipsyncInput;
+    output: SyncLipsyncOutput;
   };
   "fal-ai/sa2va/4b/image": {
     input: Sa2va4bImageInput;
@@ -77939,17 +76519,17 @@ export type EndpointTypeMap = {
     input: Sa2va8bImageInput;
     output: Sa2va8bImageOutput;
   };
-  "fal-ai/sync-lipsync": {
-    input: SyncLipsyncInput;
-    output: SyncLipsyncOutput;
-  };
-  "fal-ai/moondream-next/detection": {
-    input: MoondreamNextDetectionInput;
-    output: MoondreamNextDetectionOutput;
+  "fal-ai/sa2va/8b/video": {
+    input: Sa2va8bVideoInput;
+    output: Sa2va8bVideoOutput;
   };
   "fal-ai/moondream-next": {
     input: MoondreamNextInput;
     output: MoondreamNextOutput;
+  };
+  "fal-ai/moondream-next/detection": {
+    input: MoondreamNextDetectionInput;
+    output: MoondreamNextDetectionOutput;
   };
   "fal-ai/kling-video/v1.6/standard/text-to-video": {
     input: KlingVideoV16StandardTextToVideoInput;
@@ -77963,73 +76543,73 @@ export type EndpointTypeMap = {
     input: AutoCaptionInput;
     output: AutoCaptionOutput;
   };
-  "fal-ai/switti/512": {
-    input: Switti512Input;
-    output: Switti512Output;
-  };
   "fal-ai/switti": {
     input: swittiInput;
     output: swittiOutput;
   };
-  "fal-ai/dubbing": {
-    input: dubbingInput;
-    output: dubbingOutput;
+  "fal-ai/switti/512": {
+    input: Switti512Input;
+    output: Switti512Output;
   };
   "fal-ai/mmaudio-v2/text-to-audio": {
     input: MmaudioV2TextToAudioInput;
     output: MmaudioV2TextToAudioOutput;
   };
+  "fal-ai/dubbing": {
+    input: dubbingInput;
+    output: dubbingOutput;
+  };
   "fal-ai/sadtalker/reference": {
     input: SadtalkerReferenceInput;
     output: SadtalkerReferenceOutput;
-  };
-  "fal-ai/bria/background/remove": {
-    input: BriaBackgroundRemoveInput;
-    output: BriaBackgroundRemoveOutput;
-  };
-  "fal-ai/bria/genfill": {
-    input: BriaGenfillInput;
-    output: BriaGenfillOutput;
-  };
-  "fal-ai/bria/product-shot": {
-    input: BriaProductShotInput;
-    output: BriaProductShotOutput;
-  };
-  "fal-ai/bria/expand": {
-    input: BriaExpandInput;
-    output: BriaExpandOutput;
-  };
-  "fal-ai/bria/background/replace": {
-    input: BriaBackgroundReplaceInput;
-    output: BriaBackgroundReplaceOutput;
-  };
-  "fal-ai/bria/text-to-image/base": {
-    input: BriaTextToImageBaseInput;
-    output: BriaTextToImageBaseOutput;
-  };
-  "fal-ai/flux-lora-fill": {
-    input: FluxLoraFillInput;
-    output: FluxLoraFillOutput;
-  };
-  "fal-ai/bria/eraser": {
-    input: BriaEraserInput;
-    output: BriaEraserOutput;
   };
   "fal-ai/bria/text-to-image/fast": {
     input: BriaTextToImageFastInput;
     output: BriaTextToImageFastOutput;
   };
+  "fal-ai/bria/background/replace": {
+    input: BriaBackgroundReplaceInput;
+    output: BriaBackgroundReplaceOutput;
+  };
+  "fal-ai/bria/background/remove": {
+    input: BriaBackgroundRemoveInput;
+    output: BriaBackgroundRemoveOutput;
+  };
+  "fal-ai/flux-lora-fill": {
+    input: FluxLoraFillInput;
+    output: FluxLoraFillOutput;
+  };
+  "fal-ai/bria/text-to-image/base": {
+    input: BriaTextToImageBaseInput;
+    output: BriaTextToImageBaseOutput;
+  };
+  "fal-ai/bria/genfill": {
+    input: BriaGenfillInput;
+    output: BriaGenfillOutput;
+  };
   "fal-ai/bria/text-to-image/hd": {
     input: BriaTextToImageHdInput;
     output: BriaTextToImageHdOutput;
   };
-  "fal-ai/minimax-music": {
-    input: MinimaxMusicInput;
-    output: MinimaxMusicOutput;
+  "fal-ai/bria/product-shot": {
+    input: BriaProductShotInput;
+    output: BriaProductShotOutput;
+  };
+  "fal-ai/bria/eraser": {
+    input: BriaEraserInput;
+    output: BriaEraserOutput;
+  };
+  "fal-ai/bria/expand": {
+    input: BriaExpandInput;
+    output: BriaExpandOutput;
   };
   "fal-ai/cat-vton": {
     input: CatVtonInput;
     output: CatVtonOutput;
+  };
+  "fal-ai/minimax-music": {
+    input: MinimaxMusicInput;
+    output: MinimaxMusicOutput;
   };
   "fal-ai/leffa/virtual-tryon": {
     input: LeffaVirtualTryonInput;
@@ -78039,21 +76619,21 @@ export type EndpointTypeMap = {
     input: LeffaPoseTransferInput;
     output: LeffaPoseTransferOutput;
   };
-  "fal-ai/minimax/video-01-live/image-to-video": {
-    input: MinimaxVideo01LiveImageToVideoInput;
-    output: MinimaxVideo01LiveImageToVideoOutput;
-  };
   "fal-ai/recraft-20b": {
     input: Recraft20bInput;
     output: Recraft20bOutput;
   };
-  "fal-ai/hyper3d/rodin": {
-    input: Hyper3dRodinInput;
-    output: Hyper3dRodinOutput;
-  };
   "fal-ai/minimax/video-01-live": {
     input: MinimaxVideo01LiveInput;
     output: MinimaxVideo01LiveOutput;
+  };
+  "fal-ai/minimax/video-01-live/image-to-video": {
+    input: MinimaxVideo01LiveImageToVideoInput;
+    output: MinimaxVideo01LiveImageToVideoOutput;
+  };
+  "fal-ai/hyper3d/rodin": {
+    input: Hyper3dRodinInput;
+    output: Hyper3dRodinOutput;
   };
   "fal-ai/ideogram/v2/edit": {
     input: IdeogramV2EditInput;
@@ -78067,18 +76647,6 @@ export type EndpointTypeMap = {
     input: LumaDreamMachineInput;
     output: LumaDreamMachineOutput;
   };
-  "fal-ai/ideogram/v2/turbo": {
-    input: IdeogramV2TurboInput;
-    output: IdeogramV2TurboOutput;
-  };
-  "fal-ai/ideogram/v2/turbo/edit": {
-    input: IdeogramV2TurboEditInput;
-    output: IdeogramV2TurboEditOutput;
-  };
-  "fal-ai/ideogram/v2/turbo/remix": {
-    input: IdeogramV2TurboRemixInput;
-    output: IdeogramV2TurboRemixOutput;
-  };
   "fal-ai/video-upscaler": {
     input: VideoUpscalerInput;
     output: VideoUpscalerOutput;
@@ -78087,13 +76655,25 @@ export type EndpointTypeMap = {
     input: IdeogramV2RemixInput;
     output: IdeogramV2RemixOutput;
   };
-  "fal-ai/luma-photon/flash": {
-    input: LumaPhotonFlashInput;
-    output: LumaPhotonFlashOutput;
+  "fal-ai/ideogram/v2/turbo/edit": {
+    input: IdeogramV2TurboEditInput;
+    output: IdeogramV2TurboEditOutput;
+  };
+  "fal-ai/ideogram/v2/turbo": {
+    input: IdeogramV2TurboInput;
+    output: IdeogramV2TurboOutput;
+  };
+  "fal-ai/ideogram/v2/turbo/remix": {
+    input: IdeogramV2TurboRemixInput;
+    output: IdeogramV2TurboRemixOutput;
   };
   "fal-ai/kling-video/v1/standard/text-to-video": {
     input: KlingVideoV1StandardTextToVideoInput;
     output: KlingVideoV1StandardTextToVideoOutput;
+  };
+  "fal-ai/luma-photon/flash": {
+    input: LumaPhotonFlashInput;
+    output: LumaPhotonFlashOutput;
   };
   "fal-ai/aura-flow": {
     input: AuraFlowInput;
@@ -78107,21 +76687,17 @@ export type EndpointTypeMap = {
     input: FluxSchnellReduxInput;
     output: FluxSchnellReduxOutput;
   };
-  "fal-ai/kling-video/v1.5/pro/text-to-video": {
-    input: KlingVideoV15ProTextToVideoInput;
-    output: KlingVideoV15ProTextToVideoOutput;
-  };
   "fal-ai/flux/schnell": {
     input: FluxSchnellInput;
     output: FluxSchnellOutput;
   };
+  "fal-ai/kling-video/v1.5/pro/text-to-video": {
+    input: KlingVideoV15ProTextToVideoInput;
+    output: KlingVideoV15ProTextToVideoOutput;
+  };
   "fal-ai/flux/dev/redux": {
     input: FluxDevReduxInput;
     output: FluxDevReduxOutput;
-  };
-  "fal-ai/flux-pro/v1/redux": {
-    input: FluxProV1ReduxInput;
-    output: FluxProV1ReduxOutput;
   };
   "fal-ai/flux-pro/v1.1-ultra/redux": {
     input: FluxProV11UltraReduxInput;
@@ -78131,10 +76707,6 @@ export type EndpointTypeMap = {
     input: FluxProV1FillInput;
     output: FluxProV1FillOutput;
   };
-  "fal-ai/ltx-video/image-to-video": {
-    input: LtxVideoImageToVideoInput;
-    output: LtxVideoImageToVideoOutput;
-  };
   "fal-ai/flux-lora-depth": {
     input: FluxLoraDepthInput;
     output: FluxLoraDepthOutput;
@@ -78142,6 +76714,14 @@ export type EndpointTypeMap = {
   "fal-ai/flux-pro/v1.1/redux": {
     input: FluxProV11ReduxInput;
     output: FluxProV11ReduxOutput;
+  };
+  "fal-ai/ltx-video/image-to-video": {
+    input: LtxVideoImageToVideoInput;
+    output: LtxVideoImageToVideoOutput;
+  };
+  "fal-ai/flux-pro/v1/redux": {
+    input: FluxProV1ReduxInput;
+    output: FluxProV1ReduxOutput;
   };
   "fal-ai/kolors/image-to-image": {
     input: KolorsImageToImageInput;
@@ -78179,13 +76759,13 @@ export type EndpointTypeMap = {
     input: F5TtsInput;
     output: F5TtsOutput;
   };
-  "fal-ai/cogvideox-5b/image-to-video": {
-    input: Cogvideox5bImageToVideoInput;
-    output: Cogvideox5bImageToVideoOutput;
-  };
   "fal-ai/cogvideox-5b/video-to-video": {
     input: Cogvideox5bVideoToVideoInput;
     output: Cogvideox5bVideoToVideoOutput;
+  };
+  "fal-ai/cogvideox-5b/image-to-video": {
+    input: Cogvideox5bImageToVideoInput;
+    output: Cogvideox5bImageToVideoOutput;
   };
   "fal-ai/llavav15-13b": {
     input: Llavav1513bInput;
@@ -78195,17 +76775,17 @@ export type EndpointTypeMap = {
     input: KlingVideoV15ProImageToVideoInput;
     output: KlingVideoV15ProImageToVideoOutput;
   };
-  "fal-ai/kling-video/v1/standard/image-to-video": {
-    input: KlingVideoV1StandardImageToVideoInput;
-    output: KlingVideoV1StandardImageToVideoOutput;
+  "fal-ai/kling-video/v1/pro/image-to-video": {
+    input: any;
+    output: any;
   };
   "fal-ai/kling-video/v1/pro/text-to-video": {
     input: any;
     output: any;
   };
-  "fal-ai/kling-video/v1/pro/image-to-video": {
-    input: any;
-    output: any;
+  "fal-ai/kling-video/v1/standard/image-to-video": {
+    input: KlingVideoV1StandardImageToVideoInput;
+    output: KlingVideoV1StandardImageToVideoOutput;
   };
   "fal-ai/ltx-video": {
     input: LtxVideoInput;
@@ -78227,53 +76807,53 @@ export type EndpointTypeMap = {
     input: FluxGeneralRfInversionInput;
     output: FluxGeneralRfInversionOutput;
   };
-  "fal-ai/stable-video": {
-    input: StableVideoInput;
-    output: StableVideoOutput;
+  "fal-ai/fast-svd/text-to-video": {
+    input: FastSvdTextToVideoInput;
+    output: FastSvdTextToVideoOutput;
   };
   "fal-ai/image-preprocessors/scribble": {
     input: ImagePreprocessorsScribbleInput;
     output: ImagePreprocessorsScribbleOutput;
   };
-  "fal-ai/image-preprocessors/hed": {
-    input: ImagePreprocessorsHedInput;
-    output: ImagePreprocessorsHedOutput;
-  };
-  "fal-ai/image-preprocessors/pidi": {
-    input: ImagePreprocessorsPidiInput;
-    output: ImagePreprocessorsPidiOutput;
-  };
-  "fal-ai/image-preprocessors/mlsd": {
-    input: ImagePreprocessorsMlsdInput;
-    output: ImagePreprocessorsMlsdOutput;
-  };
-  "fal-ai/image-preprocessors/depth-anything/v2": {
-    input: ImagePreprocessorsDepthAnythingV2Input;
-    output: ImagePreprocessorsDepthAnythingV2Output;
-  };
-  "fal-ai/image-preprocessors/teed": {
-    input: ImagePreprocessorsTeedInput;
-    output: ImagePreprocessorsTeedOutput;
-  };
-  "fal-ai/image-preprocessors/zoe": {
-    input: ImagePreprocessorsZoeInput;
-    output: ImagePreprocessorsZoeOutput;
+  "fal-ai/stable-video": {
+    input: StableVideoInput;
+    output: StableVideoOutput;
   };
   "fal-ai/image-preprocessors/sam": {
     input: ImagePreprocessorsSamInput;
     output: ImagePreprocessorsSamOutput;
   };
-  "fal-ai/image-preprocessors/lineart": {
-    input: ImagePreprocessorsLineartInput;
-    output: ImagePreprocessorsLineartOutput;
+  "fal-ai/image-preprocessors/pidi": {
+    input: ImagePreprocessorsPidiInput;
+    output: ImagePreprocessorsPidiOutput;
+  };
+  "fal-ai/image-preprocessors/hed": {
+    input: ImagePreprocessorsHedInput;
+    output: ImagePreprocessorsHedOutput;
   };
   "fal-ai/image-preprocessors/midas": {
     input: ImagePreprocessorsMidasInput;
     output: ImagePreprocessorsMidasOutput;
   };
-  "fal-ai/fast-svd/text-to-video": {
-    input: FastSvdTextToVideoInput;
-    output: FastSvdTextToVideoOutput;
+  "fal-ai/image-preprocessors/zoe": {
+    input: ImagePreprocessorsZoeInput;
+    output: ImagePreprocessorsZoeOutput;
+  };
+  "fal-ai/image-preprocessors/mlsd": {
+    input: ImagePreprocessorsMlsdInput;
+    output: ImagePreprocessorsMlsdOutput;
+  };
+  "fal-ai/image-preprocessors/lineart": {
+    input: ImagePreprocessorsLineartInput;
+    output: ImagePreprocessorsLineartOutput;
+  };
+  "fal-ai/image-preprocessors/teed": {
+    input: ImagePreprocessorsTeedInput;
+    output: ImagePreprocessorsTeedOutput;
+  };
+  "fal-ai/image-preprocessors/depth-anything/v2": {
+    input: ImagePreprocessorsDepthAnythingV2Input;
+    output: ImagePreprocessorsDepthAnythingV2Output;
   };
   "fal-ai/controlnext": {
     input: controlnextInput;
@@ -78287,13 +76867,13 @@ export type EndpointTypeMap = {
     input: ImageutilsSamInput;
     output: ImageutilsSamOutput;
   };
-  "fal-ai/sam2/video": {
-    input: Sam2VideoInput;
-    output: Sam2VideoOutput;
-  };
   "fal-ai/sam2/image": {
     input: Sam2ImageInput;
     output: Sam2ImageOutput;
+  };
+  "fal-ai/sam2/video": {
+    input: Sam2VideoInput;
+    output: Sam2VideoOutput;
   };
   "fal-ai/flux-general/image-to-image": {
     input: FluxGeneralImageToImageInput;
@@ -78303,13 +76883,13 @@ export type EndpointTypeMap = {
     input: FluxGeneralInpaintingInput;
     output: FluxGeneralInpaintingOutput;
   };
-  "fal-ai/flux-lora/image-to-image": {
-    input: FluxLoraImageToImageInput;
-    output: FluxLoraImageToImageOutput;
-  };
   "fal-ai/flux-general/differential-diffusion": {
     input: FluxGeneralDifferentialDiffusionInput;
     output: FluxGeneralDifferentialDiffusionOutput;
+  };
+  "fal-ai/flux-lora/image-to-image": {
+    input: FluxLoraImageToImageInput;
+    output: FluxLoraImageToImageOutput;
   };
   "fal-ai/fooocus/upscale-or-vary": {
     input: FooocusUpscaleOrVaryInput;
@@ -78331,13 +76911,13 @@ export type EndpointTypeMap = {
     input: SdxlControlnetUnionInput;
     output: SdxlControlnetUnionOutput;
   };
-  "fal-ai/sdxl-controlnet-union/image-to-image": {
-    input: SdxlControlnetUnionImageToImageInput;
-    output: SdxlControlnetUnionImageToImageOutput;
-  };
   "fal-ai/sdxl-controlnet-union/inpainting": {
     input: SdxlControlnetUnionInpaintingInput;
     output: SdxlControlnetUnionInpaintingOutput;
+  };
+  "fal-ai/sdxl-controlnet-union/image-to-image": {
+    input: SdxlControlnetUnionImageToImageInput;
+    output: SdxlControlnetUnionImageToImageOutput;
   };
   "fal-ai/kolors": {
     input: kolorsInput;
@@ -78367,29 +76947,37 @@ export type EndpointTypeMap = {
     input: Florence2LargeOcrInput;
     output: Florence2LargeOcrOutput;
   };
-  "fal-ai/florence-2-large/caption-to-phrase-grounding": {
-    input: Florence2LargeCaptionToPhraseGroundingInput;
-    output: Florence2LargeCaptionToPhraseGroundingOutput;
+  "fal-ai/florence-2-large/caption": {
+    input: Florence2LargeCaptionInput;
+    output: Florence2LargeCaptionOutput;
+  };
+  "fal-ai/florence-2-large/region-to-category": {
+    input: Florence2LargeRegionToCategoryInput;
+    output: Florence2LargeRegionToCategoryOutput;
+  };
+  "fal-ai/florence-2-large/referring-expression-segmentation": {
+    input: Florence2LargeReferringExpressionSegmentationInput;
+    output: Florence2LargeReferringExpressionSegmentationOutput;
+  };
+  "fal-ai/florence-2-large/open-vocabulary-detection": {
+    input: Florence2LargeOpenVocabularyDetectionInput;
+    output: Florence2LargeOpenVocabularyDetectionOutput;
   };
   "fal-ai/florence-2-large/region-proposal": {
     input: Florence2LargeRegionProposalInput;
     output: Florence2LargeRegionProposalOutput;
   };
+  "fal-ai/florence-2-large/object-detection": {
+    input: Florence2LargeObjectDetectionInput;
+    output: Florence2LargeObjectDetectionOutput;
+  };
   "fal-ai/florence-2-large/detailed-caption": {
     input: Florence2LargeDetailedCaptionInput;
     output: Florence2LargeDetailedCaptionOutput;
   };
-  "fal-ai/florence-2-large/caption": {
-    input: Florence2LargeCaptionInput;
-    output: Florence2LargeCaptionOutput;
-  };
   "fal-ai/florence-2-large/ocr-with-region": {
     input: Florence2LargeOcrWithRegionInput;
     output: Florence2LargeOcrWithRegionOutput;
-  };
-  "fal-ai/florence-2-large/object-detection": {
-    input: Florence2LargeObjectDetectionInput;
-    output: Florence2LargeObjectDetectionOutput;
   };
   "fal-ai/florence-2-large/region-to-description": {
     input: Florence2LargeRegionToDescriptionInput;
@@ -78399,21 +76987,13 @@ export type EndpointTypeMap = {
     input: Florence2LargeMoreDetailedCaptionInput;
     output: Florence2LargeMoreDetailedCaptionOutput;
   };
-  "fal-ai/florence-2-large/referring-expression-segmentation": {
-    input: Florence2LargeReferringExpressionSegmentationInput;
-    output: Florence2LargeReferringExpressionSegmentationOutput;
-  };
-  "fal-ai/florence-2-large/region-to-category": {
-    input: Florence2LargeRegionToCategoryInput;
-    output: Florence2LargeRegionToCategoryOutput;
-  };
   "fal-ai/florence-2-large/region-to-segmentation": {
     input: Florence2LargeRegionToSegmentationInput;
     output: Florence2LargeRegionToSegmentationOutput;
   };
-  "fal-ai/florence-2-large/open-vocabulary-detection": {
-    input: Florence2LargeOpenVocabularyDetectionInput;
-    output: Florence2LargeOpenVocabularyDetectionOutput;
+  "fal-ai/florence-2-large/caption-to-phrase-grounding": {
+    input: Florence2LargeCaptionToPhraseGroundingInput;
+    output: Florence2LargeCaptionToPhraseGroundingOutput;
   };
   "fal-ai/florence-2-large/dense-region-caption": {
     input: Florence2LargeDenseRegionCaptionInput;
@@ -78431,10 +77011,6 @@ export type EndpointTypeMap = {
     input: StableCascadeSoteDiffusionInput;
     output: StableCascadeSoteDiffusionOutput;
   };
-  "fal-ai/fast-svd-lcm/text-to-video": {
-    input: FastSvdLcmTextToVideoInput;
-    output: FastSvdLcmTextToVideoOutput;
-  };
   "fal-ai/luma-photon": {
     input: LumaPhotonInput;
     output: LumaPhotonOutput;
@@ -78442,6 +77018,10 @@ export type EndpointTypeMap = {
   "fal-ai/luma-dream-machine/image-to-video": {
     input: LumaDreamMachineImageToVideoInput;
     output: LumaDreamMachineImageToVideoOutput;
+  };
+  "fal-ai/fast-svd-lcm/text-to-video": {
+    input: FastSvdLcmTextToVideoInput;
+    output: FastSvdLcmTextToVideoOutput;
   };
   "fal-ai/dwpose": {
     input: dwposeInput;
@@ -78459,13 +77039,17 @@ export type EndpointTypeMap = {
     input: PlaygroundV25Input;
     output: PlaygroundV25Output;
   };
+  "fal-ai/realistic-vision": {
+    input: RealisticVisionInput;
+    output: RealisticVisionOutput;
+  };
   "fal-ai/hyper-sdxl/image-to-image": {
     input: any;
     output: any;
   };
-  "fal-ai/hyper-sdxl/inpainting": {
-    input: any;
-    output: any;
+  "fal-ai/omni-zero": {
+    input: OmniZeroInput;
+    output: OmniZeroOutput;
   };
   "fal-ai/dreamshaper": {
     input: dreamshaperInput;
@@ -78475,13 +77059,9 @@ export type EndpointTypeMap = {
     input: LightningModelsInput;
     output: LightningModelsOutput;
   };
-  "fal-ai/realistic-vision": {
-    input: RealisticVisionInput;
-    output: RealisticVisionOutput;
-  };
-  "fal-ai/omni-zero": {
-    input: OmniZeroInput;
-    output: OmniZeroOutput;
+  "fal-ai/hyper-sdxl/inpainting": {
+    input: any;
+    output: any;
   };
   "fal-ai/ip-adapter-face-id": {
     input: IpAdapterFaceIdInput;
@@ -78515,13 +77095,13 @@ export type EndpointTypeMap = {
     input: FastLightningSdxlInput;
     output: FastLightningSdxlOutput;
   };
-  "fal-ai/sadtalker": {
-    input: sadtalkerInput;
-    output: sadtalkerOutput;
-  };
   "fal-ai/musetalk": {
     input: musetalkInput;
     output: musetalkOutput;
+  };
+  "fal-ai/sadtalker": {
+    input: sadtalkerInput;
+    output: sadtalkerOutput;
   };
   "fal-ai/wizper": {
     input: wizperInput;
@@ -78563,9 +77143,13 @@ export type EndpointTypeMap = {
     input: birefnetInput;
     output: birefnetOutput;
   };
-  "fal-ai/fast-lightning-sdxl/inpainting": {
-    input: FastLightningSdxlInpaintingInput;
-    output: FastLightningSdxlInpaintingOutput;
+  "fal-ai/playground-v25/inpainting": {
+    input: PlaygroundV25InpaintingInput;
+    output: PlaygroundV25InpaintingOutput;
+  };
+  "fal-ai/amt-interpolation": {
+    input: AmtInterpolationInput;
+    output: AmtInterpolationOutput;
   };
   "fal-ai/hyper-sdxl": {
     input: any;
@@ -78579,13 +77163,9 @@ export type EndpointTypeMap = {
     input: PlaygroundV25ImageToImageInput;
     output: PlaygroundV25ImageToImageOutput;
   };
-  "fal-ai/amt-interpolation": {
-    input: AmtInterpolationInput;
-    output: AmtInterpolationOutput;
-  };
-  "fal-ai/playground-v25/inpainting": {
-    input: PlaygroundV25InpaintingInput;
-    output: PlaygroundV25InpaintingOutput;
+  "fal-ai/fast-lightning-sdxl/inpainting": {
+    input: FastLightningSdxlInpaintingInput;
+    output: FastLightningSdxlInpaintingOutput;
   };
   "fal-ai/fast-lightning-sdxl/image-to-image": {
     input: FastLightningSdxlImageToImageInput;
@@ -78595,13 +77175,13 @@ export type EndpointTypeMap = {
     input: whisperInput;
     output: whisperOutput;
   };
-  "fal-ai/fast-lcm-diffusion": {
-    input: FastLcmDiffusionInput;
-    output: FastLcmDiffusionOutput;
-  };
   "fal-ai/fast-lcm-diffusion/inpainting": {
     input: FastLcmDiffusionInpaintingInput;
     output: FastLcmDiffusionInpaintingOutput;
+  };
+  "fal-ai/fast-lcm-diffusion": {
+    input: FastLcmDiffusionInput;
+    output: FastLcmDiffusionOutput;
   };
   "fal-ai/fast-lcm-diffusion/image-to-image": {
     input: FastLcmDiffusionImageToImageInput;
@@ -78615,37 +77195,17 @@ export type EndpointTypeMap = {
     input: LlavaNextInput;
     output: LlavaNextOutput;
   };
-  "fal-ai/imageutils/depth": {
-    input: ImageutilsDepthInput;
-    output: ImageutilsDepthOutput;
-  };
-  "fal-ai/illusion-diffusion": {
-    input: IllusionDiffusionInput;
-    output: IllusionDiffusionOutput;
-  };
-  "fal-ai/retoucher": {
-    input: retoucherInput;
-    output: retoucherOutput;
-  };
   "fal-ai/minimax/video-01": {
     input: MinimaxVideo01Input;
     output: MinimaxVideo01Output;
   };
-  "fal-ai/fast-animatediff/turbo/text-to-video": {
-    input: FastAnimatediffTurboTextToVideoInput;
-    output: FastAnimatediffTurboTextToVideoOutput;
+  "fal-ai/fooocus/image-prompt": {
+    input: FooocusImagePromptInput;
+    output: FooocusImagePromptOutput;
   };
   "fal-ai/fast-svd-lcm": {
     input: FastSvdLcmInput;
     output: FastSvdLcmOutput;
-  };
-  "fal-ai/fast-animatediff/video-to-video": {
-    input: FastAnimatediffVideoToVideoInput;
-    output: FastAnimatediffVideoToVideoOutput;
-  };
-  "fal-ai/fooocus/image-prompt": {
-    input: FooocusImagePromptInput;
-    output: FooocusImagePromptOutput;
   };
   "fal-ai/fast-animatediff/turbo/video-to-video": {
     input: FastAnimatediffTurboVideoToVideoInput;
@@ -78654,6 +77214,26 @@ export type EndpointTypeMap = {
   "fal-ai/fooocus/inpaint": {
     input: FooocusInpaintInput;
     output: FooocusInpaintOutput;
+  };
+  "fal-ai/retoucher": {
+    input: retoucherInput;
+    output: retoucherOutput;
+  };
+  "fal-ai/fast-animatediff/turbo/text-to-video": {
+    input: FastAnimatediffTurboTextToVideoInput;
+    output: FastAnimatediffTurboTextToVideoOutput;
+  };
+  "fal-ai/imageutils/depth": {
+    input: ImageutilsDepthInput;
+    output: ImageutilsDepthOutput;
+  };
+  "fal-ai/fast-animatediff/video-to-video": {
+    input: FastAnimatediffVideoToVideoInput;
+    output: FastAnimatediffVideoToVideoOutput;
+  };
+  "fal-ai/illusion-diffusion": {
+    input: IllusionDiffusionInput;
+    output: IllusionDiffusionOutput;
   };
   "fal-ai/lcm": {
     input: lcmInput;
@@ -78679,13 +77259,13 @@ export type EndpointTypeMap = {
     input: pulidInput;
     output: pulidOutput;
   };
-  "fal-ai/fast-sdxl-controlnet-canny/image-to-image": {
-    input: FastSdxlControlnetCannyImageToImageInput;
-    output: FastSdxlControlnetCannyImageToImageOutput;
-  };
   "fal-ai/fast-sdxl-controlnet-canny/inpainting": {
     input: FastSdxlControlnetCannyInpaintingInput;
     output: FastSdxlControlnetCannyInpaintingOutput;
+  };
+  "fal-ai/fast-sdxl-controlnet-canny/image-to-image": {
+    input: FastSdxlControlnetCannyImageToImageInput;
+    output: FastSdxlControlnetCannyImageToImageOutput;
   };
   "fal-ai/fooocus": {
     input: fooocusInput;
