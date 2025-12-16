@@ -15,12 +15,11 @@ import { fal } from "@fal-ai/client";
 
 fal.config({
   // Can also be auto-configured using environment variables:
-  // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
-  credentials: "FAL_KEY_ID:FAL_KEY_SECRET",
+  credentials: "FAL_KEY",
 });
 ```
 
-**Note:** Ensure you've reviewed the [fal.ai getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
+**Note:** Ensure you've reviewed the [fal.ai getting started guide](https://docs.fal.ai) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
 
 ## Running functions with `fal.run`
 
@@ -34,7 +33,7 @@ const result = await fal.run("my-function-id", {
 
 ## Long-running functions with `fal.subscribe`
 
-The `fal.subscribe` method offers a powerful way to rely on the [queue system](https://www.fal.ai/docs/function-endpoints/queue) to execute long-running functions. It returns the result once it's done like any other async function, so your don't have to deal with queue status updates yourself. However, it does support queue events, in case you want to listen and react to them:
+The `fal.subscribe` method offers a powerful way to rely on the [queue system](https://docs.fal.ai/model-apis/model-endpoints/queue) to execute long-running functions. It returns the result once it's done like any other async function, so your don't have to deal with queue status updates yourself. However, it does support queue events, in case you want to listen and react to them:
 
 ```ts
 const result = await fal.subscribe("my-function-id", {
@@ -49,4 +48,4 @@ const result = await fal.subscribe("my-function-id", {
 
 ## More features
 
-The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
+The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://docs.fal.ai) for a comprehensive guide.
