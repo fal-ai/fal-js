@@ -1,4 +1,4 @@
-import { createFalClient } from "@fal-ai/client";
+import { createFalClient, OutputType } from "@fal-ai/client";
 import { useMemo, useState } from "react";
 
 // @snippet:start(client.config)
@@ -9,14 +9,7 @@ const fal = createFalClient({
 // @snippet:end
 
 // @snippet:start(client.result.type)
-type Image = {
-  url: string;
-  file_name: string;
-  file_size: number;
-};
-type Output = {
-  images: Image[];
-};
+type Output = OutputType<"fal-ai/lora">;
 // @snippet:end
 
 type ErrorProps = {
@@ -72,7 +65,7 @@ export function Index() {
     setLoading(true);
     const start = Date.now();
     try {
-      const result = await fal.subscribe<Output>("fal-ai/lora", {
+      const result = await fal.subscribe("fal-ai/lora", {
         input: {
           prompt,
           model_name: "stabilityai/stable-diffusion-xl-base-1.0",
