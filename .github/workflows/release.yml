@@ -23,6 +23,10 @@ on:
         type: boolean
         default: true
 
+permissions:
+  id-token: write # Required for npm trusted publishing (OIDC)
+  contents: read
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
@@ -82,5 +86,3 @@ jobs:
           echo "Publishing ${{ steps.tag-info.outputs.package }}@${{ steps.tag-info.outputs.version }} with tag ${{ steps.tag-info.outputs.npm_tag }}"
           cd dist/libs/${{ steps.tag-info.outputs.package }}
           npm publish --access public --tag ${{ steps.tag-info.outputs.npm_tag }} ${{ inputs.dry_run && '--dry-run' || '' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
