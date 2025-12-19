@@ -163,13 +163,9 @@ async function initiateUpload(
 
   const headers: Record<string, string> = {};
   if (lifecycle) {
-    const { expiresIn } = lifecycle;
     const lifecycleConfig: UploadLifecycleConfig = {
-      expiration_duration_seconds:
-        typeof expiresIn === "number"
-          ? expiresIn
-          : EXPIRATION_VALUES[expiresIn],
-      allow_io_storage: expiresIn !== "immediate",
+      expiration_duration_seconds: getExpirationDurationSeconds(lifecycle),
+      allow_io_storage: lifecycle.expiresIn !== "immediate",
     };
     headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycleConfig);
   }
