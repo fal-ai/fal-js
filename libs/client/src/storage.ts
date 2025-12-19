@@ -52,6 +52,44 @@ const EXPIRATION_VALUES: Record<ObjectExpiration, number | undefined> = {
 };
 
 /**
+ * Converts an `ObjectLifecyclePreference` to the expiration duration in seconds.
+ * @param lifecycle the lifecycle preference
+ * @returns the expiration duration in seconds, or undefined if not applicable
+ */
+export function getExpirationDurationSeconds(
+  lifecycle: ObjectLifecyclePreference,
+): number | undefined {
+  const { expiresIn } = lifecycle;
+  return typeof expiresIn === "number"
+    ? expiresIn
+    : EXPIRATION_VALUES[expiresIn];
+}
+
+/**
+ * Builds the headers for the Object Lifecycle preference to be used in API requests.
+ * This is used by the queue and run APIs to control the lifecycle of generated objects.
+ *
+ * @param lifecycle the lifecycle preference
+ * @returns a record with the `X-Fal-Object-Lifecycle-Preference` header
+ */
+export function buildObjectLifecycleHeaders(
+  lifecycle: ObjectLifecyclePreference | undefined,
+): Record<string, string> {
+  if (!lifecycle) {
+    return {};
+  }
+  const expirationDurationSeconds = getExpirationDurationSeconds(lifecycle);
+  if (expirationDurationSeconds === undefined) {
+    return {};
+  }
+  return {
+    "X-Fal-Object-Lifecycle-Preference": JSON.stringify({
+      expiration_duration_seconds: expirationDurationSeconds,
+    }),
+  };
+}
+
+/**
  * Options for uploading a file.
  */
 export type UploadOptions = {

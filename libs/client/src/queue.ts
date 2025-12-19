@@ -2,7 +2,7 @@ import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
 import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
-import { StorageClient } from "./storage";
+import { buildObjectLifecycleHeaders, StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
 import { EndpointType, InputType, OutputType } from "./types/client";
 import {
@@ -280,6 +280,7 @@ export const createQueueClient = ({
         priority,
         hint,
         headers: extraHeaders,
+        objectLifecycle,
         ...runOptions
       } = options;
       const input = options.input
@@ -294,6 +295,7 @@ export const createQueueClient = ({
         }),
         headers: {
           ...extraHeaders,
+          ...buildObjectLifecycleHeaders(objectLifecycle),
           "x-fal-queue-priority": priority ?? "normal",
           ...(hint && { "x-fal-runner-hint": hint }),
         },
