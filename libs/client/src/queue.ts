@@ -295,7 +295,7 @@ export const createQueueClient = ({
         priority,
         hint,
         headers,
-        objectLifecycle,
+        storageSettings,
         ...runOptions
       } = options;
       const input = options.input
@@ -316,7 +316,7 @@ export const createQueueClient = ({
         }),
         headers: {
           ...extraHeaders,
-          ...buildObjectLifecycleHeaders(objectLifecycle),
+          ...buildObjectLifecycleHeaders(storageSettings),
           [QUEUE_PRIORITY_HEADER]: priority ?? "normal",
           ...(hint && { [RUNNER_HINT_HEADER]: hint }),
         },

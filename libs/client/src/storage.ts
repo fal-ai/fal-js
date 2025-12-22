@@ -18,9 +18,9 @@ export const OBJECT_LIFECYCYLE_PREFERENCE_HEADER =
 /**
  * Configuration for object lifecycle and storage behavior.
  */
-export interface ObjectLifecyclePreference {
+export interface StorageSettings {
   /**
-   * The expiration time for the object. You can specify one of the enumerated values or a number of seconds.
+   * The expiration time for the stored files (images, videos, etc.). You can specify one of the enumerated values or a number of seconds.
    */
   expiresIn: ObjectExpiration;
 }
@@ -55,12 +55,12 @@ const EXPIRATION_VALUES: Record<ObjectExpiration, number | undefined> = {
 };
 
 /**
- * Converts an `ObjectLifecyclePreference` to the expiration duration in seconds.
+ * Converts an `StorageSettings` to the expiration duration in seconds.
  * @param lifecycle the lifecycle preference
  * @returns the expiration duration in seconds, or undefined if not applicable
  */
 export function getExpirationDurationSeconds(
-  lifecycle: ObjectLifecyclePreference,
+  lifecycle: StorageSettings,
 ): number | undefined {
   const { expiresIn } = lifecycle;
   return typeof expiresIn === "number"
@@ -76,7 +76,7 @@ export function getExpirationDurationSeconds(
  * @returns a record with the `X-Fal-Object-Lifecycle-Preference` header
  */
 export function buildObjectLifecycleHeaders(
-  lifecycle: ObjectLifecyclePreference | undefined,
+  lifecycle: StorageSettings | undefined,
 ): Record<string, string> {
   if (!lifecycle) {
     return {};
@@ -100,7 +100,7 @@ export type UploadOptions = {
    * Custom lifecycle configuration for the uploaded file.
    * This object will be sent as the X-Fal-Object-Lifecycle header.
    */
-  lifecycle?: ObjectLifecyclePreference;
+  lifecycle?: StorageSettings;
 };
 
 /**
@@ -159,7 +159,7 @@ async function initiateUpload(
   file: Blob,
   config: RequiredConfig,
   contentType: string,
-  lifecycle?: ObjectLifecyclePreference,
+  lifecycle?: StorageSettings,
 ): Promise<InitiateUploadResult> {
   const filename =
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
@@ -194,7 +194,7 @@ async function initiateMultipartUpload(
   file: Blob,
   config: RequiredConfig,
   contentType: string,
-  lifecycle?: ObjectLifecyclePreference,
+  lifecycle?: StorageSettings,
 ): Promise<InitiateUploadResult> {
   const filename =
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
@@ -248,7 +248,7 @@ async function partUploadRetries(
 async function multipartUpload(
   file: Blob,
   config: RequiredConfig,
-  lifecycle?: ObjectLifecyclePreference,
+  lifecycle?: StorageSettings,
 ): Promise<string> {
   const { fetch, responseHandler } = config;
   const contentType = file.type || "application/octet-stream";

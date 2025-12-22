@@ -1,4 +1,4 @@
-import type { ObjectLifecyclePreference } from "../storage";
+import type { StorageSettings } from "../storage";
 
 /**
  * Represents an API result, containing the data,
@@ -34,10 +34,10 @@ export type RunOptions<Input> = {
    * Object lifecycle configuration for controlling how long generated objects
    * (images, files, etc.) remain available before expiring.
    *
-   * @see ObjectLifecyclePreference
+   * @see StorageSettings
    * @see https://docs.fal.ai/model-apis/model-endpoints/queue#object-lifecycle
    */
-  readonly objectLifecycle?: ObjectLifecyclePreference;
+  readonly storageSettings?: StorageSettings;
 };
 
 export type UrlOptions = {
