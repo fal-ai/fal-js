@@ -12,6 +12,9 @@ type ObjectExpiration =
   | "1y"
   | number;
 
+export const OBJECT_LIFECYCYLE_PREFERENCE_HEADER =
+  "x-fal-object-lifecycle-preference";
+
 /**
  * Configuration for object lifecycle and storage behavior.
  */
@@ -83,7 +86,7 @@ export function buildObjectLifecycleHeaders(
     return {};
   }
   return {
-    "X-Fal-Object-Lifecycle-Preference": JSON.stringify({
+    [OBJECT_LIFECYCYLE_PREFERENCE_HEADER]: JSON.stringify({
       expiration_duration_seconds: expirationDurationSeconds,
     }),
   };
