@@ -2,7 +2,7 @@ import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
 import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
-import { StorageClient } from "./storage";
+import { buildObjectLifecycleHeaders, StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
 import { EndpointType, InputType, OutputType } from "./types/client";
 import {
@@ -23,6 +23,10 @@ export type QueueStatusSubscriptionOptions = QueueStatusOptions &
 type TimeoutId = ReturnType<typeof setTimeout> | undefined;
 
 const DEFAULT_POLL_INTERVAL = 500;
+
+const QUEUE_PRIORITY_HEADER = "x-fal-queue-priority";
+
+const RUNNER_HINT_HEADER = "x-fal-runner-hint";
 
 type QueueModeOptions =
   | {
@@ -96,13 +100,18 @@ type QueueCommonSubscribeOptions = {
 
   /**
    * The priority of the request. It defaults to `normal`.
+   * This will be sent as the `x-fal-queue-priority` header.
+   *
    * @see QueuePriority
    */
   priority?: QueuePriority;
 
   /**
    * Additional HTTP headers to include in the submit request.
-   * Note: `x-fal-queue-priority` and `x-fal-runner-hint` will override any conflicting keys.
+   * Note: `priority`, `hint`, and `objectLifecycle` will override the following headers:
+   *  - `x-fal-queue-priority`
+   *  - `x-fal-runner-hint`
+   *  - `x-fal-object-lifecycle-preference`
    */
   headers?: Record<string, string>;
 };
@@ -125,19 +134,25 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
 
   /**
    * The priority of the request. It defaults to `normal`.
+   * This will be sent as the `x-fal-queue-priority` header.
+   *
    * @see QueuePriority
    */
   priority?: QueuePriority;
 
   /**
    * A hint for the runner to use when processing the request.
-   * This will be sent as the `X-Fal-Runner-Hint` header.
+   * This will be sent as the `x-fal-runner-hint` header.
    */
   hint?: string;
 
   /**
    * Additional HTTP headers to include in the submit request.
-   * Note: `x-fal-queue-priority` and `x-fal-runner-hint` will override any conflicting keys.
+   *
+   * Note: `priority`, `hint`, and `objectLifecycle` will override the following headers:
+   *  - `x-fal-queue-priority`
+   *  - `x-fal-runner-hint`
+   *  - `x-fal-object-lifecycle-preference`
    */
   headers?: Record<string, string>;
 };
@@ -279,12 +294,19 @@ export const createQueueClient = ({
         webhookUrl,
         priority,
         hint,
-        headers: extraHeaders,
+        headers,
+        storageSettings,
         ...runOptions
       } = options;
       const input = options.input
         ? await storage.transformInput(options.input)
         : undefined;
+      const extraHeaders = Object.fromEntries(
+        Object.entries(headers ?? {}).map(([key, value]) => [
+          key.toLowerCase(),
+          value,
+        ]),
+      );
       return dispatchRequest<Input, InQueueQueueStatus>({
         method: options.method,
         targetUrl: buildUrl(endpointId, {
@@ -294,8 +316,9 @@ export const createQueueClient = ({
         }),
         headers: {
           ...extraHeaders,
-          "x-fal-queue-priority": priority ?? "normal",
-          ...(hint && { "x-fal-runner-hint": hint }),
+          ...buildObjectLifecycleHeaders(storageSettings),
+          [QUEUE_PRIORITY_HEADER]: priority ?? "normal",
+          ...(hint && { [RUNNER_HINT_HEADER]: hint }),
         },
         input: input as Input,
         config,
