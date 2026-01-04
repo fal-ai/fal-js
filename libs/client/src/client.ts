@@ -11,6 +11,7 @@ import {
 import { createStreamingClient, StreamingClient } from "./streaming";
 import { EndpointType, InputType, OutputType } from "./types/client";
 import { Result, RunOptions } from "./types/common";
+import { createWebSocketClient, WebSocketClient } from "./websocket";
 
 /**
  * The main client type, it provides access to simple API model usage,
@@ -31,6 +32,12 @@ export interface FalClient {
    * @see #RealtimeClient.connect
    */
   readonly realtime: RealtimeClient;
+
+  /**
+   * A low-level websocket client helper to open authenticated sockets
+   * to fal endpoints (including non-realtime paths).
+   */
+  readonly websocket: WebSocketClient;
 
   /**
    * The storage client to interact with the storage API.
@@ -96,9 +103,11 @@ export function createFalClient(userConfig: Config = {}): FalClient {
   const queue = createQueueClient({ config, storage });
   const streaming = createStreamingClient({ config, storage });
   const realtime = createRealtimeClient({ config });
+  const websocket = createWebSocketClient({ config });
   return {
     queue,
     realtime,
+    websocket,
     storage,
     streaming,
     stream: streaming.stream,

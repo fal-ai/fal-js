@@ -23,6 +23,11 @@ export type {
   WebHookResponse,
 } from "./types/common";
 export { parseEndpointId } from "./utils";
+export type {
+  WebSocketClient,
+  WebSocketConnection,
+  WebSocketConnectOptions,
+} from "./websocket";
 
 type SingletonFalClient = {
   config(config: Config): void;
@@ -43,6 +48,9 @@ export const fal: SingletonFalClient = (function createSingletonFalClient() {
     },
     get realtime() {
       return currentInstance.realtime;
+    },
+    get websocket() {
+      return currentInstance.websocket;
     },
     get storage() {
       return currentInstance.storage;
