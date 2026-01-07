@@ -54,10 +54,12 @@ const noop = () => {
   /* no-op */
 };
 
+const noopWithRaw: WebSocketConnection["withRaw"] = () => undefined;
+
 const NoOpWebSocketConnection: WebSocketConnection = {
   send: noop,
   close: noop,
-  withRaw: () => undefined,
+  withRaw: noopWithRaw,
 };
 
 function validateMaxBuffering(value: number | undefined) {
