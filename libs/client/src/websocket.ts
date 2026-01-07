@@ -31,9 +31,16 @@ export type WebSocketConnectOptions = {
 };
 
 export type WebSocketConnection = {
-  raw: WebSocket;
+  /**
+   * Underlying WebSocket when available. Undefined in no-op/SSR mode.
+   */
+  raw?: WebSocket;
   send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void;
   close(code?: number, reason?: string): void;
+  /**
+   * Safe helper to access the raw WebSocket only when present.
+   */
+  withRaw<R>(fn: (ws: WebSocket) => R): R | undefined;
 };
 
 export interface WebSocketClient {
@@ -48,10 +55,9 @@ const noop = () => {
 };
 
 const NoOpWebSocketConnection: WebSocketConnection = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  raw: undefined as any,
   send: noop,
   close: noop,
+  withRaw: () => undefined,
 };
 
 function validateMaxBuffering(value: number | undefined) {
@@ -111,6 +117,7 @@ function openWebSocket(
         raw: ws,
         send: (data) => ws.send(data),
         close: (code?: number, reason?: string) => ws.close(code, reason),
+        withRaw: (fn) => fn(ws),
       });
     };
 

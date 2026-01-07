@@ -121,6 +121,9 @@ describe("createWebSocketClient", () => {
 
     expect(WebSocketMock).not.toHaveBeenCalled();
     expect(connection.raw).toBeUndefined();
+    expect(() => connection.send("x")).not.toThrow();
+    expect(() => connection.close()).not.toThrow();
+    expect(connection.withRaw(() => "value")).toBeUndefined();
   });
 
   it("rejects when maxBuffering is out of range", async () => {
@@ -143,5 +146,22 @@ describe("createWebSocketClient", () => {
     await expect(connectPromise).rejects.toMatchObject({ status: 408 });
     expect(WebSocketMock).toHaveBeenCalledTimes(1);
     expect(sockets[0].close).toHaveBeenCalled();
+  });
+
+  it("invokes withRaw callback when socket is available", async () => {
+    const client = createWebSocketClient({ config });
+    const promise = client.connect("123-myapp");
+    await Promise.resolve();
+    const socket = sockets[0];
+    socket.trigger("open");
+    const connection = await promise;
+
+    const result = connection.withRaw((ws) => {
+      ws.send("hello");
+      return "ok";
+    });
+
+    expect(result).toBe("ok");
+    expect(socket.send).toHaveBeenCalledWith("hello");
   });
 });
