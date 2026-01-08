@@ -78,6 +78,8 @@ function sendMessage(context: Context, event: SendEvent): Context {
   if (context.websocket && context.websocket.readyState === WebSocket.OPEN) {
     if (event.message instanceof Uint8Array) {
       context.websocket.send(event.message);
+    } else if (typeof event.message === "string") {
+      context.websocket.send(event.message);
     } else {
       context.websocket.send(encode(event.message));
     }
@@ -227,6 +229,20 @@ export interface RealtimeConnectionHandler<Output> {
   path?: string;
 
   /**
+   * Optional encoder for outgoing messages. Defaults to msgpack.
+   * Should return either a `Uint8Array` (binary) or string (text frame).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  encodeMessage?: (input: any) => Uint8Array | string;
+
+  /**
+   * Optional decoder for incoming messages. Defaults to msgpack with JSON
+   * support for string payloads.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  decodeMessage?: (data: any) => Promise<any> | any;
+
+  /**
    * Callback function that is called when a result is received.
    * @param result - The result of the request.
    */
@@ -305,7 +321,7 @@ type ConnectionOnChange = InterpretOnChangeFunction<
 
 type RealtimeConnectionCallback = Pick<
   RealtimeConnectionHandler<any>,
-  "onResult" | "onError"
+  "onResult" | "onError" | "decodeMessage"
 >;
 
 const connectionCache = new Map<string, ConnectionStateMachine>();
@@ -365,6 +381,105 @@ type RealtimeClientDependencies = {
   config: RequiredConfig;
 };
 
+async function decodeRealtimeMessage(data: any): Promise<any> {
+  if (typeof data === "string") {
+    return JSON.parse(data);
+  }
+
+  const toUint8Array = async (
+    value: ArrayBuffer | Uint8Array | Blob,
+  ): Promise<Uint8Array> => {
+    if (value instanceof Uint8Array) {
+      return value;
+    }
+    if (value instanceof Blob) {
+      return new Uint8Array(await value.arrayBuffer());
+    }
+    return new Uint8Array(value);
+  };
+
+  if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+    return decode(await toUint8Array(data));
+  }
+  if (data instanceof Blob) {
+    return decode(await toUint8Array(data));
+  }
+
+  return data;
+}
+
+function encodeRealtimeMessage(input: any): Uint8Array | string {
+  if (input instanceof Uint8Array) {
+    return input;
+  }
+  if (typeof input === "string") {
+    return encode(input);
+  }
+  return encode(input);
+}
+
+type HandleRealtimeMessageParams = {
+  data: any;
+  decodeMessage: RealtimeConnectionCallback["decodeMessage"];
+  onResult: RealtimeConnectionCallback["onResult"];
+  onError: NonNullable<RealtimeConnectionCallback["onError"]> | typeof noop;
+  send: ConnectionStateMachine["send"];
+};
+
+function handleRealtimeMessage({
+  data,
+  decodeMessage,
+  onResult,
+  onError,
+  send,
+}: HandleRealtimeMessageParams) {
+  const handleDecoded = (decoded: any) => {
+    // Drop messages that are not related to the actual result.
+    // In the future, we might want to handle other types of messages.
+    // TODO: specify the fal ws protocol format
+    if (isUnauthorizedError(decoded)) {
+      send({
+        type: "unauthorized",
+        error: new Error("Unauthorized"),
+      });
+      return;
+    }
+    if (isSuccessfulResult(decoded)) {
+      onResult(decoded);
+      return;
+    }
+    if (isFalErrorResult(decoded)) {
+      if (decoded.error === "TIMEOUT") {
+        // Timeout error messages just indicate that the connection hasn't
+        // received an incoming message for a while. We don't need to
+        // handle them as errors.
+        return;
+      }
+      onError(
+        new ApiError({
+          message: `${decoded.error}: ${decoded.reason}`,
+          // TODO better error status code
+          status: 400,
+          body: decoded,
+        }),
+      );
+      return;
+    }
+  };
+
+  Promise.resolve(decodeMessage(data))
+    .then(handleDecoded)
+    .catch((error) => {
+      onError(
+        new ApiError({
+          message:
+            (error as Error)?.message ?? "Failed to decode realtime message",
+          status: 400,
+        }),
+      );
+    });
+}
+
 export function createRealtimeClient({
   config,
 }: RealtimeClientDependencies): RealtimeClient {
@@ -380,12 +495,20 @@ export function createRealtimeClient({
         maxBuffering,
         path,
         throttleInterval = DEFAULT_THROTTLE_INTERVAL,
+        encodeMessage: encodeMessageOverride,
+        decodeMessage: decodeMessageOverride,
       } = handler;
       if (clientOnly && !isBrowser()) {
         return NoOpConnection;
       }
 
+      const encodeMessageFn =
+        encodeMessageOverride ?? ((input: any) => encodeRealtimeMessage(input));
+      const decodeMessageFn =
+        decodeMessageOverride ?? ((data: any) => decodeRealtimeMessage(data));
+
       let previousState: string | undefined;
+      let latestEnqueuedMessage: any;
 
       // Although the state machine is cached so we don't open multiple connections,
       // we still need to update the callbacks so we can call the correct references
@@ -393,6 +516,7 @@ export function createRealtimeClient({
       // are passed as part of the handler object, which can be different across
       // different calls to `connect`.
       connectionCallbacks.set(connectionKey, {
+        decodeMessage: decodeMessageFn,
         onError: handler.onError,
         onResult: handler.onResult,
       });
@@ -402,8 +526,13 @@ export function createRealtimeClient({
         connectionKey,
         throttleInterval,
         ({ context, machine, send }) => {
-          const { enqueuedMessage, token } = context;
-          if (machine.current === "active" && enqueuedMessage) {
+          const { enqueuedMessage, token, websocket } = context;
+          latestEnqueuedMessage = enqueuedMessage;
+          if (
+            machine.current === "active" &&
+            enqueuedMessage &&
+            websocket?.readyState === WebSocket.OPEN
+          ) {
             send({ type: "send", message: enqueuedMessage });
           }
           if (
@@ -436,6 +565,16 @@ export function createRealtimeClient({
             );
             ws.onopen = () => {
               send({ type: "connected", websocket: ws });
+              const queued =
+                (stateMachine as any).context?.enqueuedMessage ??
+                latestEnqueuedMessage;
+              if (queued) {
+                ws.send(encodeMessageFn(queued));
+                (stateMachine as any).context = {
+                  ...(stateMachine as any).context,
+                  enqueuedMessage: undefined,
+                };
+              }
             };
             ws.onclose = (event) => {
               if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
@@ -455,62 +594,19 @@ export function createRealtimeClient({
               onError(new ApiError({ message: "Unknown error", status: 500 }));
             };
             ws.onmessage = (event) => {
-              const { onResult } = getCallbacks();
+              const {
+                decodeMessage = decodeMessageFn,
+                onResult,
+                onError = noop,
+              } = getCallbacks();
 
-              // Handle binary messages as msgpack messages
-              if (event.data instanceof ArrayBuffer) {
-                const result = decode(new Uint8Array(event.data));
-                onResult(result);
-                return;
-              }
-              if (event.data instanceof Uint8Array) {
-                const result = decode(event.data);
-                onResult(result);
-                return;
-              }
-              if (event.data instanceof Blob) {
-                event.data.arrayBuffer().then((buffer) => {
-                  const result = decode(new Uint8Array(buffer));
-                  onResult(result);
-                });
-                return;
-              }
-
-              // Otherwise handle strings as plain JSON messages
-              const data = JSON.parse(event.data);
-
-              // Drop messages that are not related to the actual result.
-              // In the future, we might want to handle other types of messages.
-              // TODO: specify the fal ws protocol format
-              if (isUnauthorizedError(data)) {
-                send({
-                  type: "unauthorized",
-                  error: new Error("Unauthorized"),
-                });
-                return;
-              }
-              if (isSuccessfulResult(data)) {
-                onResult(data);
-                return;
-              }
-              if (isFalErrorResult(data)) {
-                if (data.error === "TIMEOUT") {
-                  // Timeout error messages just indicate that the connection hasn't
-                  // received an incoming message for a while. We don't need to
-                  // handle them as errors.
-                  return;
-                }
-                const { onError = noop } = getCallbacks();
-                onError(
-                  new ApiError({
-                    message: `${data.error}: ${data.reason}`,
-                    // TODO better error status code
-                    status: 400,
-                    body: data,
-                  }),
-                );
-                return;
-              }
+              handleRealtimeMessage({
+                data: event.data,
+                decodeMessage,
+                onResult,
+                onError,
+                send,
+              });
             };
           }
           previousState = machine.current;
@@ -521,7 +617,7 @@ export function createRealtimeClient({
         // Use throttled send to avoid sending too many messages
         stateMachine.throttledSend({
           type: "send",
-          message: input,
+          message: encodeMessageFn(input),
         });
       };
 
