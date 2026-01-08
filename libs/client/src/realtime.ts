@@ -222,6 +222,11 @@ export interface RealtimeConnectionHandler<Output> {
   maxBuffering?: number;
 
   /**
+   * Optional path to append after the app id. Defaults to `/realtime`.
+   */
+  path?: string;
+
+  /**
    * Callback function that is called when a result is received.
    * @param result - The result of the request.
    */
@@ -251,11 +256,12 @@ export interface RealtimeClient {
 type RealtimeUrlParams = {
   token: string;
   maxBuffering?: number;
+  path?: string;
 };
 
 function buildRealtimeUrl(
   app: string,
-  { token, maxBuffering }: RealtimeUrlParams,
+  { token, maxBuffering, path }: RealtimeUrlParams,
 ): string {
   if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
     throw new Error("The `maxBuffering` must be between 1 and 60 (inclusive)");
@@ -267,7 +273,8 @@ function buildRealtimeUrl(
     queryParams.set("max_buffering", maxBuffering.toFixed(0));
   }
   const appId = ensureEndpointIdFormat(app);
-  return `wss://fal.run/${appId}/realtime?${queryParams.toString()}`;
+  const normalizedPath = path ? `/${path.replace(/^\/+/, "")}` : "/realtime";
+  return `wss://fal.run/${appId}${normalizedPath}?${queryParams.toString()}`;
 }
 
 const DEFAULT_THROTTLE_INTERVAL = 128;
@@ -371,6 +378,7 @@ export function createRealtimeClient({
         clientOnly = isReact() && !isBrowser(),
         connectionKey = crypto.randomUUID(),
         maxBuffering,
+        path,
         throttleInterval = DEFAULT_THROTTLE_INTERVAL,
       } = handler;
       if (clientOnly && !isBrowser()) {
@@ -424,7 +432,7 @@ export function createRealtimeClient({
             token !== undefined
           ) {
             const ws = new WebSocket(
-              buildRealtimeUrl(app, { token, maxBuffering }),
+              buildRealtimeUrl(app, { token, maxBuffering, path }),
             );
             ws.onopen = () => {
               send({ type: "connected", websocket: ws });
