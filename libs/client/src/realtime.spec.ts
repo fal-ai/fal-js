@@ -54,6 +54,10 @@ describe("createRealtimeClient", () => {
     sockets.length = 0;
     WebSocketMock.mockClear();
     (getTemporaryAuthToken as jest.Mock).mockClear();
+    // Provide a minimal crypto polyfill for randomUUID used by the client
+    (global as any).crypto = {
+      randomUUID: () => "00000000-0000-0000-0000-000000000000",
+    };
     // @ts-expect-error override global
     global.WebSocket = WebSocketMock;
     config = createConfig({
