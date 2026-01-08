@@ -153,14 +153,29 @@ describe("createRealtimeClient", () => {
     expect(decode(payload)).toBe("hello");
   });
 
-  it("sends and receives plain json when resultType is json", async () => {
+  it("sends and receives plain json when custom encode/decode are provided", async () => {
     const onResult = jest.fn();
     const client = createRealtimeClient({ config });
     const connection = client.connect("123-myapp", {
       connectionKey: `test-conn-${connectionId}`,
       clientOnly: false,
       throttleInterval: 0,
-      resultType: "json",
+      encodeMessage: (input) =>
+        typeof input === "string" ? input : JSON.stringify(input),
+      decodeMessage: async (data) => {
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+          return JSON.parse(new TextDecoder().decode(data));
+        }
+        if (data instanceof Blob) {
+          return JSON.parse(
+            new TextDecoder().decode(new Uint8Array(await data.arrayBuffer())),
+          );
+        }
+        return data;
+      },
       onResult,
       onError: jest.fn(),
     });
@@ -191,7 +206,36 @@ describe("createRealtimeClient", () => {
       connectionKey: `test-conn-${connectionId}`,
       clientOnly: false,
       throttleInterval: 0,
-      resultType: "json",
+      encodeMessage: (input) =>
+        typeof input === "string" ? input : JSON.stringify(input),
+      decodeMessage: async (data) => {
+        const toUint8Array = async (value: ArrayBuffer | Uint8Array | Blob) => {
+          if (value instanceof Uint8Array) return value;
+          if (value instanceof Blob)
+            return new Uint8Array(await value.arrayBuffer());
+          return new Uint8Array(value);
+        };
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+          const buffer = await toUint8Array(data);
+          try {
+            return JSON.parse(new TextDecoder().decode(buffer));
+          } catch {
+            return decode(buffer);
+          }
+        }
+        if (data instanceof Blob) {
+          const buffer = await toUint8Array(data);
+          try {
+            return JSON.parse(new TextDecoder().decode(buffer));
+          } catch {
+            return decode(buffer);
+          }
+        }
+        return data;
+      },
       onResult,
       onError: jest.fn(),
     });
@@ -225,7 +269,22 @@ describe("createRealtimeClient", () => {
       connectionKey: `test-conn-${connectionId}`,
       clientOnly: false,
       throttleInterval: 0,
-      resultType: "json",
+      encodeMessage: (input) =>
+        typeof input === "string" ? input : JSON.stringify(input),
+      decodeMessage: async (data) => {
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+          return JSON.parse(new TextDecoder().decode(data));
+        }
+        if (data instanceof Blob) {
+          return JSON.parse(
+            new TextDecoder().decode(new Uint8Array(await data.arrayBuffer())),
+          );
+        }
+        return data;
+      },
       onResult: jest.fn(),
       onError,
     });

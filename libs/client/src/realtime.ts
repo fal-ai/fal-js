@@ -229,10 +229,18 @@ export interface RealtimeConnectionHandler<Output> {
   path?: string;
 
   /**
-   * Controls the serialization format for messages exchanged over the WebSocket.
-   * Defaults to `"msgpack"`. Set to `"json"` to send and receive plain JSON.
+   * Optional encoder for outgoing messages. Defaults to msgpack.
+   * Should return either a `Uint8Array` (binary) or string (text frame).
    */
-  resultType?: RealtimeMessageEncoding;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  encodeMessage?: (input: any) => Uint8Array | string;
+
+  /**
+   * Optional decoder for incoming messages. Defaults to msgpack with JSON
+   * support for string payloads.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  decodeMessage?: (data: any) => Promise<any> | any;
 
   /**
    * Callback function that is called when a result is received.
@@ -313,10 +321,8 @@ type ConnectionOnChange = InterpretOnChangeFunction<
 
 type RealtimeConnectionCallback = Pick<
   RealtimeConnectionHandler<any>,
-  "onResult" | "onError"
-> & {
-  messageEncoding: RealtimeMessageEncoding;
-};
+  "onResult" | "onError" | "decodeMessage"
+>;
 
 const connectionCache = new Map<string, ConnectionStateMachine>();
 const connectionCallbacks = new Map<string, RealtimeConnectionCallback>();
@@ -375,13 +381,7 @@ type RealtimeClientDependencies = {
   config: RequiredConfig;
 };
 
-type RealtimeMessageEncoding = "msgpack" | "json";
-const DEFAULT_MESSAGE_ENCODING: RealtimeMessageEncoding = "msgpack";
-
-async function decodeRealtimeMessage(
-  data: any,
-  encoding: RealtimeMessageEncoding,
-): Promise<any> {
+async function decodeRealtimeMessage(data: any): Promise<any> {
   if (typeof data === "string") {
     return JSON.parse(data);
   }
@@ -398,27 +398,6 @@ async function decodeRealtimeMessage(
     return new Uint8Array(value);
   };
 
-  if (encoding === "json") {
-    if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
-      const buffer = await toUint8Array(data);
-      const text = new TextDecoder().decode(buffer);
-      try {
-        return JSON.parse(text);
-      } catch {
-        return decode(buffer);
-      }
-    }
-    if (data instanceof Blob) {
-      const buffer = await toUint8Array(data);
-      const text = new TextDecoder().decode(buffer);
-      try {
-        return JSON.parse(text);
-      } catch {
-        return decode(buffer);
-      }
-    }
-  }
-
   if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
     return decode(await toUint8Array(data));
   }
@@ -429,13 +408,7 @@ async function decodeRealtimeMessage(
   return data;
 }
 
-function encodeRealtimeMessage(
-  input: any,
-  encoding: RealtimeMessageEncoding,
-): Uint8Array | string {
-  if (encoding === "json") {
-    return typeof input === "string" ? input : JSON.stringify(input);
-  }
+function encodeRealtimeMessage(input: any): Uint8Array | string {
   if (input instanceof Uint8Array) {
     return input;
   }
@@ -447,7 +420,7 @@ function encodeRealtimeMessage(
 
 type HandleRealtimeMessageParams = {
   data: any;
-  encoding: RealtimeMessageEncoding;
+  decodeMessage: RealtimeConnectionCallback["decodeMessage"];
   onResult: RealtimeConnectionCallback["onResult"];
   onError: NonNullable<RealtimeConnectionCallback["onError"]> | typeof noop;
   send: ConnectionStateMachine["send"];
@@ -455,7 +428,7 @@ type HandleRealtimeMessageParams = {
 
 function handleRealtimeMessage({
   data,
-  encoding,
+  decodeMessage,
   onResult,
   onError,
   send,
@@ -494,7 +467,7 @@ function handleRealtimeMessage({
     }
   };
 
-  decodeRealtimeMessage(data, encoding)
+  Promise.resolve(decodeMessage(data))
     .then(handleDecoded)
     .catch((error) => {
       onError(
@@ -522,11 +495,17 @@ export function createRealtimeClient({
         maxBuffering,
         path,
         throttleInterval = DEFAULT_THROTTLE_INTERVAL,
-        resultType = DEFAULT_MESSAGE_ENCODING,
+        encodeMessage: encodeMessageOverride,
+        decodeMessage: decodeMessageOverride,
       } = handler;
       if (clientOnly && !isBrowser()) {
         return NoOpConnection;
       }
+
+      const encodeMessageFn =
+        encodeMessageOverride ?? ((input: any) => encodeRealtimeMessage(input));
+      const decodeMessageFn =
+        decodeMessageOverride ?? ((data: any) => decodeRealtimeMessage(data));
 
       let previousState: string | undefined;
       let latestEnqueuedMessage: any;
@@ -537,7 +516,7 @@ export function createRealtimeClient({
       // are passed as part of the handler object, which can be different across
       // different calls to `connect`.
       connectionCallbacks.set(connectionKey, {
-        messageEncoding: resultType,
+        decodeMessage: decodeMessageFn,
         onError: handler.onError,
         onResult: handler.onResult,
       });
@@ -590,7 +569,7 @@ export function createRealtimeClient({
                 (stateMachine as any).context?.enqueuedMessage ??
                 latestEnqueuedMessage;
               if (queued) {
-                ws.send(queued);
+                ws.send(encodeMessageFn(queued));
                 (stateMachine as any).context = {
                   ...(stateMachine as any).context,
                   enqueuedMessage: undefined,
@@ -616,14 +595,14 @@ export function createRealtimeClient({
             };
             ws.onmessage = (event) => {
               const {
-                messageEncoding = DEFAULT_MESSAGE_ENCODING,
+                decodeMessage = decodeMessageFn,
                 onResult,
                 onError = noop,
               } = getCallbacks();
 
               handleRealtimeMessage({
                 data: event.data,
-                encoding: messageEncoding,
+                decodeMessage,
                 onResult,
                 onError,
                 send,
@@ -638,7 +617,7 @@ export function createRealtimeClient({
         // Use throttled send to avoid sending too many messages
         stateMachine.throttledSend({
           type: "send",
-          message: encodeRealtimeMessage(input, resultType),
+          message: encodeMessageFn(input),
         });
       };
 
