@@ -1,4 +1,9 @@
 import { RequiredConfig } from "./config";
+import {
+  buildTimeoutHeaders,
+  QUEUE_PRIORITY_HEADER,
+  RUNNER_HINT_HEADER,
+} from "./headers";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
 import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
@@ -23,10 +28,6 @@ export type QueueStatusSubscriptionOptions = QueueStatusOptions &
 type TimeoutId = ReturnType<typeof setTimeout> | undefined;
 
 const DEFAULT_POLL_INTERVAL = 500;
-
-const QUEUE_PRIORITY_HEADER = "x-fal-queue-priority";
-
-const RUNNER_HINT_HEADER = "x-fal-runner-hint";
 
 type QueueModeOptions =
   | {
@@ -93,6 +94,15 @@ type QueueCommonSubscribeOptions = {
   timeout?: number;
 
   /**
+   * Server-side request timeout in seconds. Limits total time spent waiting
+   * before processing starts (includes queue wait, retries, and routing).
+   * Does not apply once the application begins processing.
+   *
+   * This will be sent as the `x-fal-request-timeout` header.
+   */
+  startTimeout?: number;
+
+  /**
    * The URL to send a webhook notification to when the request is completed.
    * @see WebHookResponse
    */
@@ -108,9 +118,10 @@ type QueueCommonSubscribeOptions = {
 
   /**
    * Additional HTTP headers to include in the submit request.
-   * Note: `priority`, `hint`, and `objectLifecycle` will override the following headers:
+   * Note: `priority`, `hint`, `startTimeout`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
+   *  - `x-fal-request-timeout`
    *  - `x-fal-object-lifecycle-preference`
    */
   headers?: Record<string, string>;
@@ -147,11 +158,21 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
   hint?: string;
 
   /**
+   * Server-side request timeout in seconds. Limits total time spent waiting
+   * before processing starts (includes queue wait, retries, and routing).
+   * Does not apply once the application begins processing.
+   *
+   * This will be sent as the `x-fal-request-timeout` header.
+   */
+  startTimeout?: number;
+
+  /**
    * Additional HTTP headers to include in the submit request.
    *
-   * Note: `priority`, `hint`, and `objectLifecycle` will override the following headers:
+   * Note: `priority`, `hint`, `startTimeout`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
+   *  - `x-fal-request-timeout`
    *  - `x-fal-object-lifecycle-preference`
    */
   headers?: Record<string, string>;
@@ -294,6 +315,7 @@ export const createQueueClient = ({
         webhookUrl,
         priority,
         hint,
+        startTimeout,
         headers,
         storageSettings,
         ...runOptions
@@ -319,6 +341,7 @@ export const createQueueClient = ({
           ...buildObjectLifecycleHeaders(storageSettings),
           [QUEUE_PRIORITY_HEADER]: priority ?? "normal",
           ...(hint && { [RUNNER_HINT_HEADER]: hint }),
+          ...buildTimeoutHeaders(startTimeout),
         },
         input: input as Input,
         config,

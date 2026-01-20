@@ -25,15 +25,21 @@ export const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 };
 
 /**
- * Determines if an error is retryable based on the status code
+ * Determines if an error is retryable based on the status code.
+ * User-specified timeouts (504 with X-Fal-Request-Timeout-Type: user) are NOT retryable.
  */
 export function isRetryableError(
   error: any,
   retryableStatusCodes: number[],
 ): boolean {
-  return (
-    error instanceof ApiError && retryableStatusCodes.includes(error.status)
-  );
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+  // User-specified timeouts should NOT be retried
+  if (error.isUserTimeout) {
+    return false;
+  }
+  return retryableStatusCodes.includes(error.status);
 }
 
 /**
