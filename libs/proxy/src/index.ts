@@ -1,3 +1,7 @@
+import { applyProxyConfig, ProxyConfig } from "./config";
+import { HeaderValue, ProxyBehavior } from "./types";
+import { singleHeaderValue } from "./utils";
+
 export const TARGET_URL_HEADER = "x-fal-target-url";
 
 export const DEFAULT_PROXY_ROUTE = "/api/fal/proxy";
@@ -6,42 +10,20 @@ const FAL_KEY = process.env.FAL_KEY;
 const FAL_KEY_ID = process.env.FAL_KEY_ID;
 const FAL_KEY_SECRET = process.env.FAL_KEY_SECRET;
 
-export type HeaderValue = string | string[] | undefined | null;
+const FAL_REST_API_URL = "https://rest.alpha.fal.ai";
 
-const FAL_URL_REG_EXP = /(\.|^)fal\.(run|ai|dev)$/;
+const FAL_ALLOWED_URLS = [
+  /(queue\.|^)fal\.(run|dev)\/.*$/,
+  new RegExp(
+    `${FAL_REST_API_URL}/storage/upload/initiate\\?storage_type=fal-cdn-v3`,
+  ),
+  new RegExp(
+    `${FAL_REST_API_URL}/storage/upload/complete-multipart\\?storage_type=fal-cdn-v3`,
+  ),
+];
 
-/**
- * The proxy behavior that is passed to the proxy handler. This is a subset of
- * request objects that are used by different frameworks, like Express and NextJS.
- */
-export interface ProxyBehavior<ResponseType> {
-  id: string;
-  method: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  respondWith(status: number, data: string | any): ResponseType;
-  sendResponse(response: Response): Promise<ResponseType>;
-  getHeaders(): Record<string, HeaderValue>;
-  getHeader(name: string): HeaderValue;
-  sendHeader(name: string, value: string): void;
-  getRequestBody(): Promise<string | undefined>;
-  resolveApiKey?: () => Promise<string | undefined>;
-}
-
-/**
- * Utility to get a header value as `string` from a Headers object.
- *
- * @private
- * @param request the header value.
- * @returns the header value as `string` or `undefined` if the header is not set.
- */
-function singleHeaderValue(value: HeaderValue): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value;
+export function isAllowedUrl(url: string): boolean {
+  return FAL_ALLOWED_URLS.some((allowedUrl) => allowedUrl.test(url));
 }
 
 function getFalKey(): string | undefined {
@@ -67,22 +49,33 @@ const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
  */
 export async function handleRequest<ResponseType>(
   behavior: ProxyBehavior<ResponseType>,
+  config: Partial<ProxyConfig> = {},
 ) {
   const targetUrl = singleHeaderValue(behavior.getHeader(TARGET_URL_HEADER));
   if (!targetUrl) {
-    return behavior.respondWith(400, `Missing the ${TARGET_URL_HEADER} header`);
+    return behavior.respondWith(400, "Invalid request");
   }
+
+  // TODO: implement allowed endpoints check. The logic is tricky here because the target URL might be any queue URL, so
+  // we have to check the existing patterns to be able to match just the endpoint part.
 
   const urlHost = new URL(targetUrl).host;
-  if (!FAL_URL_REG_EXP.test(urlHost)) {
-    return behavior.respondWith(412, `Invalid ${TARGET_URL_HEADER} header`);
+  if (!isAllowedUrl(urlHost)) {
+    return behavior.respondWith(400, "Invalid request");
+  }
+  const resolvedConfig = applyProxyConfig(config);
+
+  const isAuthenticated =
+    (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
+  if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
+    return behavior.respondWith(401, "Unauthorized");
   }
 
-  const falKey = behavior.resolveApiKey
-    ? await behavior.resolveApiKey()
-    : getFalKey();
-  if (!falKey) {
-    return behavior.respondWith(401, "Missing fal.ai credentials");
+  const authorization =
+    (await resolvedConfig.resolveFalAuth?.(behavior)) ??
+    (await behavior.resolveApiKey());
+  if (!authorization) {
+    return behavior.respondWith(401, "Unauthorized");
   }
 
   // pass over headers prefixed with x-fal-*
@@ -99,9 +92,7 @@ export async function handleRequest<ResponseType>(
     method: behavior.method,
     headers: {
       ...headers,
-      authorization:
-        singleHeaderValue(behavior.getHeader("authorization")) ??
-        `Key ${falKey}`,
+      authorization,
       accept: "application/json",
       "content-type": "application/json",
       "user-agent": userAgent,
