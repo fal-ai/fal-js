@@ -53,9 +53,7 @@ export function validateTimeoutHeader(timeout: number): string {
  * @param timeout - Optional timeout value in seconds
  * @returns Headers object with REQUEST_TIMEOUT_HEADER if timeout is provided
  */
-export function buildTimeoutHeaders(
-  timeout?: number,
-): Record<string, string> | {} {
+export function buildTimeoutHeaders(timeout?: number): Record<string, string> {
   if (timeout === undefined) {
     return {};
   }
