@@ -1,4 +1,5 @@
 import { Config, createConfig } from "./config";
+import { buildTimeoutHeaders } from "./headers";
 import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
 import { createRealtimeClient, RealtimeClient } from "./realtime";
 import { buildUrl, dispatchRequest } from "./request";
@@ -114,7 +115,10 @@ export function createFalClient(userConfig: Config = {}): FalClient {
         targetUrl: buildUrl(endpointId, options),
         input: input as InputType<Id>,
         // TODO: consider supporting custom headers in fal.run() as well
-        headers: buildObjectLifecycleHeaders(options.storageSettings),
+        headers: {
+          ...buildObjectLifecycleHeaders(options.storageSettings),
+          ...buildTimeoutHeaders(options.startTimeout),
+        },
         config: {
           ...config,
           responseHandler: resultResponseHandler,

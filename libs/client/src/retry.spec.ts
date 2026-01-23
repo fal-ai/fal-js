@@ -32,6 +32,38 @@ describe("Retry functionality", () => {
         false,
       );
     });
+
+    it("should return false for user-specified timeout (504 with timeoutType: user)", () => {
+      const error = new ApiError({
+        message: "Request timed out",
+        status: 504,
+        timeoutType: "user",
+      });
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        false,
+      );
+    });
+
+    it("should return true for infrastructure timeout (504 without timeoutType)", () => {
+      const error = new ApiError({
+        message: "Gateway timeout",
+        status: 504,
+      });
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        true,
+      );
+    });
+
+    it("should return true for 504 with non-user timeoutType", () => {
+      const error = new ApiError({
+        message: "Gateway timeout",
+        status: 504,
+        timeoutType: "infrastructure",
+      });
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        true,
+      );
+    });
   });
 
   describe("calculateBackoffDelay", () => {
@@ -141,6 +173,28 @@ describe("Retry functionality", () => {
       await executeWithRetry(operation, options, onRetry);
 
       expect(onRetry).toHaveBeenCalledWith(1, BAD_GATEWAY_ERROR, 10);
+    });
+
+    it("should not retry on user-specified timeout", async () => {
+      const userTimeoutError = new ApiError({
+        message: "Request timed out",
+        status: 504,
+        timeoutType: "user",
+      });
+      const operation = jest.fn().mockRejectedValue(userTimeoutError);
+
+      const options: RetryOptions = {
+        ...DEFAULT_RETRY_OPTIONS,
+        maxRetries: 3,
+        baseDelay: 10,
+        enableJitter: false,
+      };
+
+      await expect(executeWithRetry(operation, options)).rejects.toThrow(
+        userTimeoutError,
+      );
+      // Should NOT retry - only 1 attempt
+      expect(operation).toHaveBeenCalledTimes(1);
     });
   });
 });

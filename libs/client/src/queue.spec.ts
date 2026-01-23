@@ -73,4 +73,56 @@ describe("queue.submit headers", () => {
     expect(call.headers["x-fal-queue-priority"]).toBe("normal");
     expect(call.headers["x-fal-runner-hint"]).toBeUndefined();
   });
+
+  it("includes startTimeout header when provided", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi" },
+      startTimeout: 30,
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-request-timeout"]).toBe("30");
+  });
+
+  it("omits startTimeout header when not provided", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi" },
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-request-timeout"]).toBeUndefined();
+  });
+
+  it("startTimeout overrides user-provided x-fal-request-timeout header", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi" },
+      headers: {
+        "x-fal-request-timeout": "10",
+      },
+      startTimeout: 60,
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-request-timeout"]).toBe("60");
+  });
+
+  it("throws error when startTimeout is <= 1 second", async () => {
+    const queue = createQueueClient({ config, storage });
+    await expect(
+      queue.submit("fal-ai/fast-sdxl", {
+        input: { prompt: "hi" },
+        startTimeout: 1,
+      }),
+    ).rejects.toThrow("Timeout must be greater than 1 seconds");
+
+    await expect(
+      queue.submit("fal-ai/fast-sdxl", {
+        input: { prompt: "hi" },
+        startTimeout: 0,
+      }),
+    ).rejects.toThrow("Timeout must be greater than 1 seconds");
+  });
 });

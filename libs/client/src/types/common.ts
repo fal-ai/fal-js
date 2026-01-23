@@ -38,6 +38,15 @@ export type RunOptions<Input> = {
    * @see https://docs.fal.ai/model-apis/model-endpoints/queue#object-lifecycle
    */
   readonly storageSettings?: StorageSettings;
+
+  /**
+   * Server-side request timeout in seconds. Limits total time spent waiting
+   * before processing starts (includes queue wait, retries, and routing).
+   * Does not apply once the application begins processing.
+   *
+   * This will be sent as the `x-fal-request-timeout` header.
+   */
+  readonly startTimeout?: number;
 };
 
 export type UrlOptions = {
