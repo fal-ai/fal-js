@@ -114,6 +114,7 @@ export function createFalClient(userConfig: Config = {}): FalClient {
         method: options.method,
         targetUrl: buildUrl(endpointId, options),
         input: input as InputType<Id>,
+        // TODO: consider supporting custom headers in fal.run() as well
         headers: {
           ...buildObjectLifecycleHeaders(options.storageSettings),
           ...buildTimeoutHeaders(options.startTimeout),
