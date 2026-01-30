@@ -275,6 +275,10 @@ type RealtimeUrlParams = {
   path?: string;
 };
 
+function normalizeRealtimePath(path?: string): string {
+  return path ? `/${path.replace(/^\/+/, "")}` : "/realtime";
+}
+
 function buildRealtimeUrl(
   app: string,
   { token, maxBuffering, path }: RealtimeUrlParams,
@@ -289,7 +293,7 @@ function buildRealtimeUrl(
     queryParams.set("max_buffering", maxBuffering.toFixed(0));
   }
   const appId = ensureEndpointIdFormat(app);
-  const normalizedPath = path ? `/${path.replace(/^\/+/, "")}` : "/realtime";
+  const normalizedPath = normalizeRealtimePath(path);
   return `wss://fal.run/${appId}${normalizedPath}?${queryParams.toString()}`;
 }
 
@@ -506,6 +510,7 @@ export function createRealtimeClient({
         encodeMessageOverride ?? ((input: any) => encodeRealtimeMessage(input));
       const decodeMessageFn =
         decodeMessageOverride ?? ((data: any) => decodeRealtimeMessage(data));
+      const normalizedPath = normalizeRealtimePath(path);
 
       let previousState: string | undefined;
       let latestEnqueuedMessage: any;
@@ -541,7 +546,7 @@ export function createRealtimeClient({
             previousState !== machine.current
           ) {
             send({ type: "initiateAuth" });
-            getTemporaryAuthToken(app, config)
+            getTemporaryAuthToken(app, config, { path: normalizedPath })
               .then((token) => {
                 send({ type: "authenticated", token });
                 const tokenExpirationTimeout = Math.round(
@@ -561,7 +566,11 @@ export function createRealtimeClient({
             token !== undefined
           ) {
             const ws = new WebSocket(
-              buildRealtimeUrl(app, { token, maxBuffering, path }),
+              buildRealtimeUrl(app, {
+                token,
+                maxBuffering,
+                path: normalizedPath,
+              }),
             );
             ws.onopen = () => {
               send({ type: "connected", websocket: ws });

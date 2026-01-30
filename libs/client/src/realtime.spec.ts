@@ -91,6 +91,9 @@ describe("createRealtimeClient", () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(getTemporaryAuthToken).toHaveBeenCalledTimes(1);
+    expect(getTemporaryAuthToken).toHaveBeenCalledWith("123-myapp", config, {
+      path: "/custom/path",
+    });
 
     expect(WebSocketMock).toHaveBeenCalledTimes(1);
     const socket = sockets[0];

@@ -10,7 +10,11 @@ export const TOKEN_EXPIRATION_SECONDS = 120;
 export async function getTemporaryAuthToken(
   app: string,
   config: RequiredConfig,
+  options: { path?: string } = {},
 ): Promise<string> {
+  const normalizedPath = options.path
+    ? `/${options.path.replace(/^\/+/, "")}`
+    : undefined;
   const appId = parseEndpointId(app);
   const token: string | object = await dispatchRequest<any, string>({
     method: "POST",
@@ -19,6 +23,7 @@ export async function getTemporaryAuthToken(
     input: {
       allowed_apps: [appId.alias],
       token_expiration: TOKEN_EXPIRATION_SECONDS,
+      ...(normalizedPath && { allowed_paths: [normalizedPath] }),
     },
   });
   // keep this in case the response was wrapped (old versions of the proxy do that)
