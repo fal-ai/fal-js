@@ -14,6 +14,7 @@ import { getTemporaryAuthToken } from "./auth";
 
 class MockWebSocket {
   public readonly url: string;
+  public readonly options?: Record<string, any>;
   public onopen?: () => void;
   public onclose?: (event: any) => void;
   public onerror?: (event: any) => void;
@@ -25,8 +26,9 @@ class MockWebSocket {
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
 
-  constructor(url: string) {
+  constructor(url: string, options?: Record<string, any>) {
     this.url = url;
+    this.options = options;
   }
 
   triggerOpen() {
@@ -39,11 +41,13 @@ describe("createRealtimeClient", () => {
   let config: RequiredConfig;
   const sockets: MockWebSocket[] = [];
   let connectionId = 0;
-  const WebSocketMock = jest.fn().mockImplementation((url: string) => {
-    const socket = new MockWebSocket(url);
-    sockets.push(socket);
-    return socket;
-  });
+  const WebSocketMock = jest
+    .fn()
+    .mockImplementation((url: string, _protocols?: any, options?: any) => {
+      const socket = new MockWebSocket(url, options);
+      sockets.push(socket);
+      return socket;
+    });
 
   beforeAll(() => {
     // minimal fetch stub to satisfy createConfig
@@ -97,6 +101,48 @@ describe("createRealtimeClient", () => {
     expect(socket.url).toBe(
       "wss://fal.run/123/myapp/custom/path?fal_jwt_token=mock-token",
     );
+  });
+
+  it("uses header auth when useJwt is false", async () => {
+    config = createConfig({
+      credentials: "test-key",
+      fetch: global.fetch as any,
+      websocketFactory: WebSocketMock as any,
+    });
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      useJwt: false,
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(getTemporaryAuthToken).not.toHaveBeenCalled();
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+    const socket = sockets[0];
+    expect(socket.url).toBe("wss://fal.run/123/myapp/realtime");
+    expect(socket.options?.headers?.Authorization).toBe("Key test-key");
+    expect(socket.options?.headers?.["User-Agent"]).toBeDefined();
+  });
+
+  it("throws when useJwt is false without a websocket factory", () => {
+    const client = createRealtimeClient({ config });
+    expect(() =>
+      client.connect("123-myapp", {
+        connectionKey: `test-conn-${connectionId}`,
+        clientOnly: false,
+        throttleInterval: 0,
+        useJwt: false,
+        onResult: jest.fn(),
+        onError: jest.fn(),
+      }),
+    ).toThrow("Header authentication requires config.websocketFactory");
   });
 
   it("sends msgpack payloads by default", async () => {

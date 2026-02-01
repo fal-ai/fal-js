@@ -13,9 +13,9 @@ import {
   transition,
 } from "robot3";
 import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from "./auth";
-import { RequiredConfig } from "./config";
+import { RequiredConfig, WebSocketFactory } from "./config";
 import { ApiError } from "./response";
-import { isBrowser } from "./runtime";
+import { getUserAgent, isBrowser } from "./runtime";
 import { ensureEndpointIdFormat, isReact, throttle } from "./utils";
 
 // Define the context
@@ -229,6 +229,13 @@ export interface RealtimeConnectionHandler<Output> {
   path?: string;
 
   /**
+   * If `true`, use temporary JWT tokens for authentication (default).
+   * If `false`, use Authorization headers (server-side only and requires
+   * `config.websocketFactory`).
+   */
+  useJwt?: boolean;
+
+  /**
    * Optional encoder for outgoing messages. Defaults to msgpack.
    * Should return either a `Uint8Array` (binary) or string (text frame).
    */
@@ -270,7 +277,7 @@ export interface RealtimeClient {
 }
 
 type RealtimeUrlParams = {
-  token: string;
+  token?: string;
   maxBuffering?: number;
   path?: string;
 };
@@ -282,15 +289,36 @@ function buildRealtimeUrl(
   if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
     throw new Error("The `maxBuffering` must be between 1 and 60 (inclusive)");
   }
-  const queryParams = new URLSearchParams({
-    fal_jwt_token: token,
-  });
+  const queryParams = new URLSearchParams();
+  if (token) {
+    queryParams.set("fal_jwt_token", token);
+  }
   if (maxBuffering !== undefined) {
     queryParams.set("max_buffering", maxBuffering.toFixed(0));
   }
   const appId = ensureEndpointIdFormat(app);
   const normalizedPath = path ? `/${path.replace(/^\/+/, "")}` : "/realtime";
-  return `wss://fal.run/${appId}${normalizedPath}?${queryParams.toString()}`;
+  const query = queryParams.toString();
+  return query
+    ? `wss://fal.run/${appId}${normalizedPath}?${query}`
+    : `wss://fal.run/${appId}${normalizedPath}`;
+}
+
+function resolveAuthHeaders(config: RequiredConfig): Record<string, string> {
+  const credentials =
+    typeof config.credentials === "function"
+      ? config.credentials()
+      : config.credentials;
+  if (!credentials) {
+    throw new Error(
+      "Missing credentials for header authentication. Provide config.credentials or use JWT.",
+    );
+  }
+  const userAgent = isBrowser() ? {} : { "User-Agent": getUserAgent() };
+  return {
+    Authorization: `Key ${credentials}`,
+    ...userAgent,
+  };
 }
 
 const DEFAULT_THROTTLE_INTERVAL = 128;
@@ -494,6 +522,7 @@ export function createRealtimeClient({
         connectionKey = crypto.randomUUID(),
         maxBuffering,
         path,
+        useJwt = true,
         throttleInterval = DEFAULT_THROTTLE_INTERVAL,
         encodeMessage: encodeMessageOverride,
         decodeMessage: decodeMessageOverride,
@@ -501,11 +530,25 @@ export function createRealtimeClient({
       if (clientOnly && !isBrowser()) {
         return NoOpConnection;
       }
+      if (!useJwt && isBrowser()) {
+        throw new Error(
+          "Header authentication is not supported in the browser. Enable JWT or use a proxy.",
+        );
+      }
+      if (!useJwt && !config.websocketFactory) {
+        throw new Error(
+          "Header authentication requires config.websocketFactory (e.g. ws).",
+        );
+      }
 
       const encodeMessageFn =
         encodeMessageOverride ?? ((input: any) => encodeRealtimeMessage(input));
       const decodeMessageFn =
         decodeMessageOverride ?? ((data: any) => decodeRealtimeMessage(data));
+      const authHeaders = useJwt ? undefined : resolveAuthHeaders(config);
+      const websocketFactory = config.websocketFactory as
+        | WebSocketFactory
+        | undefined;
 
       let previousState: string | undefined;
       let latestEnqueuedMessage: any;
@@ -541,28 +584,37 @@ export function createRealtimeClient({
             previousState !== machine.current
           ) {
             send({ type: "initiateAuth" });
-            getTemporaryAuthToken(app, config)
-              .then((token) => {
-                send({ type: "authenticated", token });
-                const tokenExpirationTimeout = Math.round(
-                  TOKEN_EXPIRATION_SECONDS * 0.9 * 1000,
-                );
-                setTimeout(() => {
-                  send({ type: "expireToken" });
-                }, tokenExpirationTimeout);
-              })
-              .catch((error) => {
-                send({ type: "unauthorized", error });
-              });
+            if (useJwt) {
+              getTemporaryAuthToken(app, config)
+                .then((token) => {
+                  send({ type: "authenticated", token });
+                  const tokenExpirationTimeout = Math.round(
+                    TOKEN_EXPIRATION_SECONDS * 0.9 * 1000,
+                  );
+                  setTimeout(() => {
+                    send({ type: "expireToken" });
+                  }, tokenExpirationTimeout);
+                })
+                .catch((error) => {
+                  send({ type: "unauthorized", error });
+                });
+            } else {
+              send({ type: "authenticated", token: "" });
+            }
           }
           if (
             machine.current === "connecting" &&
             previousState !== machine.current &&
             token !== undefined
           ) {
-            const ws = new WebSocket(
-              buildRealtimeUrl(app, { token, maxBuffering, path }),
-            );
+            const url = buildRealtimeUrl(app, { token, maxBuffering, path });
+            const ws = useJwt
+              ? websocketFactory
+                ? websocketFactory(url)
+                : new WebSocket(url)
+              : websocketFactory(url, undefined, {
+                  headers: authHeaders,
+                });
             ws.onopen = () => {
               send({ type: "connected", websocket: ws });
               const queued =

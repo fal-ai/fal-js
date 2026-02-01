@@ -21,6 +21,14 @@ export function resolveDefaultFetch(): FetchType {
   return fetch;
 }
 
+export type WebSocketFactory = (
+  url: string,
+  protocols?: string | string[],
+  options?: {
+    headers?: Record<string, string>;
+  },
+) => WebSocket;
+
 export type Config = {
   /**
    * The credentials to use for the fal client. When using the
@@ -65,6 +73,11 @@ export type Config = {
    * When not specified, a default retry configuration is used.
    */
   retry?: Partial<RetryOptions>;
+  /**
+   * Optional WebSocket factory used by the realtime client.
+   * Required for header-based auth in server environments.
+   */
+  websocketFactory?: WebSocketFactory;
 };
 
 export type RequiredConfig = Required<Config>;
