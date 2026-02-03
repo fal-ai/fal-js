@@ -1,3 +1,5 @@
+import type { StorageSettings } from "../storage";
+
 /**
  * Represents an API result, containing the data,
  *  the request ID and any other relevant information.
@@ -27,6 +29,24 @@ export type RunOptions<Input> = {
    * The abort signal to cancel the request.
    */
   readonly abortSignal?: AbortSignal;
+
+  /**
+   * Object lifecycle configuration for controlling how long generated objects
+   * (images, files, etc.) remain available before expiring.
+   *
+   * @see StorageSettings
+   * @see https://docs.fal.ai/model-apis/model-endpoints/queue#object-lifecycle
+   */
+  readonly storageSettings?: StorageSettings;
+
+  /**
+   * Server-side request timeout in seconds. Limits total time spent waiting
+   * before processing starts (includes queue wait, retries, and routing).
+   * Does not apply once the application begins processing.
+   *
+   * This will be sent as the `x-fal-request-timeout` header.
+   */
+  readonly startTimeout?: number;
 };
 
 export type UrlOptions = {

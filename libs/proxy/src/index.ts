@@ -1,3 +1,20 @@
+import {
+  applyProxyConfig,
+  createUrlMatcher,
+  DEFAULT_ALLOWED_URL_PATTERNS,
+  type ProxyConfig,
+} from "./config";
+import type { HeaderValue, ProxyBehavior } from "./types";
+import { singleHeaderValue } from "./utils";
+
+export {
+  createUrlMatcher,
+  DEFAULT_ALLOWED_URL_PATTERNS,
+  resolveProxyConfig,
+  type ProxyConfig,
+} from "./config";
+export { type HeaderValue, type ProxyBehavior } from "./types";
+
 export const TARGET_URL_HEADER = "x-fal-target-url";
 
 export const DEFAULT_PROXY_ROUTE = "/api/fal/proxy";
@@ -6,42 +23,70 @@ const FAL_KEY = process.env.FAL_KEY;
 const FAL_KEY_ID = process.env.FAL_KEY_ID;
 const FAL_KEY_SECRET = process.env.FAL_KEY_SECRET;
 
-export type HeaderValue = string | string[] | undefined | null;
-
-const FAL_URL_REG_EXP = /(\.|^)fal\.(run|ai|dev)$/;
+// Default matcher using the default allowed URL patterns
+const defaultUrlMatcher = createUrlMatcher(DEFAULT_ALLOWED_URL_PATTERNS);
 
 /**
- * The proxy behavior that is passed to the proxy handler. This is a subset of
- * request objects that are used by different frameworks, like Express and NextJS.
+ * Checks if a URL matches any of the allowed URL patterns.
+ *
+ * @param url the URL to check (without scheme, e.g., "fal.run/path").
+ * @param patterns the allowed URL patterns (glob-style). If not provided, uses default patterns.
+ * @returns whether the URL is allowed.
  */
-export interface ProxyBehavior<ResponseType> {
-  id: string;
-  method: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  respondWith(status: number, data: string | any): ResponseType;
-  sendResponse(response: Response): Promise<ResponseType>;
-  getHeaders(): Record<string, HeaderValue>;
-  getHeader(name: string): HeaderValue;
-  sendHeader(name: string, value: string): void;
-  getRequestBody(): Promise<string | undefined>;
-  resolveApiKey?: () => Promise<string | undefined>;
+export function isAllowedUrl(url: string, patterns?: string[]): boolean {
+  if (patterns) {
+    return createUrlMatcher(patterns)(url);
+  }
+  return defaultUrlMatcher(url);
 }
 
 /**
- * Utility to get a header value as `string` from a Headers object.
- *
- * @private
- * @param request the header value.
- * @returns the header value as `string` or `undefined` if the header is not set.
+ * Extracts the URL without the scheme for validation purposes.
+ * @param targetUrl the full URL including scheme.
+ * @returns the URL without the scheme (host + path + query).
  */
-function singleHeaderValue(value: HeaderValue): string | undefined {
-  if (!value) {
-    return undefined;
+function getUrlWithoutScheme(targetUrl: string): string {
+  const url = new URL(targetUrl);
+  return `${url.host}${url.pathname}${url.search}`;
+}
+
+/**
+ * Checks if the URL is on the fal.ai domain or any of its subdomains.
+ * @param targetUrl the full URL including scheme.
+ * @returns true if the URL is on *.fal.ai domain.
+ */
+function isFalAiDomain(targetUrl: string): boolean {
+  const url = new URL(targetUrl);
+  return url.host === "fal.ai" || url.host.endsWith(".fal.ai");
+}
+
+/**
+ * Extracts the endpoint from a URL (path without leading slash).
+ * @param targetUrl the full URL including scheme.
+ * @returns the endpoint (path without leading slash).
+ */
+export function getEndpoint(targetUrl: string): string {
+  const url = new URL(targetUrl);
+  // Remove leading slash from pathname
+  return url.pathname.replace(/^\//, "");
+}
+
+/**
+ * Checks if an endpoint matches any of the allowed endpoint patterns.
+ *
+ * @param endpoint the endpoint to check (path without leading slash).
+ * @param patterns the allowed endpoint patterns (glob-style).
+ * @returns whether the endpoint is allowed.
+ */
+export function isAllowedEndpoint(
+  endpoint: string,
+  patterns: string[],
+): boolean {
+  // Empty array means all endpoints are allowed (backwards compatibility)
+  if (patterns.length === 0) {
+    return true;
   }
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value;
+  return createUrlMatcher(patterns)(endpoint);
 }
 
 function getFalKey(): string | undefined {
@@ -63,26 +108,53 @@ const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
  * effortlessly.
  *
  * @param behavior the request proxy behavior.
+ * @param config the proxy configuration. Can be a partial config (will be resolved internally)
+ *               or a pre-resolved config from `resolveProxyConfig` to avoid per-request warnings.
  * @returns Promise<any> the promise that will be resolved once the request is done.
  */
 export async function handleRequest<ResponseType>(
   behavior: ProxyBehavior<ResponseType>,
+  config: Partial<ProxyConfig> | ProxyConfig = {},
 ) {
   const targetUrl = singleHeaderValue(behavior.getHeader(TARGET_URL_HEADER));
   if (!targetUrl) {
-    return behavior.respondWith(400, `Missing the ${TARGET_URL_HEADER} header`);
+    return behavior.respondWith(400, "Invalid request");
   }
 
-  const urlHost = new URL(targetUrl).host;
-  if (!FAL_URL_REG_EXP.test(urlHost)) {
-    return behavior.respondWith(412, `Invalid ${TARGET_URL_HEADER} header`);
+  // Check if config is already resolved (has all required fields with non-undefined values)
+  const isResolved =
+    config.isAuthenticated !== undefined &&
+    config.resolveFalAuth !== undefined &&
+    config.allowUnauthorizedRequests !== undefined &&
+    config.allowedUrlPatterns !== undefined;
+  const resolvedConfig = isResolved
+    ? (config as ProxyConfig)
+    : applyProxyConfig(config);
+
+  const urlToValidate = getUrlWithoutScheme(targetUrl);
+  if (!isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)) {
+    return behavior.respondWith(400, "Invalid request");
   }
 
-  const falKey = behavior.resolveApiKey
-    ? await behavior.resolveApiKey()
-    : getFalKey();
-  if (!falKey) {
-    return behavior.respondWith(401, "Missing fal.ai credentials");
+  // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
+  if (behavior.method?.toUpperCase() === "POST" && !isFalAiDomain(targetUrl)) {
+    const endpoint = getEndpoint(targetUrl);
+    if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
+      return behavior.respondWith(400, "Invalid request");
+    }
+  }
+
+  const isAuthenticated =
+    (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
+  if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
+    return behavior.respondWith(401, "Unauthorized");
+  }
+
+  const authorization =
+    (await resolvedConfig.resolveFalAuth?.(behavior)) ??
+    (await behavior.resolveApiKey?.());
+  if (!authorization) {
+    return behavior.respondWith(401, "Unauthorized");
   }
 
   // pass over headers prefixed with x-fal-*
@@ -99,9 +171,7 @@ export async function handleRequest<ResponseType>(
     method: behavior.method,
     headers: {
       ...headers,
-      authorization:
-        singleHeaderValue(behavior.getHeader("authorization")) ??
-        `Key ${falKey}`,
+      authorization,
       accept: "application/json",
       "content-type": "application/json",
       "user-agent": userAgent,

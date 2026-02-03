@@ -1,4 +1,5 @@
 import { RequiredConfig } from "./config";
+import { REQUEST_TIMEOUT_TYPE_HEADER } from "./headers";
 import { Result, ValidationErrorInfo } from "./types/common";
 
 export type ResponseHandler<Output> = (response: Response) => Promise<Output>;
@@ -15,18 +16,33 @@ type ApiErrorArgs = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
   requestId?: string;
+  /**
+   * The type of timeout that occurred. If "user", this was a user-specified
+   * timeout via startTimeout and should NOT be retried.
+   */
+  timeoutType?: string;
 };
 
 export class ApiError<Body> extends Error {
   public readonly status: number;
   public readonly body: Body;
   public readonly requestId: string;
-  constructor({ message, status, body, requestId }: ApiErrorArgs) {
+  public readonly timeoutType?: string;
+  constructor({ message, status, body, requestId, timeoutType }: ApiErrorArgs) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.body = body;
     this.requestId = requestId || "";
+    this.timeoutType = timeoutType;
+  }
+
+  /**
+   * Returns true if this error was caused by a user-specified timeout
+   * (via startTimeout parameter). These errors should NOT be retried.
+   */
+  get isUserTimeout(): boolean {
+    return this.status === 504 && this.timeoutType === "user";
   }
 }
 
@@ -68,6 +84,8 @@ export async function defaultResponseHandler<Output>(
   const { status, statusText } = response;
   const contentType = response.headers.get("Content-Type") ?? "";
   const requestId = response.headers.get(REQUEST_ID_HEADER) || undefined;
+  const timeoutType =
+    response.headers.get(REQUEST_TIMEOUT_TYPE_HEADER) || undefined;
   if (!response.ok) {
     if (contentType.includes("application/json")) {
       const body = await response.json();
@@ -77,12 +95,14 @@ export async function defaultResponseHandler<Output>(
         status,
         body,
         requestId,
+        timeoutType,
       });
     }
     throw new ApiError({
       message: `HTTP ${status}: ${statusText}`,
       status,
       requestId,
+      timeoutType,
     });
   }
   if (contentType.includes("application/json")) {
