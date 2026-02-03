@@ -10,10 +10,10 @@ import { singleHeaderValue } from "./utils";
 export {
   createUrlMatcher,
   DEFAULT_ALLOWED_URL_PATTERNS,
-  ProxyConfig,
   resolveProxyConfig,
+  type ProxyConfig,
 } from "./config";
-export { HeaderValue, ProxyBehavior } from "./types";
+export { type HeaderValue, type ProxyBehavior } from "./types";
 
 export const TARGET_URL_HEADER = "x-fal-target-url";
 

@@ -75,7 +75,7 @@ export const handler: NextApiHandler = createPageRouterHandler();
  */
 export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
   const resolvedConfig = resolveProxyConfig(config);
-  return async (request: NextRequest) => {
+  const handler = async (request: NextRequest) => {
     const responseHeaders = new Headers();
     return await handleRequest(
       {
@@ -95,22 +95,14 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
       resolvedConfig,
     );
   };
+  return {
+    GET: handler,
+    POST: handler,
+    PUT: handler,
+  };
 };
-
-/**
- * The Next API route handler for the fal.ai client proxy on App Router apps.
- *
- * @param request the Next API request object.
- * @returns a promise that resolves when the request is handled.
- */
-const routeHandler = createRouteHandler();
 
 /**
  * @deprecated Use `createRouteHandler` instead.
  */
-export const route = {
-  handler: routeHandler,
-  GET: routeHandler,
-  POST: routeHandler,
-  PUT: routeHandler,
-};
+export const route = createRouteHandler();
