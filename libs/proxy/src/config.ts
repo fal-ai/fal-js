@@ -53,9 +53,24 @@ export interface ProxyConfig {
   allowedUrlPatterns?: string[];
 
   /**
+   * Endpoint patterns (glob-style) that are allowed to be called via POST requests.
+   * The endpoint is the path portion of the URL without the leading slash.
+   *
+   * For example, for `https://fal.run/fal-ai/flux/dev`, the endpoint is `fal-ai/flux/dev`.
+   *
+   * Supports `*` (matches any characters except `/`) and `**` (matches any characters including `/`).
+   *
    * Currently for backwards compatibility an empty array means all endpoints are allowed.
    * In the future the behavior might change to disallow all endpoints by default and require
    * explicitly allowing endpoints.
+   *
+   * @example
+   * ```ts
+   * // Allow only specific endpoints
+   * allowedEndpoints: ["fal-ai/flux/**", "fal-ai/fast-sdxl"]
+   * ```
+   *
+   * @default [] (all endpoints allowed)
    */
   allowedEndpoints?: string[] | undefined;
 

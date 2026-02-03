@@ -1,5 +1,5 @@
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
-import { isAllowedUrl } from "./index";
+import { getEndpoint, isAllowedEndpoint, isAllowedUrl } from "./index";
 
 const FAL_REST_API_URL = "rest.alpha.fal.ai";
 
@@ -187,5 +187,156 @@ describe("isAllowedUrl with custom patterns", () => {
 
   it("should work with empty patterns array", () => {
     expect(isAllowedUrl("fal.run/path", [])).toBe(false);
+  });
+});
+
+describe("getEndpoint", () => {
+  it("should extract endpoint from fal.run URL", () => {
+    expect(getEndpoint("https://fal.run/fal-ai/flux-dev")).toBe(
+      "fal-ai/flux-dev",
+    );
+  });
+
+  it("should extract endpoint from URL with nested path", () => {
+    expect(getEndpoint("https://fal.run/fal-ai/flux/dev")).toBe(
+      "fal-ai/flux/dev",
+    );
+  });
+
+  it("should extract endpoint from URL with deeper nesting", () => {
+    expect(getEndpoint("https://fal.run/provider/app/path/to/endpoint")).toBe(
+      "provider/app/path/to/endpoint",
+    );
+  });
+
+  it("should handle queue URLs", () => {
+    expect(
+      getEndpoint("https://queue.fal.run/fal-ai/flux-dev/requests/abc123"),
+    ).toBe("fal-ai/flux-dev/requests/abc123");
+  });
+
+  it("should handle URLs with query parameters", () => {
+    expect(
+      getEndpoint("https://fal.run/fal-ai/flux-dev?some_param=value"),
+    ).toBe("fal-ai/flux-dev");
+  });
+
+  it("should handle root path", () => {
+    expect(getEndpoint("https://fal.run/")).toBe("");
+  });
+});
+
+describe("isAllowedEndpoint", () => {
+  describe("exact matches", () => {
+    it("should match exact endpoint", () => {
+      expect(isAllowedEndpoint("fal-ai/flux-dev", ["fal-ai/flux-dev"])).toBe(
+        true,
+      );
+    });
+
+    it("should NOT match different endpoint", () => {
+      expect(isAllowedEndpoint("fal-ai/other", ["fal-ai/flux-dev"])).toBe(
+        false,
+      );
+    });
+
+    it("should NOT match partial endpoint", () => {
+      expect(
+        isAllowedEndpoint("fal-ai/flux-dev/extra", ["fal-ai/flux-dev"]),
+      ).toBe(false);
+    });
+  });
+
+  describe("single wildcard (*) patterns", () => {
+    it("should match any single segment with *", () => {
+      expect(isAllowedEndpoint("fal-ai/flux-dev", ["fal-ai/*"])).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/fast-sdxl", ["fal-ai/*"])).toBe(true);
+    });
+
+    it("should NOT match nested paths with single *", () => {
+      expect(isAllowedEndpoint("fal-ai/flux/dev", ["fal-ai/*"])).toBe(false);
+    });
+
+    it("should match provider wildcard", () => {
+      expect(isAllowedEndpoint("fal-ai/flux-dev", ["*/flux-dev"])).toBe(true);
+      expect(isAllowedEndpoint("other-provider/flux-dev", ["*/flux-dev"])).toBe(
+        true,
+      );
+    });
+  });
+
+  describe("double wildcard (**) patterns", () => {
+    it("should match any path depth with **", () => {
+      expect(isAllowedEndpoint("fal-ai/flux-dev", ["fal-ai/**"])).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/flux/dev", ["fal-ai/**"])).toBe(true);
+      expect(
+        isAllowedEndpoint("fal-ai/flux/dev/extra/path", ["fal-ai/**"]),
+      ).toBe(true);
+    });
+
+    it("should match provider base with **", () => {
+      expect(isAllowedEndpoint("fal-ai", ["fal-ai/**"])).toBe(true);
+    });
+
+    it("should match nested provider patterns", () => {
+      expect(
+        isAllowedEndpoint("provider/app/v1/endpoint", ["provider/app/**"]),
+      ).toBe(true);
+      expect(
+        isAllowedEndpoint("provider/other/v1/endpoint", ["provider/app/**"]),
+      ).toBe(false);
+    });
+  });
+
+  describe("multiple patterns", () => {
+    const patterns = ["fal-ai/**", "runware/*", "specific/endpoint"];
+
+    it("should match any of multiple patterns", () => {
+      expect(isAllowedEndpoint("fal-ai/flux-dev", patterns)).toBe(true);
+      expect(isAllowedEndpoint("runware/fast-sdxl", patterns)).toBe(true);
+      expect(isAllowedEndpoint("specific/endpoint", patterns)).toBe(true);
+    });
+
+    it("should NOT match if no pattern matches", () => {
+      expect(isAllowedEndpoint("other-provider/model", patterns)).toBe(false);
+      expect(isAllowedEndpoint("runware/nested/path", patterns)).toBe(false);
+    });
+  });
+
+  describe("empty patterns (backwards compatibility)", () => {
+    it("should allow any endpoint when patterns is empty", () => {
+      expect(isAllowedEndpoint("fal-ai/flux-dev", [])).toBe(true);
+      expect(isAllowedEndpoint("any/random/endpoint", [])).toBe(true);
+      expect(isAllowedEndpoint("", [])).toBe(true);
+    });
+  });
+
+  describe("real-world endpoint examples", () => {
+    it("should handle fal-ai endpoints", () => {
+      const patterns = ["fal-ai/**"];
+      expect(isAllowedEndpoint("fal-ai/flux/dev", patterns)).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/flux/schnell", patterns)).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/fast-sdxl", patterns)).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/lora", patterns)).toBe(true);
+    });
+
+    it("should restrict to specific model families", () => {
+      const patterns = ["fal-ai/flux/**", "fal-ai/fast-*"];
+      expect(isAllowedEndpoint("fal-ai/flux/dev", patterns)).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/flux/schnell", patterns)).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/fast-sdxl", patterns)).toBe(true);
+      expect(isAllowedEndpoint("fal-ai/lora", patterns)).toBe(false);
+    });
+
+    it("should handle queue request paths", () => {
+      // Queue URLs have the format: fal-ai/model/requests/request-id
+      const patterns = ["fal-ai/**"];
+      expect(
+        isAllowedEndpoint("fal-ai/flux-dev/requests/abc123", patterns),
+      ).toBe(true);
+      expect(
+        isAllowedEndpoint("fal-ai/flux-dev/requests/abc123/status", patterns),
+      ).toBe(true);
+    });
   });
 });

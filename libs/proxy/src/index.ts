@@ -50,6 +50,45 @@ function getUrlWithoutScheme(targetUrl: string): string {
   return `${url.host}${url.pathname}${url.search}`;
 }
 
+/**
+ * Checks if the URL is on the fal.ai domain or any of its subdomains.
+ * @param targetUrl the full URL including scheme.
+ * @returns true if the URL is on *.fal.ai domain.
+ */
+function isFalAiDomain(targetUrl: string): boolean {
+  const url = new URL(targetUrl);
+  return url.host === "fal.ai" || url.host.endsWith(".fal.ai");
+}
+
+/**
+ * Extracts the endpoint from a URL (path without leading slash).
+ * @param targetUrl the full URL including scheme.
+ * @returns the endpoint (path without leading slash).
+ */
+export function getEndpoint(targetUrl: string): string {
+  const url = new URL(targetUrl);
+  // Remove leading slash from pathname
+  return url.pathname.replace(/^\//, "");
+}
+
+/**
+ * Checks if an endpoint matches any of the allowed endpoint patterns.
+ *
+ * @param endpoint the endpoint to check (path without leading slash).
+ * @param patterns the allowed endpoint patterns (glob-style).
+ * @returns whether the endpoint is allowed.
+ */
+export function isAllowedEndpoint(
+  endpoint: string,
+  patterns: string[],
+): boolean {
+  // Empty array means all endpoints are allowed (backwards compatibility)
+  if (patterns.length === 0) {
+    return true;
+  }
+  return createUrlMatcher(patterns)(endpoint);
+}
+
 function getFalKey(): string | undefined {
   if (FAL_KEY) {
     return FAL_KEY;
@@ -92,12 +131,17 @@ export async function handleRequest<ResponseType>(
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
 
-  // TODO: implement allowed endpoints check. The logic is tricky here because the target URL might be any queue URL, so
-  // we have to check the existing patterns to be able to match just the endpoint part.
-
   const urlToValidate = getUrlWithoutScheme(targetUrl);
   if (!isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)) {
     return behavior.respondWith(400, "Invalid request");
+  }
+
+  // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
+  if (behavior.method?.toUpperCase() === "POST" && !isFalAiDomain(targetUrl)) {
+    const endpoint = getEndpoint(targetUrl);
+    if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
+      return behavior.respondWith(400, "Invalid request");
+    }
   }
 
   const isAuthenticated =
