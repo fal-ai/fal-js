@@ -47,6 +47,9 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
   return handler;
 };
 
+// Lazy initialization for deprecated handler
+let _pageRouterHandler: NextApiHandler | null = null;
+
 /**
  * The Next API route handler for the fal.ai client proxy.
  * Use it with the /pages router in Next.js.
@@ -59,7 +62,14 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
  *
  * @deprecated Use `createPageRouterHandler` instead.
  */
-export const handler: NextApiHandler = createPageRouterHandler();
+export const handler: NextApiHandler = (request, response) => {
+  if (!_pageRouterHandler) {
+    _pageRouterHandler = createPageRouterHandler();
+  }
+  return _pageRouterHandler(request, response);
+};
+
+type RouteHandler = (request: NextRequest) => Promise<Response>;
 
 /**
  * Creates a route handler that proxies requests to the fal API.
@@ -102,7 +112,31 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
   };
 };
 
+// Lazy initialization for deprecated route
+let _routeHandler: {
+  GET: RouteHandler;
+  POST: RouteHandler;
+  PUT: RouteHandler;
+} | null = null;
+
+function getRouteHandler() {
+  if (!_routeHandler) {
+    _routeHandler = createRouteHandler();
+  }
+  return _routeHandler;
+}
+
 /**
  * @deprecated Use `createRouteHandler` instead.
  */
-export const route = createRouteHandler();
+export const route = {
+  get GET() {
+    return getRouteHandler().GET;
+  },
+  get POST() {
+    return getRouteHandler().POST;
+  },
+  get PUT() {
+    return getRouteHandler().PUT;
+  },
+};
