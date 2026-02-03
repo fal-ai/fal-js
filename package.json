@@ -11,7 +11,7 @@
     "prepare": "husky install",
     "fetch-openapi-models": "npx tsx --env-file=.env.local scripts/fetch-models.ts",
     "generate-types": "npx @hey-api/openapi-ts",
-    "generate-endpoint-maps": "npx tsx scripts/generate-fal-endpoint-maps.ts"
+    "generate-endpoint-maps": "npx tsx scripts/generate-endpoint-maps.ts"
   },
   "private": true,
   "lint-staged": {
@@ -135,7 +135,8 @@
     "typedoc-github-theme": "^0.1.2",
     "typedoc-plugin-extras": "^3.1.0",
     "typedoc-plugin-mdn-links": "^3.2.12",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "zod": "^4.3.6"
   },
   "prettier": {
     "plugins": [

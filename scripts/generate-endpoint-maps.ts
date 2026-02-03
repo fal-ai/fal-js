@@ -5,18 +5,21 @@
  * This script:
  * 1. Scans each category directory for types.gen.ts
  * 2. Extracts endpoint information from Post*Data and Get*Responses types
- * 3. For each category, generates {category}/endpoint-map.ts with:
- *    - TypeScript type imports from types.gen.ts
- *    - Zod schema imports from zod.gen.ts
- *    - CategoryEndpointMap type
- *    - CategorySchemaMap constant (Zod schemas)
- *    - CategoryModel utility type
- *    - CategoryInput<T> utility type
- *    - CategoryOutput<T> utility type
- * 4. Generates unified index.ts that re-exports all categories
+ * 3. For each category, generates:
+ *    - {category}/endpoint-map.ts: TypeScript types (EndpointMap, Model, ModelInput, ModelOutput)
+ *    - {category}/endpoint-schema.ts: Zod discriminatedUnion schema
+ * 4. Generates unified files:
+ *    - schemas.ts: Combined Zod discriminatedUnion of all endpoint schemas
+ *    - client.ts: EndpointType, InputType<T>, OutputType<T>, and EndpointTypeMap
  */
 
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as prettier from "prettier";
@@ -47,7 +50,7 @@ function extractEndpointsFromTypes(categoryPath: string): Array<EndpointInfo> {
   //   url: '/endpoint-path'
   // }
   const postTypeRegex =
-    /export type (Post\w+)Data = \{[\s\S]*?body: (\w+)[\s\S]*?url: '([^']+)'/g;
+    /export type (Post\w+)Data = \{[\s\S]*?body:\s*(\b\w+\b);?[\s\S]*?url:\s*["']([^"']+)["']/g;
 
   let match;
   while ((match = postTypeRegex.exec(content)) !== null) {
@@ -58,7 +61,7 @@ function extractEndpointsFromTypes(categoryPath: string): Array<EndpointInfo> {
     const endpointId = urlPath.replace(/^\//, "");
 
     // Derive output type from input type by replacing "Input" with "Output"
-    const outputType = inputType.replace(/Input$/, "Output");
+    const outputType = inputType.replace(/Input(Type\d+)?$/, "Output$1");
 
     // Verify the output type exists in the content
     if (!content.includes(`export type ${outputType}`)) {
@@ -106,150 +109,6 @@ function toPascalCase(str: string): string {
 }
 
 /**
- * Mapping of output types to their source categories.
- * Categories have been combined (e.g., text-to-image + image-to-image → image).
- */
-const outputTypeMapping: Record<string, Array<string>> = {
-  image: ["image"],
-  video: ["video"],
-  audio: ["audio"],
-  speech: ["speech"],
-  text: ["text", "vision"], // vision models produce text output
-  "3d": ["3d"],
-  json: ["json"],
-};
-
-/**
- * Generate output-type-based unions (FalImageModel, FalVideoModel, etc.)
- */
-function generateOutputTypeUnions(
-  processedCategories: Array<string>,
-): Array<string> {
-  const lines: Array<string> = [];
-
-  for (const [outputType, categories] of Object.entries(outputTypeMapping)) {
-    // Filter to only categories that were actually processed
-    const availableCategories = categories.filter((cat) =>
-      processedCategories.includes(cat),
-    );
-
-    if (availableCategories.length === 0) {
-      continue;
-    }
-
-    // Convert output type to PascalCase (e.g., 'image' -> 'Image', '3d' -> '3d')
-    const outputTypePascal =
-      outputType.charAt(0).toUpperCase() + outputType.slice(1);
-
-    // Generate Model union type
-    lines.push(`/** Union of all ${outputType} generation models */`);
-    lines.push(`export type Fal${outputTypePascal}Model =`);
-    for (let i = 0; i < availableCategories.length; i++) {
-      const category = availableCategories[i]!;
-      const isLast = i === availableCategories.length - 1;
-      lines.push(`  | ${toPascalCase(category)}Model${isLast ? "" : ""}`);
-    }
-    lines.push(``);
-
-    // Generate Input type
-    lines.push(`/**`);
-    lines.push(` * Get the input type for a specific ${outputType} model.`);
-    lines.push(
-      ` * Checks official fal.ai EndpointTypeMap first, then falls back to category-specific types.`,
-    );
-    lines.push(` */`);
-    lines.push(
-      `export type Fal${outputTypePascal}Input<T extends Fal${outputTypePascal}Model> =`,
-    );
-    lines.push(
-      `  T extends keyof EndpointTypeMap ? EndpointTypeMap[T]['input'] :`,
-    );
-    for (let i = 0; i < availableCategories.length; i++) {
-      const category = availableCategories[i]!;
-      const typeName = toPascalCase(category);
-      const isLast = i === availableCategories.length - 1;
-      lines.push(`  T extends ${typeName}Model ? ${typeName}ModelInput<T> :`);
-      if (isLast) {
-        lines.push(`  never`);
-      }
-    }
-    lines.push(``);
-
-    // Generate Output type
-    lines.push(`/**`);
-    lines.push(` * Get the output type for a specific ${outputType} model.`);
-    lines.push(
-      ` * Checks official fal.ai EndpointTypeMap first, then falls back to category-specific types.`,
-    );
-    lines.push(` */`);
-    lines.push(
-      `export type Fal${outputTypePascal}Output<T extends Fal${outputTypePascal}Model> =`,
-    );
-    lines.push(
-      `  T extends keyof EndpointTypeMap ? EndpointTypeMap[T]['output'] :`,
-    );
-    for (let i = 0; i < availableCategories.length; i++) {
-      const category = availableCategories[i]!;
-      const typeName = toPascalCase(category);
-      const isLast = i === availableCategories.length - 1;
-      lines.push(`  T extends ${typeName}Model ? ${typeName}ModelOutput<T> :`);
-      if (isLast) {
-        lines.push(`  never`);
-      }
-    }
-    lines.push(``);
-
-    // Generate type guards for runtime narrowing
-    for (const category of availableCategories) {
-      const typeName = toPascalCase(category);
-      lines.push(
-        `function is${typeName}Model(model: string): model is ${typeName}Model {`,
-      );
-      lines.push(`  return model in ${typeName}SchemaMap`);
-      lines.push(`}`);
-      lines.push(``);
-    }
-
-    // Generate overloaded accessor function
-    lines.push(
-      `/** Get schema for a ${outputType} model. Overloads dispatch to category-specific maps. */`,
-    );
-
-    // Generate overload signatures for specific model types
-    for (const category of availableCategories) {
-      const typeName = toPascalCase(category);
-      lines.push(
-        `export function getFal${outputTypePascal}Schema<T extends ${typeName}Model>(model: T): (typeof ${typeName}SchemaMap)[T]`,
-      );
-    }
-
-    // Generate generic overload for the union type (catches TModel extends Fal${outputTypePascal}Model)
-    lines.push(
-      `export function getFal${outputTypePascal}Schema(model: Fal${outputTypePascal}Model): { input: z.ZodSchema; output: z.ZodSchema }`,
-    );
-
-    // Generate implementation signature
-    lines.push(
-      `export function getFal${outputTypePascal}Schema(model: Fal${outputTypePascal}Model): { input: z.ZodSchema; output: z.ZodSchema } {`,
-    );
-
-    // Generate runtime dispatch
-    for (const category of availableCategories) {
-      const typeName = toPascalCase(category);
-      lines.push(`  if (is${typeName}Model(model)) {`);
-      lines.push(`    return ${typeName}SchemaMap[model]`);
-      lines.push(`  }`);
-    }
-
-    lines.push(`  throw new Error(\`Unknown ${outputType} model: \${model}\`)`);
-    lines.push(`}`);
-    lines.push(``);
-  }
-
-  return lines;
-}
-
-/**
  * Format TypeScript code using prettier
  */
 async function formatTypeScript(content: string): Promise<string> {
@@ -262,7 +121,7 @@ async function formatTypeScript(content: string): Promise<string> {
 }
 
 /**
- * Generate endpoint-map.ts for a category
+ * Generate endpoint-map.ts for a category (TypeScript types only)
  */
 async function generateEndpointMap(
   category: string,
@@ -271,35 +130,23 @@ async function generateEndpointMap(
 ): Promise<void> {
   const typeName = toPascalCase(category);
 
-  // Collect unique type and schema names
+  // Collect unique type names
   const inputTypes = new Set<string>();
   const outputTypes = new Set<string>();
-  const inputSchemas = new Set<string>();
-  const outputSchemas = new Set<string>();
 
   for (const { inputType, outputType } of endpoints) {
     inputTypes.add(inputType);
     outputTypes.add(outputType);
-    inputSchemas.add(getZodSchemaName(inputType));
-    outputSchemas.add(getZodSchemaName(outputType));
   }
 
   // Generate imports
   const typeImports = Array.from(
     new Set([...inputTypes, ...outputTypes]),
   ).sort();
-  const schemaImports = Array.from(
-    new Set([...inputSchemas, ...outputSchemas]),
-  ).sort();
 
-  const imports = [
+  const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
-    `// Generated from types.gen.ts via scripts/generate-fal-endpoint-maps.ts`,
-    ``,
-    `import {`,
-    ...schemaImports.map((t) => `  ${t},`),
-    `} from './zod.gen'`,
-    `import type { z } from 'zod'`,
+    `// Generated from types.gen.ts via scripts/generate-endpoint-maps.ts`,
     ``,
     `import type {`,
     ...typeImports.map((t) => `  ${t},`),
@@ -308,85 +155,249 @@ async function generateEndpointMap(
   ];
 
   // Generate TypeScript EndpointMap type
-  const typeMapLines = [`export type ${typeName}EndpointMap = {`];
+  lines.push(`export type ${typeName}EndpointMap = {`);
 
   for (const { endpointId, inputType, outputType } of endpoints) {
-    typeMapLines.push(`  '${endpointId}': {`);
-    typeMapLines.push(`    input: ${inputType}`);
-    typeMapLines.push(`    output: ${outputType}`);
-    typeMapLines.push(`  }`);
+    lines.push(`  '${endpointId}': {`);
+    lines.push(`    input: ${inputType}`);
+    lines.push(`    output: ${outputType}`);
+    lines.push(`  }`);
   }
 
-  typeMapLines.push(`}`);
+  lines.push(`}`);
 
-  // Generate Zod SchemaMap constant with explicit typing
-  const schemaMapLines = [
-    ``,
-    `export const ${typeName}SchemaMap: Record<`,
-    `  ${typeName}Model,`,
-    `  {`,
-    `    input: z.ZodSchema<${typeName}ModelInput<${typeName}Model>>`,
-    `    output: z.ZodSchema<${typeName}ModelOutput<${typeName}Model>>`,
-    `  }`,
-    `> = {`,
-  ];
-
-  for (const { endpointId, inputType, outputType } of endpoints) {
-    const inputSchema = getZodSchemaName(inputType);
-    const outputSchema = getZodSchemaName(outputType);
-    schemaMapLines.push(`  ['${endpointId}']: {`);
-    schemaMapLines.push(`    input: ${inputSchema},`);
-    schemaMapLines.push(`    output: ${outputSchema},`);
-    schemaMapLines.push(`  },`);
-  }
-
-  schemaMapLines.push(`}`);
-
-  // Generate Model type (must come before SchemaMap which references it)
-  const modelType = [
-    ``,
-    `/** Union type of all ${category} model endpoint IDs */`,
-    `export type ${typeName}Model = keyof ${typeName}EndpointMap`,
-  ];
+  // Generate Model type
+  lines.push(``);
+  lines.push(`/** Union type of all ${category} model endpoint IDs */`);
+  lines.push(`export type ${typeName}Model = keyof ${typeName}EndpointMap`);
 
   // Generate utility types
-  const utilityTypes = [
-    ``,
-    `/** Get the input type for a specific ${category} model */`,
+  lines.push(``);
+  lines.push(`/** Get the input type for a specific ${category} model */`);
+  lines.push(
     `export type ${typeName}ModelInput<T extends ${typeName}Model> = ${typeName}EndpointMap[T]['input']`,
-    ``,
-    `/** Get the output type for a specific ${category} model */`,
+  );
+  lines.push(``);
+  lines.push(`/** Get the output type for a specific ${category} model */`);
+  lines.push(
     `export type ${typeName}ModelOutput<T extends ${typeName}Model> = ${typeName}EndpointMap[T]['output']`,
-    ``,
-  ];
-
-  // Combine all parts
-  const content = [
-    ...imports,
-    ...typeMapLines,
-    ...modelType,
-    ...schemaMapLines,
-    ...utilityTypes,
-  ].join("\n");
+  );
 
   // Format and write to file
   const outputPath = join(categoryPath, "endpoint-map.ts");
-  const formattedContent = await formatTypeScript(content);
+  const formattedContent = await formatTypeScript(lines.join("\n"));
   writeFileSync(outputPath, formattedContent);
   console.log(
     `  ✓ Generated ${category}/endpoint-map.ts (${endpoints.length} endpoints)`,
   );
 }
 
+/**
+ * Generate endpoint-schema.ts for a category (Zod discriminatedUnion)
+ */
+async function generateEndpointSchema(
+  category: string,
+  categoryPath: string,
+  endpoints: Array<EndpointInfo>,
+): Promise<void> {
+  const typeName = toPascalCase(category);
+
+  // Collect unique schema names
+  const inputSchemas = new Set<string>();
+  const outputSchemas = new Set<string>();
+
+  for (const { inputType, outputType } of endpoints) {
+    inputSchemas.add(getZodSchemaName(inputType));
+    outputSchemas.add(getZodSchemaName(outputType));
+  }
+
+  const schemaImports = Array.from(
+    new Set([...inputSchemas, ...outputSchemas]),
+  ).sort();
+
+  const lines = [
+    `// AUTO-GENERATED - Do not edit manually`,
+    `// Generated from types.gen.ts via scripts/generate-endpoint-maps.ts`,
+    ``,
+    `import { z } from 'zod'`,
+    ``,
+    `import {`,
+    ...schemaImports.map((t) => `  ${t},`),
+    `} from './zod.gen'`,
+    ``,
+  ];
+
+  // Generate Zod discriminatedUnion
+  lines.push(
+    `/** Zod schema for ${category} endpoints using discriminatedUnion */`,
+  );
+  lines.push(
+    `export const ${typeName}EndpointSchema = z.discriminatedUnion('endpoint', [`,
+  );
+
+  for (const { endpointId, inputType, outputType } of endpoints) {
+    const inputSchema = getZodSchemaName(inputType);
+    const outputSchema = getZodSchemaName(outputType);
+    lines.push(`  z.object({`);
+    lines.push(`    endpoint: z.literal('${endpointId}'),`);
+    lines.push(`    input: ${inputSchema},`);
+    lines.push(`    output: ${outputSchema},`);
+    lines.push(`  }),`);
+  }
+
+  lines.push(`])`);
+
+  // Generate inferred types from the schema
+  lines.push(``);
+  lines.push(`/** Inferred type from ${typeName}EndpointSchema */`);
+  lines.push(
+    `export type ${typeName}Endpoint = z.infer<typeof ${typeName}EndpointSchema>`,
+  );
+
+  // Format and write to file
+  const outputPath = join(categoryPath, "endpoint-schema.ts");
+  const formattedContent = await formatTypeScript(lines.join("\n"));
+  writeFileSync(outputPath, formattedContent);
+  console.log(`  ✓ Generated ${category}/endpoint-schema.ts`);
+}
+
+/**
+ * Generate schemas.ts - Re-export category endpoint schemas
+ */
+async function generateSchemasFile(
+  generatedDir: string,
+  processedCategories: Array<string>,
+): Promise<void> {
+  const lines = [
+    `// AUTO-GENERATED - Do not edit manually`,
+    `// Generated via scripts/generate-endpoint-maps.ts`,
+    ``,
+    `// Re-export all category endpoint schemas`,
+  ];
+
+  for (const category of processedCategories) {
+    lines.push(`export * from './${category}/endpoint-schema'`);
+  }
+
+  const outputPath = join(generatedDir, "schemas.ts");
+  const formattedContent = await formatTypeScript(lines.join("\n"));
+  writeFileSync(outputPath, formattedContent);
+  console.log(`  ✓ Generated schemas.ts`);
+}
+
+/**
+ * Generate endpoints.ts - EndpointTypeMap
+ */
+async function generateEndpointsFile(
+  generatedDir: string,
+  processedCategories: Array<string>,
+): Promise<void> {
+  const lines = [
+    `// AUTO-GENERATED - Do not edit manually`,
+    `// Generated via scripts/generate-endpoint-maps.ts`,
+    ``,
+  ];
+
+  // Import EndpointMap from each category
+  for (const category of processedCategories) {
+    const typeName = toPascalCase(category);
+    lines.push(
+      `import type { ${typeName}EndpointMap } from './${category}/endpoint-map'`,
+    );
+  }
+
+  lines.push(``);
+
+  // Generate combined EndpointTypeMap
+  lines.push(`/** Combined EndpointTypeMap for all fal.ai endpoints */`);
+  lines.push(`export type EndpointTypeMap =`);
+  for (let i = 0; i < processedCategories.length; i++) {
+    const category = processedCategories[i]!;
+    const typeName = toPascalCase(category);
+    const isLast = i === processedCategories.length - 1;
+    lines.push(`  ${typeName}EndpointMap${isLast ? "" : " &"}`);
+  }
+
+  const outputPath = join(generatedDir, "endpoints.ts");
+  const formattedContent = await formatTypeScript(lines.join("\n"));
+  writeFileSync(outputPath, formattedContent);
+  console.log(`  ✓ Generated endpoints.ts`);
+}
+
+/**
+ * Generate client.ts - EndpointType, InputType<T>, OutputType<T>
+ */
+async function generateClientFile(
+  generatedDir: string,
+  processedCategories: Array<string>,
+): Promise<void> {
+  const lines = [
+    `// AUTO-GENERATED - Do not edit manually`,
+    `// Generated via scripts/generate-endpoint-maps.ts`,
+    ``,
+  ];
+
+  // Import types from each category's endpoint-map.ts
+  for (const category of processedCategories) {
+    const typeName = toPascalCase(category);
+    lines.push(`import type {`);
+    lines.push(`  ${typeName}Model,`);
+    lines.push(`  ${typeName}ModelInput,`);
+    lines.push(`  ${typeName}ModelOutput,`);
+    lines.push(`} from './${category}/endpoint-map'`);
+  }
+
+  lines.push(``);
+
+  // Generate union of all endpoint types
+  lines.push(`/** Union of all endpoint IDs */`);
+  lines.push(`export type EndpointType =`);
+  for (let i = 0; i < processedCategories.length; i++) {
+    const category = processedCategories[i]!;
+    const typeName = toPascalCase(category);
+    const isFirst = i === 0;
+    lines.push(`  ${isFirst ? "" : "| "}${typeName}Model`);
+  }
+
+  lines.push(``);
+
+  // Generate InputType - tests T against each category using conditional types
+  lines.push(`/** Get the input type for an endpoint */`);
+  lines.push(`export type InputType<T extends EndpointType> =`);
+  for (let i = 0; i < processedCategories.length; i++) {
+    const category = processedCategories[i]!;
+    const typeName = toPascalCase(category);
+    lines.push(`  T extends ${typeName}Model ? ${typeName}ModelInput<T> :`);
+  }
+  lines.push(`  never`);
+
+  lines.push(``);
+
+  // Generate OutputType - tests T against each category using conditional types
+  lines.push(`/** Get the output type for an endpoint */`);
+  lines.push(`export type OutputType<T extends EndpointType> =`);
+  for (let i = 0; i < processedCategories.length; i++) {
+    const category = processedCategories[i]!;
+    const typeName = toPascalCase(category);
+    lines.push(`  T extends ${typeName}Model ? ${typeName}ModelOutput<T> :`);
+  }
+  lines.push(`  never`);
+
+  const outputPath = join(generatedDir, "client.ts");
+  const formattedContent = await formatTypeScript(lines.join("\n"));
+  writeFileSync(outputPath, formattedContent);
+  console.log(`  ✓ Generated client.ts`);
+}
+
 async function main() {
-  const generatedDir = join(__dirname, "..", "src", "generated");
+  const generatedDir = join(__dirname, "..", "libs", "client", "src", "types");
 
   if (!existsSync(generatedDir)) {
-    console.error("Error: src/generated/ directory not found.");
+    console.error("Error: src/types/ directory not found.");
     process.exit(1);
   }
 
-  console.log("Scanning generated/ directory for categories...");
+  console.log("Scanning types/ directory for categories...");
 
   // Get all category directories
   const categories = readdirSync(generatedDir, { withFileTypes: true })
@@ -399,7 +410,7 @@ async function main() {
     console.log(`  - ${category}`);
   }
 
-  console.log("\nGenerating endpoint maps...");
+  console.log("\nGenerating endpoint maps and schemas...");
 
   const processedCategories: Array<string> = [];
 
@@ -414,107 +425,35 @@ async function main() {
       continue;
     }
 
-    // Generate endpoint-map.ts
+    // Generate endpoint-map.ts (TypeScript types)
     await generateEndpointMap(category, categoryPath, endpoints);
+
+    // Generate endpoint-schema.ts (Zod discriminatedUnion)
+    await generateEndpointSchema(category, categoryPath, endpoints);
+
     processedCategories.push(category);
   }
 
-  // Generate unified index.ts
-  console.log("\nGenerating unified index.ts...");
-  const indexLines = [
-    `// AUTO-GENERATED - Do not edit manually`,
-    `// Generated from types.gen.ts via scripts/generate-fal-endpoint-maps.ts`,
-    ``,
-  ];
+  // Generate unified files
+  console.log("\nGenerating unified files...");
 
-  // Collect categories that are used in output-type unions
-  const usedCategories = new Set<string>();
-  for (const categories of Object.values(outputTypeMapping)) {
-    for (const cat of categories) {
-      if (processedCategories.includes(cat)) {
-        usedCategories.add(cat);
-      }
+  await generateSchemasFile(generatedDir, processedCategories);
+  await generateClientFile(generatedDir, processedCategories);
+
+  // Generate endpoints.ts
+  await generateEndpointsFile(generatedDir, processedCategories);
+
+  // Delete old files if they exist
+  const oldFiles = ["index.ts"];
+  for (const file of oldFiles) {
+    const filePath = join(generatedDir, file);
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
+      console.log(`  ✓ Deleted ${file} (no longer needed)`);
     }
   }
-  const usedCategoriesList = Array.from(usedCategories).sort();
 
-  const pascalCaseCategories = processedCategories
-    .map((category) => toPascalCase(category))
-    .sort();
-
-  // Generate imports first (before exports) to satisfy import/first rule
-  indexLines.push(
-    `// Import value exports (SchemaMap constants) from category endpoint maps`,
-  );
-  for (const category of usedCategoriesList) {
-    const pascalCaseCategory = toPascalCase(category);
-    indexLines.push(
-      `import { ${pascalCaseCategory}SchemaMap } from './${category}/endpoint-map'`,
-    );
-  }
-  indexLines.push(``);
-
-  // Generate type imports grouped by category
-  indexLines.push(`// Import type exports from category endpoint maps`);
-  for (const category of processedCategories) {
-    const pascalCaseCategory = toPascalCase(category);
-    const isUsedCategory = usedCategoriesList.includes(category);
-    const typeImports: Array<string> = [`${pascalCaseCategory}Model`];
-    if (isUsedCategory) {
-      typeImports.push(`${pascalCaseCategory}ModelInput`);
-      typeImports.push(`${pascalCaseCategory}ModelOutput`);
-    }
-    indexLines.push(
-      `import type { ${typeImports.join(", ")} } from './${category}/endpoint-map'`,
-    );
-  }
-  indexLines.push(``);
-
-  // Import external zod type after local imports
-  indexLines.push(`import type { z } from 'zod'`);
-  indexLines.push(``);
-
-  // Import fal.ai EndpointTypeMap for type checking
-  indexLines.push(`// Import official fal.ai endpoint types`);
-  indexLines.push(
-    `import type { EndpointTypeMap } from '@fal-ai/client/endpoints'`,
-  );
-  indexLines.push(``);
-
-  // Now add the re-exports
-  indexLines.push(`// Re-export all category endpoint maps`);
-  for (const category of processedCategories) {
-    indexLines.push(`export * from './${category}/endpoint-map'`);
-  }
-  indexLines.push(``);
-  indexLines.push(`/**`);
-  indexLines.push(
-    ` * Union type of all Fal.ai model endpoint IDs across all categories.`,
-  );
-  indexLines.push(` * `);
-  indexLines.push(
-    ` * Note: Using this union type loses some type precision. For better type safety,`,
-  );
-  indexLines.push(
-    ` * import category-specific types like ImageToImageModel, TextToImageModel, etc.`,
-  );
-  indexLines.push(` */`);
-  indexLines.push(`export type FalModel =`);
-  for (const pascalCaseCategory of pascalCaseCategories) {
-    indexLines.push(`  | ${pascalCaseCategory}Model`);
-  }
-  indexLines.push(``);
-
-  // Generate output-type-based unions
-  const outputTypeLines = generateOutputTypeUnions(processedCategories);
-  indexLines.push(...outputTypeLines);
-
-  const indexPath = join(generatedDir, "index.ts");
-  const formattedIndex = await formatTypeScript(indexLines.join("\n"));
-  writeFileSync(indexPath, formattedIndex);
-  console.log(`  ✓ Generated index.ts`);
-
-  console.log(`\n✓ Done! Generated endpoint maps in src/generated/`);
+  console.log(`\n✓ Done! Generated endpoint maps in libs/client/src/types/`);
   console.log(`\nCategories generated:`);
   for (const category of processedCategories) {
     console.log(`  - ${category} (${toPascalCase(category)}Model)`);

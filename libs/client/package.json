@@ -17,12 +17,16 @@
   ],
   "exports": {
     ".": "./src/index.js",
-    "./endpoints": "./src/types/endpoints.js"
+    "./endpoints": "./src/types/endpoints.js",
+    "./schemas": "./src/types/schemas.js"
   },
   "typesVersions": {
     "*": {
       "endpoints": [
         "src/types/endpoints.d.ts"
+      ],
+      "schemas": [
+        "src/types/schemas.d.ts"
       ]
     }
   },
@@ -32,6 +36,14 @@
     "@msgpack/msgpack": "^3.0.0-beta2",
     "eventsource-parser": "^1.1.2",
     "robot3": "^0.4.1"
+  },
+  "peerDependencies": {
+    "zod": "^4"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=22.0.0"

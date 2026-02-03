@@ -1,4 +1,5 @@
 // This file is manually maintained (not auto-generated)
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -258,6 +259,164 @@ function resolveMissingRefs(spec: object): {
   return { fixed, unknown };
 }
 
+/**
+ * Hash a schema for identity comparison.
+ */
+function hashSchema(schema: object): string {
+  const json = JSON.stringify(
+    schema,
+    Object.keys(schema as Record<string, unknown>).sort(),
+  );
+  return createHash("sha256").update(json).digest("hex").slice(0, 16);
+}
+
+/**
+ * Generate unique schema name with numeric suffix.
+ * Produces names like "FileType1", "FileType2" for easy searching.
+ */
+function generateUniqueSchemaName(baseName: string, index: number): string {
+  return `${baseName}Type${index}`;
+}
+
+/**
+ * Rewrite $ref pointers in an object using a name mapping.
+ */
+function rewriteRefs(obj: unknown, mapping: Map<string, string>): void {
+  if (!obj || typeof obj !== "object") return;
+  if (Array.isArray(obj)) {
+    obj.forEach((item) => rewriteRefs(item, mapping));
+    return;
+  }
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (key === "$ref" && typeof value === "string") {
+      const match = value.match(/^#\/components\/schemas\/(.+)$/);
+      if (match && mapping.has(match[1])) {
+        (obj as Record<string, string>)[key] =
+          `#/components/schemas/${mapping.get(match[1])}`;
+      }
+    } else if (typeof value === "object") {
+      rewriteRefs(value, mapping);
+    }
+  }
+}
+
+/**
+ * Merge multiple OpenAPI specs into a single spec.
+ * Deduplicates identical schemas, renames conflicting ones.
+ */
+function mergeOpenAPISpecs(specs: Array<object>, categoryName: string): object {
+  type TypedSpec = {
+    info?: { "x-fal-metadata"?: { endpointId?: string } };
+    components?: { schemas?: Record<string, object>; securitySchemes?: object };
+    paths?: Record<string, object>;
+    servers?: Array<object>;
+    security?: Array<object>;
+  };
+
+  const merged: TypedSpec = {
+    openapi: "3.0.4",
+    info: { title: `Fal.ai ${categoryName} API`, version: "1.0.0" },
+    components: { schemas: {}, securitySchemes: {} },
+    paths: {},
+    servers: [],
+    security: [],
+  } as TypedSpec;
+
+  // Schema registry: name -> hash -> { schema, endpointIds, finalName }
+  const registry = new Map<
+    string,
+    Map<string, { schema: object; endpointIds: string[]; finalName: string }>
+  >();
+
+  // First pass: collect schemas
+  for (const spec of specs as TypedSpec[]) {
+    const endpointId = spec.info?.["x-fal-metadata"]?.endpointId || "unknown";
+    for (const [name, schema] of Object.entries(
+      spec.components?.schemas || {},
+    )) {
+      const hash = hashSchema(schema);
+      if (!registry.has(name)) registry.set(name, new Map());
+      const hashMap = registry.get(name)!;
+      if (!hashMap.has(hash)) {
+        hashMap.set(hash, { schema, endpointIds: [], finalName: name });
+      }
+      hashMap.get(hash)!.endpointIds.push(endpointId);
+    }
+  }
+
+  // Assign final names (most common keeps original, others renamed)
+  for (const [baseName, hashMap] of registry) {
+    const variants = [...hashMap.values()].sort(
+      (a, b) => b.endpointIds.length - a.endpointIds.length,
+    );
+    variants[0].finalName = baseName;
+    for (let i = 1; i < variants.length; i++) {
+      variants[i].finalName = generateUniqueSchemaName(baseName, i + 1);
+      console.log(
+        "Generating unique schema name for",
+        baseName,
+        "->",
+        variants[i].finalName,
+      );
+    }
+  }
+
+  // Build ref mapping per endpoint
+  const refMappings = new Map<string, Map<string, string>>();
+  for (const [baseName, hashMap] of registry) {
+    for (const variant of hashMap.values()) {
+      for (const endpointId of variant.endpointIds) {
+        if (!refMappings.has(endpointId))
+          refMappings.set(endpointId, new Map());
+        if (variant.finalName !== baseName) {
+          refMappings.get(endpointId)!.set(baseName, variant.finalName);
+        }
+      }
+    }
+  }
+
+  // Add schemas to merged spec with ref rewriting
+  for (const hashMap of registry.values()) {
+    for (const variant of hashMap.values()) {
+      const clonedSchema = structuredClone(variant.schema);
+      // Use the first endpoint's mapping to rewrite refs inside the schema
+      const firstEndpoint = variant.endpointIds[0];
+      const mapping = refMappings.get(firstEndpoint);
+      if (mapping?.size) {
+        rewriteRefs(clonedSchema, mapping);
+      }
+      merged.components!.schemas![variant.finalName] = clonedSchema;
+    }
+  }
+
+  // Second pass: merge paths with ref rewriting
+  for (const spec of specs as TypedSpec[]) {
+    const endpointId = spec.info?.["x-fal-metadata"]?.endpointId || "unknown";
+    const mapping = refMappings.get(endpointId);
+    for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
+      const cloned = structuredClone(pathItem);
+      if (mapping?.size) {
+        console.log("Rewriting refs for", pathKey, "->", [
+          ...mapping.entries(),
+        ]);
+        rewriteRefs(cloned, mapping);
+      }
+      merged.paths![pathKey] = cloned;
+    }
+  }
+
+  // Take security/servers from first spec
+  const first = specs[0] as TypedSpec;
+  if (first?.components?.securitySchemes)
+    merged.components!.securitySchemes = structuredClone(
+      first.components.securitySchemes,
+    );
+  if (first?.servers) merged.servers = structuredClone(first.servers);
+  if (first?.security) merged.security = structuredClone(first.security);
+
+  return merged;
+}
+
 function getFalCategoryFilenames(): Array<string> {
   const categoryDir = join(__dirname, "json");
   const files = readdirSync(categoryDir)
@@ -324,33 +483,38 @@ function getFalModelOpenApiObjects(filename: string): Array<object> {
 }
 
 export default [
-  ...getFalGroupedCategoryFilenames().map(({ category, filenames }) => ({
-    input: filenames.map(getFalModelOpenApiObjects).flat(),
-    output: {
-      path: `./src/generated/${category}`,
-      indexFile: false,
-      postProcess: ["prettier"],
-    },
-    plugins: [
-      {
-        name: "@hey-api/typescript",
+  ...getFalGroupedCategoryFilenames().map(({ category, filenames }) => {
+    const allSpecs = filenames.map(getFalModelOpenApiObjects).flat();
+    const mergedSpec = mergeOpenAPISpecs(allSpecs, category);
+
+    return {
+      input: mergedSpec, // Single merged spec instead of array
+      output: {
+        path: `./libs/client/src/types/${category}`,
+        indexFile: false,
+        postProcess: ["prettier"],
       },
-      {
-        name: "zod",
-        metadata: true,
-      },
-    ],
-    parser: {
-      filters: {
-        schemas: {
-          include: "/Input$|Output$|^Post.*Data$/",
+      plugins: [
+        {
+          name: "@hey-api/typescript",
         },
-        operations: {
-          include: ["/post .*/"],
-          exclude: ["/get .*/"],
+        {
+          name: "zod",
+          metadata: true,
         },
-        orphans: false,
+      ],
+      parser: {
+        filters: {
+          schemas: {
+            include: "/Input$|Output$|^Post.*Data$/",
+          },
+          operations: {
+            include: ["/post .*/"],
+            exclude: ["/get .*/"],
+          },
+          orphans: false,
+        },
       },
-    },
-  })),
+    };
+  }),
 ];
