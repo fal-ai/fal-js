@@ -42,3 +42,6 @@ Thumbs.db
 .next
 *.local
 .vercel
+
+# JSON files
+json/

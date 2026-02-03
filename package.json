@@ -8,7 +8,10 @@
     "test": "nx test",
     "lint:staged": "lint-staged",
     "docs:typedoc": "typedoc --tsconfig libs/client/tsconfig.lib.json",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "fetch-openapi-models": "npx tsx --env-file=.env.local scripts/fetch-models.ts",
+    "generate-types": "npx @hey-api/openapi-ts",
+    "generate-endpoint-maps": "npx tsx scripts/generate-fal-endpoint-maps.ts"
   },
   "private": true,
   "lint-staged": {
