@@ -467,7 +467,7 @@ function handleRealtimeMessage({
     }
   };
 
-  Promise.resolve(decodeMessage(data))
+  Promise.resolve(decodeMessage ? decodeMessage(data) : data)
     .then(handleDecoded)
     .catch((error) => {
       onError(

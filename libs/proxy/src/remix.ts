@@ -5,6 +5,7 @@ import type {
   LoaderFunctionArgs,
   json as jsonFunction,
 } from "@remix-run/node";
+import { ProxyConfig, resolveProxyConfig } from "./config";
 import {
   fromHeaders,
   handleRequest,
@@ -17,7 +18,7 @@ export type FalRemixProxy = {
   loader: LoaderFunction;
 };
 
-export type FalRemixProxyOptions = {
+export type FalRemixProxyOptions = Partial<ProxyConfig> & {
   /**
    * The reference to the `json` function from the Remix runtime.
    * e.g. `import { json } from "@remix-run/node";`
@@ -26,6 +27,8 @@ export type FalRemixProxyOptions = {
   /**
    * A function to resolve the API key used by the proxy.
    * By default, it uses the `FAL_KEY` environment variable.
+   *
+   * @deprecated Use `resolveFalAuth` in `ProxyConfig` instead.
    */
   resolveApiKey?: () => Promise<string | undefined>;
 };
@@ -33,23 +36,28 @@ export type FalRemixProxyOptions = {
 export function createProxy({
   json,
   resolveApiKey = resolveApiKeyFromEnv,
+  ...config
 }: FalRemixProxyOptions): FalRemixProxy {
+  const resolvedConfig = resolveProxyConfig(config);
   const proxy = async ({
     request,
   }: ActionFunctionArgs | LoaderFunctionArgs) => {
     const responseHeaders = new Headers();
-    return handleRequest({
-      id: "remix",
-      method: request.method,
-      respondWith: (status, data) =>
-        json(data, { status, headers: responseHeaders }),
-      getHeaders: () => fromHeaders(request.headers),
-      getHeader: (name) => request.headers.get(name),
-      sendHeader: (name, value) => responseHeaders.set(name, value),
-      getRequestBody: async () => JSON.stringify(await request.json()),
-      sendResponse: responsePassthrough,
-      resolveApiKey,
-    });
+    return handleRequest(
+      {
+        id: "remix",
+        method: request.method,
+        respondWith: (status, data) =>
+          json(data, { status, headers: responseHeaders }),
+        getHeaders: () => fromHeaders(request.headers),
+        getHeader: (name) => request.headers.get(name),
+        sendHeader: (name, value) => responseHeaders.set(name, value),
+        getRequestBody: async () => JSON.stringify(await request.json()),
+        sendResponse: responsePassthrough,
+        resolveApiKey,
+      },
+      resolvedConfig,
+    );
   };
   return {
     action: proxy,
