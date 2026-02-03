@@ -112,11 +112,10 @@ function toPascalCase(str: string): string {
  * Format TypeScript code using prettier
  */
 async function formatTypeScript(content: string): Promise<string> {
+  const config = await prettier.resolveConfig(process.cwd());
   return prettier.format(content, {
+    ...config,
     parser: "typescript",
-    semi: false,
-    singleQuote: true,
-    trailingComma: "all",
   });
 }
 
