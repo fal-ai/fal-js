@@ -1,10 +1,57 @@
+import picomatch from "picomatch";
 import { ProxyBehavior } from "./types";
 import { singleHeaderValue } from "./utils";
+
+/**
+ * The fal REST API URL used for storage operations.
+ */
+export const FAL_REST_API_URL = "rest.alpha.fal.ai";
+
+/**
+ * The default allowed URL patterns. Only `fal.run` and `queue.fal.run` are allowed by default.
+ * You can add patterns like `fal.ai/**` or `fal.dev/**` if needed for your use case.
+ *
+ * Note: Uses picomatch glob syntax. The `?` character is escaped with `\\?` for literal matching.
+ */
+export const DEFAULT_ALLOWED_URL_PATTERNS = [
+  "fal.run/**",
+  "queue.fal.run/**",
+  // Storage upload endpoints (exact matches, ? is escaped for literal match)
+  `${FAL_REST_API_URL}/storage/upload/initiate\\?storage_type=fal-cdn-v3`,
+  `${FAL_REST_API_URL}/storage/upload/complete-multipart\\?storage_type=fal-cdn-v3`,
+];
+
+/**
+ * Creates a matcher function for URL patterns using picomatch.
+ * Supports glob patterns like `*` (single segment) and `**` (any path).
+ *
+ * @param patterns the URL patterns to match against.
+ * @returns a function that checks if a URL matches any of the patterns.
+ */
+export function createUrlMatcher(patterns: string[]): (url: string) => boolean {
+  return picomatch(patterns, { dot: true });
+}
 
 /**
  * Proxy configuration options.
  */
 export interface ProxyConfig {
+  /**
+   * URL patterns (glob-style) that are allowed to be proxied.
+   * Supports `*` (matches any characters except `/`) and `**` (matches any characters including `/`).
+   *
+   * By default only `fal.run/**` and `queue.fal.run/**` are allowed.
+   * You can add patterns like `fal.ai/**` or `fal.dev/**` if needed for your use case.
+   *
+   * @example
+   * ```ts
+   * allowedUrlPatterns: ["fal.run/**", "queue.fal.run/**", "fal.ai/my-app/**"]
+   * ```
+   *
+   * @default ["fal.run/**", "queue.fal.run/**"]
+   */
+  allowedUrlPatterns?: string[];
+
   /**
    * Currently for backwards compatibility an empty array means all endpoints are allowed.
    * In the future the behavior might change to disallow all endpoints by default and require
@@ -61,6 +108,7 @@ export async function isAuthorizationHeaderPresent(
 }
 
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
+  allowedUrlPatterns: DEFAULT_ALLOWED_URL_PATTERNS,
   allowedEndpoints: [],
   allowUnauthorizedRequests: true,
   isAuthenticated: isAuthorizationHeaderPresent,
@@ -88,8 +136,19 @@ export function applyProxyConfig(config: Partial<ProxyConfig>): ProxyConfig {
   }
   if (resolvedConfig.allowUnauthorizedRequests) {
     console.warn(
-      "Allowing unathenticated requests. Make sure you protect your proxy endpoint or handle unauthenticated users appropriately.",
+      "Allowing unauthenticated requests. Make sure you protect your proxy endpoint or handle unauthenticated users appropriately.",
     );
   }
   return resolvedConfig;
+}
+
+/**
+ * Resolves the proxy configuration once. Use this at handler creation time
+ * to avoid logging warnings on every request.
+ *
+ * @param config the proxy configuration to apply.
+ * @returns the resolved proxy configuration.
+ */
+export function resolveProxyConfig(config: Partial<ProxyConfig>): ProxyConfig {
+  return applyProxyConfig(config);
 }

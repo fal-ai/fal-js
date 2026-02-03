@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { NextApiHandler } from "next/types";
-import { ProxyConfig } from "./config";
+import { ProxyConfig, resolveProxyConfig } from "./config";
 import {
   DEFAULT_PROXY_ROUTE,
   fromHeaders,
@@ -23,8 +23,9 @@ export const PROXY_ROUTE = DEFAULT_PROXY_ROUTE;
  * @returns a Next.js page router handler function.
  */
 export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
+  const resolvedConfig = resolveProxyConfig(config);
   const handler: NextApiHandler = async (request, response) => {
-    handleRequest(
+    return handleRequest(
       {
         id: "nextjs-page-router",
         method: request.method || "POST",
@@ -40,7 +41,7 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           return response.status(res.status).send(await res.text());
         },
       },
-      config,
+      resolvedConfig,
     );
   };
   return handler;
@@ -73,6 +74,7 @@ export const handler: NextApiHandler = createPageRouterHandler();
  * @returns a Next.js route handler function.
  */
 export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
+  const resolvedConfig = resolveProxyConfig(config);
   return async (request: NextRequest) => {
     const responseHeaders = new Headers();
     return await handleRequest(
@@ -90,7 +92,7 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
           }),
         sendResponse: responsePassthrough,
       },
-      config,
+      resolvedConfig,
     );
   };
 };

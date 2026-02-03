@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { type StatusCode } from "hono/utils/http-status";
-import { ProxyConfig } from "./config";
+import { ProxyConfig, resolveProxyConfig } from "./config";
 import {
   handleRequest,
   HeaderValue,
@@ -36,6 +36,7 @@ export function createRouteHandler({
   resolveApiKey = resolveApiKeyFromEnv,
   ...config
 }: FalHonoProxyOptions = {}): RouteHandler {
+  const resolvedConfig = resolveProxyConfig(config);
   const routeHandler: RouteHandler = async (context) => {
     const responseHeaders: Record<string, HeaderValue> = {};
     const response = await handleRequest(
@@ -52,7 +53,7 @@ export function createRouteHandler({
         sendResponse: responsePassthrough,
         resolveApiKey,
       },
-      config,
+      resolvedConfig,
     );
     return response;
   };

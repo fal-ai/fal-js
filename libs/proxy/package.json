@@ -46,6 +46,9 @@
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
+  "dependencies": {
+    "picomatch": "^4.0.0"
+  },
   "peerDependencies": {
     "@remix-run/dev": "^2.0.0",
     "@sveltejs/kit": "^2.0.0",

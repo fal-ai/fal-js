@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { ProxyConfig } from "./config";
+import { ProxyConfig, resolveProxyConfig } from "./config";
 import { DEFAULT_PROXY_ROUTE, handleRequest } from "./index";
 
 /**
@@ -19,6 +19,7 @@ export const route = DEFAULT_PROXY_ROUTE;
 export const createHandler = (
   config: Partial<ProxyConfig> = {},
 ): RequestHandler => {
+  const resolvedConfig = resolveProxyConfig(config);
   return async (request, response, next) => {
     await handleRequest(
       {
@@ -56,7 +57,7 @@ export const createHandler = (
           return response.status(res.status).send(await res.text());
         },
       },
-      config,
+      resolvedConfig,
     );
     next();
   };

@@ -1,5 +1,5 @@
 import { type RequestHandler } from "@sveltejs/kit";
-import { ProxyConfig } from "./config";
+import { ProxyConfig, resolveProxyConfig } from "./config";
 import { fromHeaders, handleRequest, resolveApiKeyFromEnv } from "./index";
 
 type RequestHandlerParams = Partial<ProxyConfig> & {
@@ -27,6 +27,7 @@ export const createRequestHandler = ({
     ? () => Promise.resolve(credentials)
     : resolveApiKeyFromEnv;
 
+  const resolvedConfig = resolveProxyConfig(config);
   const handler: RequestHandler = async ({ request }) => {
     const responseHeaders = new Headers({
       "Content-Type": "application/json",
@@ -49,7 +50,7 @@ export const createRequestHandler = ({
           return new Response(res.body, res);
         },
       },
-      config,
+      resolvedConfig,
     );
   };
   return {

@@ -5,7 +5,7 @@ import type {
   LoaderFunctionArgs,
   json as jsonFunction,
 } from "@remix-run/node";
-import { ProxyConfig } from "./config";
+import { ProxyConfig, resolveProxyConfig } from "./config";
 import {
   fromHeaders,
   handleRequest,
@@ -38,6 +38,7 @@ export function createProxy({
   resolveApiKey = resolveApiKeyFromEnv,
   ...config
 }: FalRemixProxyOptions): FalRemixProxy {
+  const resolvedConfig = resolveProxyConfig(config);
   const proxy = async ({
     request,
   }: ActionFunctionArgs | LoaderFunctionArgs) => {
@@ -55,7 +56,7 @@ export function createProxy({
         sendResponse: responsePassthrough,
         resolveApiKey,
       },
-      config,
+      resolvedConfig,
     );
   };
   return {
