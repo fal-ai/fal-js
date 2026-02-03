@@ -5,7 +5,10 @@
   "exclude": [
     "./src/__tests__/**",
     "*.spec.ts",
-    "./libs/client/src/types/endpoints.ts"
+    "./libs/client/src/types/endpoints.ts",
+    "./libs/client/src/types/*/*.gen.ts",
+    "./libs/client/src/types/*/endpoint-schema.ts",
+    "./libs/client/src/types/schemas.ts"
   ],
   "excludeExternals": true,
   "excludeInternal": false,
