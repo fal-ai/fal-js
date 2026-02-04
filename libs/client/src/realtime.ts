@@ -12,7 +12,11 @@ import {
   state,
   transition,
 } from "robot3";
-import { TOKEN_EXPIRATION_SECONDS, getTemporaryAuthToken } from "./auth";
+import {
+  TOKEN_EXPIRATION_SECONDS,
+  type TokenProvider,
+  getTemporaryAuthToken,
+} from "./auth";
 import { RequiredConfig } from "./config";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
@@ -253,6 +257,16 @@ export interface RealtimeConnectionHandler<Output> {
    * @param error - The error that occurred.
    */
   onError?(error: ApiError<any>): void;
+
+  /**
+   * A custom token provider function. When provided, this function will be
+   * used to fetch authentication tokens instead of the default internal
+   * token fetching mechanism.
+   *
+   * This is useful when you want to fetch tokens through your own backend proxy.
+   * If not provided, the default `getTemporaryAuthToken` will be used.
+   */
+  tokenProvider?: TokenProvider;
 }
 
 export interface RealtimeClient {
@@ -497,6 +511,7 @@ export function createRealtimeClient({
         throttleInterval = DEFAULT_THROTTLE_INTERVAL,
         encodeMessage: encodeMessageOverride,
         decodeMessage: decodeMessageOverride,
+        tokenProvider,
       } = handler;
       if (clientOnly && !isBrowser()) {
         return NoOpConnection;
@@ -541,7 +556,19 @@ export function createRealtimeClient({
             previousState !== machine.current
           ) {
             send({ type: "initiateAuth" });
-            getTemporaryAuthToken(app, config)
+            // Use custom tokenProvider if provided, otherwise use default
+            const fetchToken = tokenProvider
+              ? () => tokenProvider(app)
+              : () => {
+                  console.warn(
+                    "[fal.realtime] Using the default token provider is deprecated. " +
+                      "Please provide a `tokenProvider` function to `fal.realtime.connect()`. " +
+                      "See https://docs.fal.ai/fal-client/authentication for more information.",
+                  );
+                  return getTemporaryAuthToken(app, config);
+                };
+
+            fetchToken()
               .then((token) => {
                 send({ type: "authenticated", token });
                 const tokenExpirationTimeout = Math.round(

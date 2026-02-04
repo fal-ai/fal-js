@@ -57,6 +57,8 @@ describe("createRealtimeClient", () => {
     sockets.length = 0;
     WebSocketMock.mockClear();
     (getTemporaryAuthToken as jest.Mock).mockClear();
+    // Suppress console.warn for deprecation warnings during tests
+    jest.spyOn(console, "warn").mockImplementation(() => {});
     // Provide a minimal crypto polyfill for randomUUID used by the client
     (global as any).crypto = {
       randomUUID: () => "00000000-0000-0000-0000-000000000000",
@@ -72,6 +74,7 @@ describe("createRealtimeClient", () => {
   afterEach(() => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it("uses the provided path when opening the websocket", async () => {
@@ -307,5 +310,92 @@ describe("createRealtimeClient", () => {
     expect(onError).toHaveBeenCalledTimes(1);
     const errorArg = onError.mock.calls[0][0];
     expect(errorArg.status).toBe(400);
+  });
+
+  it("uses custom tokenProvider when provided", async () => {
+    const customTokenProvider = jest.fn().mockResolvedValue("custom-token");
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: customTokenProvider,
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(customTokenProvider).toHaveBeenCalledTimes(1);
+    expect(customTokenProvider).toHaveBeenCalledWith("123-myapp");
+    expect(getTemporaryAuthToken).not.toHaveBeenCalled();
+
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+    const socket = sockets[0];
+    expect(socket.url).toBe(
+      "wss://fal.run/123/myapp/realtime?fal_jwt_token=custom-token",
+    );
+  });
+
+  it("does not call default getTemporaryAuthToken when custom tokenProvider is used", async () => {
+    const customTokenProvider = jest.fn().mockResolvedValue("my-custom-token");
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("456-otherapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: customTokenProvider,
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ test: "data" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(customTokenProvider).toHaveBeenCalledWith("456-otherapp");
+    expect(getTemporaryAuthToken).not.toHaveBeenCalled();
+  });
+
+  it("handles tokenProvider errors correctly", async () => {
+    const tokenError = new Error("Token fetch failed");
+    const customTokenProvider = jest.fn().mockRejectedValue(tokenError);
+    const onError = jest.fn();
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: customTokenProvider,
+      onResult: jest.fn(),
+      onError,
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(customTokenProvider).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).not.toHaveBeenCalled();
+  });
+
+  it("uses default getTemporaryAuthToken when tokenProvider is not provided", async () => {
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(getTemporaryAuthToken).toHaveBeenCalledTimes(1);
+    expect(getTemporaryAuthToken).toHaveBeenCalledWith("123-myapp", config);
   });
 });

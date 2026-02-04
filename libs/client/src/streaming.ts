@@ -1,5 +1,5 @@
 import { createParser } from "eventsource-parser";
-import { getTemporaryAuthToken } from "./auth";
+import { type TokenProvider, getTemporaryAuthToken } from "./auth";
 import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
@@ -68,6 +68,13 @@ export type StreamOptions<Input> = {
    * The signal to abort the request.
    */
   readonly signal?: AbortSignal;
+
+  /**
+   * A custom token provider function. Only used when `connectionMode` is `"client"`.
+   * When provided, this function will be used to fetch authentication tokens
+   * instead of the default internal token fetching mechanism.
+   */
+  readonly tokenProvider?: TokenProvider;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
@@ -149,12 +156,28 @@ export class FalStream<Input, Output> {
 
   private start = async () => {
     const { endpointId, options } = this;
-    const { input, method = "post", connectionMode = "server" } = options;
+    const {
+      input,
+      method = "post",
+      connectionMode = "server",
+      tokenProvider,
+    } = options;
     try {
       if (connectionMode === "client") {
         // if we are in the browser, we need to get a temporary token
         // to authenticate the request
-        const token = await getTemporaryAuthToken(endpointId, this.config);
+        const fetchToken = tokenProvider
+          ? () => tokenProvider(endpointId)
+          : () => {
+              console.warn(
+                "[fal.stream] Using the default token provider is deprecated. " +
+                  'Please provide a `tokenProvider` function when using `connectionMode: "client"`. ' +
+                  "See https://docs.fal.ai/fal-client/authentication for more information.",
+              );
+              return getTemporaryAuthToken(endpointId, this.config);
+            };
+
+        const token = await fetchToken();
         const { fetch } = this.config;
         const parsedUrl = new URL(this.url);
         parsedUrl.searchParams.set("fal_jwt_token", token);

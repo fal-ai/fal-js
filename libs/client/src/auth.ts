@@ -2,6 +2,13 @@ import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
 import { parseEndpointId } from "./utils";
 
+/**
+ * A function that provides a temporary authentication token.
+ * @param app - The app/endpoint identifier
+ * @returns A promise that resolves to the token string
+ */
+export type TokenProvider = (app: string) => Promise<string>;
+
 export const TOKEN_EXPIRATION_SECONDS = 120;
 
 /**
