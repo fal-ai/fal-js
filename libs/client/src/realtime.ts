@@ -267,6 +267,15 @@ export interface RealtimeConnectionHandler<Output> {
    * If not provided, the default `getTemporaryAuthToken` will be used.
    */
   tokenProvider?: TokenProvider;
+
+  /**
+   * The token expiration time in seconds. This is used to determine when to
+   * refresh the token. The token will be refreshed at 90% of this value.
+   *
+   * Only relevant when using a custom `tokenProvider`. If a custom `tokenProvider`
+   * is used without specifying this value, automatic token refresh will be disabled.
+   */
+  tokenExpirationSeconds?: number;
 }
 
 export interface RealtimeClient {
@@ -512,6 +521,7 @@ export function createRealtimeClient({
         encodeMessage: encodeMessageOverride,
         decodeMessage: decodeMessageOverride,
         tokenProvider,
+        tokenExpirationSeconds,
       } = handler;
       if (clientOnly && !isBrowser()) {
         return NoOpConnection;
@@ -571,12 +581,19 @@ export function createRealtimeClient({
             fetchToken()
               .then((token) => {
                 send({ type: "authenticated", token });
-                const tokenExpirationTimeout = Math.round(
-                  TOKEN_EXPIRATION_SECONDS * 0.9 * 1000,
-                );
-                setTimeout(() => {
-                  send({ type: "expireToken" });
-                }, tokenExpirationTimeout);
+                // Only schedule token refresh if we know the expiration time.
+                // For custom tokenProvider without tokenExpirationSeconds, skip auto-refresh.
+                const effectiveExpiration = tokenProvider
+                  ? tokenExpirationSeconds
+                  : TOKEN_EXPIRATION_SECONDS;
+                if (effectiveExpiration !== undefined) {
+                  const tokenRefreshInterval = Math.round(
+                    effectiveExpiration * 0.9 * 1000,
+                  );
+                  setTimeout(() => {
+                    send({ type: "expireToken" });
+                  }, tokenRefreshInterval);
+                }
               })
               .catch((error) => {
                 send({ type: "unauthorized", error });

@@ -58,6 +58,7 @@ describe("createRealtimeClient", () => {
     WebSocketMock.mockClear();
     (getTemporaryAuthToken as jest.Mock).mockClear();
     // Suppress console.warn for deprecation warnings during tests
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, "warn").mockImplementation(() => {});
     // Provide a minimal crypto polyfill for randomUUID used by the client
     (global as any).crypto = {
@@ -397,5 +398,66 @@ describe("createRealtimeClient", () => {
 
     expect(getTemporaryAuthToken).toHaveBeenCalledTimes(1);
     expect(getTemporaryAuthToken).toHaveBeenCalledWith("123-myapp", config);
+  });
+
+  it("does not auto-refresh token when custom tokenProvider is used without tokenExpirationSeconds", async () => {
+    const customTokenProvider = jest.fn().mockResolvedValue("custom-token");
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: customTokenProvider,
+      // No tokenExpirationSeconds specified
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(customTokenProvider).toHaveBeenCalledTimes(1);
+
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    // Advance time well past the default refresh interval (108s)
+    jest.advanceTimersByTime(150000);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Token should NOT be refreshed since no tokenExpirationSeconds was specified
+    expect(customTokenProvider).toHaveBeenCalledTimes(1);
+  });
+
+  it("schedules token refresh with custom tokenExpirationSeconds", async () => {
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout");
+    const customTokenProvider = jest.fn().mockResolvedValue("custom-token");
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: customTokenProvider,
+      tokenExpirationSeconds: 60, // 60 seconds TTL, refresh at 54s (90%)
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(customTokenProvider).toHaveBeenCalledTimes(1);
+
+    // Verify setTimeout was called with the correct interval (60 * 0.9 * 1000 = 54000ms)
+    const tokenRefreshCall = setTimeoutSpy.mock.calls.find(
+      (call) => call[1] === 54000,
+    );
+    expect(tokenRefreshCall).toBeDefined();
+
+    setTimeoutSpy.mockRestore();
   });
 });
