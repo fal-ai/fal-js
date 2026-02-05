@@ -65,25 +65,40 @@ type OpenAPIOperation = {
   >;
 };
 
+const MAX_REF_DEPTH = 10;
+
 /**
  * Resolves all $ref references in a schema by inlining the referenced definitions.
- * Handles circular references by tracking visited paths.
+ * Handles circular references by tracking visited paths and collecting definitions for $defs.
  */
 function resolveRefs(
   schema: JSONSchema,
   definitions: Record<string, JSONSchema>,
   visited: Set<string> = new Set(),
   depth = 0,
+  collectedDefs: Record<string, JSONSchema> = {},
 ): JSONSchema {
-  const maxDepth = 10;
-  if (depth > maxDepth) {
+  if (depth > MAX_REF_DEPTH) {
     return schema;
   }
 
   if (schema.$ref) {
     const refPath = schema.$ref.replace("#/components/schemas/", "");
     if (visited.has(refPath)) {
-      // Circular reference - return a placeholder that references $defs
+      // Add to $defs if not already there (check with 'in' to detect placeholder)
+      if (!(refPath in collectedDefs) && definitions[refPath]) {
+        // Mark as being processed to prevent infinite recursion
+        collectedDefs[refPath] = {}; // placeholder
+        // Resolve the definition with itself already visited,
+        // so its self-references become $refs too
+        collectedDefs[refPath] = resolveRefs(
+          { ...definitions[refPath] },
+          definitions,
+          new Set([refPath]),
+          0,
+          collectedDefs,
+        );
+      }
       return { $ref: `#/$defs/${refPath}` };
     }
 
@@ -98,68 +113,94 @@ function resolveRefs(
       definitions,
       new Set(visited),
       depth + 1,
+      collectedDefs,
     );
     visited.delete(refPath);
     return resolved;
   }
 
-  const result: JSONSchema = {};
+  const recurse = (value: JSONSchema): JSONSchema =>
+    resolveRefs(value, definitions, new Set(visited), depth + 1, collectedDefs);
 
-  for (const [key, value] of Object.entries(schema)) {
-    if (key === "$defs") {
-      continue;
-    }
+  // Copy all properties except the ones we'll handle specially
+  const {
+    properties,
+    items,
+    allOf,
+    anyOf,
+    oneOf,
+    additionalProperties,
+    ...rest
+  } = schema;
+  delete rest.$defs;
+  const result: JSONSchema = { ...rest };
 
-    if (key === "properties" && typeof value === "object" && value !== null) {
-      result.properties = {};
-      for (const [propKey, propValue] of Object.entries(
-        value as Record<string, JSONSchema>,
-      )) {
-        result.properties[propKey] = resolveRefs(
-          propValue,
-          definitions,
-          new Set(visited),
-          depth + 1,
-        );
-      }
-    } else if (key === "items" && typeof value === "object" && value !== null) {
-      result.items = resolveRefs(
-        value as JSONSchema,
-        definitions,
-        new Set(visited),
-        depth + 1,
-      );
-    } else if (
-      (key === "allOf" || key === "anyOf" || key === "oneOf") &&
-      Array.isArray(value)
-    ) {
-      result[key] = value.map((item) =>
-        resolveRefs(item, definitions, new Set(visited), depth + 1),
-      );
-    } else if (
-      key === "additionalProperties" &&
-      typeof value === "object" &&
-      value !== null
-    ) {
-      result.additionalProperties = resolveRefs(
-        value as JSONSchema,
-        definitions,
-        new Set(visited),
-        depth + 1,
-      );
-    } else {
-      result[key] = value;
-    }
+  if (properties) {
+    result.properties = Object.fromEntries(
+      Object.entries(properties).map(([k, v]) => [k, recurse(v)]),
+    );
+  }
+  if (items) {
+    result.items = recurse(items);
+  }
+  if (allOf) {
+    result.allOf = allOf.map(recurse);
+  }
+  if (anyOf) {
+    result.anyOf = anyOf.map(recurse);
+  }
+  if (oneOf) {
+    result.oneOf = oneOf.map(recurse);
+  }
+  if (
+    typeof additionalProperties === "object" &&
+    additionalProperties !== null
+  ) {
+    result.additionalProperties = recurse(additionalProperties);
+  } else if (additionalProperties !== undefined) {
+    result.additionalProperties = additionalProperties;
   }
 
   return result;
 }
 
-/**
- * Extracts the schema reference name from a $ref string.
- */
-function extractRefName(ref: string): string {
-  return ref.replace("#/components/schemas/", "");
+function resolveSchemaRef(
+  schemaRef: JSONSchema,
+  definitions: Record<string, JSONSchema>,
+  schemaType: "input" | "output",
+): JSONSchema {
+  const collectedDefs: Record<string, JSONSchema> = {};
+  let result: JSONSchema;
+
+  if (!schemaRef.$ref) {
+    result = resolveRefs(
+      { ...schemaRef },
+      definitions,
+      new Set(),
+      0,
+      collectedDefs,
+    );
+  } else {
+    const refName = schemaRef.$ref.replace("#/components/schemas/", "");
+    const refDef = definitions[refName];
+    if (!refDef) {
+      throw new Error(
+        `Could not resolve ${schemaType} schema ref: ${schemaRef.$ref}`,
+      );
+    }
+    result = resolveRefs(
+      { ...refDef },
+      definitions,
+      new Set(),
+      0,
+      collectedDefs,
+    );
+  }
+
+  if (Object.keys(collectedDefs).length > 0) {
+    result.$defs = collectedDefs;
+  }
+  return result;
 }
 
 /**
@@ -182,63 +223,26 @@ export async function fetchEndpointSchemas(
   });
 
   const definitions = openapi.components?.schemas ?? {};
-
-  // The OpenAPI paths use the actual endpoint ID (e.g., "/fal-ai/flux/dev")
   const inputPath = `/${endpointId}`;
   const outputPath = `/${endpointId}/requests/{request_id}`;
 
-  // Extract input schema from POST /{endpointId}
-  const postPath = openapi.paths[inputPath];
-  const postOp = postPath?.post;
   const inputSchemaRef =
-    postOp?.requestBody?.content?.["application/json"]?.schema;
-
+    openapi.paths[inputPath]?.post?.requestBody?.content?.["application/json"]
+      ?.schema;
   if (!inputSchemaRef) {
     throw new Error(`Could not find input schema for endpoint: ${endpointId}`);
   }
 
-  // Extract output schema from GET /{endpointId}/requests/{request_id}
-  const getPath = openapi.paths[outputPath];
-  const getOp = getPath?.get;
   const outputSchemaRef =
-    getOp?.responses?.["200"]?.content?.["application/json"]?.schema;
-
+    openapi.paths[outputPath]?.get?.responses?.["200"]?.content?.[
+      "application/json"
+    ]?.schema;
   if (!outputSchemaRef) {
     throw new Error(`Could not find output schema for endpoint: ${endpointId}`);
   }
 
-  // Resolve the input schema
-  let inputSchema: JSONSchema;
-  if (inputSchemaRef.$ref) {
-    const inputRefName = extractRefName(inputSchemaRef.$ref);
-    const inputDef = definitions[inputRefName];
-    if (!inputDef) {
-      throw new Error(
-        `Could not resolve input schema ref: ${inputSchemaRef.$ref}`,
-      );
-    }
-    inputSchema = resolveRefs({ ...inputDef }, definitions);
-  } else {
-    inputSchema = resolveRefs({ ...inputSchemaRef }, definitions);
-  }
-
-  // Resolve the output schema
-  let outputSchema: JSONSchema;
-  if (outputSchemaRef.$ref) {
-    const outputRefName = extractRefName(outputSchemaRef.$ref);
-    const outputDef = definitions[outputRefName];
-    if (!outputDef) {
-      throw new Error(
-        `Could not resolve output schema ref: ${outputSchemaRef.$ref}`,
-      );
-    }
-    outputSchema = resolveRefs({ ...outputDef }, definitions);
-  } else {
-    outputSchema = resolveRefs({ ...outputSchemaRef }, definitions);
-  }
-
   return {
-    input: inputSchema,
-    output: outputSchema,
+    input: resolveSchemaRef(inputSchemaRef, definitions, "input"),
+    output: resolveSchemaRef(outputSchemaRef, definitions, "output"),
   };
 }
