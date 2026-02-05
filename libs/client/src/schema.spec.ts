@@ -649,6 +649,17 @@ describe("fetchEndpointSchemas", () => {
       expect(items?.properties?.children?.items).toEqual({
         $ref: "#/$defs/Node",
       });
+      // $defs should contain the Node definition with self-references as $refs
+      expect(schemas.input.$defs?.Node).toMatchObject({
+        type: "object",
+        properties: {
+          value: { type: "string" },
+          children: {
+            type: "array",
+            items: { $ref: "#/$defs/Node" },
+          },
+        },
+      });
     });
 
     it("handles mutually referencing schemas (A refs B, B refs A)", async () => {
@@ -697,6 +708,21 @@ describe("fetchEndpointSchemas", () => {
       expect(parent?.type).toBe("object");
       expect(parent?.properties?.name).toEqual({ type: "string" });
       expect(parent?.properties?.related).toEqual({ $ref: "#/$defs/TypeB" });
+      // $defs should contain TypeB definition
+      // When TypeB is resolved for $defs, TypeA is inlined until it loops back to TypeB
+      expect(schemas.input.$defs?.TypeB).toMatchObject({
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          parent: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              related: { $ref: "#/$defs/TypeB" },
+            },
+          },
+        },
+      });
     });
 
     it("respects max depth (10) for deeply nested refs", async () => {
