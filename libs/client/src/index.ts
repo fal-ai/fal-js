@@ -1,5 +1,6 @@
 import { createFalClient, type FalClient } from "./client";
 import { Config } from "./config";
+import { EndpointSchemas } from "./schema";
 import { StreamOptions } from "./streaming";
 import { EndpointType, InputType } from "./types/client";
 import { RunOptions } from "./types/common";
@@ -20,6 +21,7 @@ export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";
 export { isRetryableError } from "./retry";
 export type { RetryOptions } from "./retry";
+export type { EndpointSchemas, JSONSchema } from "./schema";
 export type {
   StorageACL,
   StorageACLRule,
@@ -76,6 +78,9 @@ export const fal: SingletonFalClient = (function createSingletonFalClient() {
       options: StreamOptions<InputType<Id>>,
     ) {
       return currentInstance.stream<Id>(endpointId, options);
+    },
+    getSchema(endpointId: string): Promise<EndpointSchemas> {
+      return currentInstance.getSchema(endpointId);
     },
   } satisfies SingletonFalClient;
 })();

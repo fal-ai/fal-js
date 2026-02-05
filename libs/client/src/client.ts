@@ -4,6 +4,7 @@ import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
 import { createRealtimeClient, RealtimeClient } from "./realtime";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
+import { EndpointSchemas, fetchEndpointSchemas } from "./schema";
 import {
   buildObjectLifecycleHeaders,
   createStorageClient,
@@ -84,6 +85,16 @@ export interface FalClient {
    * @returns the `FalStream` instance.
    */
   stream: StreamingClient["stream"];
+
+  /**
+   * Fetches the input and output JSON schemas for an endpoint.
+   * The schemas are fully resolved with all $ref references inlined,
+   * making them suitable for use with JSON Schema validators or LLM tools.
+   *
+   * @param endpointId The endpoint id, e.g. `fal-ai/flux/dev`.
+   * @returns A promise that resolves to the input and output schemas.
+   */
+  getSchema(endpointId: string): Promise<EndpointSchemas>;
 }
 
 /**
@@ -140,6 +151,9 @@ export function createFalClient(userConfig: Config = {}): FalClient {
       }
       await queue.subscribeToStatus(endpointId, { requestId, ...options });
       return queue.result(endpointId, { requestId });
+    },
+    async getSchema(endpointId: string): Promise<EndpointSchemas> {
+      return fetchEndpointSchemas(endpointId, config);
     },
   };
 }
