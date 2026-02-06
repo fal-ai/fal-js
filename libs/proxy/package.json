@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/server-proxy",
   "description": "The fal.ai server proxy adapter for JavaScript and TypeScript Web frameworks",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -46,6 +46,9 @@
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
+  "dependencies": {
+    "picomatch": "^4.0.0"
+  },
   "peerDependencies": {
     "@remix-run/dev": "^2.0.0",
     "@sveltejs/kit": "^2.0.0",

@@ -5,6 +5,7 @@ import { StreamOptions } from "./streaming";
 import { EndpointType, InputType } from "./types/client";
 import { RunOptions } from "./types/common";
 
+export type { TokenProvider } from "./auth";
 export { createFalClient, type FalClient } from "./client";
 export { withMiddleware, withProxy } from "./middleware";
 export type { RequestMiddleware } from "./middleware";

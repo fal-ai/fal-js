@@ -1,9 +1,12 @@
 import { type RequestHandler } from "@sveltejs/kit";
-import { fromHeaders, handleRequest } from "./index";
+import { ProxyConfig, resolveProxyConfig } from "./config";
+import { fromHeaders, handleRequest, resolveApiKeyFromEnv } from "./index";
 
-type RequestHandlerParams = {
+type RequestHandlerParams = Partial<ProxyConfig> & {
   /**
    * The credentials to use for the request. Usually comes from `$env/static/private`
+   *
+   * @deprecated Use `resolveFalAuth` in `ProxyConfig` instead.
    */
   credentials?: string | undefined;
 };
@@ -18,29 +21,37 @@ type RequestHandlerParams = {
  */
 export const createRequestHandler = ({
   credentials,
+  ...config
 }: RequestHandlerParams = {}) => {
+  const resolveApiKey = credentials
+    ? () => Promise.resolve(credentials)
+    : resolveApiKeyFromEnv;
+
+  const resolvedConfig = resolveProxyConfig(config);
   const handler: RequestHandler = async ({ request }) => {
-    const FAL_KEY = credentials || process.env.FAL_KEY || "";
     const responseHeaders = new Headers({
       "Content-Type": "application/json",
     });
-    return await handleRequest({
-      id: "svelte-app-router",
-      method: request.method,
-      getRequestBody: async () => request.text(),
-      getHeaders: () => fromHeaders(request.headers),
-      getHeader: (name) => request.headers.get(name),
-      sendHeader: (name, value) => (responseHeaders[name] = value),
-      resolveApiKey: () => Promise.resolve(FAL_KEY),
-      respondWith: (status, data) =>
-        new Response(JSON.stringify(data), {
-          status,
-          headers: responseHeaders,
-        }),
-      sendResponse: async (res) => {
-        return new Response(res.body, res);
+    return await handleRequest(
+      {
+        id: "svelte-app-router",
+        method: request.method,
+        getRequestBody: async () => request.text(),
+        getHeaders: () => fromHeaders(request.headers),
+        getHeader: (name) => request.headers.get(name),
+        sendHeader: (name, value) => (responseHeaders[name] = value),
+        resolveApiKey,
+        respondWith: (status, data) =>
+          new Response(JSON.stringify(data), {
+            status,
+            headers: responseHeaders,
+          }),
+        sendResponse: async (res) => {
+          return new Response(res.body, res);
+        },
       },
-    });
+      resolvedConfig,
+    );
   };
   return {
     requestHandler: handler,
