@@ -1001,7 +1001,7 @@ export type NovaSRTimings = {
    */
   postprocess: number;
 };
-export type Object = {
+export type DetectedObject = {
   /**
    * Left boundary of detection box in normalized format (0 to 1)
    */
@@ -48155,7 +48155,7 @@ export type Moondream3PreviewDetectOutput = {
   /**
    * List of detected objects with their bounding boxes
    */
-  objects: Array<Object>;
+  objects: Array<DetectedObject>;
   /**
    * Image with bounding boxes drawn around detected objects
    */
@@ -48282,7 +48282,7 @@ export type Moondream3PreviewSegmentOutput = {
   /**
    * Bounding box of the segmented object. If not detected, will be null.
    */
-  bbox?: Object;
+  bbox?: DetectedObject;
 };
 export type MoondreamCaptionInput = {
   /**
@@ -48346,7 +48346,7 @@ export type MoondreamDetectOutput = {
   /**
    * List of detected objects with their bounding boxes
    */
-  objects: Array<Object>;
+  objects: Array<DetectedObject>;
   /**
    * Image with bounding boxes drawn around detected objects
    */
@@ -48521,7 +48521,7 @@ export type MoondreamSegementationOutput = {
   /**
    * Bounding box of the segmented object. If not detected, will be null.
    */
-  bbox?: Object;
+  bbox?: DetectedObject;
 };
 export type MotionControlOutput = {
   /**
@@ -67054,7 +67054,7 @@ export type TextOutput = {
   /**
    * The timings of the generation.
    */
-  timings: any;
+  timings: unknown;
 };
 export type TextReferenceInput = {
   /**
