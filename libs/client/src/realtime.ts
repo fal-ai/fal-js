@@ -573,7 +573,7 @@ export function createRealtimeClient({
                   console.warn(
                     "[fal.realtime] Using the default token provider is deprecated. " +
                       "Please provide a `tokenProvider` function to `fal.realtime.connect()`. " +
-                      "See https://docs.fal.ai/fal-client/authentication for more information.",
+                      "See https://docs.fal.ai/model-apis/client#client-side-usage-with-token-provider for more information.",
                   );
                   return getTemporaryAuthToken(app, config);
                 };
