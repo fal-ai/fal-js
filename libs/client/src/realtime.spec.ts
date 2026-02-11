@@ -53,7 +53,10 @@ describe("createRealtimeClient", () => {
 
   beforeEach(() => {
     connectionId += 1;
-    jest.useFakeTimers();
+    // Don't fake queueMicrotask — the realtime client uses it to defer
+    // state machine sends onto a clean call stack, and it needs to execute
+    // naturally via await Promise.resolve() in tests.
+    jest.useFakeTimers({ doNotFake: ["queueMicrotask"] });
     sockets.length = 0;
     WebSocketMock.mockClear();
     (getTemporaryAuthToken as jest.Mock).mockClear();
