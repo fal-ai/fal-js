@@ -573,14 +573,20 @@ export function createRealtimeClient({
                   console.warn(
                     "[fal.realtime] Using the default token provider is deprecated. " +
                       "Please provide a `tokenProvider` function to `fal.realtime.connect()`. " +
-                      "See https://docs.fal.ai/fal-client/authentication for more information.",
+                      "See https://docs.fal.ai/model-apis/client#client-side-usage-with-token-provider for more information.",
                   );
                   return getTemporaryAuthToken(app, config);
                 };
 
             fetchToken()
               .then((token) => {
-                send({ type: "authenticated", token });
+                // Use queueMicrotask to ensure the state machine processes
+                // this on a clean call stack, not nested inside onChange.
+                // robot3's interpret can lose track of state changes when
+                // send() is called synchronously inside an onChange handler.
+                queueMicrotask(() => {
+                  send({ type: "authenticated", token });
+                });
                 // Only schedule token refresh if we know the expiration time.
                 // For custom tokenProvider without tokenExpirationSeconds, skip auto-refresh.
                 const effectiveExpiration = tokenProvider
@@ -596,7 +602,9 @@ export function createRealtimeClient({
                 }
               })
               .catch((error) => {
-                send({ type: "unauthorized", error });
+                queueMicrotask(() => {
+                  send({ type: "unauthorized", error });
+                });
               });
           }
           if (
