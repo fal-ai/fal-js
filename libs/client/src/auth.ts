@@ -4,7 +4,7 @@ import { parseEndpointId } from "./utils";
 
 /**
  * A function that provides a temporary authentication token.
- * @param app - The app/endpoint identifier
+ * @param app - The app/endpoint identifier, including the path (e.g. "fal-ai/myapp/realtime")
  * @returns A promise that resolves to the token string
  */
 export type TokenProvider = (app: string) => Promise<string>;

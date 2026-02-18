@@ -333,7 +333,7 @@ describe("createRealtimeClient", () => {
     await Promise.resolve();
 
     expect(customTokenProvider).toHaveBeenCalledTimes(1);
-    expect(customTokenProvider).toHaveBeenCalledWith("123-myapp");
+    expect(customTokenProvider).toHaveBeenCalledWith("123/myapp/realtime");
     expect(getTemporaryAuthToken).not.toHaveBeenCalled();
 
     expect(WebSocketMock).toHaveBeenCalledTimes(1);
@@ -359,7 +359,7 @@ describe("createRealtimeClient", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(customTokenProvider).toHaveBeenCalledWith("456-otherapp");
+    expect(customTokenProvider).toHaveBeenCalledWith("456/otherapp/realtime");
     expect(getTemporaryAuthToken).not.toHaveBeenCalled();
   });
 

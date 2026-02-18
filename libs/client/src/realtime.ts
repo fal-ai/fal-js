@@ -20,7 +20,12 @@ import {
 import { RequiredConfig } from "./config";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
-import { ensureEndpointIdFormat, isReact, throttle } from "./utils";
+import {
+  ensureEndpointIdFormat,
+  isReact,
+  resolveEndpointPath,
+  throttle,
+} from "./utils";
 
 // Define the context
 interface Context {
@@ -312,8 +317,8 @@ function buildRealtimeUrl(
     queryParams.set("max_buffering", maxBuffering.toFixed(0));
   }
   const appId = ensureEndpointIdFormat(app);
-  const normalizedPath = path ? `/${path.replace(/^\/+/, "")}` : "/realtime";
-  return `wss://fal.run/${appId}${normalizedPath}?${queryParams.toString()}`;
+  const resolvedPath = resolveEndpointPath(app, path, "/realtime") ?? "";
+  return `wss://fal.run/${appId}${resolvedPath}?${queryParams.toString()}`;
 }
 
 const DEFAULT_THROTTLE_INTERVAL = 128;
@@ -567,8 +572,11 @@ export function createRealtimeClient({
           ) {
             send({ type: "initiateAuth" });
             // Use custom tokenProvider if provided, otherwise use default
+            const appId = ensureEndpointIdFormat(app);
+            const resolvedPath =
+              resolveEndpointPath(app, path, "/realtime") ?? "";
             const fetchToken = tokenProvider
-              ? () => tokenProvider(app)
+              ? () => tokenProvider(`${appId}${resolvedPath}`)
               : () => {
                   console.warn(
                     "[fal.realtime] Using the default token provider is deprecated. " +
