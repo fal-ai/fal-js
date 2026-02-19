@@ -41,6 +41,30 @@ export function parseEndpointId(id: string): EndpointId {
   };
 }
 
+/**
+ * Resolves the endpoint path, normalizing it and applying a default.
+ * If no explicit path is provided and the app already ends with the
+ * default path, returns undefined to avoid duplication.
+ *
+ * @param app - The app/endpoint identifier
+ * @param path - An explicitly provided path (always used if present)
+ * @param defaultPath - The default path to use (e.g. "/realtime")
+ * @returns The resolved path, or undefined if the app already includes it
+ */
+export function resolveEndpointPath(
+  app: string,
+  path: string | undefined,
+  defaultPath: string,
+): string | undefined {
+  if (path) {
+    return `/${path.replace(/^\/+/, "")}`;
+  }
+  if (app.endsWith(defaultPath)) {
+    return undefined;
+  }
+  return defaultPath;
+}
+
 export function isValidUrl(url: string) {
   try {
     const { host } = new URL(url);
