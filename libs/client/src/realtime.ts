@@ -595,21 +595,28 @@ export function createRealtimeClient({
             const scheduleTokenRefresh =
               effectiveExpiration !== undefined
                 ? () => {
+                    clearTimeout(tokenRefreshTimer);
                     const refreshMs = Math.round(
                       effectiveExpiration * 0.9 * 1000,
                     );
                     tokenRefreshTimer = setTimeout(() => {
+                      if (machine.current !== "active") {
+                        return;
+                      }
                       fetchToken()
                         .then((newToken) => {
+                          if (machine.current !== "active") {
+                            return;
+                          }
                           queueMicrotask(() => {
                             send({ type: "authenticated", token: newToken });
                           });
                           scheduleTokenRefresh();
                         })
                         .catch(() => {
-                          // Refresh failed; the existing token is still valid
-                          // for the remaining ~10% of its lifetime. Try again
-                          // at half the remaining window.
+                          if (machine.current !== "active") {
+                            return;
+                          }
                           const retryMs = Math.round(
                             effectiveExpiration * 0.05 * 1000,
                           );
