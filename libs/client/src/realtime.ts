@@ -163,6 +163,7 @@ const connectionStateMachine = createMachine(
     ),
     active: state(
       transition("send", "active", reduce(sendMessage)),
+      transition("authenticated", "active", reduce(setToken)),
       transition("unauthorized", "idle", reduce(expireToken)),
       transition("connectionClosed", "idle", reduce(closeConnection)),
       transition("close", "idle", reduce(closeConnection)),
@@ -539,6 +540,7 @@ export function createRealtimeClient({
 
       let previousState: string | undefined;
       let latestEnqueuedMessage: any;
+      let tokenRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
       // Although the state machine is cached so we don't open multiple connections,
       // we still need to update the callbacks so we can call the correct references
@@ -586,28 +588,45 @@ export function createRealtimeClient({
                   return getTemporaryAuthToken(app, config);
                 };
 
+            const effectiveExpiration = tokenProvider
+              ? tokenExpirationSeconds
+              : TOKEN_EXPIRATION_SECONDS;
+
+            const scheduleTokenRefresh =
+              effectiveExpiration !== undefined
+                ? () => {
+                    const refreshMs = Math.round(
+                      effectiveExpiration * 0.9 * 1000,
+                    );
+                    tokenRefreshTimer = setTimeout(() => {
+                      fetchToken()
+                        .then((newToken) => {
+                          queueMicrotask(() => {
+                            send({ type: "authenticated", token: newToken });
+                          });
+                          scheduleTokenRefresh();
+                        })
+                        .catch(() => {
+                          // Refresh failed; the existing token is still valid
+                          // for the remaining ~10% of its lifetime. Try again
+                          // at half the remaining window.
+                          const retryMs = Math.round(
+                            effectiveExpiration * 0.05 * 1000,
+                          );
+                          tokenRefreshTimer = setTimeout(() => {
+                            scheduleTokenRefresh();
+                          }, retryMs);
+                        });
+                    }, refreshMs);
+                  }
+                : noop;
+
             fetchToken()
               .then((token) => {
-                // Use queueMicrotask to ensure the state machine processes
-                // this on a clean call stack, not nested inside onChange.
-                // robot3's interpret can lose track of state changes when
-                // send() is called synchronously inside an onChange handler.
                 queueMicrotask(() => {
                   send({ type: "authenticated", token });
                 });
-                // Only schedule token refresh if we know the expiration time.
-                // For custom tokenProvider without tokenExpirationSeconds, skip auto-refresh.
-                const effectiveExpiration = tokenProvider
-                  ? tokenExpirationSeconds
-                  : TOKEN_EXPIRATION_SECONDS;
-                if (effectiveExpiration !== undefined) {
-                  const tokenRefreshInterval = Math.round(
-                    effectiveExpiration * 0.9 * 1000,
-                  );
-                  setTimeout(() => {
-                    send({ type: "expireToken" });
-                  }, tokenRefreshInterval);
-                }
+                scheduleTokenRefresh();
               })
               .catch((error) => {
                 queueMicrotask(() => {
@@ -668,6 +687,10 @@ export function createRealtimeClient({
                 send,
               });
             };
+          }
+          if (previousState === "active" && machine.current !== "active") {
+            clearTimeout(tokenRefreshTimer);
+            tokenRefreshTimer = undefined;
           }
           previousState = machine.current;
         },
