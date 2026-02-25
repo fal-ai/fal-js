@@ -541,6 +541,7 @@ export function createRealtimeClient({
       let previousState: string | undefined;
       let latestEnqueuedMessage: any;
       let tokenRefreshTimer: ReturnType<typeof setTimeout> | undefined;
+      let tokenRefreshGeneration = 0;
 
       // Although the state machine is cached so we don't open multiple connections,
       // we still need to update the callbacks so we can call the correct references
@@ -573,6 +574,8 @@ export function createRealtimeClient({
             previousState !== machine.current
           ) {
             send({ type: "initiateAuth" });
+            tokenRefreshGeneration++;
+            const generation = tokenRefreshGeneration;
             // Use custom tokenProvider if provided, otherwise use default
             const appId = ensureEndpointIdFormat(app);
             const resolvedPath =
@@ -600,12 +603,12 @@ export function createRealtimeClient({
                       effectiveExpiration * 0.9 * 1000,
                     );
                     tokenRefreshTimer = setTimeout(() => {
-                      if (machine.current !== "active") {
+                      if (generation !== tokenRefreshGeneration) {
                         return;
                       }
                       fetchToken()
                         .then((newToken) => {
-                          if (machine.current !== "active") {
+                          if (generation !== tokenRefreshGeneration) {
                             return;
                           }
                           queueMicrotask(() => {
@@ -614,7 +617,7 @@ export function createRealtimeClient({
                           scheduleTokenRefresh();
                         })
                         .catch(() => {
-                          if (machine.current !== "active") {
+                          if (generation !== tokenRefreshGeneration) {
                             return;
                           }
                           const retryMs = Math.round(
