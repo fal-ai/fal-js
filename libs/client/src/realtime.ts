@@ -165,8 +165,13 @@ const connectionStateMachine = createMachine(
       transition("send", "active", reduce(sendMessage)),
       transition("authenticated", "active", reduce(setToken)),
       transition("unauthorized", "idle", reduce(expireToken)),
-      transition("connectionClosed", "idle", reduce(closeConnection)),
-      transition("close", "idle", reduce(closeConnection)),
+      transition(
+        "connectionClosed",
+        "idle",
+        reduce(expireToken),
+        reduce(closeConnection),
+      ),
+      transition("close", "idle", reduce(expireToken), reduce(closeConnection)),
     ),
     failed: state(
       transition("send", "failed"),
