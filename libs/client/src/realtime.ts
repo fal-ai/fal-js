@@ -134,7 +134,6 @@ const connectionStateMachine = createMachine(
   {
     idle: state(
       transition("send", "connecting", reduce(enqueueMessage)),
-      transition("expireToken", "idle", reduce(expireToken)),
       transition("close", "idle", reduce(closeConnection)),
     ),
     connecting: state(
@@ -165,12 +164,13 @@ const connectionStateMachine = createMachine(
       transition("send", "active", reduce(sendMessage)),
       transition("authenticated", "active", reduce(setToken)),
       transition("unauthorized", "idle", reduce(expireToken)),
-      transition("connectionClosed", "idle", reduce(closeConnection)),
-      transition("close", "idle", reduce(closeConnection)),
-    ),
-    failed: state(
-      transition("send", "failed"),
-      transition("close", "idle", reduce(closeConnection)),
+      transition(
+        "connectionClosed",
+        "idle",
+        reduce(expireToken),
+        reduce(closeConnection),
+      ),
+      transition("close", "idle", reduce(expireToken), reduce(closeConnection)),
     ),
   },
   initialState,
@@ -337,7 +337,8 @@ const WebSocketErrorCodes = {
   GOING_AWAY: 1001,
 };
 
-type ConnectionStateMachine = Service<typeof connectionStateMachine> & {
+type ConnectionStateMachine = {
+  service: Service<typeof connectionStateMachine>;
   throttledSend: (
     event: Event,
     payload?: any,
@@ -361,13 +362,13 @@ function reuseInterpreter(
   onChange: ConnectionOnChange,
 ) {
   if (!connectionCache.has(key)) {
-    const machine = interpret(connectionStateMachine, onChange);
+    const service = interpret(connectionStateMachine, onChange);
     connectionCache.set(key, {
-      ...machine,
+      service,
       throttledSend:
         throttleInterval > 0
-          ? throttle(machine.send, throttleInterval, true)
-          : machine.send,
+          ? throttle(service.send, throttleInterval, true)
+          : service.send,
     });
   }
   return connectionCache.get(key) as ConnectionStateMachine;
@@ -452,7 +453,7 @@ type HandleRealtimeMessageParams = {
   decodeMessage: RealtimeConnectionCallback["decodeMessage"];
   onResult: RealtimeConnectionCallback["onResult"];
   onError: NonNullable<RealtimeConnectionCallback["onError"]> | typeof noop;
-  send: ConnectionStateMachine["send"];
+  send: ConnectionStateMachine["service"]["send"];
 };
 
 function handleRealtimeMessage({
@@ -655,12 +656,12 @@ export function createRealtimeClient({
             ws.onopen = () => {
               send({ type: "connected", websocket: ws });
               const queued =
-                (stateMachine as any).context?.enqueuedMessage ??
+                stateMachine.service.context?.enqueuedMessage ??
                 latestEnqueuedMessage;
               if (queued) {
                 ws.send(encodeMessageFn(queued));
-                (stateMachine as any).context = {
-                  ...(stateMachine as any).context,
+                stateMachine.service.context = {
+                  ...stateMachine.service.context,
                   enqueuedMessage: undefined,
                 };
               }
@@ -715,7 +716,7 @@ export function createRealtimeClient({
       };
 
       const close = () => {
-        stateMachine.send({ type: "close" });
+        stateMachine.service.send({ type: "close" });
       };
 
       return {
