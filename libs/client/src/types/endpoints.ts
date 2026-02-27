@@ -1000,7 +1000,7 @@ export type PointPrompt = {
   /**
    * Label of the prompt. 1 for foreground, 0 for background Default value: `"1"`
    */
-  label?: "0" | "1";
+  label?: 0 | 1;
   /**
    * The frame index to interact with.
    */
