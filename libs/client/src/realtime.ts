@@ -20,7 +20,12 @@ import {
 import { RequiredConfig } from "./config";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
-import { ensureEndpointIdFormat, isReact, throttle } from "./utils";
+import {
+  ensureEndpointIdFormat,
+  isReact,
+  resolveEndpointPath,
+  throttle,
+} from "./utils";
 
 // Define the context
 interface Context {
@@ -158,9 +163,15 @@ const connectionStateMachine = createMachine(
     ),
     active: state(
       transition("send", "active", reduce(sendMessage)),
+      transition("authenticated", "active", reduce(setToken)),
       transition("unauthorized", "idle", reduce(expireToken)),
-      transition("connectionClosed", "idle", reduce(closeConnection)),
-      transition("close", "idle", reduce(closeConnection)),
+      transition(
+        "connectionClosed",
+        "idle",
+        reduce(expireToken),
+        reduce(closeConnection),
+      ),
+      transition("close", "idle", reduce(expireToken), reduce(closeConnection)),
     ),
     failed: state(
       transition("send", "failed"),
@@ -312,8 +323,8 @@ function buildRealtimeUrl(
     queryParams.set("max_buffering", maxBuffering.toFixed(0));
   }
   const appId = ensureEndpointIdFormat(app);
-  const normalizedPath = path ? `/${path.replace(/^\/+/, "")}` : "/realtime";
-  return `wss://fal.run/${appId}${normalizedPath}?${queryParams.toString()}`;
+  const resolvedPath = resolveEndpointPath(app, path, "/realtime") ?? "";
+  return `wss://fal.run/${appId}${resolvedPath}?${queryParams.toString()}`;
 }
 
 const DEFAULT_THROTTLE_INTERVAL = 128;
@@ -534,6 +545,8 @@ export function createRealtimeClient({
 
       let previousState: string | undefined;
       let latestEnqueuedMessage: any;
+      let tokenRefreshTimer: ReturnType<typeof setTimeout> | undefined;
+      let tokenRefreshGeneration = 0;
 
       // Although the state machine is cached so we don't open multiple connections,
       // we still need to update the callbacks so we can call the correct references
@@ -566,37 +579,74 @@ export function createRealtimeClient({
             previousState !== machine.current
           ) {
             send({ type: "initiateAuth" });
+            tokenRefreshGeneration++;
+            const generation = tokenRefreshGeneration;
             // Use custom tokenProvider if provided, otherwise use default
+            const appId = ensureEndpointIdFormat(app);
+            const resolvedPath =
+              resolveEndpointPath(app, path, "/realtime") ?? "";
             const fetchToken = tokenProvider
-              ? () => tokenProvider(app)
+              ? () => tokenProvider(`${appId}${resolvedPath}`)
               : () => {
                   console.warn(
                     "[fal.realtime] Using the default token provider is deprecated. " +
                       "Please provide a `tokenProvider` function to `fal.realtime.connect()`. " +
-                      "See https://docs.fal.ai/fal-client/authentication for more information.",
+                      "See https://docs.fal.ai/model-apis/client#client-side-usage-with-token-provider for more information.",
                   );
                   return getTemporaryAuthToken(app, config);
                 };
 
+            const effectiveExpiration = tokenProvider
+              ? tokenExpirationSeconds
+              : TOKEN_EXPIRATION_SECONDS;
+
+            const scheduleTokenRefresh =
+              effectiveExpiration !== undefined
+                ? () => {
+                    clearTimeout(tokenRefreshTimer);
+                    const refreshMs = Math.round(
+                      effectiveExpiration * 0.9 * 1000,
+                    );
+                    tokenRefreshTimer = setTimeout(() => {
+                      if (generation !== tokenRefreshGeneration) {
+                        return;
+                      }
+                      fetchToken()
+                        .then((newToken) => {
+                          if (generation !== tokenRefreshGeneration) {
+                            return;
+                          }
+                          queueMicrotask(() => {
+                            send({ type: "authenticated", token: newToken });
+                          });
+                          scheduleTokenRefresh();
+                        })
+                        .catch(() => {
+                          if (generation !== tokenRefreshGeneration) {
+                            return;
+                          }
+                          const retryMs = Math.round(
+                            effectiveExpiration * 0.05 * 1000,
+                          );
+                          tokenRefreshTimer = setTimeout(() => {
+                            scheduleTokenRefresh();
+                          }, retryMs);
+                        });
+                    }, refreshMs);
+                  }
+                : noop;
+
             fetchToken()
               .then((token) => {
-                send({ type: "authenticated", token });
-                // Only schedule token refresh if we know the expiration time.
-                // For custom tokenProvider without tokenExpirationSeconds, skip auto-refresh.
-                const effectiveExpiration = tokenProvider
-                  ? tokenExpirationSeconds
-                  : TOKEN_EXPIRATION_SECONDS;
-                if (effectiveExpiration !== undefined) {
-                  const tokenRefreshInterval = Math.round(
-                    effectiveExpiration * 0.9 * 1000,
-                  );
-                  setTimeout(() => {
-                    send({ type: "expireToken" });
-                  }, tokenRefreshInterval);
-                }
+                queueMicrotask(() => {
+                  send({ type: "authenticated", token });
+                });
+                scheduleTokenRefresh();
               })
               .catch((error) => {
-                send({ type: "unauthorized", error });
+                queueMicrotask(() => {
+                  send({ type: "unauthorized", error });
+                });
               });
           }
           if (
@@ -652,6 +702,10 @@ export function createRealtimeClient({
                 send,
               });
             };
+          }
+          if (previousState === "active" && machine.current !== "active") {
+            clearTimeout(tokenRefreshTimer);
+            tokenRefreshTimer = undefined;
           }
           previousState = machine.current;
         },

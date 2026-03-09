@@ -1,7 +1,7 @@
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
 import { getEndpoint, isAllowedEndpoint, isAllowedUrl } from "./index";
 
-const FAL_REST_API_URL = "rest.alpha.fal.ai";
+const FAL_REST_API_URL = "rest.fal.ai";
 
 describe("createUrlMatcher", () => {
   it("should match exact strings", () => {
