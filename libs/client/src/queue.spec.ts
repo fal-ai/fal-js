@@ -95,6 +95,18 @@ describe("queue.submit headers", () => {
     expect(call.headers["x-fal-request-timeout"]).toBeUndefined();
   });
 
+  it("forwards extraBody alongside input", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi", seed: 1 },
+      extraBody: { seed: 2, sync_mode: true },
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.input).toEqual({ prompt: "hi", seed: 1 });
+    expect(call.extraBody).toEqual({ seed: 2, sync_mode: true });
+  });
+
   it("startTimeout overrides user-provided x-fal-request-timeout header", async () => {
     const queue = createQueueClient({ config, storage });
     await queue.submit("fal-ai/fast-sdxl", {

@@ -51,6 +51,19 @@ describe("client.run headers", () => {
     expect(call.headers["x-fal-request-timeout"]).toBeUndefined();
   });
 
+  it("forwards extraBody alongside input", async () => {
+    const client = createFalClient({ credentials: "test-key" });
+    await client.run("fal-ai/fast-sdxl", {
+      input: { prompt: "hello", seed: 1 },
+      extraBody: { seed: 2, sync_mode: true },
+    });
+
+    expect(dispatchRequest).toHaveBeenCalledTimes(1);
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.input).toEqual({ prompt: "hello", seed: 1 });
+    expect(call.extraBody).toEqual({ seed: 2, sync_mode: true });
+  });
+
   it("throws error when startTimeout is <= 1 second", async () => {
     const client = createFalClient({ credentials: "test-key" });
     await expect(
