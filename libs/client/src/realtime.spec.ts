@@ -53,7 +53,10 @@ describe("createRealtimeClient", () => {
 
   beforeEach(() => {
     connectionId += 1;
-    jest.useFakeTimers();
+    // Don't fake queueMicrotask — the realtime client uses it to defer
+    // state machine sends onto a clean call stack, and it needs to execute
+    // naturally via await Promise.resolve() in tests.
+    jest.useFakeTimers({ doNotFake: ["queueMicrotask"] });
     sockets.length = 0;
     WebSocketMock.mockClear();
     (getTemporaryAuthToken as jest.Mock).mockClear();
@@ -330,7 +333,7 @@ describe("createRealtimeClient", () => {
     await Promise.resolve();
 
     expect(customTokenProvider).toHaveBeenCalledTimes(1);
-    expect(customTokenProvider).toHaveBeenCalledWith("123-myapp");
+    expect(customTokenProvider).toHaveBeenCalledWith("123/myapp/realtime");
     expect(getTemporaryAuthToken).not.toHaveBeenCalled();
 
     expect(WebSocketMock).toHaveBeenCalledTimes(1);
@@ -356,7 +359,7 @@ describe("createRealtimeClient", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(customTokenProvider).toHaveBeenCalledWith("456-otherapp");
+    expect(customTokenProvider).toHaveBeenCalledWith("456/otherapp/realtime");
     expect(getTemporaryAuthToken).not.toHaveBeenCalled();
   });
 

@@ -5,7 +5,7 @@ import { singleHeaderValue } from "./utils";
 /**
  * The fal REST API URL used for storage operations.
  */
-export const FAL_REST_API_URL = "rest.alpha.fal.ai";
+export const FAL_REST_API_URL = "rest.fal.ai";
 
 /**
  * The default allowed URL patterns. Only `fal.run` and `queue.fal.run` are allowed by default.

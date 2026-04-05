@@ -2,6 +2,10 @@
   "name": "@fal-ai/fal-js",
   "version": "0.0.0",
   "license": "MIT",
+  "packageManager": "npm@11.10.0",
+  "engines": {
+    "npm": ">=11.10.0"
+  },
   "scripts": {
     "start": "nx serve",
     "build": "nx build",

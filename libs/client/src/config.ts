@@ -151,5 +151,5 @@ export function createConfig(config: Config): RequiredConfig {
  * @returns the URL of the fal REST api endpoint.
  */
 export function getRestApiUrl(): string {
-  return "https://rest.alpha.fal.ai";
+  return "https://rest.fal.ai";
 }
