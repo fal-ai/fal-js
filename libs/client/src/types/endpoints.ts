@@ -630,36 +630,6 @@ export type AgeModifyInput = {
    */
   target_age?: number;
 };
-export type AiAvatarInput = {
-  /**
-   * The acceleration level to use for generation. Default value: `"regular"`
-   */
-  acceleration?: "none" | "regular" | "high";
-  /**
-   * The URL of the audio file.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * URL of the input image. If the input image does not match the chosen aspect ratio, it is resized and center cropped.
-   */
-  image_url: string | Blob | File;
-  /**
-   * Number of frames to generate. Must be between 81 to 129 (inclusive). If the number of frames is greater than 81, the video will be generated with 1.25x more billing units. Default value: `145`
-   */
-  num_frames?: number;
-  /**
-   * The text prompt to guide video generation.
-   */
-  prompt: string;
-  /**
-   * Resolution of the video to generate. Must be either 480p or 720p. Default value: `"480p"`
-   */
-  resolution?: "480p" | "720p";
-  /**
-   * Random seed for reproducibility. If None, a random seed is chosen. Default value: `42`
-   */
-  seed?: number;
-};
 export type AIAvatarInput = {
   /**
    * The URL of the audio file.
@@ -6346,6 +6316,16 @@ export type DavinciMagihumanInput = {
    */
   seed?: number;
 };
+export type DavinciMagihumanOutput = {
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+  /**
+   * The generated video with synchronized audio.
+   */
+  video?: File;
+};
 export type deepfilternet3Output = {
   /**
    * The audio file that was enhanced.
@@ -6711,6 +6691,16 @@ export type DiaOutput = {
    * The generated speech audio
    */
   audio: File;
+};
+export type DiarizationSegment = {
+  /**
+   * Speaker ID of the segment
+   */
+  speaker: string;
+  /**
+   * Start and end timestamp of the segment
+   */
+  timestamp: Array<unknown>;
 };
 export type DiaTtsInput = {
   /**
@@ -7744,9 +7734,24 @@ export type EditImageInput = {
    */
   guidance_scale?: number;
   /**
-   * The URL of the image to edit.
+   * The size of the generated image. If None, uses the input image dimensions.
    */
-  image_url: string | Blob | File;
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The URLs of the images to edit.
+   */
+  image_urls: Array<string>;
+  /**
+   * The negative prompt to generate an image from. Default value: `""`
+   */
+  negative_prompt?: string;
   /**
    * The number of images to generate. Default value: `1`
    */
@@ -7764,12 +7769,11 @@ export type EditImageInput = {
    */
   prompt: string;
   /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
+   * The same seed and the same prompt given to the same version of the model will output the same image every time.
    */
   seed?: number;
   /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   * If `True`, the media will be returned as a data URI.
    */
   sync_mode?: boolean;
 };
@@ -9614,6 +9618,63 @@ export type FiboEditEditStructuredInstructionInput = {
    */
   sync_mode?: boolean;
 };
+export type FiboFastImageGenerationInput = {
+  /**
+   * Aspect ratio. Options: 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9 Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "1:1"
+    | "2:3"
+    | "3:2"
+    | "3:4"
+    | "4:3"
+    | "4:5"
+    | "5:4"
+    | "9:16"
+    | "16:9";
+  /**
+   * Input image URL
+   */
+  image_url?: string | Blob | File;
+  /**
+   * Negative prompt for image generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The prompt to generate.
+   */
+  prompt?: string;
+  /**
+   * Seed for the random number generator. Default value: `7`
+   */
+  seed?: number;
+  /**
+   * Number of inference steps. Default value: `8`
+   */
+  steps_num?: number;
+  /**
+   * The structured prompt to generate.
+   */
+  structured_prompt?: StructuredPrompt;
+  /**
+   * If true, returns the image directly in the response (increases latency).
+   */
+  sync_mode?: boolean;
+};
+export type FiboFastImageGenerationOutput = {
+  /**
+   * Generated image.
+   */
+  image: Image;
+  /**
+   * Generated images.
+   */
+  images?: Array<unknown>;
+  /**
+   * Current prompt.
+   */
+  structured_prompt: StructuredPrompt;
+};
 export type FiboGenerateInput = {
   /**
    * Aspect ratio. Options: 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9 Default value: `"1:1"`
@@ -9674,63 +9735,6 @@ export type FiboGenerateOutput = {
    * Current prompt.
    */
   structured_prompt: unknown;
-};
-export type FiboLiteGenerateInput = {
-  /**
-   * Aspect ratio. Options: 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9 Default value: `"1:1"`
-   */
-  aspect_ratio?:
-    | "1:1"
-    | "2:3"
-    | "3:2"
-    | "3:4"
-    | "4:3"
-    | "4:5"
-    | "5:4"
-    | "9:16"
-    | "16:9";
-  /**
-   * Input image URL
-   */
-  image_url?: string | Blob | File;
-  /**
-   * Negative prompt for image generation. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The prompt to generate.
-   */
-  prompt?: string;
-  /**
-   * Seed for the random number generator. Default value: `7`
-   */
-  seed?: number;
-  /**
-   * Number of inference steps. Default value: `8`
-   */
-  steps_num?: number;
-  /**
-   * The structured prompt to generate.
-   */
-  structured_prompt?: StructuredPrompt;
-  /**
-   * If true, returns the image directly in the response (increases latency).
-   */
-  sync_mode?: boolean;
-};
-export type FiboLiteGenerateOutput = {
-  /**
-   * Generated image.
-   */
-  image: Image;
-  /**
-   * Generated images.
-   */
-  images?: Array<unknown>;
-  /**
-   * Current prompt.
-   */
-  structured_prompt: StructuredPrompt;
 };
 export type FiboLiteGenerateStructuredPromptLiteInput = {
   /**
@@ -11737,6 +11741,74 @@ export type FluxKontextOutput = {
    */
   timings: unknown;
 };
+export type FluxKreaLoraInpaintingInput = {
+  /**
+   * Acceleration level for image generation. 'regular' balances speed and quality. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * URL of image to use for inpainting. or img2img
+   */
+  image_url: string | Blob | File;
+  /**
+   * The LoRAs to use for the image generation. You can use any number of LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The mask to area to Inpaint in.
+   */
+  mask_url: string | Blob | File;
+  /**
+   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The prompt to generate an image from.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
+   */
+  strength?: number;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
 export type FluxKreaTrainerInput = {
   /**
    * If True segmentation masks will be used in the weight the training loss. For people a face mask is used if possible. Default value: `true`
@@ -12012,74 +12084,6 @@ export type FluxLoraImageToImageInput = {
    * and they will be merged together to generate the final image.
    */
   loras?: Array<LoraWeight>;
-  /**
-   * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * The prompt to generate an image from.
-   */
-  prompt: string;
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The strength to use for inpainting/image-to-image. Only used if the image_url is provided. 1.0 is completely remakes the image while 0.0 preserves the original. Default value: `0.85`
-   */
-  strength?: number;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
-export type FluxLoraInpaintingInput = {
-  /**
-   * Acceleration level for image generation. 'regular' balances speed and quality. Default value: `"none"`
-   */
-  acceleration?: "none" | "regular";
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `3.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The size of the generated image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * URL of image to use for inpainting. or img2img
-   */
-  image_url: string | Blob | File;
-  /**
-   * The LoRAs to use for the image generation. You can use any number of LoRAs
-   * and they will be merged together to generate the final image.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The mask to area to Inpaint in.
-   */
-  mask_url: string | Blob | File;
   /**
    * The number of images to generate. This is always set to 1 for streaming output. Default value: `1`
    */
@@ -16780,36 +16784,6 @@ export type HunyuanVideoImageToVideoInput = {
    */
   seed?: number;
 };
-export type HunyuanVideoInput = {
-  /**
-   * The aspect ratio of the video to generate. Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16";
-  /**
-   * If set to true, the safety checker will be enabled.
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * The number of frames to generate. Default value: `"129"`
-   */
-  num_frames?: "129" | "85";
-  /**
-   * By default, generations are done with 35 steps. Pro mode does 55 steps which results in higher quality videos but will take more time and cost 2x more billing units.
-   */
-  pro_mode?: boolean;
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The resolution of the video to generate. Default value: `"720p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The seed to use for generating the video.
-   */
-  seed?: number;
-};
 export type HunyuanVideoLoraInput = {
   /**
    * The aspect ratio of the video to generate. Default value: `"16:9"`
@@ -20008,6 +19982,36 @@ export type IndexTts2TextToSpeechInput = {
    */
   strength?: number;
 };
+export type infinitalkInput = {
+  /**
+   * The acceleration level to use for generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+  /**
+   * The URL of the audio file.
+   */
+  audio_url: string | Blob | File;
+  /**
+   * URL of the input image. If the input image does not match the chosen aspect ratio, it is resized and center cropped.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Number of frames to generate. Must be between 41 to 721. Default value: `145`
+   */
+  num_frames?: number;
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * Resolution of the video to generate. Must be either 480p or 720p. Default value: `"480p"`
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen. Default value: `42`
+   */
+  seed?: number;
+};
 export type InfinitalkVideoToVideoInput = {
   /**
    * The acceleration level to use for generation. Default value: `"regular"`
@@ -21468,63 +21472,6 @@ export type KeyframeTransition = {
    */
   prompt?: string;
 };
-export type Klein4BBaseEditInput = {
-  /**
-   * The acceleration level to use for image generation. Default value: `"regular"`
-   */
-  acceleration?: "none" | "regular" | "high";
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * Guidance scale for classifier-free guidance. Default value: `5`
-   */
-  guidance_scale?: number;
-  /**
-   * The size of the generated image. If not provided, uses the input image size.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The URLs of the images for editing. A maximum of 4 images are allowed.
-   */
-  image_urls: Array<string>;
-  /**
-   * Negative prompt for classifier-free guidance. Describes what to avoid in the image. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The number of inference steps to perform. Default value: `28`
-   */
-  num_inference_steps?: number;
-  /**
-   * The format of the generated image. Default value: `"png"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * The prompt to edit the image.
-   */
-  prompt: string;
-  /**
-   * The seed to use for the generation. If not provided, a random seed will be used.
-   */
-  seed?: number;
-  /**
-   * If `True`, the media will be returned as a data URI. Output is not stored when this is True.
-   */
-  sync_mode?: boolean;
-};
 export type KleinBaseEditLoRAInput = {
   /**
    * The acceleration level to use for image generation. Default value: `"regular"`
@@ -22495,7 +22442,7 @@ export type KlingVideoV1TtsInput = {
    */
   voice_speed?: number;
 };
-export type KlingVideoV21ProImageToVideoInput = {
+export type KlingVideoV25TurboProImageToVideoInput = {
   /**
    * The CFG (Classifier Free Guidance) scale is a measure of how close you want
    * the model to stick to your prompt. Default value: `0.5`
@@ -23999,6 +23946,49 @@ export type LlavaNextInput = {
    * Top P for sampling Default value: `1`
    */
   top_p?: number;
+};
+export type LongcatImageEditInput = {
+  /**
+   * The acceleration level to use. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular" | "high";
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The guidance scale to use for the image generation. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * The URL of the image to edit.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * The prompt to edit the image with.
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
 };
 export type LongcatMultiAvatarImageAudioToVideoInput = {
   /**
@@ -29140,6 +29130,33 @@ export type LucyRestyleInput = {
    */
   video_url: string | Blob | File;
 };
+export type LumaDreamMachineRay2FlashModifyInput = {
+  /**
+   * Optional URL of the first frame image for modification
+   */
+  image_url?: string | Blob | File;
+  /**
+   * Amount of modification to apply to the video, adhere_1 is the least amount of modification, reimagine_3 is the most Default value: `"flex_1"`
+   */
+  mode?:
+    | "adhere_1"
+    | "adhere_2"
+    | "adhere_3"
+    | "flex_1"
+    | "flex_2"
+    | "flex_3"
+    | "reimagine_1"
+    | "reimagine_2"
+    | "reimagine_3";
+  /**
+   * Instruction for modifying the video
+   */
+  prompt?: string;
+  /**
+   * URL of the input video to modify
+   */
+  video_url: string | Blob | File;
+};
 export type LumaDreamMachineRay2ImageToVideoInput = {
   /**
    * The aspect ratio of the generated video Default value: `"16:9"`
@@ -29191,33 +29208,6 @@ export type LumaDreamMachineRay2Input = {
    * The resolution of the generated video (720p costs 2x more, 1080p costs 4x more) Default value: `"540p"`
    */
   resolution?: "540p" | "720p" | "1080p";
-};
-export type LumaDreamMachineRay2ModifyInput = {
-  /**
-   * Optional URL of the first frame image for modification
-   */
-  image_url?: string | Blob | File;
-  /**
-   * Amount of modification to apply to the video, adhere_1 is the least amount of modification, reimagine_3 is the most Default value: `"flex_1"`
-   */
-  mode?:
-    | "adhere_1"
-    | "adhere_2"
-    | "adhere_3"
-    | "flex_1"
-    | "flex_2"
-    | "flex_3"
-    | "reimagine_1"
-    | "reimagine_2"
-    | "reimagine_3";
-  /**
-   * Instruction for modifying the video
-   */
-  prompt?: string;
-  /**
-   * URL of the input video to modify
-   */
-  video_url: string | Blob | File;
 };
 export type LumaDreamMachineRay2ReframeInput = {
   /**
@@ -30585,7 +30575,7 @@ export type MoondreamDetectOutput = {
   /**
    * List of detected objects with their bounding boxes
    */
-  objects: Array<object>;
+  objects: Array<Object>;
   /**
    * Usage information for the request
    */
@@ -30726,7 +30716,7 @@ export type MoondreamSegementationOutput = {
   /**
    * Bounding box of the segmented object. If not detected, will be null.
    */
-  bbox?: object;
+  bbox?: Object;
   /**
    * Reason for finishing the output generation
    */
@@ -31609,6 +31599,21 @@ export type NextSceneInput = {
    */
   sync_mode?: boolean;
 };
+export type Nextstep1Input = {
+  /**
+   * The URL of the image to edit.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want
+   * in the image. This could be colors, objects, scenery and even the small details
+   */
+  negative_prompt: string;
+  /**
+   * The prompt to edit the image.
+   */
+  prompt: string;
+};
 export type NovaSrInput = {
   /**
    * The format for the output audio. Default value: `"mp3"`
@@ -32340,40 +32345,6 @@ export type onerewardInput = {
    */
   true_cfg?: number;
 };
-export type OneToAllAnimation13bInput = {
-  /**
-   * The image guidance scale to use for the video generation. Default value: `2`
-   */
-  image_guidance_scale?: number;
-  /**
-   * The URL of the image to use as a reference for the video generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The negative prompt to generate the video from.
-   */
-  negative_prompt: string;
-  /**
-   * The number of inference steps to use for the video generation. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The pose guidance scale to use for the video generation. Default value: `1.5`
-   */
-  pose_guidance_scale?: number;
-  /**
-   * The prompt to generate the video from.
-   */
-  prompt: string;
-  /**
-   * The resolution of the video to generate. Default value: `"480p"`
-   */
-  resolution?: "480p" | "580p" | "720p";
-  /**
-   * The URL of the video to use as a reference for the video generation.
-   */
-  video_url: string | Blob | File;
-};
 export type OrpheusTtsInput = {
   /**
    * Repetition penalty (>= 1.1 required for stable generations). Default value: `1.2`
@@ -32570,75 +32541,6 @@ export type OverlayVideoInput = {
    * Y position of overlay center as percentage of background height (0-100) Default value: `13`
    */
   y_percent?: number;
-};
-export type OviImageToVideoInput = {
-  /**
-   * Negative prompt for audio generation. Default value: `"robotic, muffled, echo, distorted"`
-   */
-  audio_negative_prompt?: string;
-  /**
-   * The image URL to guide video generation.
-   */
-  image_url: string | Blob | File;
-  /**
-   * Negative prompt for video generation. Default value: `"jitter, bad hands, blur, distortion"`
-   */
-  negative_prompt?: string;
-  /**
-   * The number of inference steps. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The text prompt to guide video generation.
-   */
-  prompt: string;
-  /**
-   * Random seed for reproducibility. If None, a random seed is chosen.
-   */
-  seed?: number;
-};
-export type oviInput = {
-  /**
-   * Negative prompt for audio generation. Default value: `"robotic, muffled, echo, distorted"`
-   */
-  audio_negative_prompt?: string;
-  /**
-   * Negative prompt for video generation. Default value: `"jitter, bad hands, blur, distortion"`
-   */
-  negative_prompt?: string;
-  /**
-   * The number of inference steps. Default value: `30`
-   */
-  num_inference_steps?: number;
-  /**
-   * The text prompt to guide video generation.
-   */
-  prompt: string;
-  /**
-   * Resolution of the generated video in W:H format. One of (512x992, 992x512, 960x512, 512x960, 720x720, or 448x1120). Default value: `"992x512"`
-   */
-  resolution?:
-    | "512x992"
-    | "992x512"
-    | "960x512"
-    | "512x960"
-    | "720x720"
-    | "448x1120"
-    | "1120x448";
-  /**
-   * Random seed for reproducibility. If None, a random seed is chosen.
-   */
-  seed?: number;
-};
-export type oviOutput = {
-  /**
-   * The seed used for generation.
-   */
-  seed: number;
-  /**
-   * The generated video file.
-   */
-  video?: File;
 };
 export type OvisImageInput = {
   /**
@@ -33482,40 +33384,6 @@ export type PikaV22PikaframesInput = {
    */
   transitions?: Array<KeyframeTransition>;
 };
-export type PikaV22PikascenesInput = {
-  /**
-   * The aspect ratio of the generated video Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:5" | "5:4" | "3:2" | "2:3";
-  /**
-   * The duration of the generated video in seconds Default value: `"5"`
-   */
-  duration?: "5" | "10";
-  /**
-   * URLs of images to combine into a video
-   */
-  image_urls: Array<string>;
-  /**
-   * Mode for integrating multiple images. Precise mode is more accurate, creative mode is more creative. Default value: `"precise"`
-   */
-  ingredients_mode?: "precise" | "creative";
-  /**
-   * A negative prompt to guide the model Default value: `"ugly, bad, terrible"`
-   */
-  negative_prompt?: string;
-  /**
-   * Text prompt describing the desired video
-   */
-  prompt: string;
-  /**
-   * The resolution of the generated video Default value: `"1080p"`
-   */
-  resolution?: "720p" | "1080p";
-  /**
-   * The seed for the random number generator
-   */
-  seed?: number;
-};
 export type PikaV22TextToVideoInput = {
   /**
    * The aspect ratio of the generated video Default value: `"16:9"`
@@ -33781,33 +33649,6 @@ export type PixverseSwapInput = {
    * URL of the external video to swap
    */
   video_url: string | Blob | File;
-};
-export type PixverseV35ImageToVideoFastInput = {
-  /**
-   * URL of the image to use as the first frame
-   */
-  image_url: string | Blob | File;
-  /**
-   * Negative prompt to be used for the generation Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   *
-   */
-  prompt: string;
-  /**
-   * The resolution of the generated video Default value: `"720p"`
-   */
-  resolution?: "360p" | "540p" | "720p";
-  /**
-   * The same seed and the same prompt given to the same version of the model
-   * will output the same video every time.
-   */
-  seed?: number;
-  /**
-   * The style of the generated video
-   */
-  style?: "anime" | "3d_animation" | "clay" | "comic" | "cyberpunk";
 };
 export type PixverseV4ImageToVideoFastInput = {
   /**
@@ -35835,6 +35676,79 @@ export type QwenImage2TextToImageInput = {
    */
   sync_mode?: boolean;
 };
+export type QwenImageEdit2511MultipleAnglesInput = {
+  /**
+   * Acceleration level for image generation. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * Additional text to append to the automatically generated prompt.
+   */
+  additional_prompt?: string;
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The CFG (Classifier Free Guidance) scale. Default value: `4.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Horizontal rotation angle around the object in degrees. 0°=front view, 90°=right side, 180°=back view, 270°=left side, 360°=front view again.
+   */
+  horizontal_angle?: number;
+  /**
+   * The size of the generated image. If not provided, the size of the input image will be used.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The URL of the image to adjust camera angle for.
+   */
+  image_urls: Array<string>;
+  /**
+   * The scale factor for the LoRA model. Controls the strength of the camera control effect. Default value: `1`
+   */
+  lora_scale?: number;
+  /**
+   * The negative prompt for the generation Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Number of images to generate Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The number of inference steps to perform. Default value: `28`
+   */
+  num_inference_steps?: number;
+  /**
+   * The format of the output image Default value: `"png"`
+   */
+  output_format?: "png" | "jpeg" | "webp";
+  /**
+   * Random seed for reproducibility.
+   */
+  seed?: number;
+  /**
+   * If `True`, the media will be returned as a data URI.
+   */
+  sync_mode?: boolean;
+  /**
+   * Vertical camera angle in degrees. -30°=low-angle shot (looking up), 0°=eye-level, 30°=elevated, 60°=high-angle, 90°=bird's-eye view (looking down).
+   */
+  vertical_angle?: number;
+  /**
+   * Camera zoom/distance. 0=wide shot (far away), 5=medium shot (normal), 10=close-up (very close). Default value: `5`
+   */
+  zoom?: number;
+};
 export type QwenImageEditInpaintInput = {
   /**
    * Acceleration level for image generation. Options: 'none', 'regular'. Higher acceleration increases speed. 'regular' balances speed and quality. Default value: `"regular"`
@@ -35931,6 +35845,70 @@ export type QwenImageEditInput = {
    * The URL of the image to edit.
    */
   image_url: string | Blob | File;
+  /**
+   * The negative prompt for the generation Default value: `" "`
+   */
+  negative_prompt?: string;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The number of inference steps to perform. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * The prompt to generate the image with
+   */
+  prompt: string;
+  /**
+   * The same seed and the same prompt given to the same version of the model
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
+export type QwenImageEditLoraInput = {
+  /**
+   * Acceleration level for image generation. Options: 'none', 'regular'. Higher acceleration increases speed. 'regular' balances speed and quality. Default value: `"none"`
+   */
+  acceleration?: "none" | "regular" | "high";
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `4`
+   */
+  guidance_scale?: number;
+  /**
+   * The size of the generated image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The URL of the image to edit.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The LoRAs to use for the image generation. You can use up to 3 LoRAs
+   * and they will be merged together to generate the final image.
+   */
+  loras?: Array<LoraWeight>;
   /**
    * The negative prompt for the generation Default value: `" "`
    */
@@ -36188,36 +36166,6 @@ export type QwenImageTrainerInput = {
    * Default caption to use for images that don't have corresponding text files. If provided, missing .txt files will be created automatically. Default value: `""`
    */
   trigger_phrase?: string;
-};
-export type QwenImageTrainerV2Input = {
-  /**
-   * Default caption to use when caption files are missing. If None, missing captions will cause an error.
-   */
-  default_caption?: string;
-  /**
-   * URL to the input data zip archive for text-to-image training.
-   *
-   * The zip should contain images with their corresponding text captions:
-   *
-   * image.EXT and image.txt
-   * For example:
-   * photo.jpg and photo.txt
-   *
-   * The text file contains the caption/prompt describing the target image.
-   *
-   * If no text file is provided for an image, the default_caption will be used.
-   *
-   * If no default_caption is provided and a text file is missing, the training will fail.
-   */
-  image_data_url: string | Blob | File;
-  /**
-   * Learning rate for LoRA parameters. Default value: `0.0005`
-   */
-  learning_rate?: number;
-  /**
-   * Number of steps to train for Default value: `1000`
-   */
-  steps?: number;
 };
 export type RapidImageTo3DInput = {
   /**
@@ -39840,6 +39788,132 @@ export type Sd15DepthControlnetInput = {
    */
   sync_mode?: boolean;
 };
+export type SdxlControlnetUnionInput = {
+  /**
+   * The URL of the control image.
+   */
+  canny_image_url?: string | Blob | File;
+  /**
+   * Whether to preprocess the canny image. Default value: `true`
+   */
+  canny_preprocess?: boolean;
+  /**
+   * The scale of the controlnet conditioning. Default value: `0.5`
+   */
+  controlnet_conditioning_scale?: number;
+  /**
+   * The URL of the control image.
+   */
+  depth_image_url?: string | Blob | File;
+  /**
+   * Whether to preprocess the depth image. Default value: `true`
+   */
+  depth_preprocess?: boolean;
+  /**
+   * The list of embeddings to use.
+   */
+  embeddings?: Array<Embedding>;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * If set to true, the prompt will be expanded with additional prompts.
+   */
+  expand_prompt?: boolean;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  format?: "jpeg" | "png";
+  /**
+   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
+   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
+   */
+  guidance_scale?: number;
+  /**
+   * The size of the generated image. Leave it none to automatically infer from the control image.
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The list of LoRA weights to use.
+   */
+  loras?: Array<LoraWeight>;
+  /**
+   * The negative prompt to use. Use it to address details that you don't want
+   * in the image. This could be colors, objects, scenery and even the small details
+   * (e.g. moustache, blurry, low resolution). Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * The URL of the control image.
+   */
+  normal_image_url?: string | Blob | File;
+  /**
+   * Whether to preprocess the normal image. Default value: `true`
+   */
+  normal_preprocess?: boolean;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The number of inference steps to perform. Default value: `35`
+   */
+  num_inference_steps?: number;
+  /**
+   * The URL of the control image.
+   */
+  openpose_image_url?: string | Blob | File;
+  /**
+   * Whether to preprocess the openpose image. Default value: `true`
+   */
+  openpose_preprocess?: boolean;
+  /**
+   * The prompt to use for generating the image. Be as descriptive as possible for best results.
+   */
+  prompt: string;
+  /**
+   * An id bound to a request, can be used with response to identify the request
+   * itself. Default value: `""`
+   */
+  request_id?: string;
+  /**
+   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
+   */
+  safety_checker_version?: "v1" | "v2";
+  /**
+   * The same seed and the same prompt given to the same version of Stable Diffusion
+   * will output the same image every time.
+   */
+  seed?: number;
+  /**
+   * The URL of the control image.
+   */
+  segmentation_image_url?: string | Blob | File;
+  /**
+   * Whether to preprocess the segmentation image. Default value: `true`
+   */
+  segmentation_preprocess?: boolean;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+  /**
+   * The URL of the control image.
+   */
+  teed_image_url?: string | Blob | File;
+  /**
+   * Whether to preprocess the teed image. Default value: `true`
+   */
+  teed_preprocess?: boolean;
+};
 export type Seed2MiniInput = {
   /**
    * URLs of images for visual understanding. Supported formats: JPEG, PNG, WebP. A maximum of 6 images is supported. Any additional images will be ignored.
@@ -43398,132 +43472,6 @@ export type TextToImage32Input = {
    * Whether to truncate the prompt. Default value: `true`
    */
   truncate_prompt?: boolean;
-};
-export type TextToImageControlNetUnionInput = {
-  /**
-   * The URL of the control image.
-   */
-  canny_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the canny image. Default value: `true`
-   */
-  canny_preprocess?: boolean;
-  /**
-   * The scale of the controlnet conditioning. Default value: `0.5`
-   */
-  controlnet_conditioning_scale?: number;
-  /**
-   * The URL of the control image.
-   */
-  depth_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the depth image. Default value: `true`
-   */
-  depth_preprocess?: boolean;
-  /**
-   * The list of embeddings to use.
-   */
-  embeddings?: Array<Embedding>;
-  /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
-   */
-  enable_safety_checker?: boolean;
-  /**
-   * If set to true, the prompt will be expanded with additional prompts.
-   */
-  expand_prompt?: boolean;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  format?: "jpeg" | "png";
-  /**
-   * The CFG (Classifier Free Guidance) scale is a measure of how close you want
-   * the model to stick to your prompt when looking for a related image to show you. Default value: `7.5`
-   */
-  guidance_scale?: number;
-  /**
-   * The size of the generated image. Leave it none to automatically infer from the control image.
-   */
-  image_size?:
-    | ImageSize
-    | "square_hd"
-    | "square"
-    | "portrait_4_3"
-    | "portrait_16_9"
-    | "landscape_4_3"
-    | "landscape_16_9";
-  /**
-   * The list of LoRA weights to use.
-   */
-  loras?: Array<LoraWeight>;
-  /**
-   * The negative prompt to use. Use it to address details that you don't want
-   * in the image. This could be colors, objects, scenery and even the small details
-   * (e.g. moustache, blurry, low resolution). Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
-   * The URL of the control image.
-   */
-  normal_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the normal image. Default value: `true`
-   */
-  normal_preprocess?: boolean;
-  /**
-   * The number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The number of inference steps to perform. Default value: `35`
-   */
-  num_inference_steps?: number;
-  /**
-   * The URL of the control image.
-   */
-  openpose_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the openpose image. Default value: `true`
-   */
-  openpose_preprocess?: boolean;
-  /**
-   * The prompt to use for generating the image. Be as descriptive as possible for best results.
-   */
-  prompt: string;
-  /**
-   * An id bound to a request, can be used with response to identify the request
-   * itself. Default value: `""`
-   */
-  request_id?: string;
-  /**
-   * The version of the safety checker to use. v1 is the default CompVis safety checker. v2 uses a custom ViT model. Default value: `"v1"`
-   */
-  safety_checker_version?: "v1" | "v2";
-  /**
-   * The same seed and the same prompt given to the same version of Stable Diffusion
-   * will output the same image every time.
-   */
-  seed?: number;
-  /**
-   * The URL of the control image.
-   */
-  segmentation_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the segmentation image. Default value: `true`
-   */
-  segmentation_preprocess?: boolean;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-  /**
-   * The URL of the control image.
-   */
-  teed_image_url?: string | Blob | File;
-  /**
-   * Whether to preprocess the teed image. Default value: `true`
-   */
-  teed_preprocess?: boolean;
 };
 export type TextToImageInput = {
   /**
@@ -50669,6 +50617,100 @@ export type WanV22A14bTextToVideoTurboInput = {
    */
   video_write_mode?: "fast" | "balanced" | "small";
 };
+export type WanV22A14bVideoToVideoInput = {
+  /**
+   * Acceleration level to use. The more acceleration, the faster the generation, but with lower quality. The recommended value is 'regular'. Default value: `"regular"`
+   */
+  acceleration?: "none" | "regular";
+  /**
+   * If true, the number of frames per second will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If false, the passed frames per second will be used as-is. Default value: `true`
+   */
+  adjust_fps_for_interpolation?: boolean;
+  /**
+   * Aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input video. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
+  /**
+   * If set to true, output video will be checked for safety after generation.
+   */
+  enable_output_safety_checker?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * If set to true, input data will be checked for safety before processing.
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Frames per second of the generated video. Must be between 4 to 60. When using interpolation and `adjust_fps_for_interpolation` is set to true (default true,) the final FPS will be multiplied by the number of interpolated frames plus one. For example, if the generated frames per second is 16 and the number of interpolated frames is 1, the final frames per second will be 32. If `adjust_fps_for_interpolation` is set to false, this value will be used as-is. Default value: `16`
+   */
+  frames_per_second?: number;
+  /**
+   * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `3.5`
+   */
+  guidance_scale?: number;
+  /**
+   * Guidance scale for the second stage of the model. This is used to control the adherence to the prompt in the second stage of the model. Default value: `4`
+   */
+  guidance_scale_2?: number;
+  /**
+   * The model to use for frame interpolation. If None, no interpolation is applied. Default value: `"film"`
+   */
+  interpolator_model?: "none" | "film" | "rife";
+  /**
+   * Negative prompt for video generation. Default value: `""`
+   */
+  negative_prompt?: string;
+  /**
+   * Number of frames to generate. Must be between 17 to 161 (inclusive). Default value: `81`
+   */
+  num_frames?: number;
+  /**
+   * Number of inference steps for sampling. Higher values give better quality but take longer. Default value: `27`
+   */
+  num_inference_steps?: number;
+  /**
+   * Number of frames to interpolate between each pair of generated frames. Must be between 0 and 4. Default value: `1`
+   */
+  num_interpolated_frames?: number;
+  /**
+   * The text prompt to guide video generation.
+   */
+  prompt: string;
+  /**
+   * If true, the video will be resampled to the passed frames per second. If false, the video will not be resampled.
+   */
+  resample_fps?: boolean;
+  /**
+   * Resolution of the generated video (480p, 580p, or 720p). Default value: `"720p"`
+   */
+  resolution?: "480p" | "580p" | "720p";
+  /**
+   * Random seed for reproducibility. If None, a random seed is chosen.
+   */
+  seed?: number;
+  /**
+   * Shift value for the video. Must be between 1.0 and 10.0. Default value: `5`
+   */
+  shift?: number;
+  /**
+   * Strength of the video transformation. A value of 1.0 means the output will be completely based on the prompt, while a value of 0.0 means the output will be identical to the input video. Default value: `0.9`
+   */
+  strength?: number;
+  /**
+   * The quality of the output video. Higher quality means better visual quality but larger file size. Default value: `"high"`
+   */
+  video_quality?: "low" | "medium" | "high" | "maximum";
+  /**
+   * URL of the input video.
+   */
+  video_url: string | Blob | File;
+  /**
+   * The write mode of the output video. Faster write mode means faster results but larger file size, balanced write mode is a good compromise between speed and quality, and small write mode is the slowest but produces the smallest file size. Default value: `"balanced"`
+   */
+  video_write_mode?: "fast" | "balanced" | "small";
+};
 export type WanVace14bInpaintingInput = {
   /**
    * Acceleration to use for inference. Options are 'none' or 'regular'. Accelerated inference will very slightly affect output, but will be significantly faster. Default value: `regular`
@@ -51623,6 +51665,10 @@ export type WaveformOutput = {
 };
 export type WhisperChunk = {
   /**
+   * Speaker ID of the chunk. Only present if diarization is enabled.
+   */
+  speaker?: string;
+  /**
    * Transcription of the chunk
    */
   text: string;
@@ -51630,6 +51676,263 @@ export type WhisperChunk = {
    * Start and end timestamp of the chunk
    */
   timestamp: Array<unknown>;
+};
+export type whisperInput = {
+  /**
+   * URL of the audio file to transcribe. Supported formats: mp3, mp4, mpeg, mpga, m4a, wav or webm.
+   */
+  audio_url: string | Blob | File;
+  /**
+   *  Default value: `64`
+   */
+  batch_size?: number;
+  /**
+   * Level of the chunks to return. Either none, segment or word. `none` would imply that all of the audio will be transcribed without the timestamp tokens, we suggest to switch to `none` if you are not satisfied with the transcription quality, since it will usually improve the quality of the results. Switching to `none` will also provide minor speed ups in the transcription due to less amount of generated tokens. Notice that setting to none will produce **a single chunk with the whole transcription**. Default value: `"segment"`
+   */
+  chunk_level?: "none" | "segment" | "word";
+  /**
+   * Whether to diarize the audio file. Defaults to false. Setting to true will add costs proportional to diarization inference time.
+   */
+  diarize?: boolean;
+  /**
+   * Language of the audio file. If set to null, the language will be
+   * automatically detected. Defaults to null.
+   *
+   * If translate is selected as the task, the audio will be translated to
+   * English, regardless of the language selected.
+   */
+  language?:
+    | "af"
+    | "am"
+    | "ar"
+    | "as"
+    | "az"
+    | "ba"
+    | "be"
+    | "bg"
+    | "bn"
+    | "bo"
+    | "br"
+    | "bs"
+    | "ca"
+    | "cs"
+    | "cy"
+    | "da"
+    | "de"
+    | "el"
+    | "en"
+    | "es"
+    | "et"
+    | "eu"
+    | "fa"
+    | "fi"
+    | "fo"
+    | "fr"
+    | "gl"
+    | "gu"
+    | "ha"
+    | "haw"
+    | "he"
+    | "hi"
+    | "hr"
+    | "ht"
+    | "hu"
+    | "hy"
+    | "id"
+    | "is"
+    | "it"
+    | "ja"
+    | "jw"
+    | "ka"
+    | "kk"
+    | "km"
+    | "kn"
+    | "ko"
+    | "la"
+    | "lb"
+    | "ln"
+    | "lo"
+    | "lt"
+    | "lv"
+    | "mg"
+    | "mi"
+    | "mk"
+    | "ml"
+    | "mn"
+    | "mr"
+    | "ms"
+    | "mt"
+    | "my"
+    | "ne"
+    | "nl"
+    | "nn"
+    | "no"
+    | "oc"
+    | "pa"
+    | "pl"
+    | "ps"
+    | "pt"
+    | "ro"
+    | "ru"
+    | "sa"
+    | "sd"
+    | "si"
+    | "sk"
+    | "sl"
+    | "sn"
+    | "so"
+    | "sq"
+    | "sr"
+    | "su"
+    | "sv"
+    | "sw"
+    | "ta"
+    | "te"
+    | "tg"
+    | "th"
+    | "tk"
+    | "tl"
+    | "tr"
+    | "tt"
+    | "uk"
+    | "ur"
+    | "uz"
+    | "vi"
+    | "yi"
+    | "yo"
+    | "zh";
+  /**
+   * Number of speakers in the audio file. Defaults to null.
+   * If not provided, the number of speakers will be automatically
+   * detected.
+   */
+  num_speakers?: number;
+  /**
+   * Prompt to use for generation. Defaults to an empty string. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * Task to perform on the audio file. Either transcribe or translate. Default value: `"transcribe"`
+   */
+  task?: "transcribe" | "translate";
+};
+export type whisperOutput = {
+  /**
+   * Timestamp chunks of the audio file
+   */
+  chunks?: Array<WhisperChunk>;
+  /**
+   * Speaker diarization segments of the audio file. Only present if diarization is enabled.
+   */
+  diarization_segments: Array<DiarizationSegment>;
+  /**
+   * List of languages that the audio file is inferred to be. Defaults to null.
+   */
+  inferred_languages: Array<
+    | "af"
+    | "am"
+    | "ar"
+    | "as"
+    | "az"
+    | "ba"
+    | "be"
+    | "bg"
+    | "bn"
+    | "bo"
+    | "br"
+    | "bs"
+    | "ca"
+    | "cs"
+    | "cy"
+    | "da"
+    | "de"
+    | "el"
+    | "en"
+    | "es"
+    | "et"
+    | "eu"
+    | "fa"
+    | "fi"
+    | "fo"
+    | "fr"
+    | "gl"
+    | "gu"
+    | "ha"
+    | "haw"
+    | "he"
+    | "hi"
+    | "hr"
+    | "ht"
+    | "hu"
+    | "hy"
+    | "id"
+    | "is"
+    | "it"
+    | "ja"
+    | "jw"
+    | "ka"
+    | "kk"
+    | "km"
+    | "kn"
+    | "ko"
+    | "la"
+    | "lb"
+    | "ln"
+    | "lo"
+    | "lt"
+    | "lv"
+    | "mg"
+    | "mi"
+    | "mk"
+    | "ml"
+    | "mn"
+    | "mr"
+    | "ms"
+    | "mt"
+    | "my"
+    | "ne"
+    | "nl"
+    | "nn"
+    | "no"
+    | "oc"
+    | "pa"
+    | "pl"
+    | "ps"
+    | "pt"
+    | "ro"
+    | "ru"
+    | "sa"
+    | "sd"
+    | "si"
+    | "sk"
+    | "sl"
+    | "sn"
+    | "so"
+    | "sq"
+    | "sr"
+    | "su"
+    | "sv"
+    | "sw"
+    | "ta"
+    | "te"
+    | "tg"
+    | "th"
+    | "tk"
+    | "tl"
+    | "tr"
+    | "tt"
+    | "uk"
+    | "ur"
+    | "uz"
+    | "vi"
+    | "yi"
+    | "yo"
+    | "zh"
+  >;
+  /**
+   * Transcription of the audio file
+   */
+  text: string;
 };
 export type wizperInput = {
   /**
@@ -51896,40 +52199,9 @@ export type XAIImageEditInput = {
    */
   prompt: string;
   /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   * Resolution of the generated image. `1k` for standard resolution, `2k` for high resolution. Default value: `"1k"`
    */
-  sync_mode?: boolean;
-};
-export type XAIImageInput = {
-  /**
-   * Aspect ratio of the generated image. Default value: `"1:1"`
-   */
-  aspect_ratio?:
-    | "2:1"
-    | "20:9"
-    | "19.5:9"
-    | "16:9"
-    | "4:3"
-    | "3:2"
-    | "1:1"
-    | "2:3"
-    | "3:4"
-    | "9:16"
-    | "9:19.5"
-    | "9:20"
-    | "1:2";
-  /**
-   * Number of images to generate. Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * The format of the generated image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png" | "webp";
-  /**
-   * Text description of the desired image.
-   */
-  prompt: string;
+  resolution?: "1k" | "2k";
   /**
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
@@ -52213,6 +52485,32 @@ export type ZImageBaseLoraInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type ZImageBaseTrainerInput = {
+  /**
+   * Default caption to use when caption files are missing. If None, missing captions will cause an error.
+   */
+  default_caption?: string;
+  /**
+   * URL to the input data zip archive.
+   *
+   * The zip should contain pairs of images and corresponding captions.
+   *
+   * The images should be named: ROOT.EXT. For example: 001.jpg
+   *
+   * The corresponding captions should be named: ROOT.txt. For example: 001.txt
+   *
+   * If no text file is provided for an image, the default_caption will be used.
+   */
+  image_data_url: string | Blob | File;
+  /**
+   * Learning rate. Default value: `0.0005`
+   */
+  learning_rate?: number;
+  /**
+   * Number of steps to train for Default value: `2000`
+   */
+  steps?: number;
 };
 export type ZImageTrainerInput = {
   /**
@@ -52957,7 +53255,6 @@ export type AgeProgressionInput = TimeOfDayInput;
 export type AgeProgressionOutput = pulidOutput;
 export type AiAvatarMultiOutput = magiOutput;
 export type AiAvatarMultiTextOutput = magiOutput;
-export type AiAvatarOutput = magiOutput;
 export type AiAvatarSingleTextOutput = magiOutput;
 export type AmEngOutput = DiaOutput;
 export type AmixAudioOutput = MiniOutput;
@@ -53138,7 +53435,6 @@ export type CrystalUpscalerOutput = BlurOutput;
 export type CrystalVideoUpscaleOutput = React1Output;
 export type CrystalVideoUpscalerInput = CrystalVideoUpscaleInput;
 export type CrystalVideoUpscalerOutput = React1Output;
-export type DavinciMagihumanOutput = oviOutput;
 export type ddcolorInput = NafnetInput;
 export type ddcolorOutput = HEDOutput;
 export type deepfilternet3Input = NovaSrInput;
@@ -53221,8 +53517,6 @@ export type FashnTryonV16Input = V16Input;
 export type FashnTryonV16Output = V16Output;
 export type FastAnimatediffTextToVideoInput = AnimateDiffT2VInput;
 export type FastAnimatediffTextToVideoOutput = magiOutput;
-export type FastAnimatediffTurboTextToVideoInput = AnimateDiffT2VTurboInput;
-export type FastAnimatediffTurboTextToVideoOutput = magiOutput;
 export type FastAnimatediffTurboVideoToVideoInput = AnimateDiffV2VTurboInput;
 export type FastAnimatediffTurboVideoToVideoOutput = magiOutput;
 export type FastAnimatediffVideoToVideoInput = AnimateDiffV2VInput;
@@ -53269,8 +53563,6 @@ export type FfmpegApiLoudnormInput = LoudnormInput;
 export type FfmpegApiLoudnormOutput = LoudnormOutput;
 export type FfmpegApiMergeAudiosInput = MergeAudiosInput;
 export type FfmpegApiMergeAudiosOutput = DiaOutput;
-export type FfmpegApiMergeAudioVideoInput = CombineInput;
-export type FfmpegApiMergeAudioVideoOutput = I2VOutput;
 export type FfmpegApiMergeVideosInput = MergeVideosInput;
 export type FfmpegApiMergeVideosOutput = MergeVideosOutput;
 export type FfmpegApiMetadataInput = MetadataInput;
@@ -53300,8 +53592,6 @@ export type FiboEditRewriteTextInput = RewriteTextInput;
 export type FiboEditRewriteTextOutput = FiboEditEditOutput;
 export type FiboEditSketchToColoredImageInput = ZoeInput;
 export type FiboEditSketchToColoredImageOutput = FiboEditEditOutput;
-export type FiboFastImageGenerationInput = FiboLiteGenerateInput;
-export type FiboFastImageGenerationOutput = FiboLiteGenerateOutput;
 export type FiboGenerateStructuredPromptInput = StructuredPromptInput;
 export type FiboLiteGenerateStructuredPromptInput = StructuredPromptInput;
 export type FILMImageInput = filmInput;
@@ -53311,9 +53601,9 @@ export type FilmVideoOutput = React1Output;
 export type FILMVideoOutput = React1Output;
 export type FinegrainEraserBboxOutput = FinegrainEraserOutput;
 export type FinegrainEraserMaskOutput = FinegrainEraserOutput;
-export type FireredImageEditInput = Klein4BBaseEditInput;
+export type FireredImageEditInput = EditImageInput;
 export type FireredImageEditOutput = unoOutput;
-export type FireredImageEditV11Input = Klein4BBaseEditInput;
+export type FireredImageEditV11Input = EditImageInput;
 export type FireredImageEditV11Output = unoOutput;
 export type FlashvsrUpscaleVideoOutput = magiOutput;
 export type FLiteStandardInput = FLiteTextureInput;
@@ -53388,13 +53678,9 @@ export type Flux2FlexEditOutput = Emu35Output;
 export type Flux2FlexImageEditInput = Flux2FlexEditInput;
 export type Flux2FlexOutput = Emu35Output;
 export type Flux2FlexTextToImageInput = Flux2FlexInput;
-export type Flux2Klein4bBaseEditInput = Klein4BBaseEditInput;
-export type Flux2Klein4bBaseEditLoraInput = KleinBaseEditLoRAInput;
-export type Flux2Klein4bBaseEditLoraOutput = Flux2Output;
+export type Flux2Klein4bBaseEditInput = EditImageInput;
 export type Flux2Klein4bBaseEditOutput = Flux2Output;
 export type Flux2Klein4bBaseInput = OvisImageInput;
-export type Flux2Klein4bBaseLoraInput = KleinBaseLoRAInput;
-export type Flux2Klein4bBaseLoraOutput = Flux2Output;
 export type Flux2Klein4bBaseOutput = Flux2Output;
 export type Flux2Klein4bBaseTrainerEditInput = Flux2TrainerInput;
 export type Flux2Klein4bBaseTrainerEditOutput = Flux2TrainerOutput;
@@ -53402,11 +53688,9 @@ export type Flux2Klein4bBaseTrainerInput = Flux2TrainerInput;
 export type Flux2Klein4bBaseTrainerOutput = Flux2TrainerOutput;
 export type Flux2Klein4bEditLoraOutput = Flux2Output;
 export type Flux2Klein4bEditOutput = Flux2Output;
-export type Flux2Klein4bInput = piflowInput;
 export type Flux2Klein4bLoraInput = KleinLoRAInput;
 export type Flux2Klein4bLoraOutput = Flux2Output;
-export type Flux2Klein4bOutput = Flux2Output;
-export type Flux2Klein9bBaseEditInput = Klein4BBaseEditInput;
+export type Flux2Klein9bBaseEditInput = EditImageInput;
 export type Flux2Klein9bBaseEditLoraInput = KleinBaseEditLoRAInput;
 export type Flux2Klein9bBaseEditLoraOutput = Flux2Output;
 export type Flux2Klein9bBaseEditOutput = Flux2Output;
@@ -53490,8 +53774,6 @@ export type FluxControlLoraDepthOutput = unoOutput;
 export type FluxDevImageToImageInput = BaseImageToInput;
 export type FluxDevImageToImageOutput = unoOutput;
 export type FluxDevOutput = unoOutput;
-export type FluxDevReduxInput = BaseReduxInput;
-export type FluxDevReduxOutput = unoOutput;
 export type FluxDifferentialDiffusionOutput = unoOutput;
 export type FluxGeneralDifferentialDiffusionInput = DifferentialDiffusionInput;
 export type FluxGeneralDifferentialDiffusionOutput = unoOutput;
@@ -53501,8 +53783,6 @@ export type FluxGeneralOutput = unoOutput;
 export type FluxGeneralRfInversionInput = RFInversionInput;
 export type FluxGeneralRfInversionOutput = unoOutput;
 export type FluxKontextDevOutput = unoOutput;
-export type FluxKontextLoraInpaintInput = BaseKontextInpaintInput;
-export type FluxKontextLoraInpaintOutput = unoOutput;
 export type FluxKontextLoraInput = BaseKontextEditInput;
 export type FluxKontextLoraOutput = unoOutput;
 export type FluxKontextLoraTextToImageInput = FluxLoraInput;
@@ -53514,7 +53794,6 @@ export type FluxKreaImageToImageOutput = unoOutput;
 export type FluxKreaInput = FluxDevInput;
 export type FluxKreaLoraImageToImageInput = FluxLoraImageToImageInput;
 export type FluxKreaLoraImageToImageOutput = unoOutput;
-export type FluxKreaLoraInpaintingInput = FluxLoraInpaintingInput;
 export type FluxKreaLoraInpaintingOutput = unoOutput;
 export type FluxKreaLoraInput = FluxLoraInput;
 export type FluxKreaLoraOutput = unoOutput;
@@ -53529,7 +53808,6 @@ export type FluxLoraFastTrainingInput = FluxKreaTrainerInput;
 export type FluxLoraFastTrainingOutput = FluxKreaTrainerOutput;
 export type FluxLoraFillOutput = unoOutput;
 export type FluxLoraImageToImageOutput = unoOutput;
-export type FluxLoraInpaintingOutput = unoOutput;
 export type FluxLoraOutput = unoOutput;
 export type FluxLoraPortraitTrainerOutput = Flux2TrainerOutput;
 export type FluxLoraStreamInput = FluxLoraInput;
@@ -53622,7 +53900,7 @@ export type GrainOutput = BlurOutput;
 export type GreenScreenRembgOutput = GeneralRembgOutput;
 export type GrokImagineImageEditInput = XAIImageEditInput;
 export type GrokImagineImageEditOutput = XAIImageOutput;
-export type GrokImagineImageInput = XAIImageInput;
+export type GrokImagineImageInput = photaInput;
 export type GrokImagineImageOutput = XAIImageOutput;
 export type GrokImagineVideoEditVideoInput = XAIVideoEditInput;
 export type GrokImagineVideoEditVideoOutput = React1Output;
@@ -53668,6 +53946,8 @@ export type Hunyuan3dV2MultiViewTurboInput = Hunyuan3dV2MultiViewInput;
 export type Hunyuan3dV2MultiViewTurboOutput = Hunyuan3dV2Output;
 export type Hunyuan3dV2TurboInput = Hunyuan3DInput;
 export type Hunyuan3dV2TurboOutput = Hunyuan3dV2Output;
+export type Hunyuan3dV31PartInput = PartInput;
+export type Hunyuan3dV31PartOutput = PartOutput;
 export type Hunyuan3dV31ProImageTo3dInput = ProImageTo3DInput;
 export type Hunyuan3dV31ProImageTo3dOutput = SketchTo3DOutput;
 export type Hunyuan3dV31ProTextTo3dInput = ProTextTo3DInput;
@@ -53690,8 +53970,6 @@ export type HunyuanImageV21TextToImageOutput = pulidOutput;
 export type HunyuanImageV3InstructEditOutput = pulidOutput;
 export type HunyuanImageV3InstructTextToImageOutput = pulidOutput;
 export type HunyuanImageV3TextToImageOutput = pulidOutput;
-export type HunyuanMotionFastInput = HunyuanMotionInput;
-export type HunyuanMotionFastOutput = HunyuanMotionOutput;
 export type HunyuanPortraitOutput = I2VOutput;
 export type HunyuanTextToImageOutput = pulidOutput;
 export type HunyuanTextToImageV3Output = pulidOutput;
@@ -53702,7 +53980,6 @@ export type HunyuanVideoImg2vidLoraOutput = magiOutput;
 export type HunyuanVideoLoraOutput = magiOutput;
 export type HunyuanVideoLoraTrainingOutput = Flux2TrainerOutput;
 export type HunyuanVideoLoraVideoToVideoOutput = magiOutput;
-export type HunyuanVideoOutput = magiOutput;
 export type HunyuanVideoV15ImageToVideoOutput = magiOutput;
 export type HunyuanVideoV15TextToVideoOutput = magiOutput;
 export type HunyuanVideoVideoToVideoOutput = magiOutput;
@@ -53889,10 +54166,11 @@ export type ImageutilsRembgOutput = HEDOutput;
 export type ImageutilsSamInput = SamInput;
 export type ImageutilsSamOutput = SamOutput;
 export type Imagineart15PreviewTextToImageInput = ViduQ2TextToImageInput;
+export type Imagineart15ProPreviewTextToImageInput = ViduQ2TextToImageInput;
+export type Imagineart15ProPreviewTextToImageOutput = BlurOutput;
 export type Img2ImgOutput = unoOutput;
 export type ImpulseResponseOutput = MiniOutput;
 export type IndexTts2TextToSpeechOutput = DiaOutput;
-export type infinitalkInput = AiAvatarInput;
 export type infinitalkOutput = magiOutput;
 export type InfinitalkSingleTextInput = AiAvatarSingleTextInput;
 export type InfinitalkSingleTextOutput = magiOutput;
@@ -53927,6 +54205,7 @@ export type JuggernautFluxProOutput = unoOutput;
 export type Kandinsky5ProImageToVideoOutput = Kandinsky5TextToVideoOutput;
 export type Kandinsky5ProTextToVideoOutput = Kandinsky5TextToVideoOutput;
 export type Kandinsky5TextToVideoDistillOutput = Kandinsky5TextToVideoOutput;
+export type Klein4BBaseEditInput = EditImageInput;
 export type Klein4BBaseEditOutput = Flux2Output;
 export type Klein4BBaseInput = OvisImageInput;
 export type Klein4BDistilledEditOutput = Flux2Output;
@@ -53937,7 +54216,7 @@ export type Klein9BBaseInput = OvisImageInput;
 export type Klein9BDistilledInput = piflowInput;
 export type Klein9BDistilledLoRAInput = KleinLoRAInput;
 export type Klein9BDistilledT2IOutput = Flux2Output;
-export type Klein9BEditImageInput = Klein4BBaseEditInput;
+export type Klein9BEditImageInput = EditImageInput;
 export type Klein9BT2IOutput = Flux2Output;
 export type KleinDistilledEditInput = Flux2Klein4bEditInput;
 export type KleinDistilledEditLoRAInput = Flux2Klein4bEditLoraInput;
@@ -54035,12 +54314,9 @@ export type KlingVideoV21MasterImageToVideoOutput = I2VOutput;
 export type KlingVideoV21MasterTextToVideoInput =
   KlingVideoV15ProTextToVideoInput;
 export type KlingVideoV21MasterTextToVideoOutput = I2VOutput;
-export type KlingVideoV21ProImageToVideoOutput = I2VOutput;
 export type KlingVideoV21StandardImageToVideoInput =
   KlingVideoV2MasterImageToVideoInput;
 export type KlingVideoV21StandardImageToVideoOutput = I2VOutput;
-export type KlingVideoV25TurboProImageToVideoInput =
-  KlingVideoV21ProImageToVideoInput;
 export type KlingVideoV25TurboProImageToVideoOutput = I2VOutput;
 export type KlingVideoV25TurboProTextToVideoInput =
   KlingVideoV15ProTextToVideoInput;
@@ -54127,7 +54403,6 @@ export type LivePortraitOutput = I2VOutput;
 export type LlavaNextOutput = SpeechOutput;
 export type Llavav1513bInput = LlavaNextInput;
 export type Llavav1513bOutput = SpeechOutput;
-export type LongcatImageEditInput = EditImageInput;
 export type LongcatImageEditOutput = unoOutput;
 export type LongcatImageInput = FluxDevInput;
 export type LongcatImageOutput = unoOutput;
@@ -54159,9 +54434,6 @@ export type Ltx219bDistilledExtendVideoLoraInput =
 export type Ltx219bDistilledExtendVideoLoraOutput = LTX2ExtendVideoOutput;
 export type Ltx219bDistilledExtendVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx219bDistilledImageToVideoInput = LTX2DistilledImageToVideoInput;
-export type Ltx219bDistilledImageToVideoLoraInput =
-  LTX2LoRADistilledImageToVideoInput;
-export type Ltx219bDistilledImageToVideoLoraOutput = LTX2ExtendVideoOutput;
 export type Ltx219bDistilledImageToVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx219bDistilledTextToVideoInput = LTX2DistilledTextToVideoInput;
 export type Ltx219bDistilledTextToVideoLoraInput =
@@ -54270,15 +54542,12 @@ export type LumaDreamMachineRay2FlashImageToVideoInput =
   LumaDreamMachineRay2ImageToVideoInput;
 export type LumaDreamMachineRay2FlashImageToVideoOutput = I2VOutput;
 export type LumaDreamMachineRay2FlashInput = LumaDreamMachineRay2Input;
-export type LumaDreamMachineRay2FlashModifyInput =
-  LumaDreamMachineRay2ModifyInput;
 export type LumaDreamMachineRay2FlashModifyOutput = I2VOutput;
 export type LumaDreamMachineRay2FlashOutput = I2VOutput;
 export type LumaDreamMachineRay2FlashReframeInput =
   LumaDreamMachineRay2ReframeInput;
 export type LumaDreamMachineRay2FlashReframeOutput = I2VOutput;
 export type LumaDreamMachineRay2ImageToVideoOutput = I2VOutput;
-export type LumaDreamMachineRay2ModifyOutput = I2VOutput;
 export type LumaDreamMachineRay2Output = I2VOutput;
 export type LumaDreamMachineRay2ReframeOutput = I2VOutput;
 export type LumaPhotonFlashInput = LumaPhotonInput;
@@ -54321,14 +54590,10 @@ export type MergeImagesOutput = BlurOutput;
 export type MergeTextOutput = DiaTtsInput;
 export type MeshyV5MultiImageTo3dInput = MultiImageTo3DInput;
 export type MeshyV5MultiImageTo3dOutput = ImageTo3DOutput;
-export type MeshyV5RemeshInput = RemeshInput;
-export type MeshyV5RemeshOutput = RemeshOutput;
 export type MeshyV5RetextureInput = RetextureInput;
 export type MeshyV5RetextureOutput = RetextureOutput;
 export type MeshyV6ImageTo3dInput = ImageTo3DInput;
 export type MeshyV6ImageTo3dOutput = ImageTo3DOutput;
-export type MeshyV6PreviewImageTo3dInput = ImageTo3DInput;
-export type MeshyV6PreviewImageTo3dOutput = ImageTo3DOutput;
 export type MeshyV6PreviewTextTo3dInput = TextTo3DInput;
 export type MeshyV6PreviewTextTo3dOutput = TextTo3DOutput;
 export type MeshyV6TextTo3dInput = TextTo3DInput;
@@ -54369,8 +54634,6 @@ export type MinimaxMusicOutput = DiaOutput;
 export type MinimaxMusicV15Input = MinimaxMusicV2Input;
 export type MinimaxMusicV15Output = DiaOutput;
 export type MinimaxMusicV2Output = DiaOutput;
-export type MinimaxPreviewSpeech25HdInput = MinimaxSpeech02HdInput;
-export type MinimaxPreviewSpeech25HdOutput = TextToSpeechOutput;
 export type MinimaxPreviewSpeech25TurboInput = MinimaxSpeech02HdInput;
 export type MinimaxPreviewSpeech25TurboOutput = TextToSpeechOutput;
 export type MinimaxSpeech02HdOutput = TextToSpeechOutput;
@@ -54393,16 +54656,12 @@ export type MinimaxVideo01ImageToVideoInput = ProImageToVideoHailuo23Input;
 export type MinimaxVideo01ImageToVideoOutput = I2VOutput;
 export type MinimaxVideo01LiveImageToVideoInput = ProImageToVideoHailuo23Input;
 export type MinimaxVideo01LiveImageToVideoOutput = I2VOutput;
-export type MinimaxVideo01LiveInput = MinimaxVideo01Input;
-export type MinimaxVideo01LiveOutput = I2VOutput;
 export type MinimaxVideo01Output = I2VOutput;
 export type MinimaxVideo01SubjectReferenceOutput = I2VOutput;
 export type MinimaxVoiceCloneOutput = VoiceCloneOutput;
 export type MinimaxVoiceDesignOutput = VoiceDesignOutput;
 export type MixDehazeNetOutput = HEDOutput;
 export type MLSDOutput = HEDOutput;
-export type MmaudioV2Input = BaseInput;
-export type MmaudioV2Output = I2VOutput;
 export type MmaudioV2TextToAudioOutput = DiaOutput;
 export type MochiV1Output = I2VOutput;
 export type ModifyOutput = I2VOutput;
@@ -54468,6 +54727,7 @@ export type NanoBananaTextToImageOutput = NanoBananaOutput;
 export type NemotronAsrOutput = SpeechOutput;
 export type NemotronAsrStreamInput = NemotronAsrInput;
 export type NextSceneOutput = pulidOutput;
+export type Nextstep1Output = ccsrOutput;
 export type NovaSRTimings = LavaSRTimings;
 export type NSFWImageDetectionInput = ZoeInput;
 export type NSFWImageDetectionOutput = ImageutilsNsfwOutput;
@@ -54486,8 +54746,6 @@ export type O3StandardReferenceVideoI2VInput = O3ProReferenceVideoI2VInput;
 export type O3StandardReferenceVideoV2VInput = O3ProReferenceVideoV2VInput;
 export type O3StandardTextToVideoInput = O3ProTextToVideoInput;
 export type O3StandardTextToVideoOutput = I2VOutput;
-export type ObjectRemovalBboxInput = BboxInput;
-export type ObjectRemovalBboxOutput = BlurOutput;
 export type ObjectRemovalInput = PromptInput;
 export type ObjectRemovalMaskInput = MaskInput;
 export type ObjectRemovalMaskOutput = BlurOutput;
@@ -54508,14 +54766,10 @@ export type OmniVideoImageToVideoOutput = I2VOutput;
 export type OmniVideoReferenceToVideoOutput = I2VOutput;
 export type OmniZeroOutput = HEDOutput;
 export type onerewardOutput = unoOutput;
-export type OneToAllAnimation13bOutput = I2VOutput;
-export type OneToAllAnimation14bInput = OneToAllAnimation13bInput;
-export type OneToAllAnimation14bOutput = I2VOutput;
 export type OrpheusTtsOutput = DiaOutput;
 export type OutpaintOutput = BlurOutput;
 export type OverlayImageOutput = HEDOutput;
 export type OverlayVideoOutput = I2VOutput;
-export type OviImageToVideoOutput = oviOutput;
 export type OvisImageOutput = unoOutput;
 export type ParabolizeOutput = BlurOutput;
 export type PerspectiveOutput = BlurOutput;
@@ -54554,7 +54808,6 @@ export type PikaV21TextToVideoInput = TextToVideov21Input;
 export type PikaV21TextToVideoOutput = I2VOutput;
 export type PikaV22ImageToVideoOutput = I2VOutput;
 export type PikaV22PikaframesOutput = I2VOutput;
-export type PikaV22PikascenesOutput = I2VOutput;
 export type PikaV22TextToVideoOutput = I2VOutput;
 export type PikaV2PikadditionsOutput = I2VOutput;
 export type PikaV2TurboImageToVideoInput = ImageToVideov21Input;
@@ -54567,17 +54820,12 @@ export type PixverseExtendOutput = I2VOutput;
 export type PixverseLipsyncOutput = I2VOutput;
 export type PixverseSoundEffectsOutput = I2VOutput;
 export type PixverseSwapOutput = I2VOutput;
-export type PixverseV35EffectsInput = EffectInput;
-export type PixverseV35EffectsOutput = I2VOutput;
-export type PixverseV35ImageToVideoFastOutput = I2VOutput;
 export type PixverseV35ImageToVideoInput = PixverseV5ImageToVideoInput;
 export type PixverseV35ImageToVideoOutput = I2VOutput;
 export type PixverseV35TextToVideoFastInput = PixverseV4TextToVideoFastInput;
 export type PixverseV35TextToVideoFastOutput = I2VOutput;
 export type PixverseV35TextToVideoInput = PixverseV4TextToVideoInput;
 export type PixverseV35TextToVideoOutput = I2VOutput;
-export type PixverseV35TransitionInput = PixverseV5TransitionInput;
-export type PixverseV35TransitionOutput = I2VOutput;
 export type PixverseV45EffectsInput = EffectInput;
 export type PixverseV45EffectsOutput = I2VOutput;
 export type PixverseV45ImageToVideoFastInput = PixverseV4ImageToVideoFastInput;
@@ -54625,8 +54873,6 @@ export type plushifyOutput = unoOutput;
 export type PonyV7Output = unoOutput;
 export type PortraitOutput = BlurOutput;
 export type PoseTransferOutput = VTONOutput;
-export type PostProcessingBlurInput = BlurInput;
-export type PostProcessingBlurOutput = BlurOutput;
 export type PostProcessingChromaticAberrationInput = ChromaticAberrationInput;
 export type PostProcessingChromaticAberrationOutput = BlurOutput;
 export type PostProcessingColorCorrectionInput = ColorCorrectionInput;
@@ -54694,9 +54940,9 @@ export type QwenImage2512Input = OvisImageInput;
 export type QwenImage2512LoraInput = LoraInput;
 export type QwenImage2512LoraOutput = unoOutput;
 export type QwenImage2512Output = unoOutput;
-export type QwenImage2512TrainerInput = QwenImageTrainerV2Input;
+export type QwenImage2512TrainerInput = ZImageBaseTrainerInput;
 export type QwenImage2512TrainerOutput = Flux2TrainerOutput;
-export type QwenImage2512TrainerV2Input = QwenImageTrainerV2Input;
+export type QwenImage2512TrainerV2Input = ZImageBaseTrainerInput;
 export type QwenImage2512TrainerV2Output = Flux2TrainerOutput;
 export type QwenImage2EditOutput = imagen3Output;
 export type QwenImage2ProEditInput = QwenImage2EditInput;
@@ -54704,7 +54950,7 @@ export type QwenImage2ProEditOutput = imagen3Output;
 export type QwenImage2ProTextToImageInput = QwenImage2TextToImageInput;
 export type QwenImage2ProTextToImageOutput = imagen3Output;
 export type QwenImage2TextToImageOutput = imagen3Output;
-export type QwenImageEdit2509Input = Klein4BBaseEditInput;
+export type QwenImageEdit2509Input = EditImageInput;
 export type QwenImageEdit2509LoraGalleryAddBackgroundInput = NextSceneInput;
 export type QwenImageEdit2509LoraGalleryAddBackgroundOutput = pulidOutput;
 export type QwenImageEdit2509LoraGalleryFaceToFullPortraitInput =
@@ -54724,23 +54970,34 @@ export type QwenImageEdit2509LoraGalleryNextSceneInput = NextSceneInput;
 export type QwenImageEdit2509LoraGalleryNextSceneOutput = pulidOutput;
 export type QwenImageEdit2509LoraGalleryRemoveElementInput = NextSceneInput;
 export type QwenImageEdit2509LoraGalleryRemoveElementOutput = pulidOutput;
+export type QwenImageEdit2509LoraGalleryRemoveLightingInput =
+  RemoveLightingInput;
+export type QwenImageEdit2509LoraGalleryRemoveLightingOutput = pulidOutput;
 export type QwenImageEdit2509LoraGalleryShirtDesignInput = NextSceneInput;
 export type QwenImageEdit2509LoraGalleryShirtDesignOutput = pulidOutput;
 export type QwenImageEdit2509LoraInput = EditImageLoraInput;
 export type QwenImageEdit2509LoraOutput = unoOutput;
 export type QwenImageEdit2509Output = unoOutput;
-export type QwenImageEdit2509TrainerInput = QwenImageTrainerV2Input;
+export type QwenImageEdit2509TrainerInput = ZImageBaseTrainerInput;
 export type QwenImageEdit2509TrainerOutput = Flux2TrainerOutput;
-export type QwenImageEdit2511Input = Klein4BBaseEditInput;
+export type QwenImageEdit2511Input = EditImageInput;
+export type QwenImageEdit2511LoraInput = EditImageLoraInput;
+export type QwenImageEdit2511LoraOutput = unoOutput;
+export type QwenImageEdit2511MultipleAnglesOutput = AuraFlowOutput;
 export type QwenImageEdit2511Output = unoOutput;
-export type QwenImageEdit2511TrainerInput = QwenImageTrainerV2Input;
+export type QwenImageEdit2511TrainerInput = ZImageBaseTrainerInput;
 export type QwenImageEdit2511TrainerOutput = Flux2TrainerOutput;
 export type QwenImageEditImageToImageInput = BaseQwenEditImg2ImgInput;
 export type QwenImageEditImageToImageOutput = unoOutput;
 export type QwenImageEditInpaintOutput = unoOutput;
+export type QwenImageEditLoraOutput = unoOutput;
 export type QwenImageEditOutput = unoOutput;
+export type QwenImageEditPlusInput = EditImageInput;
 export type QwenImageEditPlusLoraGalleryAddBackgroundInput = NextSceneInput;
 export type QwenImageEditPlusLoraGalleryAddBackgroundOutput = pulidOutput;
+export type QwenImageEditPlusLoraGalleryFaceToFullPortraitInput =
+  NextSceneInput;
+export type QwenImageEditPlusLoraGalleryFaceToFullPortraitOutput = pulidOutput;
 export type QwenImageEditPlusLoraGalleryGroupPhotoInput = NextSceneInput;
 export type QwenImageEditPlusLoraGalleryGroupPhotoOutput = pulidOutput;
 export type QwenImageEditPlusLoraGalleryIntegrateProductInput = NextSceneInput;
@@ -54762,9 +55019,10 @@ export type QwenImageEditPlusLoraGalleryShirtDesignInput = NextSceneInput;
 export type QwenImageEditPlusLoraGalleryShirtDesignOutput = pulidOutput;
 export type QwenImageEditPlusLoraInput = EditImageLoraInput;
 export type QwenImageEditPlusLoraOutput = unoOutput;
-export type QwenImageEditPlusTrainerInput = QwenImageTrainerV2Input;
+export type QwenImageEditPlusOutput = unoOutput;
+export type QwenImageEditPlusTrainerInput = ZImageBaseTrainerInput;
 export type QwenImageEditPlusTrainerOutput = Flux2TrainerOutput;
-export type QwenImageEditTrainerInput = QwenImageTrainerV2Input;
+export type QwenImageEditTrainerInput = ZImageBaseTrainerInput;
 export type QwenImageEditTrainerOutput = Flux2TrainerOutput;
 export type QwenImageI2IOutput = unoOutput;
 export type QwenImageImageToImageInput = QwenImageI2IInput;
@@ -54772,7 +55030,7 @@ export type QwenImageImageToImageOutput = unoOutput;
 export type QwenImageInpaintOutput = unoOutput;
 export type QwenImageLayeredLoraInput = TextToImageLoRAInput;
 export type QwenImageLayeredLoraOutput = QwenImageLayeredOutput;
-export type QwenImageLayeredTrainerInput = QwenImageTrainerV2Input;
+export type QwenImageLayeredTrainerInput = ZImageBaseTrainerInput;
 export type QwenImageLayeredTrainerOutput = Flux2TrainerOutput;
 export type QwenImageMaxEditInput = QwenImage2EditInput;
 export type QwenImageMaxEditOutput = imagen3Output;
@@ -54780,6 +55038,7 @@ export type QwenImageMaxTextToImageInput = QwenImage2TextToImageInput;
 export type QwenImageMaxTextToImageOutput = imagen3Output;
 export type QwenImageOutput = unoOutput;
 export type QwenImageTrainerOutput = WanTrainerOutput;
+export type QwenImageTrainerV2Input = ZImageBaseTrainerInput;
 export type QwenImageTrainerV2Output = Flux2TrainerOutput;
 export type Ray2I2VOutput = I2VOutput;
 export type Ray2T2VOutput = I2VOutput;
@@ -54931,6 +55190,7 @@ export type SdxlControlnetUnionImageToImageInput =
 export type SdxlControlnetUnionImageToImageOutput = unoOutput;
 export type SdxlControlnetUnionInpaintingInput = InpaintingControlNetUnionInput;
 export type SdxlControlnetUnionInpaintingOutput = unoOutput;
+export type SdxlControlnetUnionOutput = unoOutput;
 export type Seed3DImageTo3DInput = ZoeInput;
 export type Seedance2VideoOutput = magiOutput;
 export type SeedanceFastI2VVideoOutput = magiOutput;
@@ -55064,6 +55324,7 @@ export type TextRemovalOutput = pulidOutput;
 export type TextToDialogueOutput = TextToAudioOutput;
 export type TextToImage32Output = HEDOutput;
 export type TextToImageControlNetInput = Sd15DepthControlnetInput;
+export type TextToImageControlNetUnionInput = SdxlControlnetUnionInput;
 export type TextToImageFooocusInput = FastFooocusSdxlInput;
 export type TextToImageLightningInput = FastLightningSdxlInput;
 export type TextToImagePlaygroundv25Input = PlaygroundV25Input;
@@ -55231,12 +55492,16 @@ export type Wan22TrainerI2vA14bInput = WanTrainerInput;
 export type Wan22TrainerI2vA14bOutput = WanTrainerOutput;
 export type Wan22TrainerT2vA14bInput = WanTrainerInput;
 export type Wan22TrainerT2vA14bOutput = WanTrainerOutput;
+export type Wan22VaceFunA14bDepthInput = WanVace14bPoseInput;
+export type Wan22VaceFunA14bDepthOutput = edittoOutput;
 export type Wan22VaceFunA14bInpaintingInput = WanVace14bInpaintingInput;
 export type Wan22VaceFunA14bInpaintingOutput = edittoOutput;
 export type Wan22VaceFunA14bOutpaintingInput = WanVace14bOutpaintingInput;
 export type Wan22VaceFunA14bOutpaintingOutput = edittoOutput;
 export type Wan22VaceFunA14bPoseInput = WanVace14bPoseInput;
 export type Wan22VaceFunA14bPoseOutput = edittoOutput;
+export type Wan22VaceFunA14bReframeInput = WanVace14bReframeInput;
+export type Wan22VaceFunA14bReframeOutput = edittoOutput;
 export type Wan25PreviewImageToImageOutput = TextToImageOutput;
 export type Wan25PreviewImageToVideoOutput = TextToVideoOutput;
 export type Wan25PreviewTextToImageOutput = TextToImageOutput;
@@ -55285,14 +55550,23 @@ export type WanV22A14bTextToImageOutput = StarVectorOutput;
 export type WanV22A14bTextToVideoLoraOutput = WanMotionOutput;
 export type WanV22A14bTextToVideoOutput = WanMotionOutput;
 export type WanV22A14bTextToVideoTurboOutput = WanMotionOutput;
+export type WanV22A14bVideoToVideoOutput = WanMotionOutput;
 export type WanV27EditInput = ImageEditInput;
 export type WanV27EditOutput = imagen3Output;
+export type WanV27EditVideoInput = Wan27VideoEditInput;
+export type WanV27EditVideoOutput = TextToVideoOutput;
+export type WanV27ImageToVideoInput = Wan27ImageToVideoInput;
+export type WanV27ImageToVideoOutput = TextToVideoOutput;
 export type WanV27ProEditInput = ImageEditInput;
 export type WanV27ProEditOutput = imagen3Output;
 export type WanV27ProTextToImageInput = Wan27TextToImageInput;
 export type WanV27ProTextToImageOutput = TextToImageWanOutput;
+export type WanV27ReferenceToVideoInput = Wan27ReferenceToVideoInput;
+export type WanV27ReferenceToVideoOutput = TextToVideoOutput;
 export type WanV27TextToImageInput = Wan27TextToImageInput;
 export type WanV27TextToImageOutput = TextToImageWanOutput;
+export type WanV27TextToVideoInput = Wan27TextToVideoInput;
+export type WanV27TextToVideoOutput = TextToVideoOutput;
 export type WanVace13bInput = WanVaceInput;
 export type WanVace13bOutput = magiOutput;
 export type WanVace14bDepthInput = WanVace14bPoseInput;
@@ -55313,11 +55587,20 @@ export type WorkflowUtilitiesAudioCompressorInput = AudioCompressorInput;
 export type WorkflowUtilitiesAudioCompressorOutput = MiniOutput;
 export type WorkflowUtilitiesAutoSubtitleInput = AutoSubtitleInput;
 export type WorkflowUtilitiesAutoSubtitleOutput = AutoSubtitleOutput;
+export type WorkflowUtilitiesBlendVideoInput = BlendVideoInput;
+export type WorkflowUtilitiesBlendVideoOutput = I2VOutput;
 export type WorkflowUtilitiesExtractNthFrameInput = ExtractNthFrameInput;
 export type WorkflowUtilitiesExtractNthFrameOutput = ExtractNthFrameOutput;
+export type WorkflowUtilitiesImpulseResponseInput = ImpulseResponseInput;
+export type WorkflowUtilitiesImpulseResponseOutput = MiniOutput;
+export type WorkflowUtilitiesReverseVideoInput = AutoCaptionOutput;
+export type WorkflowUtilitiesReverseVideoOutput = I2VOutput;
 export type WorkflowUtilitiesScaleVideoInput = ScaleVideoInput;
 export type WorkflowUtilitiesScaleVideoOutput = ScaleVideoOutput;
+export type WorkflowUtilitiesTrimVideoInput = TrimVideoInput;
+export type WorkflowUtilitiesTrimVideoOutput = TrimVideoOutput;
 export type XAIImageEditOutput = XAIImageOutput;
+export type XAIImageInput = photaInput;
 export type XAIImageToVideoOutput = React1Output;
 export type XAIReferenceToVideoOutput = React1Output;
 export type XAITextToVideoOutput = React1Output;
@@ -55332,6 +55615,7 @@ export type ZImageBaseLoraOutput = Flux2Output;
 export type ZImageBaseOutput = Flux2Output;
 export type ZImageBaseTextToImageInput = OvisImageInput;
 export type ZImageBaseTextToImageLoRAInput = ZImageBaseLoraInput;
+export type ZImageBaseTrainerOutput = Flux2TrainerOutput;
 export type ZImageTrainerOutput = Flux2TrainerOutput;
 export type ZImageTurboControlNetInput = ZImageTurboControlnetInput;
 export type ZImageTurboControlNetLoRAInput = ZImageTurboControlnetLoraInput;
@@ -55351,7 +55635,7 @@ export type ZImageTurboTextToImageLoRAInput = ZImageTurboLoraInput;
 export type ZImageTurboTilingLoRAInput = ZImageTurboTilingLoraInput;
 export type ZImageTurboTilingLoraOutput = Flux2Output;
 export type ZImageTurboTilingOutput = Flux2Output;
-export type ZImageTurboTrainerV2Input = QwenImageTrainerV2Input;
+export type ZImageTurboTrainerV2Input = ZImageBaseTrainerInput;
 export type ZImageTurboTrainerV2Output = Flux2TrainerOutput;
 export type ZoeOutput = HEDOutput;
 export type zonosOutput = DiaOutput;
@@ -55419,10 +55703,6 @@ export type EndpointTypeMap = {
   "bria/fibo-edit/sketch_to_colored_image": {
     input: FiboEditSketchToColoredImageInput;
     output: FiboEditSketchToColoredImageOutput;
-  };
-  "bria/fibo-lite/generate": {
-    input: FiboLiteGenerateInput;
-    output: FiboLiteGenerateOutput;
   };
   "bria/fibo/generate": {
     input: FiboGenerateInput;
@@ -55515,10 +55795,6 @@ export type EndpointTypeMap = {
   "fal-ai/ace-step/prompt-to-audio": {
     input: AceStepPromptToAudioInput;
     output: AceStepPromptToAudioOutput;
-  };
-  "fal-ai/ai-avatar": {
-    input: AiAvatarInput;
-    output: AiAvatarOutput;
   };
   "fal-ai/ai-avatar/multi": {
     input: AiAvatarMultiInput;
@@ -56012,10 +56288,6 @@ export type EndpointTypeMap = {
     input: FastAnimatediffTextToVideoInput;
     output: FastAnimatediffTextToVideoOutput;
   };
-  "fal-ai/fast-animatediff/turbo/text-to-video": {
-    input: FastAnimatediffTurboTextToVideoInput;
-    output: FastAnimatediffTurboTextToVideoOutput;
-  };
   "fal-ai/fast-animatediff/turbo/video-to-video": {
     input: FastAnimatediffTurboVideoToVideoInput;
     output: FastAnimatediffTurboVideoToVideoOutput;
@@ -56103,10 +56375,6 @@ export type EndpointTypeMap = {
   "fal-ai/ffmpeg-api/loudnorm": {
     input: FfmpegApiLoudnormInput;
     output: FfmpegApiLoudnormOutput;
-  };
-  "fal-ai/ffmpeg-api/merge-audio-video": {
-    input: FfmpegApiMergeAudioVideoInput;
-    output: FfmpegApiMergeAudioVideoOutput;
   };
   "fal-ai/ffmpeg-api/merge-audios": {
     input: FfmpegApiMergeAudiosInput;
@@ -56372,10 +56640,6 @@ export type EndpointTypeMap = {
     input: Flux2FlashEditInput;
     output: Flux2FlashEditOutput;
   };
-  "fal-ai/flux-2/klein/4b": {
-    input: Flux2Klein4bInput;
-    output: Flux2Klein4bOutput;
-  };
   "fal-ai/flux-2/klein/4b/base": {
     input: Flux2Klein4bBaseInput;
     output: Flux2Klein4bBaseOutput;
@@ -56383,14 +56647,6 @@ export type EndpointTypeMap = {
   "fal-ai/flux-2/klein/4b/base/edit": {
     input: Flux2Klein4bBaseEditInput;
     output: Flux2Klein4bBaseEditOutput;
-  };
-  "fal-ai/flux-2/klein/4b/base/edit/lora": {
-    input: Flux2Klein4bBaseEditLoraInput;
-    output: Flux2Klein4bBaseEditLoraOutput;
-  };
-  "fal-ai/flux-2/klein/4b/base/lora": {
-    input: Flux2Klein4bBaseLoraInput;
-    output: Flux2Klein4bBaseLoraOutput;
   };
   "fal-ai/flux-2/klein/4b/edit": {
     input: Flux2Klein4bEditInput;
@@ -56500,10 +56756,6 @@ export type EndpointTypeMap = {
     input: FluxKontextLoraInput;
     output: FluxKontextLoraOutput;
   };
-  "fal-ai/flux-kontext-lora/inpaint": {
-    input: FluxKontextLoraInpaintInput;
-    output: FluxKontextLoraInpaintOutput;
-  };
   "fal-ai/flux-kontext-lora/text-to-image": {
     input: FluxKontextLoraTextToImageInput;
     output: FluxKontextLoraTextToImageOutput;
@@ -56563,10 +56815,6 @@ export type EndpointTypeMap = {
   "fal-ai/flux-lora/image-to-image": {
     input: FluxLoraImageToImageInput;
     output: FluxLoraImageToImageOutput;
-  };
-  "fal-ai/flux-lora/inpainting": {
-    input: FluxLoraInpaintingInput;
-    output: FluxLoraInpaintingOutput;
   };
   "fal-ai/flux-lora/stream": {
     input: FluxLoraStreamInput;
@@ -56651,10 +56899,6 @@ export type EndpointTypeMap = {
   "fal-ai/flux/dev/image-to-image": {
     input: FluxDevImageToImageInput;
     output: FluxDevImageToImageOutput;
-  };
-  "fal-ai/flux/dev/redux": {
-    input: FluxDevReduxInput;
-    output: FluxDevReduxOutput;
   };
   "fal-ai/flux/krea": {
     input: FluxKreaInput;
@@ -56856,6 +57100,10 @@ export type EndpointTypeMap = {
     input: HunyuanWorldImageToWorldInput;
     output: HunyuanWorldImageToWorldOutput;
   };
+  "fal-ai/hunyuan-3d/v3.1/part": {
+    input: Hunyuan3dV31PartInput;
+    output: Hunyuan3dV31PartOutput;
+  };
   "fal-ai/hunyuan-3d/v3.1/pro/image-to-3d": {
     input: Hunyuan3dV31ProImageTo3dInput;
     output: Hunyuan3dV31ProImageTo3dOutput;
@@ -56904,17 +57152,9 @@ export type EndpointTypeMap = {
     input: HunyuanMotionInput;
     output: HunyuanMotionOutput;
   };
-  "fal-ai/hunyuan-motion/fast": {
-    input: HunyuanMotionFastInput;
-    output: HunyuanMotionFastOutput;
-  };
   "fal-ai/hunyuan-portrait": {
     input: HunyuanPortraitInput;
     output: HunyuanPortraitOutput;
-  };
-  "fal-ai/hunyuan-video": {
-    input: HunyuanVideoInput;
-    output: HunyuanVideoOutput;
   };
   "fal-ai/hunyuan-video-foley": {
     input: HunyuanVideoFoleyInput;
@@ -57588,10 +57828,6 @@ export type EndpointTypeMap = {
     input: KlingVideoV21MasterTextToVideoInput;
     output: KlingVideoV21MasterTextToVideoOutput;
   };
-  "fal-ai/kling-video/v2.1/pro/image-to-video": {
-    input: KlingVideoV21ProImageToVideoInput;
-    output: KlingVideoV21ProImageToVideoOutput;
-  };
   "fal-ai/kling-video/v2.1/standard/image-to-video": {
     input: KlingVideoV21StandardImageToVideoInput;
     output: KlingVideoV21StandardImageToVideoOutput;
@@ -57868,10 +58104,6 @@ export type EndpointTypeMap = {
     input: Ltx219bDistilledImageToVideoInput;
     output: Ltx219bDistilledImageToVideoOutput;
   };
-  "fal-ai/ltx-2-19b/distilled/image-to-video/lora": {
-    input: Ltx219bDistilledImageToVideoLoraInput;
-    output: Ltx219bDistilledImageToVideoLoraOutput;
-  };
   "fal-ai/ltx-2-19b/distilled/text-to-video": {
     input: Ltx219bDistilledTextToVideoInput;
     output: Ltx219bDistilledTextToVideoOutput;
@@ -58112,10 +58344,6 @@ export type EndpointTypeMap = {
     input: LumaDreamMachineRay2ImageToVideoInput;
     output: LumaDreamMachineRay2ImageToVideoOutput;
   };
-  "fal-ai/luma-dream-machine/ray-2/modify": {
-    input: LumaDreamMachineRay2ModifyInput;
-    output: LumaDreamMachineRay2ModifyOutput;
-  };
   "fal-ai/luma-dream-machine/ray-2/reframe": {
     input: LumaDreamMachineRay2ReframeInput;
     output: LumaDreamMachineRay2ReframeOutput;
@@ -58192,17 +58420,9 @@ export type EndpointTypeMap = {
     input: MeshyV5MultiImageTo3dInput;
     output: MeshyV5MultiImageTo3dOutput;
   };
-  "fal-ai/meshy/v5/remesh": {
-    input: MeshyV5RemeshInput;
-    output: MeshyV5RemeshOutput;
-  };
   "fal-ai/meshy/v5/retexture": {
     input: MeshyV5RetextureInput;
     output: MeshyV5RetextureOutput;
-  };
-  "fal-ai/meshy/v6-preview/image-to-3d": {
-    input: MeshyV6PreviewImageTo3dInput;
-    output: MeshyV6PreviewImageTo3dOutput;
   };
   "fal-ai/meshy/v6-preview/text-to-3d": {
     input: MeshyV6PreviewTextTo3dInput;
@@ -58280,10 +58500,6 @@ export type EndpointTypeMap = {
     input: MinimaxImage01SubjectReferenceInput;
     output: MinimaxImage01SubjectReferenceOutput;
   };
-  "fal-ai/minimax/preview/speech-2.5-hd": {
-    input: MinimaxPreviewSpeech25HdInput;
-    output: MinimaxPreviewSpeech25HdOutput;
-  };
   "fal-ai/minimax/preview/speech-2.5-turbo": {
     input: MinimaxPreviewSpeech25TurboInput;
     output: MinimaxPreviewSpeech25TurboOutput;
@@ -58324,10 +58540,6 @@ export type EndpointTypeMap = {
     input: MinimaxVideo01DirectorImageToVideoInput;
     output: MinimaxVideo01DirectorImageToVideoOutput;
   };
-  "fal-ai/minimax/video-01-live": {
-    input: MinimaxVideo01LiveInput;
-    output: MinimaxVideo01LiveOutput;
-  };
   "fal-ai/minimax/video-01-live/image-to-video": {
     input: MinimaxVideo01LiveImageToVideoInput;
     output: MinimaxVideo01LiveImageToVideoOutput;
@@ -58351,10 +58563,6 @@ export type EndpointTypeMap = {
   "fal-ai/mix-dehaze-net": {
     input: MixDehazeNetInput;
     output: MixDehazeNetOutput;
-  };
-  "fal-ai/mmaudio-v2": {
-    input: MmaudioV2Input;
-    output: MmaudioV2Output;
   };
   "fal-ai/mmaudio-v2/text-to-audio": {
     input: MmaudioV2TextToAudioInput;
@@ -58464,6 +58672,10 @@ export type EndpointTypeMap = {
     input: NemotronAsrInput;
     output: NemotronAsrOutput;
   };
+  "fal-ai/nextstep-1": {
+    input: Nextstep1Input;
+    output: Nextstep1Output;
+  };
   "fal-ai/nova-sr": {
     input: NovaSrInput;
     output: NovaSrOutput;
@@ -58471,10 +58683,6 @@ export type EndpointTypeMap = {
   "fal-ai/object-removal": {
     input: ObjectRemovalInput;
     output: ObjectRemovalOutput;
-  };
-  "fal-ai/object-removal/bbox": {
-    input: ObjectRemovalBboxInput;
-    output: ObjectRemovalBboxOutput;
   };
   "fal-ai/object-removal/mask": {
     input: ObjectRemovalMaskInput;
@@ -58508,14 +58716,6 @@ export type EndpointTypeMap = {
     input: omnipartInput;
     output: omnipartOutput;
   };
-  "fal-ai/one-to-all-animation/1.3b": {
-    input: OneToAllAnimation13bInput;
-    output: OneToAllAnimation13bOutput;
-  };
-  "fal-ai/one-to-all-animation/14b": {
-    input: OneToAllAnimation14bInput;
-    output: OneToAllAnimation14bOutput;
-  };
   "fal-ai/onereward": {
     input: onerewardInput;
     output: onerewardOutput;
@@ -58523,14 +58723,6 @@ export type EndpointTypeMap = {
   "fal-ai/orpheus-tts": {
     input: OrpheusTtsInput;
     output: OrpheusTtsOutput;
-  };
-  "fal-ai/ovi": {
-    input: oviInput;
-    output: oviOutput;
-  };
-  "fal-ai/ovi/image-to-video": {
-    input: OviImageToVideoInput;
-    output: OviImageToVideoOutput;
   };
   "fal-ai/ovis-image": {
     input: OvisImageInput;
@@ -58596,10 +58788,6 @@ export type EndpointTypeMap = {
     input: PikaV22PikaframesInput;
     output: PikaV22PikaframesOutput;
   };
-  "fal-ai/pika/v2.2/pikascenes": {
-    input: PikaV22PikascenesInput;
-    output: PikaV22PikascenesOutput;
-  };
   "fal-ai/pika/v2.2/text-to-video": {
     input: PikaV22TextToVideoInput;
     output: PikaV22TextToVideoOutput;
@@ -58640,17 +58828,9 @@ export type EndpointTypeMap = {
     input: PixverseSwapInput;
     output: PixverseSwapOutput;
   };
-  "fal-ai/pixverse/v3.5/effects": {
-    input: PixverseV35EffectsInput;
-    output: PixverseV35EffectsOutput;
-  };
   "fal-ai/pixverse/v3.5/image-to-video": {
     input: PixverseV35ImageToVideoInput;
     output: PixverseV35ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v3.5/image-to-video/fast": {
-    input: PixverseV35ImageToVideoFastInput;
-    output: PixverseV35ImageToVideoFastOutput;
   };
   "fal-ai/pixverse/v3.5/text-to-video": {
     input: PixverseV35TextToVideoInput;
@@ -58659,10 +58839,6 @@ export type EndpointTypeMap = {
   "fal-ai/pixverse/v3.5/text-to-video/fast": {
     input: PixverseV35TextToVideoFastInput;
     output: PixverseV35TextToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v3.5/transition": {
-    input: PixverseV35TransitionInput;
-    output: PixverseV35TransitionOutput;
   };
   "fal-ai/pixverse/v4.5/effects": {
     input: PixverseV45EffectsInput;
@@ -58791,10 +58967,6 @@ export type EndpointTypeMap = {
   "fal-ai/post-processing": {
     input: PostProcessingInput;
     output: PostProcessingOutput;
-  };
-  "fal-ai/post-processing/blur": {
-    input: PostProcessingBlurInput;
-    output: PostProcessingBlurOutput;
   };
   "fal-ai/post-processing/chromatic-aberration": {
     input: PostProcessingChromaticAberrationInput;
@@ -58952,6 +59124,10 @@ export type EndpointTypeMap = {
     input: QwenImageEdit2509LoraGalleryRemoveElementInput;
     output: QwenImageEdit2509LoraGalleryRemoveElementOutput;
   };
+  "fal-ai/qwen-image-edit-2509-lora-gallery/remove-lighting": {
+    input: QwenImageEdit2509LoraGalleryRemoveLightingInput;
+    output: QwenImageEdit2509LoraGalleryRemoveLightingOutput;
+  };
   "fal-ai/qwen-image-edit-2509-lora-gallery/shirt-design": {
     input: QwenImageEdit2509LoraGalleryShirtDesignInput;
     output: QwenImageEdit2509LoraGalleryShirtDesignOutput;
@@ -58964,9 +59140,25 @@ export type EndpointTypeMap = {
     input: QwenImageEdit2511Input;
     output: QwenImageEdit2511Output;
   };
+  "fal-ai/qwen-image-edit-2511-multiple-angles": {
+    input: QwenImageEdit2511MultipleAnglesInput;
+    output: QwenImageEdit2511MultipleAnglesOutput;
+  };
   "fal-ai/qwen-image-edit-2511-trainer": {
     input: QwenImageEdit2511TrainerInput;
     output: QwenImageEdit2511TrainerOutput;
+  };
+  "fal-ai/qwen-image-edit-2511/lora": {
+    input: QwenImageEdit2511LoraInput;
+    output: QwenImageEdit2511LoraOutput;
+  };
+  "fal-ai/qwen-image-edit-lora": {
+    input: QwenImageEditLoraInput;
+    output: QwenImageEditLoraOutput;
+  };
+  "fal-ai/qwen-image-edit-plus": {
+    input: QwenImageEditPlusInput;
+    output: QwenImageEditPlusOutput;
   };
   "fal-ai/qwen-image-edit-plus-lora": {
     input: QwenImageEditPlusLoraInput;
@@ -58975,6 +59167,10 @@ export type EndpointTypeMap = {
   "fal-ai/qwen-image-edit-plus-lora-gallery/add-background": {
     input: QwenImageEditPlusLoraGalleryAddBackgroundInput;
     output: QwenImageEditPlusLoraGalleryAddBackgroundOutput;
+  };
+  "fal-ai/qwen-image-edit-plus-lora-gallery/face-to-full-portrait": {
+    input: QwenImageEditPlusLoraGalleryFaceToFullPortraitInput;
+    output: QwenImageEditPlusLoraGalleryFaceToFullPortraitOutput;
   };
   "fal-ai/qwen-image-edit-plus-lora-gallery/group-photo": {
     input: QwenImageEditPlusLoraGalleryGroupPhotoInput;
@@ -59239,6 +59435,10 @@ export type EndpointTypeMap = {
   "fal-ai/sd15-depth-controlnet": {
     input: Sd15DepthControlnetInput;
     output: Sd15DepthControlnetOutput;
+  };
+  "fal-ai/sdxl-controlnet-union": {
+    input: SdxlControlnetUnionInput;
+    output: SdxlControlnetUnionOutput;
   };
   "fal-ai/sdxl-controlnet-union/image-to-image": {
     input: SdxlControlnetUnionImageToImageInput;
@@ -59672,6 +59872,10 @@ export type EndpointTypeMap = {
     input: Wan22TrainerT2vA14bInput;
     output: Wan22TrainerT2vA14bOutput;
   };
+  "fal-ai/wan-22-vace-fun-a14b/depth": {
+    input: Wan22VaceFunA14bDepthInput;
+    output: Wan22VaceFunA14bDepthOutput;
+  };
   "fal-ai/wan-22-vace-fun-a14b/inpainting": {
     input: Wan22VaceFunA14bInpaintingInput;
     output: Wan22VaceFunA14bInpaintingOutput;
@@ -59683,6 +59887,10 @@ export type EndpointTypeMap = {
   "fal-ai/wan-22-vace-fun-a14b/pose": {
     input: Wan22VaceFunA14bPoseInput;
     output: Wan22VaceFunA14bPoseOutput;
+  };
+  "fal-ai/wan-22-vace-fun-a14b/reframe": {
+    input: Wan22VaceFunA14bReframeInput;
+    output: Wan22VaceFunA14bReframeOutput;
   };
   "fal-ai/wan-25-preview/image-to-image": {
     input: Wan25PreviewImageToImageInput;
@@ -59880,9 +60088,21 @@ export type EndpointTypeMap = {
     input: WanV22A14bTextToVideoTurboInput;
     output: WanV22A14bTextToVideoTurboOutput;
   };
+  "fal-ai/wan/v2.2-a14b/video-to-video": {
+    input: WanV22A14bVideoToVideoInput;
+    output: WanV22A14bVideoToVideoOutput;
+  };
   "fal-ai/wan/v2.7/edit": {
     input: WanV27EditInput;
     output: WanV27EditOutput;
+  };
+  "fal-ai/wan/v2.7/edit-video": {
+    input: WanV27EditVideoInput;
+    output: WanV27EditVideoOutput;
+  };
+  "fal-ai/wan/v2.7/image-to-video": {
+    input: WanV27ImageToVideoInput;
+    output: WanV27ImageToVideoOutput;
   };
   "fal-ai/wan/v2.7/pro/edit": {
     input: WanV27ProEditInput;
@@ -59892,9 +60112,21 @@ export type EndpointTypeMap = {
     input: WanV27ProTextToImageInput;
     output: WanV27ProTextToImageOutput;
   };
+  "fal-ai/wan/v2.7/reference-to-video": {
+    input: WanV27ReferenceToVideoInput;
+    output: WanV27ReferenceToVideoOutput;
+  };
   "fal-ai/wan/v2.7/text-to-image": {
     input: WanV27TextToImageInput;
     output: WanV27TextToImageOutput;
+  };
+  "fal-ai/wan/v2.7/text-to-video": {
+    input: WanV27TextToVideoInput;
+    output: WanV27TextToVideoOutput;
+  };
+  "fal-ai/whisper": {
+    input: whisperInput;
+    output: whisperOutput;
   };
   "fal-ai/wizper": {
     input: wizperInput;
@@ -59908,13 +60140,29 @@ export type EndpointTypeMap = {
     input: WorkflowUtilitiesAutoSubtitleInput;
     output: WorkflowUtilitiesAutoSubtitleOutput;
   };
+  "fal-ai/workflow-utilities/blend-video": {
+    input: WorkflowUtilitiesBlendVideoInput;
+    output: WorkflowUtilitiesBlendVideoOutput;
+  };
   "fal-ai/workflow-utilities/extract-nth-frame": {
     input: WorkflowUtilitiesExtractNthFrameInput;
     output: WorkflowUtilitiesExtractNthFrameOutput;
   };
+  "fal-ai/workflow-utilities/impulse-response": {
+    input: WorkflowUtilitiesImpulseResponseInput;
+    output: WorkflowUtilitiesImpulseResponseOutput;
+  };
+  "fal-ai/workflow-utilities/reverse-video": {
+    input: WorkflowUtilitiesReverseVideoInput;
+    output: WorkflowUtilitiesReverseVideoOutput;
+  };
   "fal-ai/workflow-utilities/scale-video": {
     input: WorkflowUtilitiesScaleVideoInput;
     output: WorkflowUtilitiesScaleVideoOutput;
+  };
+  "fal-ai/workflow-utilities/trim-video": {
+    input: WorkflowUtilitiesTrimVideoInput;
+    output: WorkflowUtilitiesTrimVideoOutput;
   };
   "fal-ai/x-ailab/nsfw": {
     input: XAilabNsfwInput;
@@ -59923,6 +60171,10 @@ export type EndpointTypeMap = {
   "fal-ai/yue": {
     input: yueInput;
     output: yueOutput;
+  };
+  "fal-ai/z-image-base-trainer": {
+    input: ZImageBaseTrainerInput;
+    output: ZImageBaseTrainerOutput;
   };
   "fal-ai/z-image-trainer": {
     input: ZImageTrainerInput;
@@ -59987,6 +60239,10 @@ export type EndpointTypeMap = {
   "imagineart/imagineart-1.5-preview/text-to-image": {
     input: Imagineart15PreviewTextToImageInput;
     output: Imagineart15PreviewTextToImageOutput;
+  };
+  "imagineart/imagineart-1.5-pro-preview/text-to-image": {
+    input: Imagineart15ProPreviewTextToImageInput;
+    output: Imagineart15ProPreviewTextToImageOutput;
   };
   "mirelo-ai/sfx-v1.5/video-to-audio": {
     input: SfxV15VideoToAudioInput;
