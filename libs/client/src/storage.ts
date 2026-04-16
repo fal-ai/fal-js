@@ -12,6 +12,18 @@ type ObjectExpiration =
   | "1y"
   | number;
 
+type StorageACLDecision = "hide" | "forbid" | "allow";
+
+export interface StorageACLRule {
+  user: string;
+  decision: StorageACLDecision;
+}
+
+export interface StorageACL {
+  default?: StorageACLDecision;
+  rules?: StorageACLRule[];
+}
+
 export const OBJECT_LIFECYCYLE_PREFERENCE_HEADER =
   "x-fal-object-lifecycle-preference";
 
@@ -22,7 +34,17 @@ export interface StorageSettings {
   /**
    * The expiration time for the stored files (images, videos, etc.). You can specify one of the enumerated values or a number of seconds.
    */
-  expiresIn: ObjectExpiration;
+  expiresIn?: ObjectExpiration;
+
+  /**
+   * @deprecated This field is kept for backwards compatibility and ignored by the backend.
+   */
+  allow_io_storage?: boolean;
+
+  /**
+   * Optional ACL configuration applied to the uploaded object.
+   */
+  initialAcl?: StorageACL;
 }
 
 type UploadLifecycleConfig = {
@@ -38,15 +60,14 @@ type UploadLifecycleConfig = {
   expiration_duration_seconds?: number;
 
   /**
-   * Whether to allow I/O storage for this object.
-   * @default undefined (uses account default)
+   * Initial ACL for the uploaded object.
    */
-  allow_io_storage?: boolean;
+  initial_acl?: StorageACL;
 };
 
 const EXPIRATION_VALUES: Record<ObjectExpiration, number | undefined> = {
-  never: 3153600000, // 100 years
-  immediate: undefined,
+  never: undefined,
+  immediate: 60,
   "1h": 3600,
   "1d": 86400,
   "7d": 604800,
@@ -63,9 +84,33 @@ export function getExpirationDurationSeconds(
   lifecycle: StorageSettings,
 ): number | undefined {
   const { expiresIn } = lifecycle;
+  if (expiresIn === undefined) {
+    return undefined;
+  }
   return typeof expiresIn === "number"
     ? expiresIn
     : EXPIRATION_VALUES[expiresIn];
+}
+
+function buildUploadLifecycleConfig(
+  lifecycle: StorageSettings | undefined,
+): UploadLifecycleConfig | undefined {
+  if (!lifecycle) {
+    return undefined;
+  }
+
+  const expirationDurationSeconds = getExpirationDurationSeconds(lifecycle);
+  const lifecycleConfig: UploadLifecycleConfig = {};
+
+  if (expirationDurationSeconds !== undefined) {
+    lifecycleConfig.expiration_duration_seconds = expirationDurationSeconds;
+  }
+
+  if (lifecycle.initialAcl !== undefined) {
+    lifecycleConfig.initial_acl = lifecycle.initialAcl;
+  }
+
+  return Object.keys(lifecycleConfig).length > 0 ? lifecycleConfig : undefined;
 }
 
 /**
@@ -78,17 +123,13 @@ export function getExpirationDurationSeconds(
 export function buildObjectLifecycleHeaders(
   lifecycle: StorageSettings | undefined,
 ): Record<string, string> {
-  if (!lifecycle) {
+  const lifecycleConfig = buildUploadLifecycleConfig(lifecycle);
+  if (!lifecycleConfig) {
     return {};
   }
-  const expirationDurationSeconds = getExpirationDurationSeconds(lifecycle);
-  if (expirationDurationSeconds === undefined) {
-    return {};
-  }
+
   return {
-    [OBJECT_LIFECYCYLE_PREFERENCE_HEADER]: JSON.stringify({
-      expiration_duration_seconds: expirationDurationSeconds,
-    }),
+    [OBJECT_LIFECYCYLE_PREFERENCE_HEADER]: JSON.stringify(lifecycleConfig),
   };
 }
 
@@ -165,11 +206,8 @@ async function initiateUpload(
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
 
   const headers: Record<string, string> = {};
-  if (lifecycle) {
-    const lifecycleConfig: UploadLifecycleConfig = {
-      expiration_duration_seconds: getExpirationDurationSeconds(lifecycle),
-      allow_io_storage: lifecycle.expiresIn !== "immediate",
-    };
+  const lifecycleConfig = buildUploadLifecycleConfig(lifecycle);
+  if (lifecycleConfig) {
     headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycleConfig);
   }
 
@@ -200,8 +238,9 @@ async function initiateMultipartUpload(
     file.name || `${Date.now()}.${getExtensionFromContentType(contentType)}`;
 
   const headers: Record<string, string> = {};
-  if (lifecycle) {
-    headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycle);
+  const lifecycleConfig = buildUploadLifecycleConfig(lifecycle);
+  if (lifecycleConfig) {
+    headers["X-Fal-Object-Lifecycle"] = JSON.stringify(lifecycleConfig);
   }
 
   return await dispatchRequest<InitiateUploadData, InitiateUploadResult>({
