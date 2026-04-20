@@ -37,11 +37,6 @@ export interface StorageSettings {
   expiresIn?: ObjectExpiration;
 
   /**
-   * @deprecated This field is kept for backwards compatibility and ignored by the backend.
-   */
-  allow_io_storage?: boolean;
-
-  /**
    * Optional ACL configuration applied to the uploaded object.
    */
   initialAcl?: StorageACL;

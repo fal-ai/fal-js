@@ -44,20 +44,6 @@ describe("storage lifecycle settings", () => {
     });
   });
 
-  it("ignores legacy allow_io_storage in lifecycle headers", () => {
-    expect(buildObjectLifecycleHeaders({ allow_io_storage: true })).toEqual({});
-    expect(
-      buildObjectLifecycleHeaders({
-        expiresIn: "immediate",
-        allow_io_storage: false,
-      }),
-    ).toEqual({
-      [OBJECT_LIFECYCYLE_PREFERENCE_HEADER]: JSON.stringify({
-        expiration_duration_seconds: 60,
-      }),
-    });
-  });
-
   it("maps never to no expiration duration", () => {
     const headers = buildObjectLifecycleHeaders({ expiresIn: "never" });
     expect(headers).toEqual({});
