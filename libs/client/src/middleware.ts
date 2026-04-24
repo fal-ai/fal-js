@@ -38,29 +38,63 @@ export function withMiddleware(
   };
 }
 
+/**
+ * Runtime information passed to a user-provided {@link ProxyRuntimeGate}
+ * predicate so it can decide whether the proxy middleware should apply.
+ */
+export type ProxyRuntimeEnv = {
+  isBrowser: boolean;
+};
+
+/**
+ * Controls when the proxy middleware applies:
+ * - `"browser"` — only when a DOM `window` is available (default).
+ * - `"always"` — in every runtime (Node, Electron, Bun, workers, etc.).
+ * - A predicate receiving {@link ProxyRuntimeEnv} — full control per call.
+ */
+export type ProxyRuntimeGate =
+  | "browser"
+  | "always"
+  | ((env: ProxyRuntimeEnv) => boolean);
+
 export type RequestProxyConfig = {
   targetUrl: string;
+  when?: ProxyRuntimeGate;
 };
 
 export const TARGET_URL_HEADER = "x-fal-target-url";
 
-export function withProxy(config: RequestProxyConfig): RequestMiddleware {
-  const passthrough = (requestConfig: RequestConfig) =>
-    Promise.resolve(requestConfig);
-  // when running on the server, we don't need to proxy the request
-  if (typeof window === "undefined") {
-    return passthrough;
+function shouldProxy(when: ProxyRuntimeGate | undefined): boolean {
+  const env: ProxyRuntimeEnv = {
+    isBrowser:
+      typeof window !== "undefined" && typeof window.document !== "undefined",
+  };
+  if (typeof when === "function") {
+    return when(env);
   }
-  // if x-fal-target-url is already set, we skip it
-  return (requestConfig) =>
-    requestConfig.headers && TARGET_URL_HEADER in requestConfig
-      ? passthrough(requestConfig)
-      : Promise.resolve({
-          ...requestConfig,
-          url: config.targetUrl,
-          headers: {
-            ...(requestConfig.headers || {}),
-            [TARGET_URL_HEADER]: requestConfig.url,
-          },
-        });
+  if (when === "always") {
+    return true;
+  }
+  return env.isBrowser;
+}
+
+export function withProxy(config: RequestProxyConfig): RequestMiddleware {
+  return (requestConfig) => {
+    // if x-fal-target-url is already set, we skip it to keep the middleware
+    // re-entrant (e.g. when composed with other proxy-like middlewares)
+    if (requestConfig.headers && TARGET_URL_HEADER in requestConfig.headers) {
+      return Promise.resolve(requestConfig);
+    }
+    if (!shouldProxy(config.when)) {
+      return Promise.resolve(requestConfig);
+    }
+    return Promise.resolve({
+      ...requestConfig,
+      url: config.targetUrl,
+      headers: {
+        ...(requestConfig.headers || {}),
+        [TARGET_URL_HEADER]: requestConfig.url,
+      },
+    });
+  };
 }
