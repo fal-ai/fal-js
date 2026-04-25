@@ -6,8 +6,14 @@ import { RunOptions } from "./types/common";
 
 export type { TokenProvider } from "./auth";
 export { createFalClient, type FalClient } from "./client";
+export type { ProxyUrlConfig } from "./config";
 export { withMiddleware, withProxy } from "./middleware";
-export type { RequestMiddleware } from "./middleware";
+export type {
+  ProxyRuntimeEnv,
+  ProxyRuntimeGate,
+  RequestMiddleware,
+  RequestProxyConfig,
+} from "./middleware";
 export type { QueueClient } from "./queue";
 export type { RealtimeClient } from "./realtime";
 export { ApiError, ValidationError } from "./response";

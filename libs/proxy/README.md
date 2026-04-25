@@ -74,6 +74,32 @@ fal.config({
 
 Now all your client calls will route through your server proxy, so your credentials are protected.
 
+By default, the proxy middleware only runs in browser environments — requests made from Node, Electron, Bun, or edge/worker runtimes are sent directly to the fal API. To opt into the proxy in these runtimes, pass an object instead of a string:
+
+```ts
+fal.config({
+  proxyUrl: {
+    url: "/api/fal/proxy",
+    when: "always",
+  },
+});
+```
+
+`when` accepts:
+
+- `"browser"` — only in environments with a DOM `window` (default).
+- `"always"` — in every runtime.
+- `(env) => boolean` — a custom predicate. `env` is `{ isBrowser: boolean }`, so you can layer your own checks — for example, routing through the proxy only from an Electron renderer process:
+
+  ```ts
+  fal.config({
+    proxyUrl: {
+      url: "/api/fal/proxy",
+      when: ({ isBrowser }) => isBrowser || (typeof process !== "undefined" && process.type === "renderer"),
+    },
+  });
+  ```
+
 ## More information
 
 For a deeper dive into the proxy library and its capabilities, explore the [official documentation](https://fal.ai/docs).
