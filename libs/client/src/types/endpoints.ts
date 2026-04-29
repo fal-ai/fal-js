@@ -15471,6 +15471,78 @@ export type GptImage15Input = {
    */
   sync_mode?: boolean;
 };
+export type GptImage2EditInput = {
+  /**
+   * Background for the generated image Default value: `"auto"`
+   */
+  background?: "auto" | "transparent" | "opaque";
+  /**
+   * Aspect ratio for the generated image Default value: `"auto"`
+   */
+  image_size?: "auto" | "1024x1024" | "1536x1024" | "1024x1536";
+  /**
+   * The URLs of the images to use as a reference for the generation.
+   */
+  image_urls: Array<string>;
+  /**
+   * Input fidelity for the generated image Default value: `"high"`
+   */
+  input_fidelity?: "low" | "high";
+  /**
+   * The URL of the mask image to use for the generation. This indicates what part of the image to edit.
+   */
+  mask_image_url?: string | Blob | File;
+  /**
+   * Number of images to generate Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Output format for the images Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * The prompt for image generation
+   */
+  prompt: string;
+  /**
+   * Quality for the generated image Default value: `"high"`
+   */
+  quality?: "low" | "medium" | "high";
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
+export type GptImage2Input = {
+  /**
+   * Background for the generated image Default value: `"auto"`
+   */
+  background?: "auto" | "transparent" | "opaque";
+  /**
+   * Aspect ratio for the generated image Default value: `"1024x1024"`
+   */
+  image_size?: "1024x1024" | "1536x1024" | "1024x1536";
+  /**
+   * Number of images to generate Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * Output format for the images Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * The prompt for image generation
+   */
+  prompt: string;
+  /**
+   * Quality for the generated image Default value: `"high"`
+   */
+  quality?: "low" | "medium" | "high";
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
 export type GptImage1EditImageInput = {
   /**
    * Background for the generated image Default value: `"auto"`
@@ -53896,6 +53968,8 @@ export type GptImage1MiniInput = GptImage15Input;
 export type GptImage1MiniOutput = photaOutput;
 export type GptImage1TextToImageInput = GptImage15Input;
 export type GptImage1TextToImageOutput = photaOutput;
+export type GptImage2EditOutput = photaOutput;
+export type GptImage2Output = photaOutput;
 export type GrainOutput = BlurOutput;
 export type GreenScreenRembgOutput = GeneralRembgOutput;
 export type GrokImagineImageEditInput = XAIImageEditInput;
@@ -57035,6 +57109,14 @@ export type EndpointTypeMap = {
   "fal-ai/gpt-image-1.5/edit": {
     input: GptImage15EditInput;
     output: GptImage15EditOutput;
+  };
+  "fal-ai/gpt-image-2": {
+    input: GptImage2Input;
+    output: GptImage2Output;
+  };
+  "fal-ai/gpt-image-2/edit": {
+    input: GptImage2EditInput;
+    output: GptImage2EditOutput;
   };
   "fal-ai/gpt-image-1/edit-image": {
     input: GptImage1EditImageInput;
