@@ -83,6 +83,24 @@ describe("Retry functionality", () => {
       );
     });
 
+    it("should not retry TimeoutError (e.g. AbortSignal.timeout)", () => {
+      const error = new Error("The operation was aborted due to timeout");
+      error.name = "TimeoutError";
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        false,
+      );
+    });
+
+    it("should not retry when an AbortError is buried in the cause chain", () => {
+      const abort = Object.assign(new Error("aborted"), { name: "AbortError" });
+      const wrapped = Object.assign(new TypeError("fetch failed"), {
+        cause: abort,
+      });
+      expect(isRetryableError(wrapped, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        false,
+      );
+    });
+
     it("should walk a deeper cause chain to find a retryable code", () => {
       const root = Object.assign(new Error("root"), { code: "ETIMEDOUT" });
       const middle = Object.assign(new Error("middle"), { cause: root });

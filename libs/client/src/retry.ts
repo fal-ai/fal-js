@@ -55,20 +55,28 @@ export function isRetryableNetworkError(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
   }
-  // User-initiated cancellation must not be retried.
-  if ((error as { name?: string }).name === "AbortError") {
-    return false;
-  }
 
+  // Walk the cause chain. User cancellation (AbortError) and signal-driven
+  // timeouts (TimeoutError, e.g. AbortSignal.timeout) are explicit user
+  // intent — never retry them, even if buried in a wrapper.
   const seen = new Set<unknown>();
   let current: any = error;
+  let sawTransportShape = false;
   while (current && typeof current === "object" && !seen.has(current)) {
     seen.add(current);
+    const name = (current as { name?: unknown }).name;
+    if (name === "AbortError" || name === "TimeoutError") {
+      return false;
+    }
     const code = (current as { code?: unknown }).code;
     if (typeof code === "string" && RETRYABLE_NETWORK_ERROR_CODES.has(code)) {
-      return true;
+      sawTransportShape = true;
     }
     current = (current as { cause?: unknown }).cause;
+  }
+
+  if (sawTransportShape) {
+    return true;
   }
 
   // Generic Node `fetch` failure (`TypeError: fetch failed`) without a
