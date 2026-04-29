@@ -5,8 +5,14 @@ import {
   DEFAULT_RETRYABLE_STATUS_CODES,
   executeWithRetry,
   isRetryableError,
+  isRetryableNetworkError,
   type RetryOptions,
 } from "./retry";
+
+function makeFetchFailed(code: string): TypeError {
+  const cause = Object.assign(new Error(`connect ${code}`), { code });
+  return Object.assign(new TypeError("fetch failed"), { cause });
+}
 
 const BAD_GATEWAY_ERROR = new ApiError({ message: "Bad gateway", status: 502 });
 
@@ -26,11 +32,64 @@ describe("Retry functionality", () => {
       );
     });
 
-    it("should return false for non-ApiError errors", () => {
-      const error = new Error("Network error");
+    it("should return false for unrelated non-ApiError errors", () => {
+      const error = new Error("Some other failure");
       expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
         false,
       );
+    });
+
+    it.each([
+      "ETIMEDOUT",
+      "ECONNRESET",
+      "ECONNREFUSED",
+      "ENOTFOUND",
+      "EAI_AGAIN",
+      "EPIPE",
+      "EHOSTUNREACH",
+      "ENETUNREACH",
+      "UND_ERR_SOCKET",
+      "UND_ERR_CONNECT_TIMEOUT",
+      "UND_ERR_HEADERS_TIMEOUT",
+      "UND_ERR_BODY_TIMEOUT",
+    ])("should retry Node fetch wrapping %s", (code) => {
+      const error = makeFetchFailed(code);
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        true,
+      );
+    });
+
+    it("should retry errors that expose `code` directly (e.g. node-fetch)", () => {
+      const error = Object.assign(new Error("socket hang up"), {
+        code: "ECONNRESET",
+      });
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        true,
+      );
+    });
+
+    it("should retry generic `TypeError: fetch failed` without a known code", () => {
+      const error = new TypeError("fetch failed");
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        true,
+      );
+    });
+
+    it("should not retry AbortError even when wrapped by fetch", () => {
+      const error = new Error("The operation was aborted.");
+      error.name = "AbortError";
+      expect(isRetryableError(error, DEFAULT_RETRYABLE_STATUS_CODES)).toBe(
+        false,
+      );
+    });
+
+    it("should walk a deeper cause chain to find a retryable code", () => {
+      const root = Object.assign(new Error("root"), { code: "ETIMEDOUT" });
+      const middle = Object.assign(new Error("middle"), { cause: root });
+      const top = Object.assign(new TypeError("fetch failed"), {
+        cause: middle,
+      });
+      expect(isRetryableNetworkError(top)).toBe(true);
     });
 
     it("should return false for user-specified timeout (504 with timeoutType: user)", () => {
@@ -173,6 +232,27 @@ describe("Retry functionality", () => {
       await executeWithRetry(operation, options, onRetry);
 
       expect(onRetry).toHaveBeenCalledWith(1, BAD_GATEWAY_ERROR, 10);
+    });
+
+    it("should retry on Node-level network errors (ETIMEDOUT)", async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(makeFetchFailed("ETIMEDOUT"))
+        .mockRejectedValueOnce(makeFetchFailed("ECONNRESET"))
+        .mockResolvedValue("success");
+
+      const options: RetryOptions = {
+        ...DEFAULT_RETRY_OPTIONS,
+        maxRetries: 3,
+        baseDelay: 10,
+        enableJitter: false,
+      };
+
+      const { result, metrics } = await executeWithRetry(operation, options);
+
+      expect(result).toBe("success");
+      expect(metrics.totalAttempts).toBe(3);
+      expect(operation).toHaveBeenCalledTimes(3);
     });
 
     it("should not retry on user-specified timeout", async () => {
