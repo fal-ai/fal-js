@@ -25,21 +25,91 @@ export const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 };
 
 /**
- * Determines if an error is retryable based on the status code.
- * User-specified timeouts (504 with X-Fal-Request-Timeout-Type: user) are NOT retryable.
+ * Network/transport-level error codes that indicate transient failures worth
+ * retrying. Node's `fetch` (undici) wraps the underlying SystemError inside a
+ * `TypeError("fetch failed")` and exposes the original via `.cause`; other
+ * fetch implementations such as `node-fetch` set `.code` directly on the error.
+ */
+const RETRYABLE_NETWORK_ERROR_CODES = new Set([
+  "ECONNABORTED",
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "EAI_AGAIN",
+  "EHOSTUNREACH",
+  "ENETUNREACH",
+  "ENOTFOUND",
+  "EPIPE",
+  "ETIMEDOUT",
+  "UND_ERR_BODY_TIMEOUT",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_SOCKET",
+]);
+
+/**
+ * Returns true for transient transport-level failures (connection resets,
+ * DNS hiccups, socket timeouts, etc.). Mirrors the Python client's behavior
+ * of retrying `httpx.TransportError` and `httpx.TimeoutException`.
+ */
+export function isRetryableNetworkError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  // Walk the cause chain. User cancellation (AbortError) and signal-driven
+  // timeouts (TimeoutError, e.g. AbortSignal.timeout) are explicit user
+  // intent — never retry them, even if buried in a wrapper.
+  const seen = new Set<unknown>();
+  let current: any = error;
+  let sawTransportShape = false;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    seen.add(current);
+    const name = (current as { name?: unknown }).name;
+    if (name === "AbortError" || name === "TimeoutError") {
+      return false;
+    }
+    const code = (current as { code?: unknown }).code;
+    if (typeof code === "string" && RETRYABLE_NETWORK_ERROR_CODES.has(code)) {
+      sawTransportShape = true;
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  if (sawTransportShape) {
+    return true;
+  }
+
+  // Generic Node `fetch` failure (`TypeError: fetch failed`) without a
+  // recognised `.code` — still a transport-layer problem, treat it as
+  // retryable like httpx.TransportError does.
+  if (
+    error instanceof TypeError &&
+    typeof (error as { message?: unknown }).message === "string" &&
+    /fetch failed/i.test((error as { message: string }).message)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Determines if an error is retryable based on the status code or, for
+ * non-HTTP failures, on the underlying transport error. User-specified
+ * timeouts (504 with X-Fal-Request-Timeout-Type: user) are NOT retryable.
  */
 export function isRetryableError(
   error: any,
   retryableStatusCodes: number[],
 ): boolean {
-  if (!(error instanceof ApiError)) {
-    return false;
+  if (error instanceof ApiError) {
+    // User-specified timeouts should NOT be retried
+    if (error.isUserTimeout) {
+      return false;
+    }
+    return retryableStatusCodes.includes(error.status);
   }
-  // User-specified timeouts should NOT be retried
-  if (error.isUserTimeout) {
-    return false;
-  }
-  return retryableStatusCodes.includes(error.status);
+  return isRetryableNetworkError(error);
 }
 
 /**
