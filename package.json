@@ -13,10 +13,10 @@
     "lint:staged": "lint-staged",
     "docs:typedoc": "typedoc --tsconfig libs/client/tsconfig.lib.json",
     "prepare": "husky install",
-    "fetch-openapi-models": "npx tsx --env-file=.env.local scripts/fetch-openapi-models.ts",
-    "generate-types": "npx @hey-api/openapi-ts --file openapi-ts.config.ts",
+    "fetch-schemas": "npx tsx --env-file=.env.local scripts/fetch-openapi-models.ts",
+    "generate-schemas": "npx @hey-api/openapi-ts --file openapi-ts.config.ts",
     "generate-endpoint-maps": "npx tsx scripts/generate-endpoint-maps.ts",
-    "update-types": "npm run fetch-openapi-models && npm run generate-types && npm run generate-endpoint-maps"
+    "update-schemas": "npm run fetch-schemas && npm run generate-schemas && npm run generate-endpoint-maps"
   },
   "private": true,
   "lint-staged": {

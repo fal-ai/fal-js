@@ -27,13 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fetch OpenAPI models
-        run: npm run fetch-openapi-models
+      - name: Fetch OpenAPI schemas
+        run: npm run fetch-schemas
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
 
-      - name: Generate types
-        run: npm run generate-types
+      - name: Generate schemas
+        run: npm run generate-schemas
 
       - name: Generate endpoint maps
         run: npm run generate-endpoint-maps
