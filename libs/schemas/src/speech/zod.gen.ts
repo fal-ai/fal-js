@@ -6,34 +6,11 @@ import * as z from "zod";
  * Audio
  */
 export const zAudio = z.object({
-  file_size: z
-    .int()
-    .register(z.globalRegistry, {
-      description: "The size of the file in bytes.",
-    })
-    .optional(),
-  file_name: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The name of the file. It will be auto-generated if not provided.",
-    })
-    .optional(),
-  content_type: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The mime type of the file.",
-    })
-    .optional(),
-  url: z.string().register(z.globalRegistry, {
-    description: "The URL where the file can be downloaded from.",
-  }),
-  file_data: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "File data",
-    })
-    .optional(),
+  file_size: z.int().optional(),
+  file_name: z.string().optional(),
+  content_type: z.string().optional(),
+  url: z.string(),
+  file_data: z.string().optional(),
 });
 
 /**
@@ -47,9 +24,7 @@ export const zAudioFile = z.object({
   file_size: z.union([z.int(), z.unknown()]).optional(),
   sample_rate: z.union([z.int(), z.unknown()]).optional(),
   channels: z.union([z.int(), z.unknown()]).optional(),
-  url: z.string().register(z.globalRegistry, {
-    description: "The URL where the file can be downloaded from.",
-  }),
+  url: z.string(),
 });
 
 /**
@@ -63,9 +38,6 @@ export const zAudioSetting = z.object({
       z.literal(128000),
       z.literal(256000),
     ])
-    .register(z.globalRegistry, {
-      description: "Bitrate of generated audio",
-    })
     .optional()
     .default(128000),
   sample_rate: z
@@ -77,23 +49,11 @@ export const zAudioSetting = z.object({
       z.literal(32000),
       z.literal(44100),
     ])
-    .register(z.globalRegistry, {
-      description: "Sample rate of generated audio",
-    })
     .optional()
     .default(32000),
-  format: z
-    .enum(["mp3", "pcm", "flac"])
-    .register(z.globalRegistry, {
-      description: "Audio format",
-    })
-    .optional()
-    .default("mp3"),
+  format: z.enum(["mp3", "pcm", "flac"]).optional().default("mp3"),
   channel: z
     .union([z.literal(1), z.literal(2)])
-    .register(z.globalRegistry, {
-      description: "Number of audio channels (1=mono, 2=stereo)",
-    })
     .optional()
     .default(1),
 });
@@ -103,165 +63,75 @@ export const zAudioSetting = z.object({
  *
  * Input parameters for the speech-to-speech request.
  */
-export const zChatterboxhdSpeechToSpeechInput = z
-  .object({
-    high_quality_audio: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If True, the generated audio will be upscaled to 48kHz. The generation of the audio will take longer, but the quality will be higher. If False, the generated audio will be 24kHz. ",
-      })
-      .optional()
-      .default(false),
-    target_voice_audio_url: z
-      .string()
-      .register(z.globalRegistry, {
-        description:
-          "URL to the audio file which represents the voice of the output audio. If provided, this will override the target_voice setting. If neither target_voice nor target_voice_audio_url are provided, the default target voice will be used.",
-      })
-      .optional(),
-    source_audio_url: z.string().register(z.globalRegistry, {
-      description: "URL to the source audio file to be voice-converted.",
-    }),
-    target_voice: z
-      .enum([
-        "Aurora",
-        "Blade",
-        "Britney",
-        "Carl",
-        "Cliff",
-        "Richard",
-        "Rico",
-        "Siobhan",
-        "Vicky",
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "The voice to use for the speech-to-speech request. If neither target_voice nor target_voice_audio_url are provided, a random target voice will be used.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Input parameters for the speech-to-speech request.",
-  });
+export const zChatterboxhdSpeechToSpeechInput = z.object({
+  high_quality_audio: z.boolean().optional().default(false),
+  target_voice_audio_url: z.string().optional(),
+  source_audio_url: z.string(),
+  target_voice: z
+    .enum([
+      "Aurora",
+      "Blade",
+      "Britney",
+      "Carl",
+      "Cliff",
+      "Richard",
+      "Rico",
+      "Siobhan",
+      "Vicky",
+    ])
+    .optional(),
+});
 
 /**
  * STSOutput
  *
  * Output parameters for the speech-to-speech request.
  */
-export const zChatterboxhdSpeechToSpeechOutput = z
-  .object({
-    audio: zAudio,
-  })
-  .register(z.globalRegistry, {
-    description: "Output parameters for the speech-to-speech request.",
-  });
+export const zChatterboxhdSpeechToSpeechOutput = z.object({
+  audio: zAudio,
+});
 
 /**
  * TTSInput
  *
  * Input parameters for the TTS request.
  */
-export const zChatterboxhdTextToSpeechInput = z
-  .object({
-    text: z
-      .string()
-      .register(z.globalRegistry, {
-        description: "Text to synthesize into speech.",
-      })
-      .optional()
-      .default(
-        "My name is Maximus Decimus Meridius, commander of the Armies of the North, General of the Felix Legions and loyal servant to the true emperor, Marcus Aurelius. Father to a murdered son, husband to a murdered wife. And I will have my vengeance, in this life or the next.",
-      ),
-    exaggeration: z
-      .number()
-      .gte(0.25)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "Controls emotion exaggeration. Range typically 0.25 to 2.0.",
-      })
-      .optional()
-      .default(0.5),
-    high_quality_audio: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If True, the generated audio will be upscaled to 48kHz. The generation of the audio will take longer, but the quality will be higher. If False, the generated audio will be 24kHz. ",
-      })
-      .optional()
-      .default(false),
-    voice: z
-      .enum([
-        "Aurora",
-        "Blade",
-        "Britney",
-        "Carl",
-        "Cliff",
-        "Richard",
-        "Rico",
-        "Siobhan",
-        "Vicky",
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "The voice to use for the TTS request. If neither voice nor audio are provided, a random voice will be used.",
-      })
-      .optional(),
-    audio_url: z
-      .string()
-      .register(z.globalRegistry, {
-        description:
-          "URL to the audio sample to use as a voice prompt for zero-shot TTS voice cloning. Providing a audio sample will override the voice setting. If neither voice nor audio_url are provided, a random voice will be used.",
-      })
-      .optional(),
-    temperature: z
-      .number()
-      .gte(0.05)
-      .lte(5)
-      .register(z.globalRegistry, {
-        description:
-          "Controls the randomness of generation. Range typically 0.05 to 5.",
-      })
-      .optional()
-      .default(0.8),
-    seed: z
-      .int()
-      .gte(0)
-      .register(z.globalRegistry, {
-        description:
-          "Useful to control the reproducibility of the generated audio. Assuming all other properties didn't change, a fixed seed should always generate the exact same audio file. Set to 0 for random seed.",
-      })
-      .optional()
-      .default(0),
-    cfg: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Classifier-free guidance scale (CFG) controls the conditioning factor. Range typically 0.2 to 1.0. For expressive or dramatic speech, try lower cfg values (e.g. ~0.3) and increase exaggeration to around 0.7 or higher. If the reference speaker has a fast speaking style, lowering cfg to around 0.3 can improve pacing.",
-      })
-      .optional()
-      .default(0.5),
-  })
-  .register(z.globalRegistry, {
-    description: "Input parameters for the TTS request.",
-  });
+export const zChatterboxhdTextToSpeechInput = z.object({
+  text: z
+    .string()
+    .optional()
+    .default(
+      "My name is Maximus Decimus Meridius, commander of the Armies of the North, General of the Felix Legions and loyal servant to the true emperor, Marcus Aurelius. Father to a murdered son, husband to a murdered wife. And I will have my vengeance, in this life or the next.",
+    ),
+  exaggeration: z.number().gte(0.25).lte(2).optional().default(0.5),
+  high_quality_audio: z.boolean().optional().default(false),
+  voice: z
+    .enum([
+      "Aurora",
+      "Blade",
+      "Britney",
+      "Carl",
+      "Cliff",
+      "Richard",
+      "Rico",
+      "Siobhan",
+      "Vicky",
+    ])
+    .optional(),
+  audio_url: z.string().optional(),
+  temperature: z.number().gte(0.05).lte(5).optional().default(0.8),
+  seed: z.int().gte(0).optional().default(0),
+  cfg: z.number().gte(0).lte(1).optional().default(0.5),
+});
 
 /**
  * TTSOutput
  *
  * Output parameters for the TTS request.
  */
-export const zChatterboxhdTextToSpeechOutput = z
-  .object({
-    audio: zAudio,
-  })
-  .register(z.globalRegistry, {
-    description: "Output parameters for the TTS request.",
-  });
+export const zChatterboxhdTextToSpeechOutput = z.object({
+  audio: zAudio,
+});
 
 /**
  * ChatterboxVCRequest
@@ -275,30 +145,10 @@ export const zChatterboxSpeechToSpeechInput = z.object({
  * ChatterboxRequest
  */
 export const zChatterboxTextToSpeechInput = z.object({
-  temperature: z
-    .number()
-    .gte(0.05)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description: "Temperature for generation (higher = more creative).",
-    })
-    .optional()
-    .default(0.7),
+  temperature: z.number().gte(0.05).lte(2).optional().default(0.7),
   cfg: z.number().gte(0.1).lte(1).optional().default(0.5),
-  exaggeration: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "Exaggeration factor for the generated speech (0.0 = no exaggeration, 1.0 = maximum exaggeration).",
-    })
-    .optional()
-    .default(0.25),
-  text: z.string().register(z.globalRegistry, {
-    description:
-      "The text to be converted to speech (maximum 5000 characters). You can additionally add the following emotive tags: <laugh>, <chuckle>, <sigh>, <cough>, <sniffle>, <groan>, <yawn>, <gasp>",
-  }),
+  exaggeration: z.number().gte(0).lte(1).optional().default(0.25),
+  text: z.string(),
   audio_url: z.union([z.string(), z.unknown()]).optional(),
   seed: z.union([z.int(), z.unknown()]).optional(),
 });
@@ -308,40 +158,10 @@ export const zChatterboxTextToSpeechInput = z.object({
  */
 export const zChatterboxTextToSpeechMultilingualInput = z.object({
   seed: z.union([z.int(), z.unknown()]).optional(),
-  temperature: z
-    .number()
-    .gte(0.05)
-    .lte(5)
-    .register(z.globalRegistry, {
-      description:
-        "Controls randomness and variation in generation (0.05-5.0). Higher values create more varied speech patterns.",
-    })
-    .optional()
-    .default(0.8),
-  exaggeration: z
-    .number()
-    .gte(0.25)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description:
-        "Controls speech expressiveness and emotional intensity (0.25-2.0). 0.5 is neutral, higher values increase expressiveness. Extreme values may be unstable.",
-    })
-    .optional()
-    .default(0.5),
-  cfg_scale: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "Configuration/pace weight controlling generation guidance (0.0-1.0). Use 0.0 for language transfer to mitigate accent inheritance.",
-    })
-    .optional()
-    .default(0.5),
-  text: z.string().max(300).register(z.globalRegistry, {
-    description:
-      "The text to be converted to speech (maximum 300 characters). Supports 23 languages including English, French, German, Spanish, Italian, Portuguese, Hindi, Arabic, Chinese, Japanese, Korean, and more.",
-  }),
+  temperature: z.number().gte(0.05).lte(5).optional().default(0.8),
+  exaggeration: z.number().gte(0.25).lte(2).optional().default(0.5),
+  cfg_scale: z.number().gte(0).lte(1).optional().default(0.5),
+  text: z.string().max(300),
   custom_audio_language: z
     .union([
       z.enum([
@@ -372,23 +192,14 @@ export const zChatterboxTextToSpeechMultilingualInput = z.object({
       z.unknown(),
     ])
     .optional(),
-  voice: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "Language code for synthesis. In case using custom please provide audio url and select custom_audio_language. ",
-    })
-    .optional()
-    .default("english"),
+  voice: z.string().optional().default("english"),
 });
 
 /**
  * DiaRequest
  */
 export const zDiaTtsInput = z.object({
-  text: z.string().register(z.globalRegistry, {
-    description: "The text to be converted to speech.",
-  }),
+  text: z.string(),
 });
 
 /**
@@ -397,148 +208,32 @@ export const zDiaTtsInput = z.object({
 export const zElevenlabsTtsTurboV25Input = z.object({
   next_text: z.union([z.string(), z.unknown()]).optional(),
   language_code: z.union([z.string(), z.unknown()]).optional(),
-  stability: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Voice stability (0-1)",
-    })
-    .optional()
-    .default(0.5),
-  style: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Style exaggeration (0-1)",
-    })
-    .optional()
-    .default(0),
+  stability: z.number().gte(0).lte(1).optional().default(0.5),
+  style: z.number().gte(0).lte(1).optional().default(0),
   previous_text: z.union([z.string(), z.unknown()]).optional(),
-  voice: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The voice to use for speech generation",
-    })
-    .optional()
-    .default("Rachel"),
-  text: z.string().min(1).register(z.globalRegistry, {
-    description: "The text to convert to speech",
-  }),
-  timestamps: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to return timestamps for each word in the generated speech",
-    })
-    .optional()
-    .default(false),
-  speed: z
-    .number()
-    .gte(0.7)
-    .lte(1.2)
-    .register(z.globalRegistry, {
-      description:
-        "Speech speed (0.7-1.2). Values below 1.0 slow down the speech, above 1.0 speed it up. Extreme values may affect quality.",
-    })
-    .optional()
-    .default(1),
+  voice: z.string().optional().default("Rachel"),
+  text: z.string().min(1),
+  timestamps: z.boolean().optional().default(false),
+  speed: z.number().gte(0.7).lte(1.2).optional().default(1),
   apply_text_normalization: z
     .enum(["auto", "on", "off"])
-    .register(z.globalRegistry, {
-      description:
-        "This parameter controls text normalization with three modes: 'auto', 'on', and 'off'. When set to 'auto', the system will automatically decide whether to apply text normalization (e.g., spelling out numbers). With 'on', text normalization will always be applied, while with 'off', it will be skipped.",
-    })
     .optional()
     .default("auto"),
-  similarity_boost: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Similarity boost (0-1)",
-    })
-    .optional()
-    .default(0.75),
+  similarity_boost: z.number().gte(0).lte(1).optional().default(0.75),
 });
 
 /**
  * EmotionalStrengths
  */
 export const zEmotionalStrengths = z.object({
-  surprised: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of surprise emotion",
-    })
-    .optional()
-    .default(0),
-  disgusted: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of disgust emotion",
-    })
-    .optional()
-    .default(0),
-  angry: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of anger emotion",
-    })
-    .optional()
-    .default(0),
-  melancholic: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of melancholic emotion",
-    })
-    .optional()
-    .default(0),
-  sad: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of sadness emotion",
-    })
-    .optional()
-    .default(0),
-  afraid: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of fear emotion",
-    })
-    .optional()
-    .default(0),
-  calm: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of calm emotion",
-    })
-    .optional()
-    .default(0),
-  happy: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Strength of happiness emotion",
-    })
-    .optional()
-    .default(0),
+  surprised: z.number().gte(0).lte(1).optional().default(0),
+  disgusted: z.number().gte(0).lte(1).optional().default(0),
+  angry: z.number().gte(0).lte(1).optional().default(0),
+  melancholic: z.number().gte(0).lte(1).optional().default(0),
+  sad: z.number().gte(0).lte(1).optional().default(0),
+  afraid: z.number().gte(0).lte(1).optional().default(0),
+  calm: z.number().gte(0).lte(1).optional().default(0),
+  happy: z.number().gte(0).lte(1).optional().default(0),
 });
 
 /**
@@ -546,9 +241,7 @@ export const zEmotionalStrengths = z.object({
  */
 export const zFile = z.object({
   file_name: z.union([z.string(), z.unknown()]).optional(),
-  url: z.string().register(z.globalRegistry, {
-    description: "The URL where the file can be downloaded from.",
-  }),
+  url: z.string(),
   content_type: z.union([z.string(), z.unknown()]).optional(),
   file_size: z.union([z.int(), z.unknown()]).optional(),
 });
@@ -594,45 +287,21 @@ export const zElevenlabsTtsTurboV25Output = z.object({
  *
  * Output for Gemini text-to-speech generation.
  */
-export const zGemini31FlashTtsOutput = z
-  .object({
-    audio: zFile,
-  })
-  .register(z.globalRegistry, {
-    description: "Output for Gemini text-to-speech generation.",
-  });
+export const zGemini31FlashTtsOutput = z.object({
+  audio: zFile,
+});
 
 /**
  * IndexTTS2Input
  */
 export const zIndexTts2TextToSpeechInput = z.object({
   emotion_prompt: z.union([z.string(), z.unknown()]).optional(),
-  audio_url: z.string().register(z.globalRegistry, {
-    description: "The audio file to generate the speech from.",
-  }),
-  strength: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The strength of the emotional style transfer. Higher values result in stronger emotional influence.",
-    })
-    .optional()
-    .default(1),
+  audio_url: z.string(),
+  strength: z.number().gte(0).lte(1).optional().default(1),
   emotional_audio_url: z.union([z.string(), z.unknown()]).optional(),
   emotional_strengths: z.union([zEmotionalStrengths, z.unknown()]).optional(),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "The speech prompt to generate",
-  }),
-  should_use_prompt_for_emotion: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to use the `prompt` to calculate emotional strengths, if enabled it will overwrite the `emotional_strengths` values. If `emotion_prompt` is provided, it will be used to instead of `prompt` to extract the emotional style.",
-    })
-    .optional()
-    .default(false),
+  prompt: z.string(),
+  should_use_prompt_for_emotion: z.boolean().optional().default(false),
 });
 
 /**
@@ -655,9 +324,6 @@ export const zInworldTtsInput = z.object({
       z.literal(40000),
       z.literal(48000),
     ])
-    .register(z.globalRegistry, {
-      description: "The sample rate in Hz for the output audio.",
-    })
     .optional()
     .default(48000),
   voice: z
@@ -776,14 +442,9 @@ export const zInworldTtsInput = z.object({
       "Nour (ar)",
       "Omar (ar)",
     ])
-    .register(z.globalRegistry, {
-      description: "The voice to use for synthesis.",
-    })
     .optional()
     .default("Craig (en)"),
-  text: z.string().register(z.globalRegistry, {
-    description: "The text to synthesize into speech.",
-  }),
+  text: z.string(),
 });
 
 /**
@@ -797,18 +458,8 @@ export const zInworldTtsOutput = z.object({
  * TTSInput
  */
 export const zKlingVideoV1TtsInput = z.object({
-  text: z.string().max(500).register(z.globalRegistry, {
-    description: "The text to be converted to speech",
-  }),
-  voice_speed: z
-    .number()
-    .gte(0.8)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description: "Rate of speech",
-    })
-    .optional()
-    .default(1),
+  text: z.string().max(500),
+  voice_speed: z.number().gte(0.8).lte(2).optional().default(1),
   voice_id: z
     .enum([
       "genshin_vindi2",
@@ -858,9 +509,6 @@ export const zKlingVideoV1TtsInput = z.object({
       "daopianyansang-v1",
       "mengwa-v1",
     ])
-    .register(z.globalRegistry, {
-      description: "The voice ID to use for speech synthesis",
-    })
     .optional()
     .default("genshin_vindi2"),
 });
@@ -876,84 +524,22 @@ export const zKlingVideoV1TtsOutput = z.object({
  * LoudnessNormalizationSetting
  */
 export const zLoudnessNormalizationSetting = z.object({
-  enabled: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Enable loudness normalization for the audio",
-    })
-    .optional()
-    .default(true),
-  target_range: z
-    .number()
-    .gte(0)
-    .lte(20)
-    .register(z.globalRegistry, {
-      description: "Target loudness range in LU (default 8.0)",
-    })
-    .optional()
-    .default(8),
-  target_peak: z
-    .number()
-    .gte(-3)
-    .lte(0)
-    .register(z.globalRegistry, {
-      description: "Target peak level in dBTP (default -0.5).",
-    })
-    .optional()
-    .default(-0.5),
-  target_loudness: z
-    .number()
-    .gte(-70)
-    .lte(-10)
-    .register(z.globalRegistry, {
-      description: "Target loudness in LUFS (default -18.0)",
-    })
-    .optional()
-    .default(-18),
+  enabled: z.boolean().optional().default(true),
+  target_range: z.number().gte(0).lte(20).optional().default(8),
+  target_peak: z.number().gte(-3).lte(0).optional().default(-0.5),
+  target_loudness: z.number().gte(-70).lte(-10).optional().default(-18),
 });
 
 /**
  * Input
  */
 export const zLuxTtsInput = z.object({
-  guidance_scale: z
-    .number()
-    .gte(0)
-    .lte(10)
-    .register(z.globalRegistry, {
-      description:
-        "Classifier-free guidance scale. Higher values increase adherence to the reference voice at the cost of diversity.",
-    })
-    .optional()
-    .default(3),
+  guidance_scale: z.number().gte(0).lte(10).optional().default(3),
   seed: z.union([z.int(), z.unknown()]).optional(),
-  num_inference_steps: z
-    .int()
-    .gte(1)
-    .lte(16)
-    .register(z.globalRegistry, {
-      description:
-        "Number of flow-matching inference steps. 4 is recommended for best efficiency.",
-    })
-    .optional()
-    .default(4),
-  audio_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL of the reference audio file for voice cloning. The model will mimic the voice characteristics from this audio.",
-  }),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "The text to be converted to speech.",
-  }),
-  max_ref_length: z
-    .number()
-    .gte(1)
-    .lte(15)
-    .register(z.globalRegistry, {
-      description:
-        "Maximum length of the reference audio to use for voice encoding, in seconds. Longer durations capture more voice characteristics but increase processing time.",
-    })
-    .optional()
-    .default(5),
+  num_inference_steps: z.int().gte(1).lte(16).optional().default(4),
+  audio_url: z.string(),
+  prompt: z.string(),
+  max_ref_length: z.number().gte(1).lte(15).optional().default(5),
 });
 
 /**
@@ -970,275 +556,74 @@ export const zLuxTtsOutput = z.object({
  *
  * Input schema for batch Maya-1-Voice TTS generation
  */
-export const zMayaBatchInput = z
-  .object({
-    max_tokens: z
-      .int()
-      .gte(28)
-      .lte(4000)
-      .register(z.globalRegistry, {
-        description: "Maximum SNAC tokens per generation.",
-      })
-      .optional()
-      .default(2000),
-    prompts: z.array(z.string()).min(1).max(100).register(z.globalRegistry, {
-      description:
-        "List of voice descriptions for each text. Must match the length of texts list. Each describes the voice/character attributes.",
-    }),
-    output_format: z
-      .enum(["wav", "mp3"])
-      .register(z.globalRegistry, {
-        description: "Output audio format for all generated speech files",
-      })
-      .optional()
-      .default("wav"),
-    repetition_penalty: z
-      .number()
-      .gte(1)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description: "Repetition penalty for all generations.",
-      })
-      .optional()
-      .default(1.1),
-    sample_rate: z
-      .enum(["48 kHz", "24 kHz"])
-      .register(z.globalRegistry, {
-        description:
-          "Output audio sample rate for all generations. 48 kHz provides higher quality, 24 kHz is faster.",
-      })
-      .optional()
-      .default("48 kHz"),
-    texts: z.array(z.string()).min(1).max(100).register(z.globalRegistry, {
-      description:
-        "List of texts to synthesize into speech. You can embed emotion tags in each text using the format <emotion_name>.",
-    }),
-    top_p: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description: "Nucleus sampling parameter for all generations.",
-      })
-      .optional()
-      .default(0.9),
-    temperature: z
-      .number()
-      .gte(0)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description: "Sampling temperature for all generations.",
-      })
-      .optional()
-      .default(0.4),
-  })
-  .register(z.globalRegistry, {
-    description: "Input schema for batch Maya-1-Voice TTS generation",
-  });
+export const zMayaBatchInput = z.object({
+  max_tokens: z.int().gte(28).lte(4000).optional().default(2000),
+  prompts: z.array(z.string()).min(1).max(100),
+  output_format: z.enum(["wav", "mp3"]).optional().default("wav"),
+  repetition_penalty: z.number().gte(1).lte(2).optional().default(1.1),
+  sample_rate: z.enum(["48 kHz", "24 kHz"]).optional().default("48 kHz"),
+  texts: z.array(z.string()).min(1).max(100),
+  top_p: z.number().gte(0).lte(1).optional().default(0.9),
+  temperature: z.number().gte(0).lte(2).optional().default(0.4),
+});
 
 /**
  * MayaVoiceBatchOutput
  *
  * Output schema for batch Maya-1-Voice TTS generation
  */
-export const zMayaBatchOutput = z
-  .object({
-    sample_rate: z.string().register(z.globalRegistry, {
-      description: "Sample rate of all generated audio files",
-    }),
-    average_rtf: z.number().register(z.globalRegistry, {
-      description: "Average real-time factor across all generations",
-    }),
-    audios: z.array(zFile).register(z.globalRegistry, {
-      description: "List of generated audio files",
-    }),
-    durations: z.array(z.number()).register(z.globalRegistry, {
-      description: "Duration of each generated audio in seconds",
-    }),
-    total_generation_time: z.number().register(z.globalRegistry, {
-      description: "Total time taken to generate all audio files in seconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output schema for batch Maya-1-Voice TTS generation",
-  });
+export const zMayaBatchOutput = z.object({
+  sample_rate: z.string(),
+  average_rtf: z.number(),
+  audios: z.array(zFile),
+  durations: z.array(z.number()),
+  total_generation_time: z.number(),
+});
 
 /**
  * MayaVoiceInput
  *
  * Input schema for Maya-1-Voice TTS generation
  */
-export const zMayaInput = z
-  .object({
-    output_format: z
-      .enum(["wav", "mp3"])
-      .register(z.globalRegistry, {
-        description: "Output audio format for the generated speech",
-      })
-      .optional()
-      .default("wav"),
-    prompt: z.string().max(500).register(z.globalRegistry, {
-      description:
-        "Description of the voice/character. Includes attributes like age, accent, pitch, timbre, pacing, tone, and intensity. See examples for format.",
-    }),
-    max_tokens: z
-      .int()
-      .gte(28)
-      .lte(4000)
-      .register(z.globalRegistry, {
-        description:
-          "Maximum number of SNAC tokens to generate (7 tokens per frame). Controls maximum audio length.",
-      })
-      .optional()
-      .default(2000),
-    repetition_penalty: z
-      .number()
-      .gte(1)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "Penalty for repeating tokens. Higher values reduce repetition artifacts.",
-      })
-      .optional()
-      .default(1.1),
-    sample_rate: z
-      .enum(["48 kHz", "24 kHz"])
-      .register(z.globalRegistry, {
-        description:
-          "Output audio sample rate. 48 kHz provides higher quality audio, 24 kHz is faster.",
-      })
-      .optional()
-      .default("48 kHz"),
-    top_p: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Nucleus sampling parameter. Controls diversity of token selection.",
-      })
-      .optional()
-      .default(0.9),
-    temperature: z
-      .number()
-      .gte(0)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "Sampling temperature. Lower values (0.2-0.5) produce more stable/consistent audio. Higher values add variation.",
-      })
-      .optional()
-      .default(0.4),
-    text: z.string().max(5000).register(z.globalRegistry, {
-      description:
-        "The text to synthesize into speech. You can embed emotion tags anywhere in the text using the format <emotion_name>. Available emotions: laugh, laugh_harder, sigh, chuckle, gasp, angry, excited, whisper, cry, scream, sing, snort, exhale, gulp, giggle, sarcastic, curious. Example: 'Hello world! <excited> This is amazing!' or 'I can't believe this <sigh> happened again.'",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Input schema for Maya-1-Voice TTS generation",
-  });
+export const zMayaInput = z.object({
+  output_format: z.enum(["wav", "mp3"]).optional().default("wav"),
+  prompt: z.string().max(500),
+  max_tokens: z.int().gte(28).lte(4000).optional().default(2000),
+  repetition_penalty: z.number().gte(1).lte(2).optional().default(1.1),
+  sample_rate: z.enum(["48 kHz", "24 kHz"]).optional().default("48 kHz"),
+  top_p: z.number().gte(0).lte(1).optional().default(0.9),
+  temperature: z.number().gte(0).lte(2).optional().default(0.4),
+  text: z.string().max(5000),
+});
 
 /**
  * MayaVoiceOutput
  *
  * Output schema for Maya-1-Voice TTS generation
  */
-export const zMayaOutput = z
-  .object({
-    sample_rate: z.string().register(z.globalRegistry, {
-      description: "Sample rate of the generated audio",
-    }),
-    generation_time: z.number().register(z.globalRegistry, {
-      description: "Time taken to generate the audio in seconds",
-    }),
-    rtf: z.number().register(z.globalRegistry, {
-      description:
-        "Real-time factor (generation_time / audio_duration). Lower is better.",
-    }),
-    audio: zFile,
-    duration: z.number().register(z.globalRegistry, {
-      description: "Duration of the generated audio in seconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output schema for Maya-1-Voice TTS generation",
-  });
+export const zMayaOutput = z.object({
+  sample_rate: z.string(),
+  generation_time: z.number(),
+  rtf: z.number(),
+  audio: zFile,
+  duration: z.number(),
+});
 
 /**
  * MayaVoiceStreamingInput
  *
  * Input schema for Maya-1-Voice streaming TTS generation
  */
-export const zMayaStreamInput = z
-  .object({
-    output_format: z
-      .enum(["mp3", "wav", "pcm"])
-      .register(z.globalRegistry, {
-        description:
-          "Output audio format. 'mp3' for browser-playable audio, 'wav' for uncompressed audio, 'pcm' for raw PCM (lowest latency, requires client-side decoding).",
-      })
-      .optional()
-      .default("mp3"),
-    prompt: z.string().max(500).register(z.globalRegistry, {
-      description:
-        "Description of the voice/character. Includes attributes like age, accent, pitch, timbre, pacing, tone, and intensity. See examples for format.",
-    }),
-    max_tokens: z
-      .int()
-      .gte(28)
-      .lte(4000)
-      .register(z.globalRegistry, {
-        description:
-          "Maximum number of SNAC tokens to generate (7 tokens per frame). Controls maximum audio length.",
-      })
-      .optional()
-      .default(2000),
-    repetition_penalty: z
-      .number()
-      .gte(1)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "Penalty for repeating tokens. Higher values reduce repetition artifacts.",
-      })
-      .optional()
-      .default(1.1),
-    sample_rate: z
-      .enum(["48 kHz", "24 kHz"])
-      .register(z.globalRegistry, {
-        description:
-          "Output audio sample rate. 48 kHz uses upsampling for higher quality audio, 24 kHz is native SNAC output (faster, lower latency).",
-      })
-      .optional()
-      .default("24 kHz"),
-    top_p: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Nucleus sampling parameter. Controls diversity of token selection.",
-      })
-      .optional()
-      .default(0.9),
-    temperature: z
-      .number()
-      .gte(0)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "Sampling temperature. Lower values (0.2-0.5) produce more stable/consistent audio. Higher values add variation.",
-      })
-      .optional()
-      .default(0.4),
-    text: z.string().max(5000).register(z.globalRegistry, {
-      description:
-        "The text to synthesize into speech. You can embed emotion tags anywhere in the text using the format <emotion_name>. Available emotions: laugh, laugh_harder, sigh, chuckle, gasp, angry, excited, whisper, cry, scream, sing, snort, exhale, gulp, giggle, sarcastic, curious. Example: 'Hello world! <excited> This is amazing!' or 'I can't believe this <sigh> happened again.'",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Input schema for Maya-1-Voice streaming TTS generation",
-  });
+export const zMayaStreamInput = z.object({
+  output_format: z.enum(["mp3", "wav", "pcm"]).optional().default("mp3"),
+  prompt: z.string().max(500),
+  max_tokens: z.int().gte(28).lte(4000).optional().default(2000),
+  repetition_penalty: z.number().gte(1).lte(2).optional().default(1.1),
+  sample_rate: z.enum(["48 kHz", "24 kHz"]).optional().default("24 kHz"),
+  top_p: z.number().gte(0).lte(1).optional().default(0.9),
+  temperature: z.number().gte(0).lte(2).optional().default(0.4),
+  text: z.string().max(5000),
+});
 
 export const zMayaStreamOutput = z.unknown();
 
@@ -1247,9 +632,7 @@ export const zMayaStreamOutput = z.unknown();
  */
 export const zMinimaxPreviewSpeech25HdOutput = z.object({
   audio: zFile,
-  duration_ms: z.int().register(z.globalRegistry, {
-    description: "Duration of the audio in milliseconds",
-  }),
+  duration_ms: z.int(),
 });
 
 /**
@@ -1257,9 +640,7 @@ export const zMinimaxPreviewSpeech25HdOutput = z.object({
  */
 export const zMinimaxPreviewSpeech25TurboOutput = z.object({
   audio: zFile,
-  duration_ms: z.int().register(z.globalRegistry, {
-    description: "Duration of the audio in milliseconds",
-  }),
+  duration_ms: z.int(),
 });
 
 /**
@@ -1267,9 +648,7 @@ export const zMinimaxPreviewSpeech25TurboOutput = z.object({
  */
 export const zMinimaxSpeech02HdOutput = z.object({
   audio: zFile,
-  duration_ms: z.int().register(z.globalRegistry, {
-    description: "Duration of the audio in milliseconds",
-  }),
+  duration_ms: z.int(),
 });
 
 /**
@@ -1277,9 +656,7 @@ export const zMinimaxSpeech02HdOutput = z.object({
  */
 export const zMinimaxSpeech02TurboOutput = z.object({
   audio: zFile,
-  duration_ms: z.int().register(z.globalRegistry, {
-    description: "Duration of the audio in milliseconds",
-  }),
+  duration_ms: z.int(),
 });
 
 /**
@@ -1287,9 +664,7 @@ export const zMinimaxSpeech02TurboOutput = z.object({
  */
 export const zMinimaxSpeech26HdOutput = z.object({
   audio: zFile,
-  duration_ms: z.int().register(z.globalRegistry, {
-    description: "Duration of the audio in milliseconds",
-  }),
+  duration_ms: z.int(),
 });
 
 /**
@@ -1297,9 +672,7 @@ export const zMinimaxSpeech26HdOutput = z.object({
  */
 export const zMinimaxSpeech26TurboOutput = z.object({
   audio: zFile,
-  duration_ms: z.int().register(z.globalRegistry, {
-    description: "Duration of the audio in milliseconds",
-  }),
+  duration_ms: z.int(),
 });
 
 /**
@@ -1307,32 +680,20 @@ export const zMinimaxSpeech26TurboOutput = z.object({
  *
  * Output model for Speech 2.8 HD.
  */
-export const zMinimaxSpeech28HdOutput = z
-  .object({
-    audio: zFile,
-    duration_ms: z.int().register(z.globalRegistry, {
-      description: "Duration of the audio in milliseconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output model for Speech 2.8 HD.",
-  });
+export const zMinimaxSpeech28HdOutput = z.object({
+  audio: zFile,
+  duration_ms: z.int(),
+});
 
 /**
  * TextToSpeechTurbo28Output
  *
  * Output model for Speech 2.8 Turbo.
  */
-export const zMinimaxSpeech28TurboOutput = z
-  .object({
-    audio: zFile,
-    duration_ms: z.int().register(z.globalRegistry, {
-      description: "Duration of the audio in milliseconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output model for Speech 2.8 Turbo.",
-  });
+export const zMinimaxSpeech28TurboOutput = z.object({
+  audio: zFile,
+  duration_ms: z.int(),
+});
 
 /**
  * VoiceCloneRequest
@@ -1345,32 +706,13 @@ export const zMinimaxVoiceCloneInput = z.object({
       "speech-01-hd",
       "speech-01-turbo",
     ])
-    .register(z.globalRegistry, {
-      description:
-        "TTS model to use for preview. Options: speech-02-hd, speech-02-turbo, speech-01-hd, speech-01-turbo",
-    })
     .optional()
     .default("speech-02-hd"),
-  noise_reduction: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Enable noise reduction for the cloned voice",
-    })
-    .optional()
-    .default(false),
+  noise_reduction: z.boolean().optional().default(false),
   text: z.union([z.string().max(1000), z.unknown()]).optional(),
   accuracy: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
-  audio_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n            URL of the input audio file for voice cloning. Should be at least 10 seconds\n            long. To retain the voice permanently, use it with a TTS (text-to-speech)\n            endpoint at least once within 7 days. Otherwise, it will be\n            automatically deleted.\n        ",
-  }),
-  need_volume_normalization: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Enable volume normalization for the cloned voice",
-    })
-    .optional()
-    .default(false),
+  audio_url: z.string(),
+  need_volume_normalization: z.boolean().optional().default(false),
 });
 
 /**
@@ -1378,22 +720,15 @@ export const zMinimaxVoiceCloneInput = z.object({
  */
 export const zMinimaxVoiceCloneOutput = z.object({
   audio: z.union([zFile, z.unknown()]).optional(),
-  custom_voice_id: z.string().register(z.globalRegistry, {
-    description: "The cloned voice ID for use with TTS",
-  }),
+  custom_voice_id: z.string(),
 });
 
 /**
  * VoiceDesignRequest
  */
 export const zMinimaxVoiceDesignInput = z.object({
-  prompt: z.string().max(2000).register(z.globalRegistry, {
-    description: "Voice description prompt for generating a personalized voice",
-  }),
-  preview_text: z.string().max(500).register(z.globalRegistry, {
-    description:
-      "Text for audio preview. Limited to 500 characters. A fee of $30 per 1M characters will be charged for the generation of the preview audio.",
-  }),
+  prompt: z.string().max(2000),
+  preview_text: z.string().max(500),
 });
 
 /**
@@ -1401,43 +736,18 @@ export const zMinimaxVoiceDesignInput = z.object({
  */
 export const zMinimaxVoiceDesignOutput = z.object({
   audio: zFile,
-  custom_voice_id: z.string().register(z.globalRegistry, {
-    description: "The voice_id of the generated voice",
-  }),
+  custom_voice_id: z.string(),
 });
 
 /**
  * OrpheusRequest
  */
 export const zOrpheusTtsInput = z.object({
-  temperature: z
-    .number()
-    .gte(0)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description: "Temperature for generation (higher = more creative).",
-    })
-    .optional()
-    .default(0.7),
-  repetition_penalty: z
-    .number()
-    .gte(1.1)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description:
-        "Repetition penalty (>= 1.1 required for stable generations).",
-    })
-    .optional()
-    .default(1.2),
-  text: z.string().register(z.globalRegistry, {
-    description:
-      "The text to be converted to speech. You can additionally add the following emotive tags: <laugh>, <chuckle>, <sigh>, <cough>, <sniffle>, <groan>, <yawn>, <gasp>",
-  }),
+  temperature: z.number().gte(0).lte(2).optional().default(0.7),
+  repetition_penalty: z.number().gte(1.1).lte(2).optional().default(1.2),
+  text: z.string(),
   voice: z
     .enum(["tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"])
-    .register(z.globalRegistry, {
-      description: "Voice ID for the desired voice.",
-    })
     .optional()
     .default("tara"),
 });
@@ -1454,100 +764,52 @@ export const zOrpheusTtsOutput = z.object({
  *
  * Output format configuration for the TTS API.
  */
-export const zOutputFormat = z
-  .object({
-    codec: z
-      .enum(["mp3", "wav", "pcm", "mulaw", "alaw"])
-      .register(z.globalRegistry, {
-        description: "Audio codec. Supported: mp3, wav, pcm, mulaw, alaw.",
-      })
-      .optional()
-      .default("mp3"),
-    bit_rate: z
-      .union([
-        z.union([
-          z.literal(32000),
-          z.literal(64000),
-          z.literal(96000),
-          z.literal(128000),
-          z.literal(192000),
-        ]),
-        z.unknown(),
-      ])
-      .optional(),
-    sample_rate: z
-      .union([
-        z.literal(8000),
-        z.literal(16000),
-        z.literal(22050),
-        z.literal(24000),
-        z.literal(44100),
-        z.literal(48000),
-      ])
-      .register(z.globalRegistry, {
-        description: "Sample rate in Hz.",
-      })
-      .optional()
-      .default(24000),
-  })
-  .register(z.globalRegistry, {
-    description: "Output format configuration for the TTS API.",
-  });
+export const zOutputFormat = z.object({
+  codec: z
+    .enum(["mp3", "wav", "pcm", "mulaw", "alaw"])
+    .optional()
+    .default("mp3"),
+  bit_rate: z
+    .union([
+      z.union([
+        z.literal(32000),
+        z.literal(64000),
+        z.literal(96000),
+        z.literal(128000),
+        z.literal(192000),
+      ]),
+      z.unknown(),
+    ])
+    .optional(),
+  sample_rate: z
+    .union([
+      z.literal(8000),
+      z.literal(16000),
+      z.literal(22050),
+      z.literal(24000),
+      z.literal(44100),
+      z.literal(48000),
+    ])
+    .optional()
+    .default(24000),
+});
 
 /**
  * PronunciationDict
  */
 export const zPronunciationDict = z.object({
-  tone_list: z
-    .array(z.string())
-    .register(z.globalRegistry, {
-      description:
-        "List of pronunciation replacements in format ['text/(pronunciation)', ...]. For Chinese, tones are 1-5. Example: ['燕少飞/(yan4)(shao3)(fei1)']",
-    })
-    .optional(),
+  tone_list: z.array(z.string()).optional(),
 });
 
 export const zQueueStatus = z.object({
   status: z.enum(["IN_QUEUE", "IN_PROGRESS", "COMPLETED"]),
-  request_id: z.string().register(z.globalRegistry, {
-    description: "The request id.",
-  }),
-  response_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The response url.",
-    })
-    .optional(),
-  status_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The status url.",
-    })
-    .optional(),
-  cancel_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The cancel url.",
-    })
-    .optional(),
-  logs: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The logs.",
-    })
-    .optional(),
-  metrics: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The metrics.",
-    })
-    .optional(),
-  queue_position: z
-    .int()
-    .register(z.globalRegistry, {
-      description: "The queue position.",
-    })
-    .optional(),
+  request_id: z.string(),
+  response_url: z.string().optional(),
+  status_url: z.string().optional(),
+  cancel_url: z.string().optional(),
+  logs: z.record(z.string(), z.unknown()).optional(),
+  metrics: z.record(z.string(), z.unknown()).optional(),
+  queue_position: z.int().optional(),
 });
 
 /**
@@ -1571,9 +833,6 @@ export const zQwen3TtsTextToSpeech06bInput = z.object({
       "Portuguese",
       "Russian",
     ])
-    .register(z.globalRegistry, {
-      description: "The language of the voice.",
-    })
     .optional()
     .default("Auto"),
   subtalker_dosample: z.union([z.boolean(), z.unknown()]).optional(),
@@ -1586,9 +845,7 @@ export const zQwen3TtsTextToSpeech06bInput = z.object({
   speaker_voice_embedding_file_url: z
     .union([z.string(), z.unknown()])
     .optional(),
-  text: z.string().register(z.globalRegistry, {
-    description: "The text to be converted to speech.",
-  }),
+  text: z.string(),
   temperature: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
   prompt: z.union([z.string(), z.unknown()]).optional(),
   repetition_penalty: z.union([z.number().gte(0), z.unknown()]).optional(),
@@ -1638,9 +895,6 @@ export const zQwen3TtsTextToSpeech17bInput = z.object({
       "Portuguese",
       "Russian",
     ])
-    .register(z.globalRegistry, {
-      description: "The language of the voice.",
-    })
     .optional()
     .default("Auto"),
   subtalker_dosample: z.union([z.boolean(), z.unknown()]).optional(),
@@ -1653,9 +907,7 @@ export const zQwen3TtsTextToSpeech17bInput = z.object({
   speaker_voice_embedding_file_url: z
     .union([z.string(), z.unknown()])
     .optional(),
-  text: z.string().register(z.globalRegistry, {
-    description: "The text to be converted to speech.",
-  }),
+  text: z.string(),
   temperature: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
   prompt: z.union([z.string(), z.unknown()]).optional(),
   repetition_penalty: z.union([z.number().gte(0), z.unknown()]).optional(),
@@ -1689,9 +941,7 @@ export const zQwen3TtsTextToSpeech17bOutput = z.object({
  */
 export const zQwen3TtsVoiceDesign17bInput = z.object({
   max_new_tokens: z.union([z.int().gte(1).lte(8192), z.unknown()]).optional(),
-  text: z.string().register(z.globalRegistry, {
-    description: "The text to be converted to speech.",
-  }),
+  text: z.string(),
   top_p: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
   subtalker_top_k: z.union([z.int().gte(0), z.unknown()]).optional(),
   top_k: z.union([z.int().gte(0), z.unknown()]).optional(),
@@ -1711,14 +961,9 @@ export const zQwen3TtsVoiceDesign17bInput = z.object({
       "Portuguese",
       "Russian",
     ])
-    .register(z.globalRegistry, {
-      description: "The language of the voice to be designed.",
-    })
     .optional()
     .default("Auto"),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Optional prompt to guide the style of the generated speech.",
-  }),
+  prompt: z.string(),
   subtalker_temperature: z
     .union([z.number().gte(0).lte(1), z.unknown()])
     .optional(),
@@ -1738,401 +983,282 @@ export const zQwen3TtsVoiceDesign17bOutput = z.object({
  *
  * Voice configuration for a single speaker in multi-speaker synthesis.
  */
-export const zSpeakerConfig = z
-  .object({
-    speaker_id: z.string().regex(/^\w+$/).register(z.globalRegistry, {
-      description:
-        "Alias used to identify this speaker in the prompt. Use this alias as a prefix in the prompt field, e.g. 'Alice: Hello! Bob: Hi there!'. Must be alphanumeric with no whitespace.",
-    }),
-    voice: z
-      .enum([
-        "Achernar",
-        "Achird",
-        "Algenib",
-        "Algieba",
-        "Alnilam",
-        "Aoede",
-        "Autonoe",
-        "Callirrhoe",
-        "Charon",
-        "Despina",
-        "Enceladus",
-        "Erinome",
-        "Fenrir",
-        "Gacrux",
-        "Iapetus",
-        "Kore",
-        "Laomedeia",
-        "Leda",
-        "Orus",
-        "Pulcherrima",
-        "Puck",
-        "Rasalgethi",
-        "Sadachbia",
-        "Sadaltager",
-        "Schedar",
-        "Sulafat",
-        "Umbriel",
-        "Vindemiatrix",
-        "Zephyr",
-        "Zubenelgenubi",
-      ])
-      .register(z.globalRegistry, {
-        description: "Voice preset for this speaker.",
-      }),
-  })
-  .register(z.globalRegistry, {
-    description:
-      "Voice configuration for a single speaker in multi-speaker synthesis.",
-  });
+export const zSpeakerConfig = z.object({
+  speaker_id: z.string().regex(/^\w+$/),
+  voice: z.enum([
+    "Achernar",
+    "Achird",
+    "Algenib",
+    "Algieba",
+    "Alnilam",
+    "Aoede",
+    "Autonoe",
+    "Callirrhoe",
+    "Charon",
+    "Despina",
+    "Enceladus",
+    "Erinome",
+    "Fenrir",
+    "Gacrux",
+    "Iapetus",
+    "Kore",
+    "Laomedeia",
+    "Leda",
+    "Orus",
+    "Pulcherrima",
+    "Puck",
+    "Rasalgethi",
+    "Sadachbia",
+    "Sadaltager",
+    "Schedar",
+    "Sulafat",
+    "Umbriel",
+    "Vindemiatrix",
+    "Zephyr",
+    "Zubenelgenubi",
+  ]),
+});
 
 /**
  * Gemini31FlashTTSInput
  *
  * Input for Gemini 3.1 Flash TTS preview speech generation.
  */
-export const zGemini31FlashTtsInput = z
-  .object({
-    speakers: z
-      .union([z.array(zSpeakerConfig).min(2).max(10), z.unknown()])
-      .optional(),
-    prompt: z.string().min(1).max(50000).register(z.globalRegistry, {
-      description:
-        "The text to convert to speech. Gemini 3.1 Flash TTS supports natural-language prompting for style, pace, accent, and emotional expression — include delivery instructions inline with the text (e.g. 'Say cheerfully: Have a wonderful day!'). Supports expressive audio tags like [sigh], [laughing], [whispering], [short pause] for fine-grained control over delivery. For multi-speaker synthesis, prefix lines with speaker aliases defined in the speakers field (e.g. 'Alice: Hello!\\nBob: Hi!').",
-    }),
-    language_code: z
-      .union([
-        z.enum([
-          "Arabic (Egypt)",
-          "Bangla (Bangladesh)",
-          "Dutch (Netherlands)",
-          "English (India)",
-          "English (US)",
-          "French (France)",
-          "German (Germany)",
-          "Hindi (India)",
-          "Indonesian (Indonesia)",
-          "Italian (Italy)",
-          "Japanese (Japan)",
-          "Korean (South Korea)",
-          "Marathi (India)",
-          "Polish (Poland)",
-          "Portuguese (Brazil)",
-          "Romanian (Romania)",
-          "Russian (Russia)",
-          "Spanish (Spain)",
-          "Tamil (India)",
-          "Telugu (India)",
-          "Thai (Thailand)",
-          "Turkish (Turkey)",
-          "Ukrainian (Ukraine)",
-          "Vietnamese (Vietnam)",
-          "Afrikaans (South Africa)",
-          "Albanian (Albania)",
-          "Amharic (Ethiopia)",
-          "Arabic (World)",
-          "Armenian (Armenia)",
-          "Azerbaijani (Azerbaijan)",
-          "Basque (Spain)",
-          "Belarusian (Belarus)",
-          "Bulgarian (Bulgaria)",
-          "Burmese (Myanmar)",
-          "Catalan (Spain)",
-          "Cebuano (Philippines)",
-          "Chinese Mandarin (China)",
-          "Chinese Mandarin (Taiwan)",
-          "Croatian (Croatia)",
-          "Czech (Czech Republic)",
-          "Danish (Denmark)",
-          "English (Australia)",
-          "English (UK)",
-          "Estonian (Estonia)",
-          "Filipino (Philippines)",
-          "Finnish (Finland)",
-          "French (Canada)",
-          "Galician (Spain)",
-          "Georgian (Georgia)",
-          "Greek (Greece)",
-          "Gujarati (India)",
-          "Haitian Creole (Haiti)",
-          "Hebrew (Israel)",
-          "Hungarian (Hungary)",
-          "Icelandic (Iceland)",
-          "Javanese (Java)",
-          "Kannada (India)",
-          "Konkani (India)",
-          "Lao (Laos)",
-          "Latin (Vatican City)",
-          "Latvian (Latvia)",
-          "Lithuanian (Lithuania)",
-          "Luxembourgish (Luxembourg)",
-          "Macedonian (North Macedonia)",
-          "Maithili (India)",
-          "Malagasy (Madagascar)",
-          "Malay (Malaysia)",
-          "Malayalam (India)",
-          "Mongolian (Mongolia)",
-          "Nepali (Nepal)",
-          "Norwegian Bokmal (Norway)",
-          "Norwegian Nynorsk (Norway)",
-          "Odia (India)",
-          "Pashto (Afghanistan)",
-          "Persian (Iran)",
-          "Portuguese (Portugal)",
-          "Punjabi (India)",
-          "Serbian (Serbia)",
-          "Sindhi (India)",
-          "Sinhala (Sri Lanka)",
-          "Slovak (Slovakia)",
-          "Slovenian (Slovenia)",
-          "Spanish (Latin America)",
-          "Spanish (Mexico)",
-          "Swahili (Kenya)",
-          "Swedish (Sweden)",
-          "Urdu (Pakistan)",
-        ]),
-        z.unknown(),
-      ])
-      .optional(),
-    output_format: z
-      .enum(["wav", "mp3", "ogg_opus"])
-      .register(z.globalRegistry, {
-        description:
-          "Audio output format. mp3: compressed, small file size (recommended). wav: uncompressed PCM wrapped in WAV (24 kHz, 16-bit mono). ogg_opus: Ogg container with Opus codec, good quality-to-size ratio.",
-      })
-      .optional()
-      .default("mp3"),
-    voice: z
-      .enum([
-        "Achernar",
-        "Achird",
-        "Algenib",
-        "Algieba",
-        "Alnilam",
-        "Aoede",
-        "Autonoe",
-        "Callirrhoe",
-        "Charon",
-        "Despina",
-        "Enceladus",
-        "Erinome",
-        "Fenrir",
-        "Gacrux",
-        "Iapetus",
-        "Kore",
-        "Laomedeia",
-        "Leda",
-        "Orus",
-        "Pulcherrima",
-        "Puck",
-        "Rasalgethi",
-        "Sadachbia",
-        "Sadaltager",
-        "Schedar",
-        "Sulafat",
-        "Umbriel",
-        "Vindemiatrix",
-        "Zephyr",
-        "Zubenelgenubi",
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "Voice preset for single-speaker synthesis. 30 distinct voices are available. Ignored when speakers is set. Popular choices: Kore (strong, firm female), Puck (upbeat, lively male), Charon (calm, professional male), Zephyr (bright, clear female), Aoede (warm, melodic female).",
-      })
-      .optional()
-      .default("Kore"),
-    style_instructions: z.union([z.string().max(4000), z.unknown()]).optional(),
-    temperature: z
-      .number()
-      .gte(0)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "Controls the randomness of the speech output. Higher values produce more creative and varied delivery, while lower values make the output more predictable and focused.",
-      })
-      .optional()
-      .default(1),
-  })
-  .register(z.globalRegistry, {
-    description: "Input for Gemini 3.1 Flash TTS preview speech generation.",
-  });
+export const zGemini31FlashTtsInput = z.object({
+  speakers: z
+    .union([z.array(zSpeakerConfig).min(2).max(10), z.unknown()])
+    .optional(),
+  prompt: z.string().min(1).max(50000),
+  language_code: z
+    .union([
+      z.enum([
+        "Arabic (Egypt)",
+        "Bangla (Bangladesh)",
+        "Dutch (Netherlands)",
+        "English (India)",
+        "English (US)",
+        "French (France)",
+        "German (Germany)",
+        "Hindi (India)",
+        "Indonesian (Indonesia)",
+        "Italian (Italy)",
+        "Japanese (Japan)",
+        "Korean (South Korea)",
+        "Marathi (India)",
+        "Polish (Poland)",
+        "Portuguese (Brazil)",
+        "Romanian (Romania)",
+        "Russian (Russia)",
+        "Spanish (Spain)",
+        "Tamil (India)",
+        "Telugu (India)",
+        "Thai (Thailand)",
+        "Turkish (Turkey)",
+        "Ukrainian (Ukraine)",
+        "Vietnamese (Vietnam)",
+        "Afrikaans (South Africa)",
+        "Albanian (Albania)",
+        "Amharic (Ethiopia)",
+        "Arabic (World)",
+        "Armenian (Armenia)",
+        "Azerbaijani (Azerbaijan)",
+        "Basque (Spain)",
+        "Belarusian (Belarus)",
+        "Bulgarian (Bulgaria)",
+        "Burmese (Myanmar)",
+        "Catalan (Spain)",
+        "Cebuano (Philippines)",
+        "Chinese Mandarin (China)",
+        "Chinese Mandarin (Taiwan)",
+        "Croatian (Croatia)",
+        "Czech (Czech Republic)",
+        "Danish (Denmark)",
+        "English (Australia)",
+        "English (UK)",
+        "Estonian (Estonia)",
+        "Filipino (Philippines)",
+        "Finnish (Finland)",
+        "French (Canada)",
+        "Galician (Spain)",
+        "Georgian (Georgia)",
+        "Greek (Greece)",
+        "Gujarati (India)",
+        "Haitian Creole (Haiti)",
+        "Hebrew (Israel)",
+        "Hungarian (Hungary)",
+        "Icelandic (Iceland)",
+        "Javanese (Java)",
+        "Kannada (India)",
+        "Konkani (India)",
+        "Lao (Laos)",
+        "Latin (Vatican City)",
+        "Latvian (Latvia)",
+        "Lithuanian (Lithuania)",
+        "Luxembourgish (Luxembourg)",
+        "Macedonian (North Macedonia)",
+        "Maithili (India)",
+        "Malagasy (Madagascar)",
+        "Malay (Malaysia)",
+        "Malayalam (India)",
+        "Mongolian (Mongolia)",
+        "Nepali (Nepal)",
+        "Norwegian Bokmal (Norway)",
+        "Norwegian Nynorsk (Norway)",
+        "Odia (India)",
+        "Pashto (Afghanistan)",
+        "Persian (Iran)",
+        "Portuguese (Portugal)",
+        "Punjabi (India)",
+        "Serbian (Serbia)",
+        "Sindhi (India)",
+        "Sinhala (Sri Lanka)",
+        "Slovak (Slovakia)",
+        "Slovenian (Slovenia)",
+        "Spanish (Latin America)",
+        "Spanish (Mexico)",
+        "Swahili (Kenya)",
+        "Swedish (Sweden)",
+        "Urdu (Pakistan)",
+      ]),
+      z.unknown(),
+    ])
+    .optional(),
+  output_format: z.enum(["wav", "mp3", "ogg_opus"]).optional().default("mp3"),
+  voice: z
+    .enum([
+      "Achernar",
+      "Achird",
+      "Algenib",
+      "Algieba",
+      "Alnilam",
+      "Aoede",
+      "Autonoe",
+      "Callirrhoe",
+      "Charon",
+      "Despina",
+      "Enceladus",
+      "Erinome",
+      "Fenrir",
+      "Gacrux",
+      "Iapetus",
+      "Kore",
+      "Laomedeia",
+      "Leda",
+      "Orus",
+      "Pulcherrima",
+      "Puck",
+      "Rasalgethi",
+      "Sadachbia",
+      "Sadaltager",
+      "Schedar",
+      "Sulafat",
+      "Umbriel",
+      "Vindemiatrix",
+      "Zephyr",
+      "Zubenelgenubi",
+    ])
+    .optional()
+    .default("Kore"),
+  style_instructions: z.union([z.string().max(4000), z.unknown()]).optional(),
+  temperature: z.number().gte(0).lte(2).optional().default(1),
+});
 
 /**
  * XAITTSInput
  *
  * Input for xAI text-to-speech generation.
  */
-export const zTtsV1Input = z
-  .object({
-    output_format: zOutputFormat.optional(),
-    voice: z
-      .enum(["eve", "ara", "rex", "sal", "leo"])
-      .register(z.globalRegistry, {
-        description:
-          "Voice to use for synthesis. eve: energetic, upbeat. ara: warm, friendly. rex: confident, clear. sal: smooth, balanced. leo: authoritative, strong.",
-      })
-      .optional()
-      .default("eve"),
-    language: z
-      .enum([
-        "auto",
-        "en",
-        "ar-EG",
-        "ar-SA",
-        "ar-AE",
-        "bn",
-        "zh",
-        "fr",
-        "de",
-        "hi",
-        "id",
-        "it",
-        "ja",
-        "ko",
-        "pt-BR",
-        "pt-PT",
-        "ru",
-        "es-MX",
-        "es-ES",
-        "tr",
-        "vi",
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "BCP-47 language code or 'auto' for automatic detection. Supported: en, zh, fr, de, hi, id, it, ja, ko, pt-BR, pt-PT, ru, es-MX, es-ES, tr, vi, bn, ar-EG, ar-SA, ar-AE.",
-      })
-      .optional()
-      .default("auto"),
-    text: z.string().min(1).max(15000).register(z.globalRegistry, {
-      description:
-        "The text to convert to speech. Maximum 15,000 characters. Supports speech tags for expressive delivery: inline tags like [laugh], [pause], [sigh] and wrapping tags like <whisper>text</whisper>, <slow>text</slow>.",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Input for xAI text-to-speech generation.",
-  });
+export const zTtsV1Input = z.object({
+  output_format: zOutputFormat.optional(),
+  voice: z.enum(["eve", "ara", "rex", "sal", "leo"]).optional().default("eve"),
+  language: z
+    .enum([
+      "auto",
+      "en",
+      "ar-EG",
+      "ar-SA",
+      "ar-AE",
+      "bn",
+      "zh",
+      "fr",
+      "de",
+      "hi",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "pt-BR",
+      "pt-PT",
+      "ru",
+      "es-MX",
+      "es-ES",
+      "tr",
+      "vi",
+    ])
+    .optional()
+    .default("auto"),
+  text: z.string().min(1).max(15000),
+});
 
 /**
  * XAITTSOutput
  *
  * Output for xAI text-to-speech generation.
  */
-export const zTtsV1Output = z
-  .object({
-    audio: zFile,
-  })
-  .register(z.globalRegistry, {
-    description: "Output for xAI text-to-speech generation.",
-  });
+export const zTtsV1Output = z.object({
+  audio: zFile,
+});
 
 /**
  * VibeVoice0_5bInput
  *
  * Input schema for VibeVoice-0.5b TTS generation
  */
-export const zVibevoice05bInput = z
-  .object({
-    seed: z.union([z.int(), z.unknown()]).optional(),
-    script: z.string().max(90000).register(z.globalRegistry, {
-      description: "The script to convert to speech.",
-    }),
-    cfg_scale: z
-      .number()
-      .gte(1)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "CFG (Classifier-Free Guidance) scale for generation. Higher values increase adherence to text.",
-      })
-      .optional()
-      .default(1.3),
-    speaker: z
-      .enum(["Frank", "Wayne", "Carter", "Emma", "Grace", "Mike"])
-      .register(z.globalRegistry, {
-        description: "Voice to use for speaking.",
-      }),
-  })
-  .register(z.globalRegistry, {
-    description: "Input schema for VibeVoice-0.5b TTS generation",
-  });
+export const zVibevoice05bInput = z.object({
+  seed: z.union([z.int(), z.unknown()]).optional(),
+  script: z.string().max(90000),
+  cfg_scale: z.number().gte(1).lte(2).optional().default(1.3),
+  speaker: z.enum(["Frank", "Wayne", "Carter", "Emma", "Grace", "Mike"]),
+});
 
 /**
  * VibeVoice_0_5BOutput
  *
  * Output schema for VibeVoice-0.5b TTS generation
  */
-export const zVibevoice05bOutput = z
-  .object({
-    audio: zFile,
-    sample_rate: z.int().register(z.globalRegistry, {
-      description: "Sample rate of the generated audio",
-    }),
-    rtf: z.number().register(z.globalRegistry, {
-      description:
-        "Real-time factor (generation_time / audio_duration). Lower is better.",
-    }),
-    duration: z.number().register(z.globalRegistry, {
-      description: "Duration of the generated audio in seconds",
-    }),
-    generation_time: z.number().register(z.globalRegistry, {
-      description: "Time taken to generate the audio in seconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output schema for VibeVoice-0.5b TTS generation",
-  });
+export const zVibevoice05bOutput = z.object({
+  audio: zFile,
+  sample_rate: z.int(),
+  rtf: z.number(),
+  duration: z.number(),
+  generation_time: z.number(),
+});
 
 /**
  * VibeVoiceOutput
  *
  * Output schema for VibeVoice TTS generation
  */
-export const zVibevoice7bOutput = z
-  .object({
-    audio: zFile,
-    sample_rate: z.int().register(z.globalRegistry, {
-      description: "Sample rate of the generated audio",
-    }),
-    rtf: z.number().register(z.globalRegistry, {
-      description:
-        "Real-time factor (generation_time / audio_duration). Lower is better.",
-    }),
-    duration: z.number().register(z.globalRegistry, {
-      description: "Duration of the generated audio in seconds",
-    }),
-    generation_time: z.number().register(z.globalRegistry, {
-      description: "Time taken to generate the audio in seconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output schema for VibeVoice TTS generation",
-  });
+export const zVibevoice7bOutput = z.object({
+  audio: zFile,
+  sample_rate: z.int(),
+  rtf: z.number(),
+  duration: z.number(),
+  generation_time: z.number(),
+});
 
 /**
  * VibeVoiceOutput
  *
  * Output schema for VibeVoice TTS generation
  */
-export const zVibevoiceOutput = z
-  .object({
-    audio: zFile,
-    sample_rate: z.int().register(z.globalRegistry, {
-      description: "Sample rate of the generated audio",
-    }),
-    rtf: z.number().register(z.globalRegistry, {
-      description:
-        "Real-time factor (generation_time / audio_duration). Lower is better.",
-    }),
-    duration: z.number().register(z.globalRegistry, {
-      description: "Duration of the generated audio in seconds",
-    }),
-    generation_time: z.number().register(z.globalRegistry, {
-      description: "Time taken to generate the audio in seconds",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output schema for VibeVoice TTS generation",
-  });
+export const zVibevoiceOutput = z.object({
+  audio: zFile,
+  sample_rate: z.int(),
+  rtf: z.number(),
+  duration: z.number(),
+  generation_time: z.number(),
+});
 
 /**
  * VibeVoiceSpeaker
@@ -2149,10 +1275,6 @@ export const zVibeVoiceSpeaker = z.object({
       "Bowen [ZH]",
       "Xinran [ZH]",
     ])
-    .register(z.globalRegistry, {
-      description:
-        "Default voice preset to use for the speaker. Not used if `audio_url` is provided.",
-    })
     .optional()
     .default("Alice [EN]"),
   audio_url: z.union([z.string(), z.unknown()]).optional(),
@@ -2163,118 +1285,41 @@ export const zVibeVoiceSpeaker = z.object({
  *
  * Input schema for VibeVoice-7b TTS generation
  */
-export const zVibevoice7bInput = z
-  .object({
-    cfg_scale: z
-      .number()
-      .gte(1)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "CFG (Classifier-Free Guidance) scale for generation. Higher values increase adherence to text.",
-      })
-      .optional()
-      .default(1.3),
-    script: z.string().max(30000).register(z.globalRegistry, {
-      description:
-        "The script to convert to speech. Can be formatted with 'Speaker X:' prefixes for multi-speaker dialogues.",
-    }),
-    speakers: z.array(zVibeVoiceSpeaker).register(z.globalRegistry, {
-      description:
-        "List of speakers to use for the script. If not provided, will be inferred from the script or voice samples.",
-    }),
-    seed: z.union([z.int(), z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Input schema for VibeVoice-7b TTS generation",
-  });
+export const zVibevoice7bInput = z.object({
+  cfg_scale: z.number().gte(1).lte(2).optional().default(1.3),
+  script: z.string().max(30000),
+  speakers: z.array(zVibeVoiceSpeaker),
+  seed: z.union([z.int(), z.unknown()]).optional(),
+});
 
 /**
  * VibeVoiceInput
  *
  * Input schema for VibeVoice TTS generation
  */
-export const zVibevoiceInput = z
-  .object({
-    cfg_scale: z
-      .number()
-      .gte(1)
-      .lte(2)
-      .register(z.globalRegistry, {
-        description:
-          "CFG (Classifier-Free Guidance) scale for generation. Higher values increase adherence to text.",
-      })
-      .optional()
-      .default(1.3),
-    script: z.string().max(90000).register(z.globalRegistry, {
-      description:
-        "The script to convert to speech. Can be formatted with 'Speaker X:' prefixes for multi-speaker dialogues.",
-    }),
-    speakers: z.array(zVibeVoiceSpeaker).register(z.globalRegistry, {
-      description:
-        "List of speakers to use for the script. If not provided, will be inferred from the script or voice samples.",
-    }),
-    seed: z.union([z.int(), z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Input schema for VibeVoice TTS generation",
-  });
+export const zVibevoiceInput = z.object({
+  cfg_scale: z.number().gte(1).lte(2).optional().default(1.3),
+  script: z.string().max(90000),
+  speakers: z.array(zVibeVoiceSpeaker),
+  seed: z.union([z.int(), z.unknown()]).optional(),
+});
 
 /**
  * VoiceModify
  *
  * Voice modification settings for Speech 2.8 models.
  */
-export const zVoiceModify = z
-  .object({
-    pitch: z
-      .int()
-      .gte(-100)
-      .lte(100)
-      .register(z.globalRegistry, {
-        description:
-          "Pitch adjustment in semitones. Range: -100 to 100. Positive values raise pitch, negative values lower it.",
-      })
-      .optional()
-      .default(0),
-    intensity: z
-      .int()
-      .gte(-100)
-      .lte(100)
-      .register(z.globalRegistry, {
-        description:
-          "Intensity/energy of the voice. Range: -100 to 100. Higher values create more energetic speech.",
-      })
-      .optional()
-      .default(0),
-    timbre: z
-      .int()
-      .gte(-100)
-      .lte(100)
-      .register(z.globalRegistry, {
-        description:
-          "Timbre adjustment. Range: -100 to 100. Affects the tonal quality of the voice.",
-      })
-      .optional()
-      .default(0),
-  })
-  .register(z.globalRegistry, {
-    description: "Voice modification settings for Speech 2.8 models.",
-  });
+export const zVoiceModify = z.object({
+  pitch: z.int().gte(-100).lte(100).optional().default(0),
+  intensity: z.int().gte(-100).lte(100).optional().default(0),
+  timbre: z.int().gte(-100).lte(100).optional().default(0),
+});
 
 /**
  * VoiceSetting
  */
 export const zVoiceSetting = z.object({
-  pitch: z
-    .int()
-    .gte(-12)
-    .lte(12)
-    .register(z.globalRegistry, {
-      description: "Voice pitch (-12 to 12)",
-    })
-    .optional()
-    .default(0),
+  pitch: z.int().gte(-12).lte(12).optional().default(0),
   emotion: z
     .union([
       z.enum([
@@ -2289,40 +1334,10 @@ export const zVoiceSetting = z.object({
       z.unknown(),
     ])
     .optional(),
-  english_normalization: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Enables English text normalization to improve number reading performance, with a slight increase in latency",
-    })
-    .optional()
-    .default(false),
-  vol: z
-    .number()
-    .gte(0.01)
-    .lte(10)
-    .register(z.globalRegistry, {
-      description: "Volume (0-10)",
-    })
-    .optional()
-    .default(1),
-  speed: z
-    .number()
-    .gte(0.5)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description: "Speech speed (0.5-2.0)",
-    })
-    .optional()
-    .default(1),
-  voice_id: z
-    .string()
-    .min(1)
-    .register(z.globalRegistry, {
-      description: "Predefined voice ID to use for synthesis",
-    })
-    .optional()
-    .default("Wise_Woman"),
+  english_normalization: z.boolean().optional().default(false),
+  vol: z.number().gte(0.01).lte(10).optional().default(1),
+  speed: z.number().gte(0.5).lte(2).optional().default(1),
+  voice_id: z.string().min(1).optional().default("Wise_Woman"),
 });
 
 /**
@@ -2379,17 +1394,8 @@ export const zMinimaxPreviewSpeech25HdInput = z.object({
     ])
     .optional(),
   voice_setting: zVoiceSetting.optional(),
-  output_format: z
-    .enum(["url", "hex"])
-    .register(z.globalRegistry, {
-      description: "Format of the output content (non-streaming only)",
-    })
-    .optional()
-    .default("hex"),
-  text: z.string().min(1).max(5000).register(z.globalRegistry, {
-    description:
-      "Text to convert to speech (max 5000 characters, minimum 1 non-whitespace character)",
-  }),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
+  text: z.string().min(1).max(5000),
   pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
 });
 
@@ -2447,17 +1453,8 @@ export const zMinimaxPreviewSpeech25TurboInput = z.object({
     ])
     .optional(),
   voice_setting: zVoiceSetting.optional(),
-  output_format: z
-    .enum(["url", "hex"])
-    .register(z.globalRegistry, {
-      description: "Format of the output content (non-streaming only)",
-    })
-    .optional()
-    .default("hex"),
-  text: z.string().min(1).max(5000).register(z.globalRegistry, {
-    description:
-      "Text to convert to speech (max 5000 characters, minimum 1 non-whitespace character)",
-  }),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
+  text: z.string().min(1).max(5000),
   pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
 });
 
@@ -2512,17 +1509,8 @@ export const zMinimaxSpeech02HdInput = z.object({
     ])
     .optional(),
   voice_setting: zVoiceSetting.optional(),
-  output_format: z
-    .enum(["url", "hex"])
-    .register(z.globalRegistry, {
-      description: "Format of the output content (non-streaming only)",
-    })
-    .optional()
-    .default("hex"),
-  text: z.string().min(1).max(5000).register(z.globalRegistry, {
-    description:
-      "Text to convert to speech (max 5000 characters, minimum 1 non-whitespace character)",
-  }),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
+  text: z.string().min(1).max(5000),
   pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
 });
 
@@ -2577,17 +1565,8 @@ export const zMinimaxSpeech02TurboInput = z.object({
     ])
     .optional(),
   voice_setting: zVoiceSetting.optional(),
-  output_format: z
-    .enum(["url", "hex"])
-    .register(z.globalRegistry, {
-      description: "Format of the output content (non-streaming only)",
-    })
-    .optional()
-    .default("hex"),
-  text: z.string().min(1).max(5000).register(z.globalRegistry, {
-    description:
-      "Text to convert to speech (max 5000 characters, minimum 1 non-whitespace character)",
-  }),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
+  text: z.string().min(1).max(5000),
   pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
 });
 
@@ -2643,18 +1622,9 @@ export const zMinimaxSpeech26HdInput = z.object({
     ])
     .optional(),
   voice_setting: zVoiceSetting.optional(),
-  output_format: z
-    .enum(["url", "hex"])
-    .register(z.globalRegistry, {
-      description: "Format of the output content (non-streaming only)",
-    })
-    .optional()
-    .default("hex"),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
   normalization_setting: zLoudnessNormalizationSetting.optional(),
-  prompt: z.string().min(1).max(10000).register(z.globalRegistry, {
-    description:
-      "Text to convert to speech. Paragraph breaks should be marked with newline characters. **NOTE**: You can customize speech pauses by adding markers in the form `<#x#>`, where `x` is the pause duration in seconds. Valid range: `[0.01, 99.99]`, up to two decimal places. Pause markers must be placed between speakable text segments and cannot be used consecutively.",
-  }),
+  prompt: z.string().min(1).max(10000),
 });
 
 /**
@@ -2709,18 +1679,9 @@ export const zMinimaxSpeech26TurboInput = z.object({
     ])
     .optional(),
   voice_setting: zVoiceSetting.optional(),
-  output_format: z
-    .enum(["url", "hex"])
-    .register(z.globalRegistry, {
-      description: "Format of the output content (non-streaming only)",
-    })
-    .optional()
-    .default("hex"),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
   normalization_setting: zLoudnessNormalizationSetting.optional(),
-  prompt: z.string().min(1).max(10000).register(z.globalRegistry, {
-    description:
-      "Text to convert to speech. Paragraph breaks should be marked with newline characters. **NOTE**: You can customize speech pauses by adding markers in the form `<#x#>`, where `x` is the pause duration in seconds. Valid range: `[0.01, 99.99]`, up to two decimal places. Pause markers must be placed between speakable text segments and cannot be used consecutively.",
-  }),
+  prompt: z.string().min(1).max(10000),
 });
 
 /**
@@ -2728,148 +1689,120 @@ export const zMinimaxSpeech26TurboInput = z.object({
  *
  * Request model for Speech 2.8 HD - highest quality speech synthesis.
  */
-export const zMinimaxSpeech28HdInput = z
-  .object({
-    audio_setting: zAudioSetting.optional(),
-    language_boost: z
-      .union([
-        z.enum([
-          "Chinese",
-          "Chinese,Yue",
-          "English",
-          "Arabic",
-          "Russian",
-          "Spanish",
-          "French",
-          "Portuguese",
-          "German",
-          "Turkish",
-          "Dutch",
-          "Ukrainian",
-          "Vietnamese",
-          "Indonesian",
-          "Japanese",
-          "Italian",
-          "Korean",
-          "Thai",
-          "Polish",
-          "Romanian",
-          "Greek",
-          "Czech",
-          "Finnish",
-          "Hindi",
-          "Bulgarian",
-          "Danish",
-          "Hebrew",
-          "Malay",
-          "Slovak",
-          "Swedish",
-          "Croatian",
-          "Hungarian",
-          "Norwegian",
-          "Slovenian",
-          "Catalan",
-          "Nynorsk",
-          "Afrikaans",
-          "auto",
-        ]),
-        z.unknown(),
-      ])
-      .optional(),
-    output_format: z
-      .enum(["url", "hex"])
-      .register(z.globalRegistry, {
-        description: "Format of the output content (non-streaming only)",
-      })
-      .optional()
-      .default("hex"),
-    voice_modify: z.union([zVoiceModify, z.unknown()]).optional(),
-    normalization_setting: zLoudnessNormalizationSetting.optional(),
-    prompt: z.string().min(1).max(10000).register(z.globalRegistry, {
-      description:
-        "Text to convert to speech. Use `<#x#>` for pauses (x = 0.01-99.99 seconds). Supports interjection tags: `(laughs)`, `(sighs)`, `(coughs)`, `(clears throat)`, `(gasps)`, `(sniffs)`, `(groans)`, `(yawns)`.",
-    }),
-    voice_setting: zVoiceSetting.optional(),
-    pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description:
-      "Request model for Speech 2.8 HD - highest quality speech synthesis.",
-  });
+export const zMinimaxSpeech28HdInput = z.object({
+  audio_setting: zAudioSetting.optional(),
+  language_boost: z
+    .union([
+      z.enum([
+        "Chinese",
+        "Chinese,Yue",
+        "English",
+        "Arabic",
+        "Russian",
+        "Spanish",
+        "French",
+        "Portuguese",
+        "German",
+        "Turkish",
+        "Dutch",
+        "Ukrainian",
+        "Vietnamese",
+        "Indonesian",
+        "Japanese",
+        "Italian",
+        "Korean",
+        "Thai",
+        "Polish",
+        "Romanian",
+        "Greek",
+        "Czech",
+        "Finnish",
+        "Hindi",
+        "Bulgarian",
+        "Danish",
+        "Hebrew",
+        "Malay",
+        "Slovak",
+        "Swedish",
+        "Croatian",
+        "Hungarian",
+        "Norwegian",
+        "Slovenian",
+        "Catalan",
+        "Nynorsk",
+        "Afrikaans",
+        "auto",
+      ]),
+      z.unknown(),
+    ])
+    .optional(),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
+  voice_modify: z.union([zVoiceModify, z.unknown()]).optional(),
+  normalization_setting: zLoudnessNormalizationSetting.optional(),
+  prompt: z.string().min(1).max(10000),
+  voice_setting: zVoiceSetting.optional(),
+  pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
+});
 
 /**
  * TextToSpeechTurbo28Request
  *
  * Request model for Speech 2.8 Turbo - faster speech synthesis with good quality.
  */
-export const zMinimaxSpeech28TurboInput = z
-  .object({
-    audio_setting: zAudioSetting.optional(),
-    language_boost: z
-      .union([
-        z.enum([
-          "Chinese",
-          "Chinese,Yue",
-          "English",
-          "Arabic",
-          "Russian",
-          "Spanish",
-          "French",
-          "Portuguese",
-          "German",
-          "Turkish",
-          "Dutch",
-          "Ukrainian",
-          "Vietnamese",
-          "Indonesian",
-          "Japanese",
-          "Italian",
-          "Korean",
-          "Thai",
-          "Polish",
-          "Romanian",
-          "Greek",
-          "Czech",
-          "Finnish",
-          "Hindi",
-          "Bulgarian",
-          "Danish",
-          "Hebrew",
-          "Malay",
-          "Slovak",
-          "Swedish",
-          "Croatian",
-          "Hungarian",
-          "Norwegian",
-          "Slovenian",
-          "Catalan",
-          "Nynorsk",
-          "Afrikaans",
-          "auto",
-        ]),
-        z.unknown(),
-      ])
-      .optional(),
-    output_format: z
-      .enum(["url", "hex"])
-      .register(z.globalRegistry, {
-        description: "Format of the output content (non-streaming only)",
-      })
-      .optional()
-      .default("hex"),
-    voice_modify: z.union([zVoiceModify, z.unknown()]).optional(),
-    normalization_setting: zLoudnessNormalizationSetting.optional(),
-    prompt: z.string().min(1).max(10000).register(z.globalRegistry, {
-      description:
-        "Text to convert to speech. Use `<#x#>` for pauses (x = 0.01-99.99 seconds). Supports interjection tags: `(laughs)`, `(sighs)`, `(coughs)`, `(clears throat)`, `(gasps)`, `(sniffs)`, `(groans)`, `(yawns)`.",
-    }),
-    voice_setting: zVoiceSetting.optional(),
-    pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description:
-      "Request model for Speech 2.8 Turbo - faster speech synthesis with good quality.",
-  });
+export const zMinimaxSpeech28TurboInput = z.object({
+  audio_setting: zAudioSetting.optional(),
+  language_boost: z
+    .union([
+      z.enum([
+        "Chinese",
+        "Chinese,Yue",
+        "English",
+        "Arabic",
+        "Russian",
+        "Spanish",
+        "French",
+        "Portuguese",
+        "German",
+        "Turkish",
+        "Dutch",
+        "Ukrainian",
+        "Vietnamese",
+        "Indonesian",
+        "Japanese",
+        "Italian",
+        "Korean",
+        "Thai",
+        "Polish",
+        "Romanian",
+        "Greek",
+        "Czech",
+        "Finnish",
+        "Hindi",
+        "Bulgarian",
+        "Danish",
+        "Hebrew",
+        "Malay",
+        "Slovak",
+        "Swedish",
+        "Croatian",
+        "Hungarian",
+        "Norwegian",
+        "Slovenian",
+        "Catalan",
+        "Nynorsk",
+        "Afrikaans",
+        "auto",
+      ]),
+      z.unknown(),
+    ])
+    .optional(),
+  output_format: z.enum(["url", "hex"]).optional().default("hex"),
+  voice_modify: z.union([zVoiceModify, z.unknown()]).optional(),
+  normalization_setting: zLoudnessNormalizationSetting.optional(),
+  prompt: z.string().min(1).max(10000),
+  voice_setting: zVoiceSetting.optional(),
+  pronunciation_dict: z.union([zPronunciationDict, z.unknown()]).optional(),
+});
 
 export const zPostFalAiChatterboxSpeechToSpeechBody =
   zChatterboxSpeechToSpeechInput;
@@ -2881,9 +1814,7 @@ export const zPostFalAiChatterboxSpeechToSpeechResponse = zQueueStatus;
 
 export const zGetFalAiChatterboxSpeechToSpeechRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2894,44 +1825,25 @@ export const zGetFalAiChatterboxSpeechToSpeechRequestsByRequestIdResponse =
 
 export const zPutFalAiChatterboxSpeechToSpeechRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiChatterboxSpeechToSpeechRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiChatterboxSpeechToSpeechRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiChatterboxSpeechToSpeechRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2959,9 +1871,7 @@ export const zPostFalAiChatterboxTextToSpeechMultilingualResponse =
 
 export const zGetFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2972,44 +1882,25 @@ export const zGetFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdRespo
 
 export const zPutFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3019,9 +1910,7 @@ export const zGetFalAiChatterboxTextToSpeechMultilingualRequestsByRequestIdStatu
   zQueueStatus;
 
 export const zGetFalAiChatterboxTextToSpeechRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3032,44 +1921,25 @@ export const zGetFalAiChatterboxTextToSpeechRequestsByRequestIdResponse =
 
 export const zPutFalAiChatterboxTextToSpeechRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiChatterboxTextToSpeechRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiChatterboxTextToSpeechRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiChatterboxTextToSpeechRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3086,9 +1956,7 @@ export const zPostFalAiDiaTtsBody = zDiaTtsInput;
 export const zPostFalAiDiaTtsResponse = zQueueStatus;
 
 export const zGetFalAiDiaTtsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3097,41 +1965,22 @@ export const zGetFalAiDiaTtsRequestsByRequestIdPath = z.object({
 export const zGetFalAiDiaTtsRequestsByRequestIdResponse = zDiaTtsOutput;
 
 export const zPutFalAiDiaTtsRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiDiaTtsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiDiaTtsRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiDiaTtsRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiDiaTtsRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3147,9 +1996,7 @@ export const zPostFalAiElevenlabsTtsTurboV25Body = zElevenlabsTtsTurboV25Input;
 export const zPostFalAiElevenlabsTtsTurboV25Response = zQueueStatus;
 
 export const zGetFalAiElevenlabsTtsTurboV25RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3160,43 +2007,25 @@ export const zGetFalAiElevenlabsTtsTurboV25RequestsByRequestIdResponse =
 
 export const zPutFalAiElevenlabsTtsTurboV25RequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiElevenlabsTtsTurboV25RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiElevenlabsTtsTurboV25RequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiElevenlabsTtsTurboV25RequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiElevenlabsTtsTurboV25RequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3213,9 +2042,7 @@ export const zPostFalAiGemini31FlashTtsBody = zGemini31FlashTtsInput;
 export const zPostFalAiGemini31FlashTtsResponse = zQueueStatus;
 
 export const zGetFalAiGemini31FlashTtsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3225,42 +2052,24 @@ export const zGetFalAiGemini31FlashTtsRequestsByRequestIdResponse =
   zGemini31FlashTtsOutput;
 
 export const zPutFalAiGemini31FlashTtsRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiGemini31FlashTtsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiGemini31FlashTtsRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiGemini31FlashTtsRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiGemini31FlashTtsRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -3278,9 +2087,7 @@ export const zPostFalAiIndexTts2TextToSpeechBody = zIndexTts2TextToSpeechInput;
 export const zPostFalAiIndexTts2TextToSpeechResponse = zQueueStatus;
 
 export const zGetFalAiIndexTts2TextToSpeechRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3291,43 +2098,25 @@ export const zGetFalAiIndexTts2TextToSpeechRequestsByRequestIdResponse =
 
 export const zPutFalAiIndexTts2TextToSpeechRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiIndexTts2TextToSpeechRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiIndexTts2TextToSpeechRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiIndexTts2TextToSpeechRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiIndexTts2TextToSpeechRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3344,9 +2133,7 @@ export const zPostFalAiInworldTtsBody = zInworldTtsInput;
 export const zPostFalAiInworldTtsResponse = zQueueStatus;
 
 export const zGetFalAiInworldTtsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3355,41 +2142,22 @@ export const zGetFalAiInworldTtsRequestsByRequestIdPath = z.object({
 export const zGetFalAiInworldTtsRequestsByRequestIdResponse = zInworldTtsOutput;
 
 export const zPutFalAiInworldTtsRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiInworldTtsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiInworldTtsRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiInworldTtsRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiInworldTtsRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3406,9 +2174,7 @@ export const zPostFalAiKlingVideoV1TtsBody = zKlingVideoV1TtsInput;
 export const zPostFalAiKlingVideoV1TtsResponse = zQueueStatus;
 
 export const zGetFalAiKlingVideoV1TtsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3418,41 +2184,23 @@ export const zGetFalAiKlingVideoV1TtsRequestsByRequestIdResponse =
   zKlingVideoV1TtsOutput;
 
 export const zPutFalAiKlingVideoV1TtsRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiKlingVideoV1TtsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiKlingVideoV1TtsRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiKlingVideoV1TtsRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiKlingVideoV1TtsRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3469,9 +2217,7 @@ export const zPostFalAiLuxTtsBody = zLuxTtsInput;
 export const zPostFalAiLuxTtsResponse = zQueueStatus;
 
 export const zGetFalAiLuxTtsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3480,41 +2226,22 @@ export const zGetFalAiLuxTtsRequestsByRequestIdPath = z.object({
 export const zGetFalAiLuxTtsRequestsByRequestIdResponse = zLuxTtsOutput;
 
 export const zPutFalAiLuxTtsRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiLuxTtsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiLuxTtsRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiLuxTtsRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiLuxTtsRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3537,9 +2264,7 @@ export const zPostFalAiMayaBatchBody = zMayaBatchInput;
 export const zPostFalAiMayaBatchResponse = zQueueStatus;
 
 export const zGetFalAiMayaBatchRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3548,41 +2273,22 @@ export const zGetFalAiMayaBatchRequestsByRequestIdPath = z.object({
 export const zGetFalAiMayaBatchRequestsByRequestIdResponse = zMayaBatchOutput;
 
 export const zPutFalAiMayaBatchRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMayaBatchRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiMayaBatchRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiMayaBatchRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiMayaBatchRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3591,9 +2297,7 @@ export const zGetFalAiMayaBatchRequestsByRequestIdStatusQuery = z.object({
 export const zGetFalAiMayaBatchRequestsByRequestIdStatusResponse = zQueueStatus;
 
 export const zGetFalAiMayaRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3602,41 +2306,22 @@ export const zGetFalAiMayaRequestsByRequestIdPath = z.object({
 export const zGetFalAiMayaRequestsByRequestIdResponse = zMayaOutput;
 
 export const zPutFalAiMayaRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMayaRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiMayaRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiMayaRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiMayaRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3652,9 +2337,7 @@ export const zPostFalAiMayaStreamBody = zMayaStreamInput;
 export const zPostFalAiMayaStreamResponse = zQueueStatus;
 
 export const zGetFalAiMayaStreamRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3663,41 +2346,22 @@ export const zGetFalAiMayaStreamRequestsByRequestIdPath = z.object({
 export const zGetFalAiMayaStreamRequestsByRequestIdResponse = zMayaStreamOutput;
 
 export const zPutFalAiMayaStreamRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMayaStreamRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiMayaStreamRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiMayaStreamRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiMayaStreamRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3716,9 +2380,7 @@ export const zPostFalAiMinimaxPreviewSpeech25HdResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxPreviewSpeech25HdRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -3729,44 +2391,25 @@ export const zGetFalAiMinimaxPreviewSpeech25HdRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxPreviewSpeech25HdRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMinimaxPreviewSpeech25HdRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMinimaxPreviewSpeech25HdRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMinimaxPreviewSpeech25HdRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3785,9 +2428,7 @@ export const zPostFalAiMinimaxPreviewSpeech25TurboResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxPreviewSpeech25TurboRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -3798,44 +2439,25 @@ export const zGetFalAiMinimaxPreviewSpeech25TurboRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxPreviewSpeech25TurboRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMinimaxPreviewSpeech25TurboRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMinimaxPreviewSpeech25TurboRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMinimaxPreviewSpeech25TurboRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3852,9 +2474,7 @@ export const zPostFalAiMinimaxSpeech02HdBody = zMinimaxSpeech02HdInput;
 export const zPostFalAiMinimaxSpeech02HdResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxSpeech02HdRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3865,45 +2485,27 @@ export const zGetFalAiMinimaxSpeech02HdRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxSpeech02HdRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxSpeech02HdRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxSpeech02HdRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxSpeech02HdRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiMinimaxSpeech02HdRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3920,9 +2522,7 @@ export const zPostFalAiMinimaxSpeech02TurboBody = zMinimaxSpeech02TurboInput;
 export const zPostFalAiMinimaxSpeech02TurboResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxSpeech02TurboRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3933,43 +2533,25 @@ export const zGetFalAiMinimaxSpeech02TurboRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxSpeech02TurboRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxSpeech02TurboRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxSpeech02TurboRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxSpeech02TurboRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMinimaxSpeech02TurboRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3986,9 +2568,7 @@ export const zPostFalAiMinimaxSpeech26HdBody = zMinimaxSpeech26HdInput;
 export const zPostFalAiMinimaxSpeech26HdResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxSpeech26HdRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3999,45 +2579,27 @@ export const zGetFalAiMinimaxSpeech26HdRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxSpeech26HdRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxSpeech26HdRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxSpeech26HdRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxSpeech26HdRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiMinimaxSpeech26HdRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4054,9 +2616,7 @@ export const zPostFalAiMinimaxSpeech26TurboBody = zMinimaxSpeech26TurboInput;
 export const zPostFalAiMinimaxSpeech26TurboResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxSpeech26TurboRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4067,43 +2627,25 @@ export const zGetFalAiMinimaxSpeech26TurboRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxSpeech26TurboRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxSpeech26TurboRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxSpeech26TurboRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxSpeech26TurboRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMinimaxSpeech26TurboRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4120,9 +2662,7 @@ export const zPostFalAiMinimaxSpeech28HdBody = zMinimaxSpeech28HdInput;
 export const zPostFalAiMinimaxSpeech28HdResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxSpeech28HdRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4133,45 +2673,27 @@ export const zGetFalAiMinimaxSpeech28HdRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxSpeech28HdRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxSpeech28HdRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxSpeech28HdRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxSpeech28HdRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiMinimaxSpeech28HdRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4188,9 +2710,7 @@ export const zPostFalAiMinimaxSpeech28TurboBody = zMinimaxSpeech28TurboInput;
 export const zPostFalAiMinimaxSpeech28TurboResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxSpeech28TurboRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4201,43 +2721,25 @@ export const zGetFalAiMinimaxSpeech28TurboRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxSpeech28TurboRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxSpeech28TurboRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxSpeech28TurboRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxSpeech28TurboRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMinimaxSpeech28TurboRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4254,9 +2756,7 @@ export const zPostFalAiMinimaxVoiceCloneBody = zMinimaxVoiceCloneInput;
 export const zPostFalAiMinimaxVoiceCloneResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxVoiceCloneRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4267,45 +2767,27 @@ export const zGetFalAiMinimaxVoiceCloneRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxVoiceCloneRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxVoiceCloneRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxVoiceCloneRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxVoiceCloneRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiMinimaxVoiceCloneRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4322,9 +2804,7 @@ export const zPostFalAiMinimaxVoiceDesignBody = zMinimaxVoiceDesignInput;
 export const zPostFalAiMinimaxVoiceDesignResponse = zQueueStatus;
 
 export const zGetFalAiMinimaxVoiceDesignRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4335,43 +2815,25 @@ export const zGetFalAiMinimaxVoiceDesignRequestsByRequestIdResponse =
 
 export const zPutFalAiMinimaxVoiceDesignRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMinimaxVoiceDesignRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMinimaxVoiceDesignRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMinimaxVoiceDesignRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMinimaxVoiceDesignRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4388,9 +2850,7 @@ export const zPostFalAiOrpheusTtsBody = zOrpheusTtsInput;
 export const zPostFalAiOrpheusTtsResponse = zQueueStatus;
 
 export const zGetFalAiOrpheusTtsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4399,41 +2859,22 @@ export const zGetFalAiOrpheusTtsRequestsByRequestIdPath = z.object({
 export const zGetFalAiOrpheusTtsRequestsByRequestIdResponse = zOrpheusTtsOutput;
 
 export const zPutFalAiOrpheusTtsRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiOrpheusTtsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiOrpheusTtsRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiOrpheusTtsRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiOrpheusTtsRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -4452,9 +2893,7 @@ export const zPostFalAiQwen3TtsTextToSpeech06bResponse = zQueueStatus;
 
 export const zGetFalAiQwen3TtsTextToSpeech06bRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -4466,44 +2905,25 @@ export const zGetFalAiQwen3TtsTextToSpeech06bRequestsByRequestIdResponse =
 
 export const zPutFalAiQwen3TtsTextToSpeech06bRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwen3TtsTextToSpeech06bRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwen3TtsTextToSpeech06bRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwen3TtsTextToSpeech06bRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4522,9 +2942,7 @@ export const zPostFalAiQwen3TtsTextToSpeech17bResponse = zQueueStatus;
 
 export const zGetFalAiQwen3TtsTextToSpeech17bRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -4536,44 +2954,25 @@ export const zGetFalAiQwen3TtsTextToSpeech17bRequestsByRequestIdResponse =
 
 export const zPutFalAiQwen3TtsTextToSpeech17bRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwen3TtsTextToSpeech17bRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwen3TtsTextToSpeech17bRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwen3TtsTextToSpeech17bRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4591,9 +2990,7 @@ export const zPostFalAiQwen3TtsVoiceDesign17bBody =
 export const zPostFalAiQwen3TtsVoiceDesign17bResponse = zQueueStatus;
 
 export const zGetFalAiQwen3TtsVoiceDesign17bRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4604,44 +3001,25 @@ export const zGetFalAiQwen3TtsVoiceDesign17bRequestsByRequestIdResponse =
 
 export const zPutFalAiQwen3TtsVoiceDesign17bRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwen3TtsVoiceDesign17bRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwen3TtsVoiceDesign17bRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwen3TtsVoiceDesign17bRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4665,9 +3043,7 @@ export const zPostFalAiVibevoice05bBody = zVibevoice05bInput;
 export const zPostFalAiVibevoice05bResponse = zQueueStatus;
 
 export const zGetFalAiVibevoice05bRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4677,41 +3053,22 @@ export const zGetFalAiVibevoice05bRequestsByRequestIdResponse =
   zVibevoice05bOutput;
 
 export const zPutFalAiVibevoice05bRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiVibevoice05bRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiVibevoice05bRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiVibevoice05bRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiVibevoice05bRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -4728,9 +3085,7 @@ export const zPostFalAiVibevoice7bBody = zVibevoice7bInput;
 export const zPostFalAiVibevoice7bResponse = zQueueStatus;
 
 export const zGetFalAiVibevoice7bRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4740,41 +3095,22 @@ export const zGetFalAiVibevoice7bRequestsByRequestIdResponse =
   zVibevoice7bOutput;
 
 export const zPutFalAiVibevoice7bRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiVibevoice7bRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiVibevoice7bRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiVibevoice7bRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiVibevoice7bRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -4784,9 +3120,7 @@ export const zGetFalAiVibevoice7bRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiVibevoiceRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4795,41 +3129,22 @@ export const zGetFalAiVibevoiceRequestsByRequestIdPath = z.object({
 export const zGetFalAiVibevoiceRequestsByRequestIdResponse = zVibevoiceOutput;
 
 export const zPutFalAiVibevoiceRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiVibevoiceRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiVibevoiceRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiVibevoiceRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiVibevoiceRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -4847,9 +3162,7 @@ export const zPostResembleAiChatterboxhdSpeechToSpeechResponse = zQueueStatus;
 
 export const zGetResembleAiChatterboxhdSpeechToSpeechRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -4860,44 +3173,25 @@ export const zGetResembleAiChatterboxhdSpeechToSpeechRequestsByRequestIdResponse
 
 export const zPutResembleAiChatterboxhdSpeechToSpeechRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutResembleAiChatterboxhdSpeechToSpeechRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetResembleAiChatterboxhdSpeechToSpeechRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetResembleAiChatterboxhdSpeechToSpeechRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4916,9 +3210,7 @@ export const zPostResembleAiChatterboxhdTextToSpeechResponse = zQueueStatus;
 
 export const zGetResembleAiChatterboxhdTextToSpeechRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -4929,44 +3221,25 @@ export const zGetResembleAiChatterboxhdTextToSpeechRequestsByRequestIdResponse =
 
 export const zPutResembleAiChatterboxhdTextToSpeechRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutResembleAiChatterboxhdTextToSpeechRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetResembleAiChatterboxhdTextToSpeechRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetResembleAiChatterboxhdTextToSpeechRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4983,9 +3256,7 @@ export const zPostXaiTtsV1Body = zTtsV1Input;
 export const zPostXaiTtsV1Response = zQueueStatus;
 
 export const zGetXaiTtsV1RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4994,41 +3265,22 @@ export const zGetXaiTtsV1RequestsByRequestIdPath = z.object({
 export const zGetXaiTtsV1RequestsByRequestIdResponse = zTtsV1Output;
 
 export const zPutXaiTtsV1RequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutXaiTtsV1RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutXaiTtsV1RequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetXaiTtsV1RequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetXaiTtsV1RequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**

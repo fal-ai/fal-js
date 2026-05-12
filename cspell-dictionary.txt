@@ -1,6 +1,7 @@
 quickstart
 runtimes
 ElevenLabs
+gzipped
 Hailuo
 Kling
 mecha

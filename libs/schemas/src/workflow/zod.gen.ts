@@ -7,62 +7,24 @@ import * as z from "zod";
  *
  * Represents an image file.
  */
-export const zImage = z
-  .object({
-    width: z.union([z.int(), z.unknown()]).optional(),
-    content_type: z.union([z.string(), z.unknown()]).optional(),
-    file_size: z.union([z.int(), z.unknown()]).optional(),
-    url: z.string().register(z.globalRegistry, {
-      description: "The URL where the file can be downloaded from.",
-    }),
-    height: z.union([z.int(), z.unknown()]).optional(),
-    file_name: z.union([z.string(), z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Represents an image file.",
-  });
+export const zImage = z.object({
+  width: z.union([z.int(), z.unknown()]).optional(),
+  content_type: z.union([z.string(), z.unknown()]).optional(),
+  file_size: z.union([z.int(), z.unknown()]).optional(),
+  url: z.string(),
+  height: z.union([z.int(), z.unknown()]).optional(),
+  file_name: z.union([z.string(), z.unknown()]).optional(),
+});
 
 export const zQueueStatus = z.object({
   status: z.enum(["IN_QUEUE", "IN_PROGRESS", "COMPLETED"]),
-  request_id: z.string().register(z.globalRegistry, {
-    description: "The request id.",
-  }),
-  response_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The response url.",
-    })
-    .optional(),
-  status_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The status url.",
-    })
-    .optional(),
-  cancel_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The cancel url.",
-    })
-    .optional(),
-  logs: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The logs.",
-    })
-    .optional(),
-  metrics: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The metrics.",
-    })
-    .optional(),
-  queue_position: z
-    .int()
-    .register(z.globalRegistry, {
-      description: "The queue position.",
-    })
-    .optional(),
+  request_id: z.string(),
+  response_url: z.string().optional(),
+  status_url: z.string().optional(),
+  cancel_url: z.string().optional(),
+  logs: z.record(z.string(), z.unknown()).optional(),
+  metrics: z.record(z.string(), z.unknown()).optional(),
+  queue_position: z.int().optional(),
 });
 
 /**
@@ -73,45 +35,24 @@ export const zQueueStatus = z.object({
  * Pass-through utility: the URL is returned as provided in the input,
  * without fetching or re-uploading the image.
  */
-export const zWorkflowUtilitiesPickImageByIndexInput = z
-  .object({
-    index: z.int().register(z.globalRegistry, {
-      description:
-        "1-based position of the image to return. Value 1 returns the first image, 2 returns the second, and so on.",
-    }),
-    fallback_index: z
-      .enum(["first-image", "last-image"])
-      .register(z.globalRegistry, {
-        description:
-          "Behavior when `index` exceeds the length of `image_urls`. When `first-image`, returns the first image in the array. When `last-image`, returns the last image in the array. This input has no effect when `index` is within range, when `index` is below 1, or when `image_urls` is empty (the latter two cases still return validation errors). Default is `first-image`.",
-      })
-      .optional()
-      .default("first-image"),
-    image_urls: z.array(z.string()).register(z.globalRegistry, {
-      description: "Array of image URLs to select from",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description:
-      "Input model for selecting a single image from an array by 1-based index.\n\nPass-through utility: the URL is returned as provided in the input,\nwithout fetching or re-uploading the image.",
-  });
+export const zWorkflowUtilitiesPickImageByIndexInput = z.object({
+  index: z.int(),
+  fallback_index: z
+    .enum(["first-image", "last-image"])
+    .optional()
+    .default("first-image"),
+  image_urls: z.array(z.string()),
+});
 
 /**
  * PickImageByIndexOutput
  *
  * Output model for the picked image.
  */
-export const zWorkflowUtilitiesPickImageByIndexOutput = z
-  .object({
-    image: zImage,
-    images: z.array(zImage).register(z.globalRegistry, {
-      description:
-        "Single-element array containing the selected image. Included so downstream nodes that expect an `images` reference (matching merge and other utilities) work without changes.",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Output model for the picked image.",
-  });
+export const zWorkflowUtilitiesPickImageByIndexOutput = z.object({
+  image: zImage,
+  images: z.array(zImage),
+});
 
 export const zPostFalAiWorkflowUtilitiesPickImageByIndexBody =
   zWorkflowUtilitiesPickImageByIndexInput;
@@ -123,9 +64,7 @@ export const zPostFalAiWorkflowUtilitiesPickImageByIndexResponse = zQueueStatus;
 
 export const zGetFalAiWorkflowUtilitiesPickImageByIndexRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -136,44 +75,25 @@ export const zGetFalAiWorkflowUtilitiesPickImageByIndexRequestsByRequestIdRespon
 
 export const zPutFalAiWorkflowUtilitiesPickImageByIndexRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiWorkflowUtilitiesPickImageByIndexRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiWorkflowUtilitiesPickImageByIndexRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiWorkflowUtilitiesPickImageByIndexRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**

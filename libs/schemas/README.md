@@ -25,7 +25,20 @@ JSON Schemas (no `zod` peer required):
 Zod (requires `zod ^4`):
 
 - `@fal-ai/schemas/zod` — every category namespaced (e.g. `Image.imageEndpoints`, `Image.zAuraFlowInput`). Raw schema names collide across categories, so the top-level barrel namespaces per category.
-- `@fal-ai/schemas/zod/{category}` — single category's `{category}Endpoints` record (a typed `{ [endpointId]: { input, output } }` map), the `{Category}EndpointId` key-union type, and every `z*Input` / `z*Output` schema. Importing a category drags in its whole `zod.gen.ts` because schemas register side-effects on `z.globalRegistry`.
+- `@fal-ai/schemas/zod/{category}` — single category's `{category}Endpoints` record (a typed `{ [endpointId]: { input, output } }` map), the `{Category}EndpointId` key-union type, and every `z*Input` / `z*Output` schema.
+
+## Bundle size and tree-shaking
+
+Every file in this package is side-effect-free (`sideEffects: false`), so bundlers can tree-shake on a per-export basis:
+
+| Import                                                            | What ships                                                                                                                                                                                |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import { zVeo3Input } from "@fal-ai/schemas/zod/video"`          | Just `zVeo3Input` and the sub-schemas it references (a few KB gzipped).                                                                                                                   |
+| `import { Veo3InputSchema } from "@fal-ai/schemas/schemas/video"` | Same, for the JSON Schema side.                                                                                                                                                           |
+| `import { videoEndpoints } from "@fal-ai/schemas/zod/video"`      | The whole category — the record literal references every endpoint's schema, so bundlers can't drop them. Use this when you want every endpoint addressable by id (typed-client dispatch). |
+| `import { Video } from "@fal-ai/schemas/zod"`                     | All 12 categories. Avoid — import the specific category instead.                                                                                                                          |
+
+Zod schemas ship without `z.globalRegistry` metadata. Descriptions, examples, and titles live on the JSON Schema side (`schemas.gen.ts`) — read them from there if you need them at runtime.
 
 ## Examples
 

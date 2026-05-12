@@ -6,36 +6,17 @@ import * as z from "zod";
  * Input
  */
 export const zErnieImageTrainerInput = z.object({
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to the input data zip archive.\n\n        The zip should contain pairs of images and corresponding captions.\n\n        The images should be named: ROOT.EXT. For example: 001.jpg\n\n        The corresponding captions should be named: ROOT.txt. For example: 001.txt\n\n        If no text file is provided for an image, the default_caption will be used.\n        ",
-  }),
-  steps: z
-    .int()
-    .gte(10)
-    .lte(40000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(2000),
+  images_data_url: z.string(),
+  steps: z.int().gte(10).lte(40000).optional().default(2000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate.",
-    })
-    .optional()
-    .default(0.0005),
+  learning_rate: z.number().optional().default(0.0005),
 });
 
 /**
  * File
  */
 export const zFile = z.object({
-  url: z.string().register(z.globalRegistry, {
-    description: "The URL where the file can be downloaded from.",
-  }),
+  url: z.string(),
   file_name: z.union([z.string(), z.unknown()]).optional(),
   content_type: z.union([z.string(), z.unknown()]).optional(),
   file_size: z.union([z.int(), z.unknown()]).optional(),
@@ -53,33 +34,10 @@ export const zErnieImageTrainerOutput = z.object({
  * InputEditV2
  */
 export const zFlux2Klein4bBaseTrainerEditInput = z.object({
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain up to four reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ROOT_start4.EXT, ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate applied to trainable parameters.",
-    })
-    .optional()
-    .default(0.00005),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Total number of training steps.",
-    })
-    .optional()
-    .default(1000),
-  output_lora_format: z
-    .enum(["fal", "comfy"])
-    .register(z.globalRegistry, {
-      description: "Dictates the naming scheme for the output weights",
-    })
-    .optional()
-    .default("fal"),
+  image_data_url: z.string(),
+  learning_rate: z.number().optional().default(0.00005),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -96,40 +54,13 @@ export const zFlux2Klein4bBaseTrainerEditOutput = z.object({
  *
  * V2 input with multi-resolution bucketing.
  */
-export const zFlux2Klein4bBaseTrainerInput = z
-  .object({
-    image_data_url: z.string().register(z.globalRegistry, {
-      description:
-        "\n    URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n\n    The zip can also contain a text file for each image. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-    }),
-    learning_rate: z
-      .number()
-      .register(z.globalRegistry, {
-        description: "Learning rate applied to trainable parameters.",
-      })
-      .optional()
-      .default(0.00005),
-    steps: z
-      .int()
-      .gte(100)
-      .lte(10000)
-      .register(z.globalRegistry, {
-        description: "Total number of training steps.",
-      })
-      .optional()
-      .default(1000),
-    output_lora_format: z
-      .enum(["fal", "comfy"])
-      .register(z.globalRegistry, {
-        description: "Dictates the naming scheme for the output weights",
-      })
-      .optional()
-      .default("fal"),
-    default_caption: z.union([z.string(), z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "V2 input with multi-resolution bucketing.",
-  });
+export const zFlux2Klein4bBaseTrainerInput = z.object({
+  image_data_url: z.string(),
+  learning_rate: z.number().optional().default(0.00005),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
+  default_caption: z.union([z.string(), z.unknown()]).optional(),
+});
 
 /**
  * Output
@@ -143,34 +74,11 @@ export const zFlux2Klein4bBaseTrainerOutput = z.object({
  * InputEditV2
  */
 export const zFlux2Klein9bBaseTrainerEditInput = z.object({
-  output_lora_format: z
-    .enum(["fal", "comfy"])
-    .register(z.globalRegistry, {
-      description: "Dictates the naming scheme for the output weights",
-    })
-    .optional()
-    .default("fal"),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Total number of training steps.",
-    })
-    .optional()
-    .default(1000),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain up to four reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ROOT_start4.EXT, ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate applied to trainable parameters.",
-    })
-    .optional()
-    .default(0.00005),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
+  image_data_url: z.string(),
+  learning_rate: z.number().optional().default(0.00005),
 });
 
 /**
@@ -186,40 +94,13 @@ export const zFlux2Klein9bBaseTrainerEditOutput = z.object({
  *
  * V2 input with multi-resolution bucketing.
  */
-export const zFlux2Klein9bBaseTrainerInput = z
-  .object({
-    output_lora_format: z
-      .enum(["fal", "comfy"])
-      .register(z.globalRegistry, {
-        description: "Dictates the naming scheme for the output weights",
-      })
-      .optional()
-      .default("fal"),
-    default_caption: z.union([z.string(), z.unknown()]).optional(),
-    steps: z
-      .int()
-      .gte(100)
-      .lte(10000)
-      .register(z.globalRegistry, {
-        description: "Total number of training steps.",
-      })
-      .optional()
-      .default(1000),
-    image_data_url: z.string().register(z.globalRegistry, {
-      description:
-        "\n    URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n\n    The zip can also contain a text file for each image. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-    }),
-    learning_rate: z
-      .number()
-      .register(z.globalRegistry, {
-        description: "Learning rate applied to trainable parameters.",
-      })
-      .optional()
-      .default(0.00005),
-  })
-  .register(z.globalRegistry, {
-    description: "V2 input with multi-resolution bucketing.",
-  });
+export const zFlux2Klein9bBaseTrainerInput = z.object({
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
+  default_caption: z.union([z.string(), z.unknown()]).optional(),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
+  image_data_url: z.string(),
+  learning_rate: z.number().optional().default(0.00005),
+});
 
 /**
  * Output
@@ -233,34 +114,11 @@ export const zFlux2Klein9bBaseTrainerOutput = z.object({
  * InputEdit
  */
 export const zFlux2TrainerEditInput = z.object({
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate applied to trainable parameters.",
-    })
-    .optional()
-    .default(0.00005),
-  output_lora_format: z
-    .enum(["fal", "comfy"])
-    .register(z.globalRegistry, {
-      description: "Dictates the naming scheme for the output weights",
-    })
-    .optional()
-    .default("fal"),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Total number of training steps.",
-    })
-    .optional()
-    .default(1000),
+  learning_rate: z.number().optional().default(0.00005),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain up to four reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ROOT_start4.EXT, ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
+  image_data_url: z.string(),
 });
 
 /**
@@ -275,34 +133,11 @@ export const zFlux2TrainerEditOutput = z.object({
  * InputT2I
  */
 export const zFlux2TrainerInput = z.object({
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate applied to trainable parameters.",
-    })
-    .optional()
-    .default(0.00005),
-  output_lora_format: z
-    .enum(["fal", "comfy"])
-    .register(z.globalRegistry, {
-      description: "Dictates the naming scheme for the output weights",
-    })
-    .optional()
-    .default("fal"),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Total number of training steps.",
-    })
-    .optional()
-    .default(1000),
+  learning_rate: z.number().optional().default(0.00005),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n\n    The zip can also contain a text file for each image. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
+  image_data_url: z.string(),
 });
 
 /**
@@ -317,34 +152,11 @@ export const zFlux2TrainerOutput = z.object({
  * InputEditV2
  */
 export const zFlux2TrainerV2EditInput = z.object({
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain up to four reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ROOT_start4.EXT, ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
-  output_lora_format: z
-    .enum(["fal", "comfy"])
-    .register(z.globalRegistry, {
-      description: "Dictates the naming scheme for the output weights",
-    })
-    .optional()
-    .default("fal"),
+  image_data_url: z.string(),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate applied to trainable parameters.",
-    })
-    .optional()
-    .default(0.00005),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Total number of training steps.",
-    })
-    .optional()
-    .default(1000),
+  learning_rate: z.number().optional().default(0.00005),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
 });
 
 /**
@@ -360,40 +172,13 @@ export const zFlux2TrainerV2EditOutput = z.object({
  *
  * V2 input with multi-resolution bucketing.
  */
-export const zFlux2TrainerV2Input = z
-  .object({
-    image_data_url: z.string().register(z.globalRegistry, {
-      description:
-        "\n    URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n\n    The zip can also contain a text file for each image. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-    }),
-    output_lora_format: z
-      .enum(["fal", "comfy"])
-      .register(z.globalRegistry, {
-        description: "Dictates the naming scheme for the output weights",
-      })
-      .optional()
-      .default("fal"),
-    default_caption: z.union([z.string(), z.unknown()]).optional(),
-    learning_rate: z
-      .number()
-      .register(z.globalRegistry, {
-        description: "Learning rate applied to trainable parameters.",
-      })
-      .optional()
-      .default(0.00005),
-    steps: z
-      .int()
-      .gte(100)
-      .lte(10000)
-      .register(z.globalRegistry, {
-        description: "Total number of training steps.",
-      })
-      .optional()
-      .default(1000),
-  })
-  .register(z.globalRegistry, {
-    description: "V2 input with multi-resolution bucketing.",
-  });
+export const zFlux2TrainerV2Input = z.object({
+  image_data_url: z.string(),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
+  default_caption: z.union([z.string(), z.unknown()]).optional(),
+  learning_rate: z.number().optional().default(0.00005),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
+});
 
 /**
  * Output
@@ -408,27 +193,10 @@ export const zFlux2TrainerV2Output = z.object({
  */
 export const zFluxKontextTrainerInput = z.object({
   learning_rate: z.number().optional().default(0.0001),
-  output_lora_format: z
-    .enum(["fal", "comfy"])
-    .register(z.globalRegistry, {
-      description: "Dictates the naming scheme for the output weights",
-    })
-    .optional()
-    .default("fal"),
-  steps: z
-    .int()
-    .gte(2)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
+  output_lora_format: z.enum(["fal", "comfy"]).optional().default("fal"),
+  steps: z.int().gte(2).lte(10000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to the input data zip archive.\n\n        The zip should contain pairs of images. The images should be named:\n\n        ROOT_start.EXT and ROOT_end.EXT\n        For example:\n        photo_start.jpg and photo_end.jpg\n\n        The zip can also contain a text file for each image pair. The text file should be named:\n        ROOT.txt\n        For example:\n        photo.txt\n\n        This text file can be used to specify the edit instructions for the image pair.\n\n        If no text file is provided, the default_caption will be used.\n\n        If no default_caption is provided, the training will fail.\n        ",
-  }),
+  image_data_url: z.string(),
 });
 
 /**
@@ -443,37 +211,13 @@ export const zFluxKontextTrainerOutput = z.object({
  * PublicInput
  */
 export const zFluxKreaTrainerInput = z.object({
-  create_masks: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If True segmentation masks will be used in the weight the training loss. For people a face mask is used if possible.",
-    })
-    .optional()
-    .default(true),
+  create_masks: z.boolean().optional().default(true),
   trigger_word: z.union([z.string(), z.unknown()]).nullish(),
   steps: z.union([z.int().gte(1).lte(10000), z.unknown()]).optional(),
-  is_style: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If True, the training will be for a style. This will deactivate segmentation, captioning and will use trigger word instead. Use the trigger word to specify the style.",
-    })
-    .optional()
-    .default(false),
+  is_style: z.boolean().optional().default(false),
   data_archive_format: z.union([z.string(), z.unknown()]).nullish(),
-  is_input_format_already_preprocessed: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Specifies whether the input data is already in a processed format. When set to False (default), the system expects raw input where image files and their corresponding caption files share the same name (e.g., 'photo.jpg' and 'photo.txt'). Set to True if your data is already in a preprocessed format.",
-    })
-    .optional()
-    .default(false),
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to zip archive with images. Try to use at least 4 images in general the more the better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image file it corresponds to.\n    ",
-  }),
+  is_input_format_already_preprocessed: z.boolean().optional().default(false),
+  images_data_url: z.string(),
 });
 
 /**
@@ -489,35 +233,11 @@ export const zFluxKreaTrainerOutput = z.object({
  * PublicInput
  */
 export const zFluxLoraFastTrainingInput = z.object({
-  is_style: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If True, the training will be for a style. This will deactivate segmentation, captioning and will use trigger word instead. Use the trigger word to specify the style.",
-    })
-    .optional()
-    .default(false),
+  is_style: z.boolean().optional().default(false),
   trigger_word: z.union([z.string(), z.unknown()]).nullish(),
-  is_input_format_already_preprocessed: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Specifies whether the input data is already in a processed format. When set to False (default), the system expects raw input where image files and their corresponding caption files share the same name (e.g., 'photo.jpg' and 'photo.txt'). Set to True if your data is already in a preprocessed format.",
-    })
-    .optional()
-    .default(false),
-  create_masks: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If True segmentation masks will be used in the weight the training loss. For people a face mask is used if possible.",
-    })
-    .optional()
-    .default(true),
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to zip archive with images. Try to use at least 4 images in general the more the better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image file it corresponds to.\n    ",
-  }),
+  is_input_format_already_preprocessed: z.boolean().optional().default(false),
+  create_masks: z.boolean().optional().default(true),
+  images_data_url: z.string(),
   data_archive_format: z.union([z.string(), z.unknown()]).nullish(),
   steps: z.union([z.int().gte(1).lte(10000), z.unknown()]).optional(),
 });
@@ -539,53 +259,15 @@ export const zFluxLoraPortraitTrainerInput = z.object({
     .number()
     .gte(0.000001)
     .lte(0.001)
-    .register(z.globalRegistry, {
-      description: "Learning rate to use for training.",
-    })
     .optional()
     .default(0.00009),
-  subject_crop: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "If True, the subject will be cropped from the image.",
-    })
-    .optional()
-    .default(true),
+  subject_crop: z.boolean().optional().default(true),
   trigger_phrase: z.union([z.string(), z.unknown()]).nullish(),
-  resume_from_checkpoint: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "URL to a checkpoint to resume training from.",
-    })
-    .optional()
-    .default(""),
-  steps: z
-    .int()
-    .gte(1)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train the LoRA on.",
-    })
-    .optional()
-    .default(2500),
-  create_masks: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "If True, masks will be created for the subject.",
-    })
-    .optional()
-    .default(false),
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image file it corresponds to.\n\n        The captions can include a special string `[trigger]`. If a trigger_word is specified, it will replace `[trigger]` in the captions.\n    ",
-  }),
-  multiresolution_training: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "If True, multiresolution training will be used.",
-    })
-    .optional()
-    .default(true),
+  resume_from_checkpoint: z.string().optional().default(""),
+  steps: z.int().gte(1).lte(10000).optional().default(2500),
+  create_masks: z.boolean().optional().default(false),
+  images_data_url: z.string(),
+  multiresolution_training: z.boolean().optional().default(true),
   data_archive_format: z.union([z.string(), z.unknown()]).nullish(),
 });
 
@@ -602,34 +284,11 @@ export const zFluxLoraPortraitTrainerOutput = z.object({
  */
 export const zHunyuanVideoLoraTrainingInput = z.object({
   data_archive_format: z.union([z.string(), z.unknown()]).nullish(),
-  trigger_word: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The trigger word to use.",
-    })
-    .optional()
-    .default(""),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate to use for training.",
-    })
-    .optional()
-    .default(0.0001),
-  steps: z.int().gte(1).lte(5000).register(z.globalRegistry, {
-    description: "Number of steps to train the LoRA on.",
-  }),
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to zip archive with images. Try to use at least 4 images in general the more the better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image file it corresponds to.\n    ",
-  }),
-  do_caption: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to generate captions for the images.",
-    })
-    .optional()
-    .default(true),
+  trigger_word: z.string().optional().default(""),
+  learning_rate: z.number().optional().default(0.0001),
+  steps: z.int().gte(1).lte(5000),
+  images_data_url: z.string(),
+  do_caption: z.boolean().optional().default(true),
 });
 
 /**
@@ -644,23 +303,15 @@ export const zHunyuanVideoLoraTrainingOutput = z.object({
  * TrainModelInput
  */
 export const zIdeogramCustomModelsInput = z.object({
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL of a ZIP archive of training images. The archive must contain between 10 and 100 images (JPEG, PNG, or WebP). You may include caption sidecar files (``<stem>.txt``) to guide training -- captions are matched to images by filename stem.",
-  }),
+  images_data_url: z.string(),
 });
 
 /**
  * TrainModelOutput
  */
 export const zIdeogramCustomModelsOutput = z.object({
-  model_id: z.string().register(z.globalRegistry, {
-    description: "The Ideogram model id. Pass this to /generate.",
-  }),
-  custom_model_uri: z.string().register(z.globalRegistry, {
-    description:
-      "The trained model's URI. ``/generate`` resolves this automatically from the ``model_id``, but it is surfaced here for callers that use the ``custom_model_uri`` on the public Ideogram v3 generate endpoint directly.",
-  }),
+  model_id: z.string(),
+  custom_model_uri: z.string(),
 });
 
 /**
@@ -668,48 +319,36 @@ export const zIdeogramCustomModelsOutput = z.object({
  *
  * Output from LTX-2.3 video-to-video training.
  */
-export const zLtx23V2vTrainerOutput = z
-  .object({
-    debug_dataset: z.union([zFile, z.unknown()]).optional(),
-    video: z.union([zFile, z.unknown()]).optional(),
-    lora_file: zFile,
-    config_file: zFile,
-  })
-  .register(z.globalRegistry, {
-    description: "Output from LTX-2.3 video-to-video training.",
-  });
+export const zLtx23V2vTrainerOutput = z.object({
+  debug_dataset: z.union([zFile, z.unknown()]).optional(),
+  video: z.union([zFile, z.unknown()]).optional(),
+  lora_file: zFile,
+  config_file: zFile,
+});
 
 /**
  * LTX23Output
  *
  * Output from LTX-2.3 training.
  */
-export const zLtx23VideoTrainerOutput = z
-  .object({
-    config_file: zFile,
-    lora_file: zFile,
-    video: z.union([zFile, z.unknown()]).optional(),
-    debug_dataset: z.union([zFile, z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Output from LTX-2.3 training.",
-  });
+export const zLtx23VideoTrainerOutput = z.object({
+  config_file: zFile,
+  lora_file: zFile,
+  video: z.union([zFile, z.unknown()]).optional(),
+  debug_dataset: z.union([zFile, z.unknown()]).optional(),
+});
 
 /**
  * LTX2Output
  *
  * Output from LTX-2 training.
  */
-export const zLtx2VideoTrainerOutput = z
-  .object({
-    config_file: zFile,
-    lora_file: zFile,
-    debug_dataset: z.union([zFile, z.unknown()]).optional(),
-    video: z.union([zFile, z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Output from LTX-2 training.",
-  });
+export const zLtx2VideoTrainerOutput = z.object({
+  config_file: zFile,
+  lora_file: zFile,
+  debug_dataset: z.union([zFile, z.unknown()]).optional(),
+  video: z.union([zFile, z.unknown()]).optional(),
+});
 
 /**
  * TrainingOutput
@@ -724,88 +363,35 @@ export const zLtxVideoTrainerOutput = z.object({
  * PhotaProfileCreateInput
  */
 export const zPhotaCreateProfileInput = z.object({
-  image_data_url: z.string().register(z.globalRegistry, {
-    description: "URL to a ZIP archive containing the profile images.",
-  }),
+  image_data_url: z.string(),
 });
 
 /**
  * PhotaProfileOutput
  */
 export const zPhotaCreateProfileOutput = z.object({
-  profile_id: z.string().register(z.globalRegistry, {
-    description: "The Photalabs profile ID.",
-  }),
+  profile_id: z.string(),
 });
 
 export const zQueueStatus = z.object({
   status: z.enum(["IN_QUEUE", "IN_PROGRESS", "COMPLETED"]),
-  request_id: z.string().register(z.globalRegistry, {
-    description: "The request id.",
-  }),
-  response_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The response url.",
-    })
-    .optional(),
-  status_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The status url.",
-    })
-    .optional(),
-  cancel_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The cancel url.",
-    })
-    .optional(),
-  logs: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The logs.",
-    })
-    .optional(),
-  metrics: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The metrics.",
-    })
-    .optional(),
-  queue_position: z
-    .int()
-    .register(z.globalRegistry, {
-      description: "The queue position.",
-    })
-    .optional(),
+  request_id: z.string(),
+  response_url: z.string().optional(),
+  status_url: z.string().optional(),
+  cancel_url: z.string().optional(),
+  logs: z.record(z.string(), z.unknown()).optional(),
+  metrics: z.record(z.string(), z.unknown()).optional(),
+  queue_position: z.int().optional(),
 });
 
 /**
  * InputImage
  */
 export const zQwenImage2512TrainerInput = z.object({
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive for text-to-image training.\n\n    The zip should contain images with their corresponding text captions:\n\n    image.EXT and image.txt\n    For example:\n    photo.jpg and photo.txt\n\n    The text file contains the caption/prompt describing the target image.\n\n    If no text file is provided for an image, the default_caption will be used.\n\n    If no default_caption is provided and a text file is missing, the training will fail.\n    ",
-  }),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(30000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
+  image_data_url: z.string(),
+  steps: z.int().gte(100).lte(30000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0005),
+  learning_rate: z.number().optional().default(0.0005),
 });
 
 /**
@@ -820,27 +406,10 @@ export const zQwenImage2512TrainerOutput = z.object({
  * Input
  */
 export const zQwenImage2512TrainerV2Input = z.object({
-  steps: z
-    .int()
-    .gte(10)
-    .lte(40000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(2000),
+  steps: z.int().gte(10).lte(40000).optional().default(2000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate.",
-    })
-    .optional()
-    .default(0.0005),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to the input data zip archive.\n\n        The zip should contain pairs of images and corresponding captions.\n\n        The images should be named: ROOT.EXT. For example: 001.jpg\n\n        The corresponding captions should be named: ROOT.txt. For example: 001.txt\n\n        If no text file is provided for an image, the default_caption will be used.\n        ",
-  }),
+  learning_rate: z.number().optional().default(0.0005),
+  image_data_url: z.string(),
 });
 
 /**
@@ -855,26 +424,9 @@ export const zQwenImage2512TrainerV2Output = z.object({
  * InputPlus
  */
 export const zQwenImageEdit2509TrainerInput = z.object({
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain more than one reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ..., ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The Reference Image Count field should be set to the number of reference images.\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0001),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(30000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
+  image_data_url: z.string(),
+  learning_rate: z.number().optional().default(0.0001),
+  steps: z.int().gte(100).lte(30000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -890,27 +442,10 @@ export const zQwenImageEdit2509TrainerOutput = z.object({
  * Input2511
  */
 export const zQwenImageEdit2511TrainerInput = z.object({
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0001),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(30000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
+  learning_rate: z.number().optional().default(0.0001),
+  steps: z.int().gte(100).lte(30000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain more than one reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ..., ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The Reference Image Count field should be set to the number of reference images.\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
+  image_data_url: z.string(),
 });
 
 /**
@@ -925,26 +460,9 @@ export const zQwenImageEdit2511TrainerOutput = z.object({
  * InputPlus
  */
 export const zQwenImageEditPlusTrainerInput = z.object({
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain more than one reference image for each image pair. The reference images should be named:\n    ROOT_start.EXT, ROOT_start2.EXT, ROOT_start3.EXT, ..., ROOT_end.EXT\n    For example:\n    photo_start.jpg, photo_start2.jpg, photo_end.jpg\n\n    The Reference Image Count field should be set to the number of reference images.\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0001),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(30000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
+  image_data_url: z.string(),
+  learning_rate: z.number().optional().default(0.0001),
+  steps: z.int().gte(100).lte(30000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -960,26 +478,9 @@ export const zQwenImageEditPlusTrainerOutput = z.object({
  * InputEdit
  */
 export const zQwenImageEditTrainerInput = z.object({
-  steps: z
-    .int()
-    .gte(100)
-    .lte(30000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0001),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain pairs of images. The images should be named:\n\n    ROOT_start.EXT and ROOT_end.EXT\n    For example:\n    photo_start.jpg and photo_end.jpg\n\n    The zip can also contain a text file for each image pair. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
+  steps: z.int().gte(100).lte(30000).optional().default(1000),
+  learning_rate: z.number().optional().default(0.0001),
+  image_data_url: z.string(),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -995,26 +496,9 @@ export const zQwenImageEditTrainerOutput = z.object({
  * Input
  */
 export const zQwenImageLayeredTrainerInput = z.object({
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0001),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive.\n\n    The zip should contain groups of images. The images should be named:\n\n    ROOT_start.EXT, ROOT_end.EXT, ROOT_end2.EXT, ..., ROOT_endN.EXT\n    For example:\n    photo_start.png, photo_end.png, photo_end2.png, ..., photo_endN.png\n\n    The start image is the base image that will be decomposed into layers.\n    The end images are the layers that will be added to the base image.  ROOT_end.EXT is the first layer, ROOT_end2.EXT is the second layer, and so on.\n    You can have up to 8 layers.\n    All image groups must have the same number of output layers.\n\n    The end images can contain transparent regions. Only PNG and WebP images are supported since these are the only formats that support transparency.\n\n    The zip can also contain a text file for each image group. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify a description of the base image.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
+  learning_rate: z.number().optional().default(0.0001),
+  image_data_url: z.string(),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -1030,37 +514,10 @@ export const zQwenImageLayeredTrainerOutput = z.object({
  * PublicInput
  */
 export const zQwenImageTrainerInput = z.object({
-  steps: z
-    .int()
-    .gte(1)
-    .lte(8000)
-    .register(z.globalRegistry, {
-      description:
-        "Total number of training steps to perform. Default is 4000.",
-    })
-    .optional()
-    .default(1000),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(0.01)
-    .register(z.globalRegistry, {
-      description: "Learning rate for training. Default is 5e-4",
-    })
-    .optional()
-    .default(0.0005),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "Default caption to use for images that don't have corresponding text files. If provided, missing .txt files will be created automatically.",
-    })
-    .optional()
-    .default(""),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to zip archive with images for training. The archive should contain images and corresponding text files with captions.\n        Each text file should have the same name as the image file it corresponds to (e.g., image1.jpg and image1.txt).\n        If text files are missing for some images, you can provide a trigger_phrase to automatically create them.\n        Supported image formats: PNG, JPG, JPEG, WEBP.\n        Try to use at least 10 images, although more is better.\n    ",
-  }),
+  steps: z.int().gte(1).lte(8000).optional().default(1000),
+  learning_rate: z.number().gte(0.000001).lte(0.01).optional().default(0.0005),
+  trigger_phrase: z.string().optional().default(""),
+  image_data_url: z.string(),
 });
 
 /**
@@ -1075,26 +532,9 @@ export const zQwenImageTrainerOutput = z.object({
  * InputImage
  */
 export const zQwenImageTrainerV2Input = z.object({
-  steps: z
-    .int()
-    .gte(100)
-    .lte(30000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(1000),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate for LoRA parameters.",
-    })
-    .optional()
-    .default(0.0005),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to the input data zip archive for text-to-image training.\n\n    The zip should contain images with their corresponding text captions:\n\n    image.EXT and image.txt\n    For example:\n    photo.jpg and photo.txt\n\n    The text file contains the caption/prompt describing the target image.\n\n    If no text file is provided for an image, the default_caption will be used.\n\n    If no default_caption is provided and a text file is missing, the training will fail.\n    ",
-  }),
+  steps: z.int().gte(100).lte(30000).optional().default(1000),
+  learning_rate: z.number().optional().default(0.0005),
+  image_data_url: z.string(),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -1198,26 +638,16 @@ export const zRecraftV3CreateStyleInput = z.object({
       "vector_illustration/line_circuit",
       "vector_illustration/linocut",
     ])
-    .register(z.globalRegistry, {
-      description:
-        "The base style of the generated images, this topic is covered above.",
-    })
     .optional()
     .default("digital_illustration"),
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images, use PNG format. Maximum 5 images are allowed.",
-  }),
+  images_data_url: z.string(),
 });
 
 /**
  * StyleReferenceOutput
  */
 export const zRecraftV3CreateStyleOutput = z.object({
-  style_id: z.string().register(z.globalRegistry, {
-    description:
-      "The ID of the created style, this ID can be used to reference the style in the future.",
-  }),
+  style_id: z.string(),
 });
 
 /**
@@ -1228,36 +658,10 @@ export const zTurboFluxTrainerInput = z.object({
   training_style: z
     .union([z.enum(["subject", "style"]), z.unknown()])
     .optional(),
-  face_crop: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to try to detect the face and crop the images to the face.",
-    })
-    .optional()
-    .default(true),
-  steps: z
-    .int()
-    .gte(1)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train the LoRA on.",
-    })
-    .optional()
-    .default(1000),
-  images_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n        ",
-  }),
-  learning_rate: z
-    .number()
-    .gte(1e-7)
-    .lte(0.01)
-    .register(z.globalRegistry, {
-      description: "Learning rate for the training.",
-    })
-    .optional()
-    .default(0.00115),
+  face_crop: z.boolean().optional().default(true),
+  steps: z.int().gte(1).lte(10000).optional().default(1000),
+  images_data_url: z.string(),
+  learning_rate: z.number().gte(1e-7).lte(0.01).optional().default(0.00115),
 });
 
 /**
@@ -1273,223 +677,68 @@ export const zTurboFluxTrainerOutput = z.object({
  *
  * Validation input for video-to-video training.
  */
-export const zV2vValidation = z
-  .object({
-    prompt: z.string().register(z.globalRegistry, {
-      description: "The prompt to use for validation.",
-    }),
-    reference_video_url: z.string().min(1).register(z.globalRegistry, {
-      description:
-        "URL to reference video for IC-LoRA validation. This is the input video that will be transformed.",
-    }),
-  })
-  .register(z.globalRegistry, {
-    description: "Validation input for video-to-video training.",
-  });
+export const zV2vValidation = z.object({
+  prompt: z.string(),
+  reference_video_url: z.string().min(1),
+});
 
 /**
  * LTX23V2VInput
  *
  * Input configuration for LTX-2.3 video-to-video (IC-LoRA) training.
  */
-export const zLtx23V2vTrainerInput = z
-  .object({
-    aspect_ratio: z
-      .enum(["16:9", "1:1", "9:16"])
-      .register(z.globalRegistry, {
-        description: "Aspect ratio to use for training.",
-      })
-      .optional()
-      .default("1:1"),
-    validation_number_of_frames: z
-      .int()
-      .gte(9)
-      .lte(121)
-      .register(z.globalRegistry, {
-        description: "The number of frames in validation videos.",
-      })
-      .optional()
-      .default(89),
-    training_data_url: z.string().register(z.globalRegistry, {
-      description:
-        "URL to zip archive with videos or images. Try to use at least 10 files, although more is better.\n\n        **Supported video formats:** .mp4, .mov, .avi, .mkv\n        **Supported image formats:** .png, .jpg, .jpeg\n\n        Note: The dataset must contain ONLY videos OR ONLY images - mixed datasets are not supported.\n\n        The archive can also contain text files with captions. Each text file should have the same name as the media file it corresponds to.",
-    }),
-    stg_scale: z
-      .number()
-      .gte(0)
-      .lte(3)
-      .register(z.globalRegistry, {
-        description:
-          "STG (Spatio-Temporal Guidance) scale. 0.0 disables STG. Recommended value is 1.0.",
-      })
-      .optional()
-      .default(1),
-    split_input_duration_threshold: z
-      .number()
-      .gte(1)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description:
-          "The duration threshold in seconds. If a video is longer than this, it will be split into scenes.",
-      })
-      .optional()
-      .default(30),
-    frame_rate: z
-      .int()
-      .gte(8)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description: "Target frames per second for the video.",
-      })
-      .optional()
-      .default(25),
-    number_of_steps: z
-      .int()
-      .gte(100)
-      .lte(20000)
-      .register(z.globalRegistry, {
-        description: "The number of training steps.",
-      })
-      .optional()
-      .default(2000),
-    validation_aspect_ratio: z
-      .enum(["16:9", "1:1", "9:16"])
-      .register(z.globalRegistry, {
-        description: "The aspect ratio to use for validation.",
-      })
-      .optional()
-      .default("1:1"),
-    split_input_into_scenes: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If true, videos above a certain duration threshold will be split into scenes.",
-      })
-      .optional()
-      .default(true),
-    validation_negative_prompt: z
-      .string()
-      .register(z.globalRegistry, {
-        description: "A negative prompt to use for validation.",
-      })
-      .optional()
-      .default(
-        "worst quality, inconsistent motion, blurry, jittery, distorted",
-      ),
-    first_frame_conditioning_p: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Probability of conditioning on the first frame during training. Lower values work better for video-to-video transformation.",
-      })
-      .optional()
-      .default(0.1),
-    trigger_phrase: z
-      .string()
-      .register(z.globalRegistry, {
-        description:
-          "A phrase that will trigger the LoRA style. Will be prepended to captions during training.",
-      })
-      .optional()
-      .default(""),
-    debug_dataset: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "When enabled, the trainer returns a downloadable archive of your preprocessed training data for manual inspection. Use this to verify that your videos, images, and captions were processed correctly before committing to a full training run.",
-      })
-      .optional()
-      .default(false),
-    validation_resolution: z
-      .enum(["low", "medium", "high"])
-      .register(z.globalRegistry, {
-        description: "The resolution to use for validation.",
-      })
-      .optional()
-      .default("high"),
-    learning_rate: z
-      .number()
-      .gte(0.000001)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Learning rate for optimization. Higher values can lead to faster training but may cause overfitting.",
-      })
-      .optional()
-      .default(0.0002),
-    auto_scale_input: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If true, videos will be automatically scaled to the target frame count and fps. This option has no effect on image datasets.",
-      })
-      .optional()
-      .default(false),
-    validation: z
-      .array(zV2vValidation)
-      .max(2)
-      .register(z.globalRegistry, {
-        description:
-          "A list of validation inputs with prompts and reference videos.",
-      })
-      .optional()
-      .default([]),
-    resolution: z
-      .enum(["low", "medium", "high"])
-      .register(z.globalRegistry, {
-        description:
-          "Resolution to use for training. Higher resolutions require more memory.",
-      })
-      .optional()
-      .default("medium"),
-    rank: z
-      .union([
-        z.literal(8),
-        z.literal(16),
-        z.literal(32),
-        z.literal(64),
-        z.literal(128),
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "The rank of the LoRA adaptation. Higher values increase capacity but use more memory.",
-      })
-      .optional()
-      .default(32),
-    number_of_frames: z
-      .int()
-      .gte(9)
-      .lte(121)
-      .register(z.globalRegistry, {
-        description:
-          "Number of frames per training sample. Must satisfy frames % 8 == 1 (e.g., 1, 9, 17, 25, 33, 41, 49, 57, 65, 73, 81, 89, 97).",
-      })
-      .optional()
-      .default(89),
-    validation_frame_rate: z
-      .int()
-      .gte(8)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description: "Target frames per second for validation videos.",
-      })
-      .optional()
-      .default(25),
-  })
-  .register(z.globalRegistry, {
-    description:
-      "Input configuration for LTX-2.3 video-to-video (IC-LoRA) training.",
-  });
+export const zLtx23V2vTrainerInput = z.object({
+  aspect_ratio: z.enum(["16:9", "1:1", "9:16"]).optional().default("1:1"),
+  validation_number_of_frames: z.int().gte(9).lte(121).optional().default(89),
+  training_data_url: z.string(),
+  stg_scale: z.number().gte(0).lte(3).optional().default(1),
+  split_input_duration_threshold: z
+    .number()
+    .gte(1)
+    .lte(60)
+    .optional()
+    .default(30),
+  frame_rate: z.int().gte(8).lte(60).optional().default(25),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(2000),
+  validation_aspect_ratio: z
+    .enum(["16:9", "1:1", "9:16"])
+    .optional()
+    .default("1:1"),
+  split_input_into_scenes: z.boolean().optional().default(true),
+  validation_negative_prompt: z
+    .string()
+    .optional()
+    .default("worst quality, inconsistent motion, blurry, jittery, distorted"),
+  first_frame_conditioning_p: z.number().gte(0).lte(1).optional().default(0.1),
+  trigger_phrase: z.string().optional().default(""),
+  debug_dataset: z.boolean().optional().default(false),
+  validation_resolution: z
+    .enum(["low", "medium", "high"])
+    .optional()
+    .default("high"),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  auto_scale_input: z.boolean().optional().default(false),
+  validation: z.array(zV2vValidation).max(2).optional().default([]),
+  resolution: z.enum(["low", "medium", "high"]).optional().default("medium"),
+  rank: z
+    .union([
+      z.literal(8),
+      z.literal(16),
+      z.literal(32),
+      z.literal(64),
+      z.literal(128),
+    ])
+    .optional()
+    .default(32),
+  number_of_frames: z.int().gte(9).lte(121).optional().default(89),
+  validation_frame_rate: z.int().gte(8).lte(60).optional().default(25),
+});
 
 /**
  * Validation
  */
 export const zValidation = z.object({
-  prompt: z.string().register(z.globalRegistry, {
-    description: "The prompt to use for validation.",
-  }),
+  prompt: z.string(),
   image_url: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -1498,489 +747,124 @@ export const zValidation = z.object({
  *
  * Input configuration for LTX-2.3 text-to-video training.
  */
-export const zLtx23VideoTrainerInput = z
-  .object({
-    resolution: z
-      .enum(["low", "medium", "high"])
-      .register(z.globalRegistry, {
-        description:
-          "Resolution to use for training. Higher resolutions require more memory.",
-      })
-      .optional()
-      .default("medium"),
-    number_of_steps: z
-      .int()
-      .gte(100)
-      .lte(20000)
-      .register(z.globalRegistry, {
-        description: "The number of training steps.",
-      })
-      .optional()
-      .default(2000),
-    split_input_into_scenes: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If true, videos above a certain duration threshold will be split into scenes.",
-      })
-      .optional()
-      .default(true),
-    first_frame_conditioning_p: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Probability of conditioning on the first frame during training. Higher values improve image-to-video performance.",
-      })
-      .optional()
-      .default(0.5),
-    frame_rate: z
-      .int()
-      .gte(8)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description: "Target frames per second for the video.",
-      })
-      .optional()
-      .default(25),
-    validation_resolution: z
-      .enum(["low", "medium", "high"])
-      .register(z.globalRegistry, {
-        description: "The resolution to use for validation.",
-      })
-      .optional()
-      .default("high"),
-    debug_dataset: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "When enabled, the trainer returns a downloadable archive of your preprocessed training data for manual inspection. Use this to verify that your videos, images, and captions were processed correctly before committing to a full training run.",
-      })
-      .optional()
-      .default(false),
-    rank: z
-      .union([
-        z.literal(8),
-        z.literal(16),
-        z.literal(32),
-        z.literal(64),
-        z.literal(128),
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "The rank of the LoRA adaptation. Higher values increase capacity but use more memory.",
-      })
-      .optional()
-      .default(32),
-    split_input_duration_threshold: z
-      .number()
-      .gte(1)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description:
-          "The duration threshold in seconds. If a video is longer than this, it will be split into scenes.",
-      })
-      .optional()
-      .default(30),
-    validation_aspect_ratio: z
-      .enum(["16:9", "1:1", "9:16"])
-      .register(z.globalRegistry, {
-        description: "The aspect ratio to use for validation.",
-      })
-      .optional()
-      .default("1:1"),
-    stg_scale: z
-      .number()
-      .gte(0)
-      .lte(3)
-      .register(z.globalRegistry, {
-        description:
-          "STG (Spatio-Temporal Guidance) scale. 0.0 disables STG. Recommended value is 1.0.",
-      })
-      .optional()
-      .default(1),
-    validation_frame_rate: z
-      .int()
-      .gte(8)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description: "Target frames per second for validation videos.",
-      })
-      .optional()
-      .default(25),
-    with_audio: z.union([z.boolean(), z.unknown()]).optional(),
-    number_of_frames: z
-      .int()
-      .gte(9)
-      .lte(121)
-      .register(z.globalRegistry, {
-        description:
-          "Number of frames per training sample. Must satisfy frames % 8 == 1 (e.g., 1, 9, 17, 25, 33, 41, 49, 57, 65, 73, 81, 89, 97).",
-      })
-      .optional()
-      .default(89),
-    trigger_phrase: z
-      .string()
-      .register(z.globalRegistry, {
-        description:
-          "A phrase that will trigger the LoRA style. Will be prepended to captions during training.",
-      })
-      .optional()
-      .default(""),
-    audio_normalize: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "Normalize audio peak amplitude to a consistent level. Recommended for consistent audio levels across the dataset.",
-      })
-      .optional()
-      .default(true),
-    validation: z
-      .array(zValidation)
-      .max(2)
-      .register(z.globalRegistry, {
-        description:
-          "A list of validation prompts to use during training. When providing an image, _all_ validation inputs must have an image.",
-      })
-      .optional()
-      .default([]),
-    validation_negative_prompt: z
-      .string()
-      .register(z.globalRegistry, {
-        description: "A negative prompt to use for validation.",
-      })
-      .optional()
-      .default(
-        "worst quality, inconsistent motion, blurry, jittery, distorted",
-      ),
-    auto_scale_input: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If true, videos will be automatically scaled to the target frame count and fps. This option has no effect on image datasets.",
-      })
-      .optional()
-      .default(false),
-    audio_preserve_pitch: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "When audio duration doesn't match video duration, stretch/compress audio without changing pitch. If disabled, audio is trimmed or padded with silence.",
-      })
-      .optional()
-      .default(true),
-    training_data_url: z.string().register(z.globalRegistry, {
-      description:
-        "URL to zip archive with videos or images. Try to use at least 10 files, although more is better.\n\n        **Supported video formats:** .mp4, .mov, .avi, .mkv\n        **Supported image formats:** .png, .jpg, .jpeg\n\n        Note: The dataset must contain ONLY videos OR ONLY images - mixed datasets are not supported.\n\n        The archive can also contain text files with captions. Each text file should have the same name as the media file it corresponds to.",
-    }),
-    learning_rate: z
-      .number()
-      .gte(0.000001)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Learning rate for optimization. Higher values can lead to faster training but may cause overfitting.",
-      })
-      .optional()
-      .default(0.0002),
-    validation_number_of_frames: z
-      .int()
-      .gte(9)
-      .lte(121)
-      .register(z.globalRegistry, {
-        description: "The number of frames in validation videos.",
-      })
-      .optional()
-      .default(89),
-    generate_audio_in_validation: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether to generate audio in validation samples.",
-      })
-      .optional()
-      .default(true),
-    aspect_ratio: z
-      .enum(["16:9", "1:1", "9:16"])
-      .register(z.globalRegistry, {
-        description: "Aspect ratio to use for training.",
-      })
-      .optional()
-      .default("1:1"),
-  })
-  .register(z.globalRegistry, {
-    description: "Input configuration for LTX-2.3 text-to-video training.",
-  });
+export const zLtx23VideoTrainerInput = z.object({
+  resolution: z.enum(["low", "medium", "high"]).optional().default("medium"),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(2000),
+  split_input_into_scenes: z.boolean().optional().default(true),
+  first_frame_conditioning_p: z.number().gte(0).lte(1).optional().default(0.5),
+  frame_rate: z.int().gte(8).lte(60).optional().default(25),
+  validation_resolution: z
+    .enum(["low", "medium", "high"])
+    .optional()
+    .default("high"),
+  debug_dataset: z.boolean().optional().default(false),
+  rank: z
+    .union([
+      z.literal(8),
+      z.literal(16),
+      z.literal(32),
+      z.literal(64),
+      z.literal(128),
+    ])
+    .optional()
+    .default(32),
+  split_input_duration_threshold: z
+    .number()
+    .gte(1)
+    .lte(60)
+    .optional()
+    .default(30),
+  validation_aspect_ratio: z
+    .enum(["16:9", "1:1", "9:16"])
+    .optional()
+    .default("1:1"),
+  stg_scale: z.number().gte(0).lte(3).optional().default(1),
+  validation_frame_rate: z.int().gte(8).lte(60).optional().default(25),
+  with_audio: z.union([z.boolean(), z.unknown()]).optional(),
+  number_of_frames: z.int().gte(9).lte(121).optional().default(89),
+  trigger_phrase: z.string().optional().default(""),
+  audio_normalize: z.boolean().optional().default(true),
+  validation: z.array(zValidation).max(2).optional().default([]),
+  validation_negative_prompt: z
+    .string()
+    .optional()
+    .default("worst quality, inconsistent motion, blurry, jittery, distorted"),
+  auto_scale_input: z.boolean().optional().default(false),
+  audio_preserve_pitch: z.boolean().optional().default(true),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  validation_number_of_frames: z.int().gte(9).lte(121).optional().default(89),
+  generate_audio_in_validation: z.boolean().optional().default(true),
+  aspect_ratio: z.enum(["16:9", "1:1", "9:16"]).optional().default("1:1"),
+});
 
 /**
  * LTX2Input
  *
  * Input configuration for LTX-2 text-to-video training.
  */
-export const zLtx2VideoTrainerInput = z
-  .object({
-    validation_frame_rate: z
-      .int()
-      .gte(8)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description: "Target frames per second for validation videos.",
-      })
-      .optional()
-      .default(25),
-    validation: z
-      .array(zValidation)
-      .max(2)
-      .register(z.globalRegistry, {
-        description:
-          "A list of validation prompts to use during training. When providing an image, _all_ validation inputs must have an image.",
-      })
-      .optional()
-      .default([]),
-    generate_audio_in_validation: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether to generate audio in validation samples.",
-      })
-      .optional()
-      .default(true),
-    number_of_steps: z
-      .int()
-      .gte(100)
-      .lte(20000)
-      .register(z.globalRegistry, {
-        description: "The number of training steps.",
-      })
-      .optional()
-      .default(2000),
-    number_of_frames: z
-      .int()
-      .gte(9)
-      .lte(121)
-      .register(z.globalRegistry, {
-        description:
-          "Number of frames per training sample. Must satisfy frames % 8 == 1 (e.g., 1, 9, 17, 25, 33, 41, 49, 57, 65, 73, 81, 89, 97).",
-      })
-      .optional()
-      .default(89),
-    trigger_phrase: z
-      .string()
-      .register(z.globalRegistry, {
-        description:
-          "A phrase that will trigger the LoRA style. Will be prepended to captions during training.",
-      })
-      .optional()
-      .default(""),
-    frame_rate: z
-      .int()
-      .gte(8)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description: "Target frames per second for the video.",
-      })
-      .optional()
-      .default(25),
-    audio_normalize: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "Normalize audio peak amplitude to a consistent level. Recommended for consistent audio levels across the dataset.",
-      })
-      .optional()
-      .default(true),
-    auto_scale_input: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If true, videos will be automatically scaled to the target frame count and fps. This option has no effect on image datasets.",
-      })
-      .optional()
-      .default(false),
-    rank: z
-      .union([
-        z.literal(8),
-        z.literal(16),
-        z.literal(32),
-        z.literal(64),
-        z.literal(128),
-      ])
-      .register(z.globalRegistry, {
-        description:
-          "The rank of the LoRA adaptation. Higher values increase capacity but use more memory.",
-      })
-      .optional()
-      .default(32),
-    resolution: z
-      .enum(["low", "medium", "high"])
-      .register(z.globalRegistry, {
-        description:
-          "Resolution to use for training. Higher resolutions require more memory.",
-      })
-      .optional()
-      .default("medium"),
-    training_data_url: z.string().register(z.globalRegistry, {
-      description:
-        "URL to zip archive with videos or images. Try to use at least 10 files, although more is better.\n\n        **Supported video formats:** .mp4, .mov, .avi, .mkv\n        **Supported image formats:** .png, .jpg, .jpeg\n\n        Note: The dataset must contain ONLY videos OR ONLY images - mixed datasets are not supported.\n\n        The archive can also contain text files with captions. Each text file should have the same name as the media file it corresponds to.",
-    }),
-    validation_number_of_frames: z
-      .int()
-      .gte(9)
-      .lte(121)
-      .register(z.globalRegistry, {
-        description: "The number of frames in validation videos.",
-      })
-      .optional()
-      .default(89),
-    with_audio: z.union([z.boolean(), z.unknown()]).optional(),
-    validation_aspect_ratio: z
-      .enum(["16:9", "1:1", "9:16"])
-      .register(z.globalRegistry, {
-        description: "The aspect ratio to use for validation.",
-      })
-      .optional()
-      .default("1:1"),
-    debug_dataset: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "When enabled, the trainer returns a downloadable archive of your preprocessed training data for manual inspection. Use this to verify that your videos, images, and captions were processed correctly before committing to a full training run.",
-      })
-      .optional()
-      .default(false),
-    validation_negative_prompt: z
-      .string()
-      .register(z.globalRegistry, {
-        description: "A negative prompt to use for validation.",
-      })
-      .optional()
-      .default(
-        "worst quality, inconsistent motion, blurry, jittery, distorted",
-      ),
-    split_input_duration_threshold: z
-      .number()
-      .gte(1)
-      .lte(60)
-      .register(z.globalRegistry, {
-        description:
-          "The duration threshold in seconds. If a video is longer than this, it will be split into scenes.",
-      })
-      .optional()
-      .default(30),
-    split_input_into_scenes: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "If true, videos above a certain duration threshold will be split into scenes.",
-      })
-      .optional()
-      .default(true),
-    learning_rate: z
-      .number()
-      .gte(0.000001)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Learning rate for optimization. Higher values can lead to faster training but may cause overfitting.",
-      })
-      .optional()
-      .default(0.0002),
-    audio_preserve_pitch: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description:
-          "When audio duration doesn't match video duration, stretch/compress audio without changing pitch. If disabled, audio is trimmed or padded with silence.",
-      })
-      .optional()
-      .default(true),
-    first_frame_conditioning_p: z
-      .number()
-      .gte(0)
-      .lte(1)
-      .register(z.globalRegistry, {
-        description:
-          "Probability of conditioning on the first frame during training. Higher values improve image-to-video performance.",
-      })
-      .optional()
-      .default(0.5),
-    aspect_ratio: z
-      .enum(["16:9", "1:1", "9:16"])
-      .register(z.globalRegistry, {
-        description: "Aspect ratio to use for training.",
-      })
-      .optional()
-      .default("1:1"),
-    validation_resolution: z
-      .enum(["low", "medium", "high"])
-      .register(z.globalRegistry, {
-        description: "The resolution to use for validation.",
-      })
-      .optional()
-      .default("high"),
-    stg_scale: z
-      .number()
-      .gte(0)
-      .lte(3)
-      .register(z.globalRegistry, {
-        description:
-          "STG (Spatio-Temporal Guidance) scale. 0.0 disables STG. Recommended value is 1.0.",
-      })
-      .optional()
-      .default(1),
-  })
-  .register(z.globalRegistry, {
-    description: "Input configuration for LTX-2 text-to-video training.",
-  });
+export const zLtx2VideoTrainerInput = z.object({
+  validation_frame_rate: z.int().gte(8).lte(60).optional().default(25),
+  validation: z.array(zValidation).max(2).optional().default([]),
+  generate_audio_in_validation: z.boolean().optional().default(true),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(2000),
+  number_of_frames: z.int().gte(9).lte(121).optional().default(89),
+  trigger_phrase: z.string().optional().default(""),
+  frame_rate: z.int().gte(8).lte(60).optional().default(25),
+  audio_normalize: z.boolean().optional().default(true),
+  auto_scale_input: z.boolean().optional().default(false),
+  rank: z
+    .union([
+      z.literal(8),
+      z.literal(16),
+      z.literal(32),
+      z.literal(64),
+      z.literal(128),
+    ])
+    .optional()
+    .default(32),
+  resolution: z.enum(["low", "medium", "high"]).optional().default("medium"),
+  training_data_url: z.string(),
+  validation_number_of_frames: z.int().gte(9).lte(121).optional().default(89),
+  with_audio: z.union([z.boolean(), z.unknown()]).optional(),
+  validation_aspect_ratio: z
+    .enum(["16:9", "1:1", "9:16"])
+    .optional()
+    .default("1:1"),
+  debug_dataset: z.boolean().optional().default(false),
+  validation_negative_prompt: z
+    .string()
+    .optional()
+    .default("worst quality, inconsistent motion, blurry, jittery, distorted"),
+  split_input_duration_threshold: z
+    .number()
+    .gte(1)
+    .lte(60)
+    .optional()
+    .default(30),
+  split_input_into_scenes: z.boolean().optional().default(true),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  audio_preserve_pitch: z.boolean().optional().default(true),
+  first_frame_conditioning_p: z.number().gte(0).lte(1).optional().default(0.5),
+  aspect_ratio: z.enum(["16:9", "1:1", "9:16"]).optional().default("1:1"),
+  validation_resolution: z
+    .enum(["low", "medium", "high"])
+    .optional()
+    .default("high"),
+  stg_scale: z.number().gte(0).lte(3).optional().default(1),
+});
 
 /**
  * Input
  */
 export const zLtxVideoTrainerInput = z.object({
-  resolution: z
-    .enum(["low", "medium", "high"])
-    .register(z.globalRegistry, {
-      description:
-        "The resolution to use for training. This is the resolution of the video.",
-    })
-    .optional()
-    .default("medium"),
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, videos will be automatically scaled to the target frame count and fps. This option has no effect on image datasets.",
-    })
-    .optional()
-    .default(false),
-  split_input_into_scenes: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, videos above a certain duration threshold will be split into scenes. If you provide captions for a split video, the caption will be applied to each scene. If you do not provide captions, scenes will be auto-captioned. This option has no effect on image datasets.",
-    })
-    .optional()
-    .default(true),
-  frame_rate: z
-    .int()
-    .gte(8)
-    .lte(60)
-    .register(z.globalRegistry, {
-      description: "The target frames per second for the video.",
-    })
-    .optional()
-    .default(25),
-  validation_reverse: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the validation videos will be reversed. This is useful for effects that are learned in reverse and then applied in reverse.",
-    })
-    .optional()
-    .default(false),
+  resolution: z.enum(["low", "medium", "high"]).optional().default("medium"),
+  auto_scale_input: z.boolean().optional().default(false),
+  split_input_into_scenes: z.boolean().optional().default(true),
+  frame_rate: z.int().gte(8).lte(60).optional().default(25),
+  validation_reverse: z.boolean().optional().default(false),
   validation_aspect_ratio: z
     .enum(["16:9", "1:1", "9:16"])
-    .register(z.globalRegistry, {
-      description: "The aspect ratio to use for validation.",
-    })
     .optional()
     .default("1:1"),
   rank: z
@@ -1991,170 +875,45 @@ export const zLtxVideoTrainerInput = z.object({
       z.literal(64),
       z.literal(128),
     ])
-    .register(z.globalRegistry, {
-      description: "The rank of the LoRA.",
-    })
     .optional()
     .default(128),
-  number_of_frames: z
-    .int()
-    .gte(25)
-    .lte(121)
-    .register(z.globalRegistry, {
-      description:
-        "The number of frames to use for training. This is the number of frames per second multiplied by the number of seconds.",
-    })
-    .optional()
-    .default(81),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(1000),
+  number_of_frames: z.int().gte(25).lte(121).optional().default(81),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(1000),
   validation_resolution: z
     .enum(["low", "medium", "high"])
-    .register(z.globalRegistry, {
-      description: "The resolution to use for validation.",
-    })
     .optional()
     .default("high"),
-  validation: z
-    .array(zValidation)
-    .max(2)
-    .register(z.globalRegistry, {
-      description:
-        "A list of validation prompts to use during training. When providing an image, _all_ validation inputs must have an image.",
-    })
-    .optional()
-    .default([]),
+  validation: z.array(zValidation).max(2).optional().default([]),
   split_input_duration_threshold: z
     .number()
     .gte(1)
     .lte(60)
-    .register(z.globalRegistry, {
-      description:
-        "The duration threshold in seconds. If a video is longer than this, it will be split into scenes. If you provide captions for a split video, the caption will be applied to each scene. If you do not provide captions, scenes will be auto-captioned.",
-    })
     .optional()
     .default(30),
-  aspect_ratio: z
-    .enum(["16:9", "1:1", "9:16"])
-    .register(z.globalRegistry, {
-      description:
-        "The aspect ratio to use for training. This is the aspect ratio of the video.",
-    })
-    .optional()
-    .default("1:1"),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with videos or images. Try to use at least 10 files, although more is better.\n\n        **Supported video formats:** .mp4, .mov, .avi, .mkv\n        **Supported image formats:** .png, .jpg, .jpeg\n\n        Note: The dataset must contain ONLY videos OR ONLY images - mixed datasets are not supported.\n\n        The archive can also contain text files with captions. Each text file should have the same name as the media file it corresponds to.",
-  }),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
+  aspect_ratio: z.enum(["16:9", "1:1", "9:16"]).optional().default("1:1"),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  training_data_url: z.string(),
+  trigger_phrase: z.string().optional().default(""),
   validation_negative_prompt: z
     .string()
-    .register(z.globalRegistry, {
-      description: "A negative prompt to use for validation.",
-    })
     .optional()
     .default("blurry, low quality, bad quality, out of focus"),
-  validation_number_of_frames: z
-    .int()
-    .gte(8)
-    .lte(121)
-    .register(z.globalRegistry, {
-      description: "The number of frames to use for validation.",
-    })
-    .optional()
-    .default(81),
+  validation_number_of_frames: z.int().gte(8).lte(121).optional().default(81),
 });
 
 /**
  * BasicInput
  */
 export const zWan22ImageTrainerInput = z.object({
-  trigger_phrase: z.string().register(z.globalRegistry, {
-    description: "Trigger phrase for the model.",
-  }),
-  use_masks: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to use masks for the training data.",
-    })
-    .optional()
-    .default(true),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(0.1)
-    .register(z.globalRegistry, {
-      description: "Learning rate for training.",
-    })
-    .optional()
-    .default(0.0007),
-  steps: z
-    .int()
-    .gte(10)
-    .lte(6000)
-    .register(z.globalRegistry, {
-      description: "Number of training steps.",
-    })
-    .optional()
-    .default(1000),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description: "URL to the training data.",
-  }),
-  use_face_detection: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to use face detection for the training data. When enabled, images will use the center of the face as the center of the image when resizing.",
-    })
-    .optional()
-    .default(true),
-  is_style: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Whether the training data is style data. If true, face specific options like masking and face detection will be disabled.",
-    })
-    .optional()
-    .default(false),
-  include_synthetic_captions: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to include synthetic captions.",
-    })
-    .optional()
-    .default(false),
-  use_face_cropping: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to use face cropping for the training data. When enabled, images will be cropped to the face before resizing.",
-    })
-    .optional()
-    .default(false),
+  trigger_phrase: z.string(),
+  use_masks: z.boolean().optional().default(true),
+  learning_rate: z.number().gte(0.000001).lte(0.1).optional().default(0.0007),
+  steps: z.int().gte(10).lte(6000).optional().default(1000),
+  training_data_url: z.string(),
+  use_face_detection: z.boolean().optional().default(true),
+  is_style: z.boolean().optional().default(false),
+  include_synthetic_captions: z.boolean().optional().default(false),
+  use_face_cropping: z.boolean().optional().default(false),
 });
 
 /**
@@ -2170,45 +929,11 @@ export const zWan22ImageTrainerOutput = z.object({
  * Input
  */
 export const zWan22TrainerI2vA14bInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
+  auto_scale_input: z.boolean().optional().default(false),
+  trigger_phrase: z.string().optional().default(""),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
 });
 
 /**
@@ -2223,45 +948,11 @@ export const zWan22TrainerI2vA14bOutput = z.object({
  * Input
  */
 export const zWan22TrainerT2vA14bInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
+  auto_scale_input: z.boolean().optional().default(false),
+  trigger_phrase: z.string().optional().default(""),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
 });
 
 /**
@@ -2276,45 +967,11 @@ export const zWan22TrainerT2vA14bOutput = z.object({
  * Input
  */
 export const zWanTrainerFlf2V720pInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
+  auto_scale_input: z.boolean().optional().default(false),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  trigger_phrase: z.string().optional().default(""),
 });
 
 /**
@@ -2329,45 +986,11 @@ export const zWanTrainerFlf2V720pOutput = z.object({
  * Input
  */
 export const zWanTrainerI2V720pInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
+  auto_scale_input: z.boolean().optional().default(false),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  trigger_phrase: z.string().optional().default(""),
 });
 
 /**
@@ -2382,45 +1005,11 @@ export const zWanTrainerI2V720pOutput = z.object({
  * Input
  */
 export const zWanTrainerInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
+  auto_scale_input: z.boolean().optional().default(false),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  trigger_phrase: z.string().optional().default(""),
 });
 
 /**
@@ -2435,45 +1024,11 @@ export const zWanTrainerOutput = z.object({
  * Input
  */
 export const zWanTrainerT2V14bInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
+  auto_scale_input: z.boolean().optional().default(false),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  trigger_phrase: z.string().optional().default(""),
 });
 
 /**
@@ -2488,45 +1043,11 @@ export const zWanTrainerT2V14bOutput = z.object({
  * Input
  */
 export const zWanTrainerT2vInput = z.object({
-  auto_scale_input: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description:
-        "If true, the input will be automatically scale the video to 81 frames at 16fps.",
-    })
-    .optional()
-    .default(false),
-  number_of_steps: z
-    .int()
-    .gte(100)
-    .lte(20000)
-    .register(z.globalRegistry, {
-      description: "The number of steps to train for.",
-    })
-    .optional()
-    .default(400),
-  training_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "URL to zip archive with images of a consistent style. Try to use at least 10 images and/or videos, although more is better.\n\n        In addition to images the archive can contain text files with captions. Each text file should have the same name as the image/video file it corresponds to.",
-  }),
-  learning_rate: z
-    .number()
-    .gte(0.000001)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description:
-        "The rate at which the model learns. Higher values can lead to faster training, but over-fitting.",
-    })
-    .optional()
-    .default(0.0002),
-  trigger_phrase: z
-    .string()
-    .register(z.globalRegistry, {
-      description:
-        "The phrase that will trigger the model to generate an image.",
-    })
-    .optional()
-    .default(""),
+  auto_scale_input: z.boolean().optional().default(false),
+  number_of_steps: z.int().gte(100).lte(20000).optional().default(400),
+  training_data_url: z.string(),
+  learning_rate: z.number().gte(0.000001).lte(1).optional().default(0.0002),
+  trigger_phrase: z.string().optional().default(""),
 });
 
 /**
@@ -2541,27 +1062,10 @@ export const zWanTrainerT2vOutput = z.object({
  * Input
  */
 export const zZImageBaseTrainerInput = z.object({
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate.",
-    })
-    .optional()
-    .default(0.0005),
+  learning_rate: z.number().optional().default(0.0005),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  steps: z
-    .int()
-    .gte(10)
-    .lte(40000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(2000),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to the input data zip archive.\n\n        The zip should contain pairs of images and corresponding captions.\n\n        The images should be named: ROOT.EXT. For example: 001.jpg\n\n        The corresponding captions should be named: ROOT.txt. For example: 001.txt\n\n        If no text file is provided for an image, the default_caption will be used.\n        ",
-  }),
+  steps: z.int().gte(10).lte(40000).optional().default(2000),
+  image_data_url: z.string(),
 });
 
 /**
@@ -2576,35 +1080,14 @@ export const zZImageBaseTrainerOutput = z.object({
  * Input
  */
 export const zZImageTrainerInput = z.object({
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate applied to trainable parameters.",
-    })
-    .optional()
-    .default(0.0001),
+  learning_rate: z.number().optional().default(0.0001),
   training_type: z
     .enum(["content", "style", "balanced"])
-    .register(z.globalRegistry, {
-      description:
-        "Type of training to perform. Use 'content' to focus on the content of the images, 'style' to focus on the style of the images, and 'balanced' to focus on a combination of both.",
-    })
     .optional()
     .default("balanced"),
-  steps: z
-    .int()
-    .gte(100)
-    .lte(10000)
-    .register(z.globalRegistry, {
-      description: "Total number of training steps.",
-    })
-    .optional()
-    .default(1000),
+  steps: z.int().gte(100).lte(10000).optional().default(1000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n    URL to zip archive with images of a consistent style. Try to use at least 10 images, although more is better.\n\n    The zip can also contain a text file for each image. The text file should be named:\n    ROOT.txt\n    For example:\n    photo.txt\n\n    This text file can be used to specify the edit instructions for the image pair.\n\n    If no text file is provided, the default_caption will be used.\n\n    If no default_caption is provided, the training will fail.\n    ",
-  }),
+  image_data_url: z.string(),
 });
 
 /**
@@ -2619,27 +1102,10 @@ export const zZImageTrainerOutput = z.object({
  * Input
  */
 export const zZImageTurboTrainerV2Input = z.object({
-  steps: z
-    .int()
-    .gte(10)
-    .lte(40000)
-    .register(z.globalRegistry, {
-      description: "Number of steps to train for",
-    })
-    .optional()
-    .default(2000),
+  steps: z.int().gte(10).lte(40000).optional().default(2000),
   default_caption: z.union([z.string(), z.unknown()]).optional(),
-  learning_rate: z
-    .number()
-    .register(z.globalRegistry, {
-      description: "Learning rate.",
-    })
-    .optional()
-    .default(0.0005),
-  image_data_url: z.string().register(z.globalRegistry, {
-    description:
-      "\n        URL to the input data zip archive.\n\n        The zip should contain pairs of images and corresponding captions.\n\n        The images should be named: ROOT.EXT. For example: 001.jpg\n\n        The corresponding captions should be named: ROOT.txt. For example: 001.txt\n\n        If no text file is provided for an image, the default_caption will be used.\n        ",
-  }),
+  learning_rate: z.number().optional().default(0.0005),
+  image_data_url: z.string(),
 });
 
 /**
@@ -2658,9 +1124,7 @@ export const zPostFalAiErnieImageTrainerBody = zErnieImageTrainerInput;
 export const zPostFalAiErnieImageTrainerResponse = zQueueStatus;
 
 export const zGetFalAiErnieImageTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2671,45 +1135,27 @@ export const zGetFalAiErnieImageTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiErnieImageTrainerRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiErnieImageTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiErnieImageTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiErnieImageTrainerRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiErnieImageTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2736,9 +1182,7 @@ export const zPostFalAiFlux2Klein4bBaseTrainerEditResponse = zQueueStatus;
 
 export const zGetFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2749,44 +1193,25 @@ export const zGetFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdResponse =
 
 export const zPutFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2797,9 +1222,7 @@ export const zGetFalAiFlux2Klein4bBaseTrainerEditRequestsByRequestIdStatusRespon
 
 export const zGetFalAiFlux2Klein4bBaseTrainerRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -2811,44 +1234,25 @@ export const zGetFalAiFlux2Klein4bBaseTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiFlux2Klein4bBaseTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlux2Klein4bBaseTrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlux2Klein4bBaseTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlux2Klein4bBaseTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2875,9 +1279,7 @@ export const zPostFalAiFlux2Klein9bBaseTrainerEditResponse = zQueueStatus;
 
 export const zGetFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2888,44 +1290,25 @@ export const zGetFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdResponse =
 
 export const zPutFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2936,9 +1319,7 @@ export const zGetFalAiFlux2Klein9bBaseTrainerEditRequestsByRequestIdStatusRespon
 
 export const zGetFalAiFlux2Klein9bBaseTrainerRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -2950,44 +1331,25 @@ export const zGetFalAiFlux2Klein9bBaseTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiFlux2Klein9bBaseTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlux2Klein9bBaseTrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlux2Klein9bBaseTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlux2Klein9bBaseTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3018,9 +1380,7 @@ export const zPostFalAiFlux2TrainerV2EditBody = zFlux2TrainerV2EditInput;
 export const zPostFalAiFlux2TrainerV2EditResponse = zQueueStatus;
 
 export const zGetFalAiFlux2TrainerV2EditRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3031,43 +1391,25 @@ export const zGetFalAiFlux2TrainerV2EditRequestsByRequestIdResponse =
 
 export const zPutFalAiFlux2TrainerV2EditRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFlux2TrainerV2EditRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFlux2TrainerV2EditRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFlux2TrainerV2EditRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlux2TrainerV2EditRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3077,9 +1419,7 @@ export const zGetFalAiFlux2TrainerV2EditRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiFlux2TrainerV2RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3089,41 +1429,23 @@ export const zGetFalAiFlux2TrainerV2RequestsByRequestIdResponse =
   zFlux2TrainerV2Output;
 
 export const zPutFalAiFlux2TrainerV2RequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFlux2TrainerV2RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFlux2TrainerV2RequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFlux2TrainerV2RequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiFlux2TrainerV2RequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3140,9 +1462,7 @@ export const zPostFalAiFlux2TrainerEditBody = zFlux2TrainerEditInput;
 export const zPostFalAiFlux2TrainerEditResponse = zQueueStatus;
 
 export const zGetFalAiFlux2TrainerEditRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3152,42 +1472,24 @@ export const zGetFalAiFlux2TrainerEditRequestsByRequestIdResponse =
   zFlux2TrainerEditOutput;
 
 export const zPutFalAiFlux2TrainerEditRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFlux2TrainerEditRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFlux2TrainerEditRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFlux2TrainerEditRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiFlux2TrainerEditRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -3198,9 +1500,7 @@ export const zGetFalAiFlux2TrainerEditRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiFlux2TrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3210,41 +1510,22 @@ export const zGetFalAiFlux2TrainerRequestsByRequestIdResponse =
   zFlux2TrainerOutput;
 
 export const zPutFalAiFlux2TrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFlux2TrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiFlux2TrainerRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiFlux2TrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiFlux2TrainerRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3261,9 +1542,7 @@ export const zPostFalAiFluxKontextTrainerBody = zFluxKontextTrainerInput;
 export const zPostFalAiFluxKontextTrainerResponse = zQueueStatus;
 
 export const zGetFalAiFluxKontextTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3274,43 +1553,25 @@ export const zGetFalAiFluxKontextTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiFluxKontextTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFluxKontextTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFluxKontextTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFluxKontextTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFluxKontextTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3327,9 +1588,7 @@ export const zPostFalAiFluxKreaTrainerBody = zFluxKreaTrainerInput;
 export const zPostFalAiFluxKreaTrainerResponse = zQueueStatus;
 
 export const zGetFalAiFluxKreaTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3339,41 +1598,23 @@ export const zGetFalAiFluxKreaTrainerRequestsByRequestIdResponse =
   zFluxKreaTrainerOutput;
 
 export const zPutFalAiFluxKreaTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFluxKreaTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFluxKreaTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFluxKreaTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiFluxKreaTrainerRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3390,9 +1631,7 @@ export const zPostFalAiFluxLoraFastTrainingBody = zFluxLoraFastTrainingInput;
 export const zPostFalAiFluxLoraFastTrainingResponse = zQueueStatus;
 
 export const zGetFalAiFluxLoraFastTrainingRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3403,43 +1642,25 @@ export const zGetFalAiFluxLoraFastTrainingRequestsByRequestIdResponse =
 
 export const zPutFalAiFluxLoraFastTrainingRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFluxLoraFastTrainingRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFluxLoraFastTrainingRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFluxLoraFastTrainingRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFluxLoraFastTrainingRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3458,9 +1679,7 @@ export const zPostFalAiFluxLoraPortraitTrainerResponse = zQueueStatus;
 
 export const zGetFalAiFluxLoraPortraitTrainerRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -3472,44 +1691,25 @@ export const zGetFalAiFluxLoraPortraitTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiFluxLoraPortraitTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFluxLoraPortraitTrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFluxLoraPortraitTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFluxLoraPortraitTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3528,9 +1728,7 @@ export const zPostFalAiHunyuanVideoLoraTrainingResponse = zQueueStatus;
 
 export const zGetFalAiHunyuanVideoLoraTrainingRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -3541,44 +1739,25 @@ export const zGetFalAiHunyuanVideoLoraTrainingRequestsByRequestIdResponse =
 
 export const zPutFalAiHunyuanVideoLoraTrainingRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiHunyuanVideoLoraTrainingRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiHunyuanVideoLoraTrainingRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiHunyuanVideoLoraTrainingRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3595,9 +1774,7 @@ export const zPostFalAiIdeogramCustomModelsBody = zIdeogramCustomModelsInput;
 export const zPostFalAiIdeogramCustomModelsResponse = zQueueStatus;
 
 export const zGetFalAiIdeogramCustomModelsRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3608,43 +1785,25 @@ export const zGetFalAiIdeogramCustomModelsRequestsByRequestIdResponse =
 
 export const zPutFalAiIdeogramCustomModelsRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiIdeogramCustomModelsRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiIdeogramCustomModelsRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiIdeogramCustomModelsRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiIdeogramCustomModelsRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3661,9 +1820,7 @@ export const zPostFalAiLtxVideoTrainerBody = zLtxVideoTrainerInput;
 export const zPostFalAiLtxVideoTrainerResponse = zQueueStatus;
 
 export const zGetFalAiLtxVideoTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3673,41 +1830,23 @@ export const zGetFalAiLtxVideoTrainerRequestsByRequestIdResponse =
   zLtxVideoTrainerOutput;
 
 export const zPutFalAiLtxVideoTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiLtxVideoTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiLtxVideoTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiLtxVideoTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiLtxVideoTrainerRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3724,9 +1863,7 @@ export const zPostFalAiLtx2VideoTrainerBody = zLtx2VideoTrainerInput;
 export const zPostFalAiLtx2VideoTrainerResponse = zQueueStatus;
 
 export const zGetFalAiLtx2VideoTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3736,42 +1873,24 @@ export const zGetFalAiLtx2VideoTrainerRequestsByRequestIdResponse =
   zLtx2VideoTrainerOutput;
 
 export const zPutFalAiLtx2VideoTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiLtx2VideoTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiLtx2VideoTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiLtx2VideoTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiLtx2VideoTrainerRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -3789,9 +1908,7 @@ export const zPostFalAiLtx23V2vTrainerBody = zLtx23V2vTrainerInput;
 export const zPostFalAiLtx23V2vTrainerResponse = zQueueStatus;
 
 export const zGetFalAiLtx23V2vTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3801,41 +1918,23 @@ export const zGetFalAiLtx23V2vTrainerRequestsByRequestIdResponse =
   zLtx23V2vTrainerOutput;
 
 export const zPutFalAiLtx23V2vTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiLtx23V2vTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiLtx23V2vTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiLtx23V2vTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiLtx23V2vTrainerRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3852,9 +1951,7 @@ export const zPostFalAiLtx23VideoTrainerBody = zLtx23VideoTrainerInput;
 export const zPostFalAiLtx23VideoTrainerResponse = zQueueStatus;
 
 export const zGetFalAiLtx23VideoTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3865,45 +1962,27 @@ export const zGetFalAiLtx23VideoTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiLtx23VideoTrainerRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiLtx23VideoTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiLtx23VideoTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiLtx23VideoTrainerRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiLtx23VideoTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3920,9 +1999,7 @@ export const zPostFalAiPhotaCreateProfileBody = zPhotaCreateProfileInput;
 export const zPostFalAiPhotaCreateProfileResponse = zQueueStatus;
 
 export const zGetFalAiPhotaCreateProfileRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3933,43 +2010,25 @@ export const zGetFalAiPhotaCreateProfileRequestsByRequestIdResponse =
 
 export const zPutFalAiPhotaCreateProfileRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiPhotaCreateProfileRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiPhotaCreateProfileRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiPhotaCreateProfileRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiPhotaCreateProfileRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3994,9 +2053,7 @@ export const zPostFalAiQwenImage2512TrainerV2Body =
 export const zPostFalAiQwenImage2512TrainerV2Response = zQueueStatus;
 
 export const zGetFalAiQwenImage2512TrainerV2RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4007,44 +2064,25 @@ export const zGetFalAiQwenImage2512TrainerV2RequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImage2512TrainerV2RequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwenImage2512TrainerV2RequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwenImage2512TrainerV2RequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImage2512TrainerV2RequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4054,9 +2092,7 @@ export const zGetFalAiQwenImage2512TrainerV2RequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiQwenImage2512TrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4067,43 +2103,25 @@ export const zGetFalAiQwenImage2512TrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImage2512TrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiQwenImage2512TrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiQwenImage2512TrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiQwenImage2512TrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImage2512TrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4122,9 +2140,7 @@ export const zPostFalAiQwenImageEdit2509TrainerResponse = zQueueStatus;
 
 export const zGetFalAiQwenImageEdit2509TrainerRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -4135,44 +2151,25 @@ export const zGetFalAiQwenImageEdit2509TrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImageEdit2509TrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwenImageEdit2509TrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwenImageEdit2509TrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImageEdit2509TrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4191,9 +2188,7 @@ export const zPostFalAiQwenImageEdit2511TrainerResponse = zQueueStatus;
 
 export const zGetFalAiQwenImageEdit2511TrainerRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -4204,44 +2199,25 @@ export const zGetFalAiQwenImageEdit2511TrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImageEdit2511TrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwenImageEdit2511TrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwenImageEdit2511TrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImageEdit2511TrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4260,9 +2236,7 @@ export const zPostFalAiQwenImageEditPlusTrainerResponse = zQueueStatus;
 
 export const zGetFalAiQwenImageEditPlusTrainerRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -4273,44 +2247,25 @@ export const zGetFalAiQwenImageEditPlusTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImageEditPlusTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwenImageEditPlusTrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwenImageEditPlusTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImageEditPlusTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4327,9 +2282,7 @@ export const zPostFalAiQwenImageEditTrainerBody = zQwenImageEditTrainerInput;
 export const zPostFalAiQwenImageEditTrainerResponse = zQueueStatus;
 
 export const zGetFalAiQwenImageEditTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4340,43 +2293,25 @@ export const zGetFalAiQwenImageEditTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImageEditTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiQwenImageEditTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiQwenImageEditTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiQwenImageEditTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImageEditTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4395,9 +2330,7 @@ export const zPostFalAiQwenImageLayeredTrainerResponse = zQueueStatus;
 
 export const zGetFalAiQwenImageLayeredTrainerRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -4409,44 +2342,25 @@ export const zGetFalAiQwenImageLayeredTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImageLayeredTrainerRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiQwenImageLayeredTrainerRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiQwenImageLayeredTrainerRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImageLayeredTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4470,9 +2384,7 @@ export const zPostFalAiQwenImageTrainerV2Body = zQwenImageTrainerV2Input;
 export const zPostFalAiQwenImageTrainerV2Response = zQueueStatus;
 
 export const zGetFalAiQwenImageTrainerV2RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4483,43 +2395,25 @@ export const zGetFalAiQwenImageTrainerV2RequestsByRequestIdResponse =
 
 export const zPutFalAiQwenImageTrainerV2RequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiQwenImageTrainerV2RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiQwenImageTrainerV2RequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiQwenImageTrainerV2RequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiQwenImageTrainerV2RequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4529,9 +2423,7 @@ export const zGetFalAiQwenImageTrainerV2RequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiQwenImageTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4541,42 +2433,24 @@ export const zGetFalAiQwenImageTrainerRequestsByRequestIdResponse =
   zQwenImageTrainerOutput;
 
 export const zPutFalAiQwenImageTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiQwenImageTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiQwenImageTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiQwenImageTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiQwenImageTrainerRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -4594,9 +2468,7 @@ export const zPostFalAiRecraftV3CreateStyleBody = zRecraftV3CreateStyleInput;
 export const zPostFalAiRecraftV3CreateStyleResponse = zQueueStatus;
 
 export const zGetFalAiRecraftV3CreateStyleRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4607,43 +2479,25 @@ export const zGetFalAiRecraftV3CreateStyleRequestsByRequestIdResponse =
 
 export const zPutFalAiRecraftV3CreateStyleRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiRecraftV3CreateStyleRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiRecraftV3CreateStyleRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiRecraftV3CreateStyleRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiRecraftV3CreateStyleRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4660,9 +2514,7 @@ export const zPostFalAiTurboFluxTrainerBody = zTurboFluxTrainerInput;
 export const zPostFalAiTurboFluxTrainerResponse = zQueueStatus;
 
 export const zGetFalAiTurboFluxTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4672,42 +2524,24 @@ export const zGetFalAiTurboFluxTrainerRequestsByRequestIdResponse =
   zTurboFluxTrainerOutput;
 
 export const zPutFalAiTurboFluxTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiTurboFluxTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiTurboFluxTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiTurboFluxTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiTurboFluxTrainerRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -4725,9 +2559,7 @@ export const zPostFalAiWan22ImageTrainerBody = zWan22ImageTrainerInput;
 export const zPostFalAiWan22ImageTrainerResponse = zQueueStatus;
 
 export const zGetFalAiWan22ImageTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4738,45 +2570,27 @@ export const zGetFalAiWan22ImageTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiWan22ImageTrainerRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWan22ImageTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiWan22ImageTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiWan22ImageTrainerRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiWan22ImageTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4793,9 +2607,7 @@ export const zPostFalAiWan22TrainerI2vA14bBody = zWan22TrainerI2vA14bInput;
 export const zPostFalAiWan22TrainerI2vA14bResponse = zQueueStatus;
 
 export const zGetFalAiWan22TrainerI2vA14bRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4806,43 +2618,25 @@ export const zGetFalAiWan22TrainerI2vA14bRequestsByRequestIdResponse =
 
 export const zPutFalAiWan22TrainerI2vA14bRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWan22TrainerI2vA14bRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiWan22TrainerI2vA14bRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiWan22TrainerI2vA14bRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiWan22TrainerI2vA14bRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4859,9 +2653,7 @@ export const zPostFalAiWan22TrainerT2vA14bBody = zWan22TrainerT2vA14bInput;
 export const zPostFalAiWan22TrainerT2vA14bResponse = zQueueStatus;
 
 export const zGetFalAiWan22TrainerT2vA14bRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4872,43 +2664,25 @@ export const zGetFalAiWan22TrainerT2vA14bRequestsByRequestIdResponse =
 
 export const zPutFalAiWan22TrainerT2vA14bRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWan22TrainerT2vA14bRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiWan22TrainerT2vA14bRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiWan22TrainerT2vA14bRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiWan22TrainerT2vA14bRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4932,9 +2706,7 @@ export const zPostFalAiWanTrainerFlf2V720pBody = zWanTrainerFlf2V720pInput;
 export const zPostFalAiWanTrainerFlf2V720pResponse = zQueueStatus;
 
 export const zGetFalAiWanTrainerFlf2V720pRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -4945,43 +2717,25 @@ export const zGetFalAiWanTrainerFlf2V720pRequestsByRequestIdResponse =
 
 export const zPutFalAiWanTrainerFlf2V720pRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWanTrainerFlf2V720pRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiWanTrainerFlf2V720pRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiWanTrainerFlf2V720pRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiWanTrainerFlf2V720pRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -4998,9 +2752,7 @@ export const zPostFalAiWanTrainerI2V720pBody = zWanTrainerI2V720pInput;
 export const zPostFalAiWanTrainerI2V720pResponse = zQueueStatus;
 
 export const zGetFalAiWanTrainerI2V720pRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5011,45 +2763,27 @@ export const zGetFalAiWanTrainerI2V720pRequestsByRequestIdResponse =
 
 export const zPutFalAiWanTrainerI2V720pRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWanTrainerI2V720pRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiWanTrainerI2V720pRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiWanTrainerI2V720pRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiWanTrainerI2V720pRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -5059,9 +2793,7 @@ export const zGetFalAiWanTrainerI2V720pRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiWanTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5070,41 +2802,22 @@ export const zGetFalAiWanTrainerRequestsByRequestIdPath = z.object({
 export const zGetFalAiWanTrainerRequestsByRequestIdResponse = zWanTrainerOutput;
 
 export const zPutFalAiWanTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWanTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiWanTrainerRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiWanTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiWanTrainerRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -5128,9 +2841,7 @@ export const zPostFalAiWanTrainerT2V14bBody = zWanTrainerT2V14bInput;
 export const zPostFalAiWanTrainerT2V14bResponse = zQueueStatus;
 
 export const zGetFalAiWanTrainerT2V14bRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5140,42 +2851,24 @@ export const zGetFalAiWanTrainerT2V14bRequestsByRequestIdResponse =
   zWanTrainerT2V14bOutput;
 
 export const zPutFalAiWanTrainerT2V14bRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWanTrainerT2V14bRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiWanTrainerT2V14bRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiWanTrainerT2V14bRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiWanTrainerT2V14bRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -5186,9 +2879,7 @@ export const zGetFalAiWanTrainerT2V14bRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiWanTrainerT2vRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5198,41 +2889,24 @@ export const zGetFalAiWanTrainerT2vRequestsByRequestIdResponse =
   zWanTrainerT2vOutput;
 
 export const zPutFalAiWanTrainerT2vRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiWanTrainerT2vRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiWanTrainerT2vRequestsByRequestIdCancelResponse = z.object(
+  {
+    success: z.boolean().optional(),
+  },
+);
 
 export const zGetFalAiWanTrainerT2vRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiWanTrainerT2vRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -5249,9 +2923,7 @@ export const zPostFalAiZImageBaseTrainerBody = zZImageBaseTrainerInput;
 export const zPostFalAiZImageBaseTrainerResponse = zQueueStatus;
 
 export const zGetFalAiZImageBaseTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5262,45 +2934,27 @@ export const zGetFalAiZImageBaseTrainerRequestsByRequestIdResponse =
 
 export const zPutFalAiZImageBaseTrainerRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiZImageBaseTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiZImageBaseTrainerRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiZImageBaseTrainerRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiZImageBaseTrainerRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -5317,9 +2971,7 @@ export const zPostFalAiZImageTrainerBody = zZImageTrainerInput;
 export const zPostFalAiZImageTrainerResponse = zQueueStatus;
 
 export const zGetFalAiZImageTrainerRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5329,41 +2981,24 @@ export const zGetFalAiZImageTrainerRequestsByRequestIdResponse =
   zZImageTrainerOutput;
 
 export const zPutFalAiZImageTrainerRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiZImageTrainerRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiZImageTrainerRequestsByRequestIdCancelResponse = z.object(
+  {
+    success: z.boolean().optional(),
+  },
+);
 
 export const zGetFalAiZImageTrainerRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiZImageTrainerRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -5380,9 +3015,7 @@ export const zPostFalAiZImageTurboTrainerV2Body = zZImageTurboTrainerV2Input;
 export const zPostFalAiZImageTurboTrainerV2Response = zQueueStatus;
 
 export const zGetFalAiZImageTurboTrainerV2RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -5393,43 +3026,25 @@ export const zGetFalAiZImageTurboTrainerV2RequestsByRequestIdResponse =
 
 export const zPutFalAiZImageTurboTrainerV2RequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiZImageTurboTrainerV2RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiZImageTurboTrainerV2RequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiZImageTurboTrainerV2RequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiZImageTurboTrainerV2RequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**

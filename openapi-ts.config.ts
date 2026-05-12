@@ -39,7 +39,10 @@ export default buildMergedCategorySpecs().map(({ category, mergedSpec }) => ({
   },
   plugins: [
     { name: "@hey-api/schemas", type: "json" },
-    { name: "zod", metadata: true },
+    // metadata stays off (default): `.register(z.globalRegistry, ...)` calls
+    // would be top-level side effects that block tree-shaking the category.
+    // Descriptions/examples already ship in schemas.gen.ts (JSON Schema).
+    { name: "zod" },
   ],
   parser: {
     filters: {

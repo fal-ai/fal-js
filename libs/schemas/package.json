@@ -18,10 +18,7 @@
     "typescript"
   ],
   "type": "module",
-  "sideEffects": [
-    "**/zod.gen.*",
-    "**/endpoint-schema.*"
-  ],
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.js",
     "./schemas": "./src/schemas.js",

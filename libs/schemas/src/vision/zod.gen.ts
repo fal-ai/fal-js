@@ -13,9 +13,6 @@ export const zArbiterImageImageOutput = z.object({
         z.union([z.number(), z.record(z.string(), z.number())]),
       ),
     )
-    .register(z.globalRegistry, {
-      description: "The values of the measurements.",
-    })
     .optional(),
 });
 
@@ -30,9 +27,6 @@ export const zArbiterImageOutput = z.object({
         z.union([z.number(), z.record(z.string(), z.number())]),
       ),
     )
-    .register(z.globalRegistry, {
-      description: "The values of the measurements.",
-    })
     .optional(),
 });
 
@@ -47,9 +41,6 @@ export const zArbiterImageTextOutput = z.object({
         z.union([z.number(), z.record(z.string(), z.number())]),
       ),
     )
-    .register(z.globalRegistry, {
-      description: "The values of the measurements.",
-    })
     .optional(),
 });
 
@@ -57,15 +48,9 @@ export const zArbiterImageTextOutput = z.object({
  * CompletionUsage
  */
 export const zCompletionUsage = z.object({
-  completion_tokens: z.int().register(z.globalRegistry, {
-    description: "Number of tokens in the completion",
-  }),
-  total_tokens: z.int().register(z.globalRegistry, {
-    description: "Total tokens used",
-  }),
-  prompt_tokens: z.int().register(z.globalRegistry, {
-    description: "Number of tokens in the prompt",
-  }),
+  completion_tokens: z.int(),
+  total_tokens: z.int(),
+  prompt_tokens: z.int(),
 });
 
 /**
@@ -75,135 +60,93 @@ export const zFile = z.object({
   file_name: z.union([z.string(), z.unknown()]).optional(),
   file_size: z.union([z.int(), z.unknown()]).optional(),
   content_type: z.union([z.string(), z.unknown()]).optional(),
-  url: z.string().register(z.globalRegistry, {
-    description: "The URL where the file can be downloaded from.",
-  }),
+  url: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zFlorence2LargeCaptionInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the image to be processed.",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * TextOutput
  */
 export const zFlorence2LargeCaptionOutput = z.object({
-  results: z.string().register(z.globalRegistry, {
-    description: "Results from the model",
-  }),
+  results: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zFlorence2LargeDetailedCaptionInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the image to be processed.",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * TextOutput
  */
 export const zFlorence2LargeDetailedCaptionOutput = z.object({
-  results: z.string().register(z.globalRegistry, {
-    description: "Results from the model",
-  }),
+  results: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zFlorence2LargeMoreDetailedCaptionInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the image to be processed.",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * TextOutput
  */
 export const zFlorence2LargeMoreDetailedCaptionOutput = z.object({
-  results: z.string().register(z.globalRegistry, {
-    description: "Results from the model",
-  }),
+  results: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zFlorence2LargeOcrInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the image to be processed.",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * TextOutput
  */
 export const zFlorence2LargeOcrOutput = z.object({
-  results: z.string().register(z.globalRegistry, {
-    description: "Results from the model",
-  }),
+  results: z.string(),
 });
 
 /**
  * TextOutput
  */
 export const zFlorence2LargeRegionToCategoryOutput = z.object({
-  results: z.string().register(z.globalRegistry, {
-    description: "Results from the model",
-  }),
+  results: z.string(),
 });
 
 /**
  * TextOutput
  */
 export const zFlorence2LargeRegionToDescriptionOutput = z.object({
-  results: z.string().register(z.globalRegistry, {
-    description: "Results from the model",
-  }),
+  results: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zGotOcrV2Input = z.object({
-  input_image_urls: z
-    .array(z.string())
-    .register(z.globalRegistry, {
-      description: "URL of images.",
-    })
-    .optional()
-    .default([]),
-  multi_page: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Use provided images to generate a single output.",
-    })
-    .optional()
-    .default(false),
-  do_format: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Generate the output in formatted mode.",
-    })
-    .optional()
-    .default(false),
+  input_image_urls: z.array(z.string()).optional().default([]),
+  multi_page: z.boolean().optional().default(false),
+  do_format: z.boolean().optional().default(false),
 });
 
 /**
  * ImageChatOutput
  */
 export const zGotOcrV2Output = z.object({
-  outputs: z.array(z.string()).register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  outputs: z.array(z.string()),
 });
 
 /**
@@ -211,20 +154,14 @@ export const zGotOcrV2Output = z.object({
  *
  * Represents an image file.
  */
-export const zImage = z
-  .object({
-    width: z.union([z.int(), z.unknown()]).optional(),
-    file_name: z.union([z.string(), z.unknown()]).optional(),
-    url: z.string().register(z.globalRegistry, {
-      description: "The URL where the file can be downloaded from.",
-    }),
-    height: z.union([z.int(), z.unknown()]).optional(),
-    file_size: z.union([z.int(), z.unknown()]).optional(),
-    content_type: z.union([z.string(), z.unknown()]).optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "Represents an image file.",
-  });
+export const zImage = z.object({
+  width: z.union([z.int(), z.unknown()]).optional(),
+  file_name: z.union([z.string(), z.unknown()]).optional(),
+  url: z.string(),
+  height: z.union([z.int(), z.unknown()]).optional(),
+  file_size: z.union([z.int(), z.unknown()]).optional(),
+  content_type: z.union([z.string(), z.unknown()]).optional(),
+});
 
 /**
  * ImageFile
@@ -235,81 +172,59 @@ export const zImageFile = z.object({
   content_type: z.union([z.string(), z.unknown()]).optional(),
   height: z.union([z.int(), z.unknown()]).optional(),
   width: z.union([z.int(), z.unknown()]).optional(),
-  url: z.string().register(z.globalRegistry, {
-    description: "The URL where the file can be downloaded from.",
-  }),
+  url: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zImageInput = z.object({
-  hypothesis: z.string().register(z.globalRegistry, {
-    description: "The image to use for the measurement.",
-  }),
+  hypothesis: z.string(),
 });
 
 /**
  * ImageMultiMeasurementInput
  */
 export const zArbiterImageInput = z.object({
-  inputs: z.array(zImageInput).register(z.globalRegistry, {
-    description: "The inputs to use for the measurement.",
-  }),
-  measurements: z
-    .array(z.enum(["arniqa", "clip_iqa", "musiq", "nima", "lapvar"]))
-    .register(z.globalRegistry, {
-      description: "The measurements to use for the measurement.",
-    }),
+  inputs: z.array(zImageInput),
+  measurements: z.array(
+    z.enum(["arniqa", "clip_iqa", "musiq", "nima", "lapvar"]),
+  ),
 });
 
 /**
  * NSFWImageDetectionInput
  */
 export const zImageutilsNsfwInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "Input image url.",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * NSFWImageDetectionOutput
  */
 export const zImageutilsNsfwOutput = z.object({
-  nsfw_probability: z.number().register(z.globalRegistry, {
-    description: "The probability of the image being NSFW.",
-  }),
+  nsfw_probability: z.number(),
 });
 
 /**
  * VisionInput
  */
 export const zIsaac01Input = z.object({
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the image",
-  }),
+  prompt: z.string(),
   response_style: z
     .enum(["text", "box", "point", "polygon"])
-    .register(z.globalRegistry, {
-      description:
-        "\nResponse style to be used for the image.\n\n- text: Model will output text. Good for descriptions and captioning.\n- box: Model will output a combination of text and bounding boxes. Good for\nlocalization.\n- point: Model will output a combination of text and points. Good for counting many\nobjects.\n- polygon: Model will output a combination of text and polygons. Good for granular\nsegmentation.\n",
-    })
     .optional()
     .default("text"),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "Image URL to be processed",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * Schema referenced but not defined by fal.ai (missing from source OpenAPI spec)
  */
-export const zIsaac01OpenaiV1ChatCompletionsInput = z
-  .record(z.string(), z.unknown())
-  .register(z.globalRegistry, {
-    description:
-      "Schema referenced but not defined by fal.ai (missing from source OpenAPI spec)",
-  });
+export const zIsaac01OpenaiV1ChatCompletionsInput = z.record(
+  z.string(),
+  z.unknown(),
+);
 
 export const zIsaac01OpenaiV1ChatCompletionsOutput = z.unknown();
 
@@ -319,89 +234,42 @@ export const zIsaac01OpenaiV1ChatCompletionsOutput = z.unknown();
 export const zIsaac01Output = z.object({
   usage: z.union([zCompletionUsage, z.unknown()]).optional(),
   error: z.union([z.string(), z.unknown()]).optional(),
-  partial: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether the output is partial",
-    })
-    .optional()
-    .default(false),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  partial: z.boolean().optional().default(false),
+  output: z.string(),
 });
 
 /**
  * LLavaInput
  */
 export const zLlavaNextInput = z.object({
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the image",
-  }),
-  top_p: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Top P for sampling",
-    })
-    .optional()
-    .default(1),
-  temperature: z
-    .number()
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Temperature for sampling",
-    })
-    .optional()
-    .default(0.2),
-  max_tokens: z
-    .int()
-    .register(z.globalRegistry, {
-      description: "Maximum number of tokens to generate",
-    })
-    .optional()
-    .default(64),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  prompt: z.string(),
+  top_p: z.number().gte(0).lte(1).optional().default(1),
+  temperature: z.number().lte(1).optional().default(0.2),
+  max_tokens: z.int().optional().default(64),
+  image_url: z.string(),
 });
 
 /**
  * LLavaOutput
  */
 export const zLlavaNextOutput = z.object({
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
-  partial: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether the output is partial",
-    })
-    .optional()
-    .default(false),
+  output: z.string(),
+  partial: z.boolean().optional().default(false),
 });
 
 /**
  * MoondreamInput
  */
 export const zMoondream2Input = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * MoondreamObjectInput
  */
 export const zMoondream2ObjectDetectionInput = z.object({
-  object: z.string().register(z.globalRegistry, {
-    description: "Object to be detected in the image",
-  }),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  object: z.string(),
+  image_url: z.string(),
 });
 
 /**
@@ -409,32 +277,22 @@ export const zMoondream2ObjectDetectionInput = z.object({
  */
 export const zMoondream2ObjectDetectionOutput = z.object({
   image: zImage,
-  objects: z
-    .array(z.record(z.string(), z.unknown()))
-    .register(z.globalRegistry, {
-      description: "Objects detected in the image",
-    }),
+  objects: z.array(z.record(z.string(), z.unknown())),
 });
 
 /**
  * MoondreamOutput
  */
 export const zMoondream2Output = z.object({
-  output: z.string().register(z.globalRegistry, {
-    description: "Output for the given query",
-  }),
+  output: z.string(),
 });
 
 /**
  * MoondreamObjectInput
  */
 export const zMoondream2PointObjectDetectionInput = z.object({
-  object: z.string().register(z.globalRegistry, {
-    description: "Object to be detected in the image",
-  }),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  object: z.string(),
+  image_url: z.string(),
 });
 
 /**
@@ -442,108 +300,60 @@ export const zMoondream2PointObjectDetectionInput = z.object({
  */
 export const zMoondream2PointObjectDetectionOutput = z.object({
   image: zImage,
-  objects: z
-    .array(z.record(z.string(), z.unknown()))
-    .register(z.globalRegistry, {
-      description: "Objects detected in the image",
-    }),
+  objects: z.array(z.record(z.string(), z.unknown())),
 });
 
 /**
  * MoondreamQueryInput
  */
 export const zMoondream2VisualQueryInput = z.object({
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Query to be asked in the image",
-  }),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  prompt: z.string(),
+  image_url: z.string(),
 });
 
 /**
  * MoondreamOutput
  */
 export const zMoondream2VisualQueryOutput = z.object({
-  output: z.string().register(z.globalRegistry, {
-    description: "Output for the given query",
-  }),
+  output: z.string(),
 });
 
 /**
  * MoondreamCaptionInput
  */
 export const zMoondream3PreviewCaptionInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  image_url: z.string(),
   top_p: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
   temperature: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
-  length: z
-    .enum(["short", "normal", "long"])
-    .register(z.globalRegistry, {
-      description: "Length of the caption to generate",
-    })
-    .optional()
-    .default("normal"),
+  length: z.enum(["short", "normal", "long"]).optional().default("normal"),
 });
 
 /**
  * MoondreamDetectInput
  */
 export const zMoondream3PreviewDetectInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
-  preview: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to preview the output",
-    })
-    .optional()
-    .default(false),
-  prompt: z.string().min(1).register(z.globalRegistry, {
-    description: "Object to be detected in the image",
-  }),
+  image_url: z.string(),
+  preview: z.boolean().optional().default(false),
+  prompt: z.string().min(1),
 });
 
 /**
  * MoondreamPointInput
  */
 export const zMoondream3PreviewPointInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
-  preview: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to preview the output",
-    })
-    .optional()
-    .default(false),
-  prompt: z.string().min(1).register(z.globalRegistry, {
-    description: "Object to be located in the image",
-  }),
+  image_url: z.string(),
+  preview: z.boolean().optional().default(false),
+  prompt: z.string().min(1),
 });
 
 /**
  * MoondreamQueryInput
  */
 export const zMoondream3PreviewQueryInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
+  image_url: z.string(),
   top_p: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
-  reasoning: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to include detailed reasoning behind the answer",
-    })
-    .optional()
-    .default(true),
-  prompt: z.string().min(1).register(z.globalRegistry, {
-    description: "Query to be asked in the image",
-  }),
+  reasoning: z.boolean().optional().default(true),
+  prompt: z.string().min(1),
   temperature: z.union([z.number().gte(0).lte(1), z.unknown()]).optional(),
 });
 
@@ -551,108 +361,42 @@ export const zMoondream3PreviewQueryInput = z.object({
  * BatchedMoondreamOutput
  */
 export const zMoondreamBatchedOutput = z.object({
-  partial: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether the output is partial",
-    })
-    .optional()
-    .default(false),
+  partial: z.boolean().optional().default(false),
   filenames: z.union([z.array(z.string()), z.unknown()]).nullish(),
-  outputs: z.array(z.string()).register(z.globalRegistry, {
-    description: "List of generated outputs",
-  }),
-  timings: z.record(z.string(), z.number()).register(z.globalRegistry, {
-    description: "Timings for different parts of the process",
-  }),
+  outputs: z.array(z.string()),
+  timings: z.record(z.string(), z.number()),
 });
 
 /**
  * MoondreamInputParam
  */
 export const zMoondreamInputParam = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to be processed",
-  }),
-  prompt: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "Prompt to be used for the image",
-    })
-    .optional()
-    .default("Describe this image."),
+  image_url: z.string(),
+  prompt: z.string().optional().default("Describe this image."),
 });
 
 /**
  * BatchedMoondreamInput
  */
 export const zMoondreamBatchedInput = z.object({
-  max_tokens: z
-    .int()
-    .gte(32)
-    .lte(1024)
-    .register(z.globalRegistry, {
-      description: "Maximum number of new tokens to generate",
-    })
-    .optional()
-    .default(64),
-  top_p: z
-    .number()
-    .gte(0)
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Top P for sampling",
-    })
-    .optional()
-    .default(1),
-  inputs: z.array(zMoondreamInputParam).register(z.globalRegistry, {
-    description: "List of input prompts and image URLs",
-  }),
-  temperature: z
-    .number()
-    .lte(1)
-    .register(z.globalRegistry, {
-      description: "Temperature for sampling",
-    })
-    .optional()
-    .default(0.2),
+  max_tokens: z.int().gte(32).lte(1024).optional().default(64),
+  top_p: z.number().gte(0).lte(1).optional().default(1),
+  inputs: z.array(zMoondreamInputParam),
+  temperature: z.number().lte(1).optional().default(0.2),
   model_id: z
     .enum(["vikhyatk/moondream2", "fal-ai/moondream2-docci"])
-    .register(z.globalRegistry, {
-      description: "Model ID to use for inference",
-    })
     .optional()
     .default("vikhyatk/moondream2"),
-  repetition_penalty: z
-    .number()
-    .gte(1)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description: "Repetition penalty for sampling",
-    })
-    .optional()
-    .default(1),
+  repetition_penalty: z.number().gte(1).lte(2).optional().default(1),
 });
 
 /**
  * BatchQueryInput
  */
 export const zMoondreamNextBatchInput = z.object({
-  images_data_url: z.string().register(z.globalRegistry, {
-    description: "List of image URLs to be processed (maximum 32 images)",
-  }),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Single prompt to apply to all images",
-  }),
-  max_tokens: z
-    .int()
-    .gte(1)
-    .lte(512)
-    .register(z.globalRegistry, {
-      description: "Maximum number of tokens to generate",
-    })
-    .optional()
-    .default(64),
+  images_data_url: z.string(),
+  prompt: z.string(),
+  max_tokens: z.int().gte(1).lte(512).optional().default(64),
 });
 
 /**
@@ -660,78 +404,42 @@ export const zMoondreamNextBatchInput = z.object({
  */
 export const zMoondreamNextBatchOutput = z.object({
   captions_file: zFile,
-  outputs: z.array(z.string()).register(z.globalRegistry, {
-    description: "List of generated captions",
-  }),
+  outputs: z.array(z.string()),
 });
 
 /**
  * QueryInput
  */
 export const zMoondreamNextInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "Image URL to be processed",
-  }),
-  task_type: z
-    .enum(["caption", "query"])
-    .register(z.globalRegistry, {
-      description: "Type of task to perform",
-    })
-    .optional()
-    .default("caption"),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt for query task",
-  }),
-  max_tokens: z
-    .int()
-    .gte(1)
-    .lte(512)
-    .register(z.globalRegistry, {
-      description: "Maximum number of tokens to generate",
-    })
-    .optional()
-    .default(64),
+  image_url: z.string(),
+  task_type: z.enum(["caption", "query"]).optional().default("caption"),
+  prompt: z.string(),
+  max_tokens: z.int().gte(1).lte(512).optional().default(64),
 });
 
 /**
  * MoonDreamOutput
  */
 export const zMoondreamNextOutput = z.object({
-  output: z.string().register(z.globalRegistry, {
-    description: "Response from the model",
-  }),
+  output: z.string(),
 });
 
 /**
  * Object
  */
 export const zObject = z.object({
-  x_max: z.number().register(z.globalRegistry, {
-    description:
-      "Right boundary of detection box in normalized format (0 to 1)",
-  }),
-  y_max: z.number().register(z.globalRegistry, {
-    description:
-      "Bottom boundary of detection box in normalized format (0 to 1)",
-  }),
-  x_min: z.number().register(z.globalRegistry, {
-    description: "Left boundary of detection box in normalized format (0 to 1)",
-  }),
-  y_min: z.number().register(z.globalRegistry, {
-    description: "Top boundary of detection box in normalized format (0 to 1)",
-  }),
+  x_max: z.number(),
+  y_max: z.number(),
+  x_min: z.number(),
+  y_min: z.number(),
 });
 
 /**
  * Point
  */
 export const zPoint = z.object({
-  y: z.number().register(z.globalRegistry, {
-    description: "Y coordinate of the point in normalized format (0 to 1)",
-  }),
-  x: z.number().register(z.globalRegistry, {
-    description: "X coordinate of the point in normalized format (0 to 1)",
-  }),
+  y: z.number(),
+  x: z.number(),
 });
 
 /**
@@ -744,98 +452,46 @@ export const zPromptTokensDetails = z.object({
 
 export const zQueueStatus = z.object({
   status: z.enum(["IN_QUEUE", "IN_PROGRESS", "COMPLETED"]),
-  request_id: z.string().register(z.globalRegistry, {
-    description: "The request id.",
-  }),
-  response_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The response url.",
-    })
-    .optional(),
-  status_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The status url.",
-    })
-    .optional(),
-  cancel_url: z
-    .string()
-    .register(z.globalRegistry, {
-      description: "The cancel url.",
-    })
-    .optional(),
-  logs: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The logs.",
-    })
-    .optional(),
-  metrics: z
-    .record(z.string(), z.unknown())
-    .register(z.globalRegistry, {
-      description: "The metrics.",
-    })
-    .optional(),
-  queue_position: z
-    .int()
-    .register(z.globalRegistry, {
-      description: "The queue position.",
-    })
-    .optional(),
+  request_id: z.string(),
+  response_url: z.string().optional(),
+  status_url: z.string().optional(),
+  cancel_url: z.string().optional(),
+  logs: z.record(z.string(), z.unknown()).optional(),
+  metrics: z.record(z.string(), z.unknown()).optional(),
+  queue_position: z.int().optional(),
 });
 
 /**
  * ReferenceImageInput
  */
 export const zReferenceImageInput = z.object({
-  hypothesis: z.string().register(z.globalRegistry, {
-    description: "The hypothesis image to use for the measurement.",
-  }),
-  reference: z.string().register(z.globalRegistry, {
-    description: "The image to use for the measurement.",
-  }),
+  hypothesis: z.string(),
+  reference: z.string(),
 });
 
 /**
  * ImageReferenceMeasurementInput
  */
 export const zArbiterImageImageInput = z.object({
-  inputs: z.array(zReferenceImageInput).register(z.globalRegistry, {
-    description: "The inputs to use for the measurement.",
-  }),
-  measurements: z
-    .array(z.enum(["dists", "mse", "lpips", "sdi", "ssim"]))
-    .register(z.globalRegistry, {
-      description: "The measurements to use for the measurement.",
-    }),
+  inputs: z.array(zReferenceImageInput),
+  measurements: z.array(z.enum(["dists", "mse", "lpips", "sdi", "ssim"])),
 });
 
 /**
  * Region
  */
 export const zRegion = z.object({
-  y1: z.int().gte(0).lte(999).register(z.globalRegistry, {
-    description: "Y-coordinate of the top-left corner",
-  }),
-  x1: z.int().gte(0).lte(999).register(z.globalRegistry, {
-    description: "X-coordinate of the top-left corner",
-  }),
-  y2: z.int().gte(0).lte(999).register(z.globalRegistry, {
-    description: "Y-coordinate of the bottom-right corner",
-  }),
-  x2: z.int().gte(0).lte(999).register(z.globalRegistry, {
-    description: "X-coordinate of the bottom-right corner",
-  }),
+  y1: z.int().gte(0).lte(999),
+  x1: z.int().gte(0).lte(999),
+  y2: z.int().gte(0).lte(999),
+  x2: z.int().gte(0).lte(999),
 });
 
 /**
  * ImageWithUserCoordinatesInput
  */
 export const zFlorence2LargeRegionToCategoryInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the image to be processed.",
-  }),
+  image_url: z.string(),
   region: zRegion,
 });
 
@@ -843,9 +499,7 @@ export const zFlorence2LargeRegionToCategoryInput = z.object({
  * ImageWithUserCoordinatesInput
  */
 export const zFlorence2LargeRegionToDescriptionInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the image to be processed.",
-  }),
+  image_url: z.string(),
   region: zRegion,
 });
 
@@ -853,34 +507,12 @@ export const zFlorence2LargeRegionToDescriptionInput = z.object({
  * VisionInput
  */
 export const zRouterVisionInput = z.object({
-  image_urls: z.array(z.string()).register(z.globalRegistry, {
-    description: "List of image URLs to be processed",
-  }),
-  temperature: z
-    .number()
-    .gte(0)
-    .lte(2)
-    .register(z.globalRegistry, {
-      description:
-        "This setting influences the variety in the model's responses. Lower values lead to more predictable and typical responses, while higher values encourage more diverse and less common responses. At 0, the model always gives the same response for a given input.",
-    })
-    .optional()
-    .default(1),
+  image_urls: z.array(z.string()),
+  temperature: z.number().gte(0).lte(2).optional().default(1),
   max_tokens: z.union([z.int().gte(1), z.unknown()]).optional(),
-  reasoning: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Should reasoning be the part of the final answer.",
-    })
-    .optional()
-    .default(false),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the image",
-  }),
-  model: z.string().register(z.globalRegistry, {
-    description:
-      "Name of the model to use. Charged based on actual token usage.",
-  }),
+  reasoning: z.boolean().optional().default(false),
+  prompt: z.string(),
+  model: z.string(),
   system_prompt: z.union([z.string(), z.unknown()]).optional(),
 });
 
@@ -888,24 +520,16 @@ export const zRouterVisionInput = z.object({
  * ImageInput
  */
 export const zSa2Va4bImageInput = z.object({
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the chat completion",
-  }),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "Url for the Input image.",
-  }),
+  prompt: z.string(),
+  image_url: z.string(),
 });
 
 /**
  * ImageChatOutput
  */
 export const zSa2Va4bImageOutput = z.object({
-  masks: z.array(zImage).register(z.globalRegistry, {
-    description: "Dictionary of label: mask image",
-  }),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  masks: z.array(zImage),
+  output: z.string(),
 });
 
 /**
@@ -915,48 +539,32 @@ export const zSa2Va4bVideoInput = z.object({
   num_frames_to_sample: z
     .union([z.int().gte(5).lte(100), z.unknown()])
     .optional(),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the chat completion",
-  }),
-  video_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the input video.",
-  }),
+  prompt: z.string(),
+  video_url: z.string(),
 });
 
 /**
  * VideoChatOutput
  */
 export const zSa2Va4bVideoOutput = z.object({
-  masks: z.array(zFile).register(z.globalRegistry, {
-    description: "Dictionary of label: mask video",
-  }),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  masks: z.array(zFile),
+  output: z.string(),
 });
 
 /**
  * ImageInput
  */
 export const zSa2Va8bImageInput = z.object({
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the chat completion",
-  }),
-  image_url: z.string().register(z.globalRegistry, {
-    description: "Url for the Input image.",
-  }),
+  prompt: z.string(),
+  image_url: z.string(),
 });
 
 /**
  * ImageChatOutput
  */
 export const zSa2Va8bImageOutput = z.object({
-  masks: z.array(zImage).register(z.globalRegistry, {
-    description: "Dictionary of label: mask image",
-  }),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  masks: z.array(zImage),
+  output: z.string(),
 });
 
 /**
@@ -966,87 +574,57 @@ export const zSa2Va8bVideoInput = z.object({
   num_frames_to_sample: z
     .union([z.int().gte(5).lte(100), z.unknown()])
     .optional(),
-  prompt: z.string().register(z.globalRegistry, {
-    description: "Prompt to be used for the chat completion",
-  }),
-  video_url: z.string().register(z.globalRegistry, {
-    description: "The URL of the input video.",
-  }),
+  prompt: z.string(),
+  video_url: z.string(),
 });
 
 /**
  * VideoChatOutput
  */
 export const zSa2Va8bVideoOutput = z.object({
-  masks: z.array(zFile).register(z.globalRegistry, {
-    description: "Dictionary of label: mask video",
-  }),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  masks: z.array(zFile),
+  output: z.string(),
 });
 
 /**
  * SAM3EmbeddingInput
  */
 export const zSam3ImageEmbedInput = z.object({
-  image_url: z.string().register(z.globalRegistry, {
-    description: "URL of the image to embed.",
-  }),
+  image_url: z.string(),
 });
 
 /**
  * SAM3EmbeddingOutput
  */
 export const zSam3ImageEmbedOutput = z.object({
-  embedding_b64: z.string().register(z.globalRegistry, {
-    description: "Embedding of the image",
-  }),
+  embedding_b64: z.string(),
 });
 
 /**
  * SemanticImageInput
  */
 export const zSemanticImageInput = z.object({
-  hypothesis: z.string().register(z.globalRegistry, {
-    description: "The hypothesis image to use for the measurement.",
-  }),
-  reference: z.string().register(z.globalRegistry, {
-    description: "The text reference to use for the measurement.",
-  }),
+  hypothesis: z.string(),
+  reference: z.string(),
 });
 
 /**
  * SemanticImageMeasurementInput
  */
 export const zArbiterImageTextInput = z.object({
-  inputs: z.array(zSemanticImageInput).register(z.globalRegistry, {
-    description: "The inputs to use for the measurement.",
-  }),
-  measurements: z.array(z.string()).register(z.globalRegistry, {
-    description: "The measurements to use for the measurement.",
-  }),
+  inputs: z.array(zSemanticImageInput),
+  measurements: z.array(z.string()),
 });
 
 /**
  * UsageInfo
  */
 export const zUsageInfo = z.object({
-  prefill_time_ms: z.number().register(z.globalRegistry, {
-    description: "Time taken for prefill in milliseconds",
-  }),
-  input_tokens: z.int().register(z.globalRegistry, {
-    description: "Number of input tokens processed",
-  }),
-  output_tokens: z.int().register(z.globalRegistry, {
-    description: "Number of output tokens generated",
-  }),
-  ttft_ms: z.number().register(z.globalRegistry, {
-    description: "Time to first token in milliseconds",
-  }),
-  decode_time_ms: z.number().register(z.globalRegistry, {
-    description: "Time taken for decoding in milliseconds",
-  }),
+  prefill_time_ms: z.number(),
+  input_tokens: z.int(),
+  output_tokens: z.int(),
+  ttft_ms: z.number(),
+  decode_time_ms: z.number(),
 });
 
 /**
@@ -1054,12 +632,8 @@ export const zUsageInfo = z.object({
  */
 export const zMoondream3PreviewCaptionOutput = z.object({
   usage_info: zUsageInfo,
-  finish_reason: z.string().register(z.globalRegistry, {
-    description: "Reason for finishing the output generation",
-  }),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated caption for the image",
-  }),
+  finish_reason: z.string(),
+  output: z.string(),
 });
 
 /**
@@ -1067,13 +641,9 @@ export const zMoondream3PreviewCaptionOutput = z.object({
  */
 export const zMoondream3PreviewDetectOutput = z.object({
   usage_info: zUsageInfo,
-  finish_reason: z.string().register(z.globalRegistry, {
-    description: "Reason for finishing the output generation",
-  }),
+  finish_reason: z.string(),
   image: z.union([zImageFile, z.unknown()]).optional(),
-  objects: z.array(zObject).register(z.globalRegistry, {
-    description: "List of detected objects with their bounding boxes",
-  }),
+  objects: z.array(zObject),
 });
 
 /**
@@ -1081,12 +651,8 @@ export const zMoondream3PreviewDetectOutput = z.object({
  */
 export const zMoondream3PreviewPointOutput = z.object({
   usage_info: zUsageInfo,
-  finish_reason: z.string().register(z.globalRegistry, {
-    description: "Reason for finishing the output generation",
-  }),
-  points: z.array(zPoint).register(z.globalRegistry, {
-    description: "List of points marking the detected objects",
-  }),
+  finish_reason: z.string(),
+  points: z.array(zPoint),
   image: z.union([zImageFile, z.unknown()]).optional(),
 });
 
@@ -1095,13 +661,9 @@ export const zMoondream3PreviewPointOutput = z.object({
  */
 export const zMoondream3PreviewQueryOutput = z.object({
   usage_info: zUsageInfo,
-  finish_reason: z.string().register(z.globalRegistry, {
-    description: "Reason for finishing the output generation",
-  }),
+  finish_reason: z.string(),
   reasoning: z.union([z.string(), z.unknown()]).optional(),
-  output: z.string().register(z.globalRegistry, {
-    description: "Answer to the query about the image",
-  }),
+  output: z.string(),
 });
 
 /**
@@ -1122,56 +684,37 @@ export const zUsageInfoType2 = z.object({
  */
 export const zRouterVisionOutput = z.object({
   usage: z.union([zUsageInfoType2, z.unknown()]),
-  output: z.string().register(z.globalRegistry, {
-    description: "Generated output",
-  }),
+  output: z.string(),
 });
 
 /**
  * VideoUnderstandingInput
  */
 export const zVideoUnderstandingInput = z.object({
-  prompt: z.string().min(1).max(5000).register(z.globalRegistry, {
-    description: "The question or prompt about the video content.",
-  }),
-  video_url: z.string().register(z.globalRegistry, {
-    description: "URL of the video to analyze",
-  }),
-  detailed_analysis: z
-    .boolean()
-    .register(z.globalRegistry, {
-      description: "Whether to request a more detailed analysis of the video",
-    })
-    .optional()
-    .default(false),
+  prompt: z.string().min(1).max(5000),
+  video_url: z.string(),
+  detailed_analysis: z.boolean().optional().default(false),
 });
 
 /**
  * VideoUnderstandingOutput
  */
 export const zVideoUnderstandingOutput = z.object({
-  output: z.string().register(z.globalRegistry, {
-    description: "The analysis of the video content based on the prompt",
-  }),
+  output: z.string(),
 });
 
 /**
  * NSFWInput
  */
 export const zXAilabNsfwInput = z.object({
-  image_urls: z.array(z.string()).register(z.globalRegistry, {
-    description:
-      "List of image URLs to check. If more than 10 images are provided, only the first 10 will be checked.",
-  }),
+  image_urls: z.array(z.string()),
 });
 
 /**
  * NSFWOutput
  */
 export const zXAilabNsfwOutput = z.object({
-  has_nsfw_concepts: z.array(z.boolean()).register(z.globalRegistry, {
-    description: "List of booleans indicating if the image has an NSFW concept",
-  }),
+  has_nsfw_concepts: z.array(z.boolean()),
 });
 
 export const zPostFalAiArbiterImageBody = zArbiterImageInput;
@@ -1189,9 +732,7 @@ export const zPostFalAiArbiterImageImageBody = zArbiterImageImageInput;
 export const zPostFalAiArbiterImageImageResponse = zQueueStatus;
 
 export const zGetFalAiArbiterImageImageRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1202,45 +743,27 @@ export const zGetFalAiArbiterImageImageRequestsByRequestIdResponse =
 
 export const zPutFalAiArbiterImageImageRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiArbiterImageImageRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiArbiterImageImageRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiArbiterImageImageRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiArbiterImageImageRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1250,9 +773,7 @@ export const zGetFalAiArbiterImageImageRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiArbiterImageRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1262,41 +783,22 @@ export const zGetFalAiArbiterImageRequestsByRequestIdResponse =
   zArbiterImageOutput;
 
 export const zPutFalAiArbiterImageRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiArbiterImageRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiArbiterImageRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiArbiterImageRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiArbiterImageRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -1313,9 +815,7 @@ export const zPostFalAiArbiterImageTextBody = zArbiterImageTextInput;
 export const zPostFalAiArbiterImageTextResponse = zQueueStatus;
 
 export const zGetFalAiArbiterImageTextRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1325,42 +825,24 @@ export const zGetFalAiArbiterImageTextRequestsByRequestIdResponse =
   zArbiterImageTextOutput;
 
 export const zPutFalAiArbiterImageTextRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiArbiterImageTextRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiArbiterImageTextRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiArbiterImageTextRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiArbiterImageTextRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -1378,9 +860,7 @@ export const zPostFalAiFlorence2LargeCaptionBody = zFlorence2LargeCaptionInput;
 export const zPostFalAiFlorence2LargeCaptionResponse = zQueueStatus;
 
 export const zGetFalAiFlorence2LargeCaptionRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1391,43 +871,25 @@ export const zGetFalAiFlorence2LargeCaptionRequestsByRequestIdResponse =
 
 export const zPutFalAiFlorence2LargeCaptionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFlorence2LargeCaptionRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFlorence2LargeCaptionRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFlorence2LargeCaptionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlorence2LargeCaptionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1446,9 +908,7 @@ export const zPostFalAiFlorence2LargeDetailedCaptionResponse = zQueueStatus;
 
 export const zGetFalAiFlorence2LargeDetailedCaptionRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -1459,44 +919,25 @@ export const zGetFalAiFlorence2LargeDetailedCaptionRequestsByRequestIdResponse =
 
 export const zPutFalAiFlorence2LargeDetailedCaptionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlorence2LargeDetailedCaptionRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlorence2LargeDetailedCaptionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlorence2LargeDetailedCaptionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1515,9 +956,7 @@ export const zPostFalAiFlorence2LargeMoreDetailedCaptionResponse = zQueueStatus;
 
 export const zGetFalAiFlorence2LargeMoreDetailedCaptionRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -1528,44 +967,25 @@ export const zGetFalAiFlorence2LargeMoreDetailedCaptionRequestsByRequestIdRespon
 
 export const zPutFalAiFlorence2LargeMoreDetailedCaptionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlorence2LargeMoreDetailedCaptionRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlorence2LargeMoreDetailedCaptionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlorence2LargeMoreDetailedCaptionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1582,9 +1002,7 @@ export const zPostFalAiFlorence2LargeOcrBody = zFlorence2LargeOcrInput;
 export const zPostFalAiFlorence2LargeOcrResponse = zQueueStatus;
 
 export const zGetFalAiFlorence2LargeOcrRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1595,45 +1013,27 @@ export const zGetFalAiFlorence2LargeOcrRequestsByRequestIdResponse =
 
 export const zPutFalAiFlorence2LargeOcrRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiFlorence2LargeOcrRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiFlorence2LargeOcrRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiFlorence2LargeOcrRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetFalAiFlorence2LargeOcrRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1652,9 +1052,7 @@ export const zPostFalAiFlorence2LargeRegionToCategoryResponse = zQueueStatus;
 
 export const zGetFalAiFlorence2LargeRegionToCategoryRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -1665,44 +1063,25 @@ export const zGetFalAiFlorence2LargeRegionToCategoryRequestsByRequestIdResponse 
 
 export const zPutFalAiFlorence2LargeRegionToCategoryRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlorence2LargeRegionToCategoryRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlorence2LargeRegionToCategoryRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlorence2LargeRegionToCategoryRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1721,9 +1100,7 @@ export const zPostFalAiFlorence2LargeRegionToDescriptionResponse = zQueueStatus;
 
 export const zGetFalAiFlorence2LargeRegionToDescriptionRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -1734,44 +1111,25 @@ export const zGetFalAiFlorence2LargeRegionToDescriptionRequestsByRequestIdRespon
 
 export const zPutFalAiFlorence2LargeRegionToDescriptionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiFlorence2LargeRegionToDescriptionRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiFlorence2LargeRegionToDescriptionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiFlorence2LargeRegionToDescriptionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -1788,9 +1146,7 @@ export const zPostFalAiGotOcrV2Body = zGotOcrV2Input;
 export const zPostFalAiGotOcrV2Response = zQueueStatus;
 
 export const zGetFalAiGotOcrV2RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1799,41 +1155,22 @@ export const zGetFalAiGotOcrV2RequestsByRequestIdPath = z.object({
 export const zGetFalAiGotOcrV2RequestsByRequestIdResponse = zGotOcrV2Output;
 
 export const zPutFalAiGotOcrV2RequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiGotOcrV2RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiGotOcrV2RequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiGotOcrV2RequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiGotOcrV2RequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -1849,9 +1186,7 @@ export const zPostFalAiImageutilsNsfwBody = zImageutilsNsfwInput;
 export const zPostFalAiImageutilsNsfwResponse = zQueueStatus;
 
 export const zGetFalAiImageutilsNsfwRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1861,41 +1196,23 @@ export const zGetFalAiImageutilsNsfwRequestsByRequestIdResponse =
   zImageutilsNsfwOutput;
 
 export const zPutFalAiImageutilsNsfwRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiImageutilsNsfwRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiImageutilsNsfwRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiImageutilsNsfwRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiImageutilsNsfwRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -1912,9 +1229,7 @@ export const zPostFalAiLlavaNextBody = zLlavaNextInput;
 export const zPostFalAiLlavaNextResponse = zQueueStatus;
 
 export const zGetFalAiLlavaNextRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1923,41 +1238,22 @@ export const zGetFalAiLlavaNextRequestsByRequestIdPath = z.object({
 export const zGetFalAiLlavaNextRequestsByRequestIdResponse = zLlavaNextOutput;
 
 export const zPutFalAiLlavaNextRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiLlavaNextRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiLlavaNextRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiLlavaNextRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiLlavaNextRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -1980,9 +1276,7 @@ export const zPostFalAiMoondreamNextBatchBody = zMoondreamNextBatchInput;
 export const zPostFalAiMoondreamNextBatchResponse = zQueueStatus;
 
 export const zGetFalAiMoondreamNextBatchRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -1993,43 +1287,25 @@ export const zGetFalAiMoondreamNextBatchRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondreamNextBatchRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMoondreamNextBatchRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMoondreamNextBatchRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMoondreamNextBatchRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondreamNextBatchRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2039,9 +1315,7 @@ export const zGetFalAiMoondreamNextBatchRequestsByRequestIdStatusResponse =
   zQueueStatus;
 
 export const zGetFalAiMoondreamNextRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2051,41 +1325,24 @@ export const zGetFalAiMoondreamNextRequestsByRequestIdResponse =
   zMoondreamNextOutput;
 
 export const zPutFalAiMoondreamNextRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMoondreamNextRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiMoondreamNextRequestsByRequestIdCancelResponse = z.object(
+  {
+    success: z.boolean().optional(),
+  },
+);
 
 export const zGetFalAiMoondreamNextRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiMoondreamNextRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -2102,9 +1359,7 @@ export const zPostFalAiMoondreamBatchedBody = zMoondreamBatchedInput;
 export const zPostFalAiMoondreamBatchedResponse = zQueueStatus;
 
 export const zGetFalAiMoondreamBatchedRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2114,42 +1369,24 @@ export const zGetFalAiMoondreamBatchedRequestsByRequestIdResponse =
   zMoondreamBatchedOutput;
 
 export const zPutFalAiMoondreamBatchedRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMoondreamBatchedRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMoondreamBatchedRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMoondreamBatchedRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiMoondreamBatchedRequestsByRequestIdStatusQuery = z.object(
   {
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   },
 );
 
@@ -2176,9 +1413,7 @@ export const zPostFalAiMoondream2ObjectDetectionResponse = zQueueStatus;
 
 export const zGetFalAiMoondream2ObjectDetectionRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2189,44 +1424,25 @@ export const zGetFalAiMoondream2ObjectDetectionRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondream2ObjectDetectionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMoondream2ObjectDetectionRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMoondream2ObjectDetectionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream2ObjectDetectionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2245,9 +1461,7 @@ export const zPostFalAiMoondream2PointObjectDetectionResponse = zQueueStatus;
 
 export const zGetFalAiMoondream2PointObjectDetectionRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2258,44 +1472,25 @@ export const zGetFalAiMoondream2PointObjectDetectionRequestsByRequestIdResponse 
 
 export const zPutFalAiMoondream2PointObjectDetectionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMoondream2PointObjectDetectionRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMoondream2PointObjectDetectionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream2PointObjectDetectionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2305,9 +1500,7 @@ export const zGetFalAiMoondream2PointObjectDetectionRequestsByRequestIdStatusRes
   zQueueStatus;
 
 export const zGetFalAiMoondream2RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2316,41 +1509,22 @@ export const zGetFalAiMoondream2RequestsByRequestIdPath = z.object({
 export const zGetFalAiMoondream2RequestsByRequestIdResponse = zMoondream2Output;
 
 export const zPutFalAiMoondream2RequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMoondream2RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiMoondream2RequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiMoondream2RequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiMoondream2RequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -2367,9 +1541,7 @@ export const zPostFalAiMoondream2VisualQueryBody = zMoondream2VisualQueryInput;
 export const zPostFalAiMoondream2VisualQueryResponse = zQueueStatus;
 
 export const zGetFalAiMoondream2VisualQueryRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2380,43 +1552,25 @@ export const zGetFalAiMoondream2VisualQueryRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondream2VisualQueryRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiMoondream2VisualQueryRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiMoondream2VisualQueryRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiMoondream2VisualQueryRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream2VisualQueryRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2435,9 +1589,7 @@ export const zPostFalAiMoondream3PreviewCaptionResponse = zQueueStatus;
 
 export const zGetFalAiMoondream3PreviewCaptionRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -2448,44 +1600,25 @@ export const zGetFalAiMoondream3PreviewCaptionRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondream3PreviewCaptionRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMoondream3PreviewCaptionRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMoondream3PreviewCaptionRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream3PreviewCaptionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2504,9 +1637,7 @@ export const zPostFalAiMoondream3PreviewDetectResponse = zQueueStatus;
 
 export const zGetFalAiMoondream3PreviewDetectRequestsByRequestIdPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
@@ -2518,44 +1649,25 @@ export const zGetFalAiMoondream3PreviewDetectRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondream3PreviewDetectRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMoondream3PreviewDetectRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMoondream3PreviewDetectRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream3PreviewDetectRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2573,9 +1685,7 @@ export const zPostFalAiMoondream3PreviewPointBody =
 export const zPostFalAiMoondream3PreviewPointResponse = zQueueStatus;
 
 export const zGetFalAiMoondream3PreviewPointRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2586,44 +1696,25 @@ export const zGetFalAiMoondream3PreviewPointRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondream3PreviewPointRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMoondream3PreviewPointRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMoondream3PreviewPointRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream3PreviewPointRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2641,9 +1732,7 @@ export const zPostFalAiMoondream3PreviewQueryBody =
 export const zPostFalAiMoondream3PreviewQueryResponse = zQueueStatus;
 
 export const zGetFalAiMoondream3PreviewQueryRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2654,44 +1743,25 @@ export const zGetFalAiMoondream3PreviewQueryRequestsByRequestIdResponse =
 
 export const zPutFalAiMoondream3PreviewQueryRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutFalAiMoondream3PreviewQueryRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetFalAiMoondream3PreviewQueryRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiMoondream3PreviewQueryRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -2708,9 +1778,7 @@ export const zPostFalAiSa2Va4bImageBody = zSa2Va4bImageInput;
 export const zPostFalAiSa2Va4bImageResponse = zQueueStatus;
 
 export const zGetFalAiSa2Va4bImageRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2720,41 +1788,22 @@ export const zGetFalAiSa2Va4bImageRequestsByRequestIdResponse =
   zSa2Va4bImageOutput;
 
 export const zPutFalAiSa2Va4bImageRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiSa2Va4bImageRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiSa2Va4bImageRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiSa2Va4bImageRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiSa2Va4bImageRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -2771,9 +1820,7 @@ export const zPostFalAiSa2Va4bVideoBody = zSa2Va4bVideoInput;
 export const zPostFalAiSa2Va4bVideoResponse = zQueueStatus;
 
 export const zGetFalAiSa2Va4bVideoRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2783,41 +1830,22 @@ export const zGetFalAiSa2Va4bVideoRequestsByRequestIdResponse =
   zSa2Va4bVideoOutput;
 
 export const zPutFalAiSa2Va4bVideoRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiSa2Va4bVideoRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiSa2Va4bVideoRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiSa2Va4bVideoRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiSa2Va4bVideoRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -2834,9 +1862,7 @@ export const zPostFalAiSa2Va8bImageBody = zSa2Va8bImageInput;
 export const zPostFalAiSa2Va8bImageResponse = zQueueStatus;
 
 export const zGetFalAiSa2Va8bImageRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2846,41 +1872,22 @@ export const zGetFalAiSa2Va8bImageRequestsByRequestIdResponse =
   zSa2Va8bImageOutput;
 
 export const zPutFalAiSa2Va8bImageRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiSa2Va8bImageRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiSa2Va8bImageRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiSa2Va8bImageRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiSa2Va8bImageRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -2897,9 +1904,7 @@ export const zPostFalAiSa2Va8bVideoBody = zSa2Va8bVideoInput;
 export const zPostFalAiSa2Va8bVideoResponse = zQueueStatus;
 
 export const zGetFalAiSa2Va8bVideoRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2909,41 +1914,22 @@ export const zGetFalAiSa2Va8bVideoRequestsByRequestIdResponse =
   zSa2Va8bVideoOutput;
 
 export const zPutFalAiSa2Va8bVideoRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiSa2Va8bVideoRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiSa2Va8bVideoRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiSa2Va8bVideoRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiSa2Va8bVideoRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -2960,9 +1946,7 @@ export const zPostFalAiSam3ImageEmbedBody = zSam3ImageEmbedInput;
 export const zPostFalAiSam3ImageEmbedResponse = zQueueStatus;
 
 export const zGetFalAiSam3ImageEmbedRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -2972,41 +1956,23 @@ export const zGetFalAiSam3ImageEmbedRequestsByRequestIdResponse =
   zSam3ImageEmbedOutput;
 
 export const zPutFalAiSam3ImageEmbedRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiSam3ImageEmbedRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiSam3ImageEmbedRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiSam3ImageEmbedRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiSam3ImageEmbedRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3023,9 +1989,7 @@ export const zPostFalAiVideoUnderstandingBody = zVideoUnderstandingInput;
 export const zPostFalAiVideoUnderstandingResponse = zQueueStatus;
 
 export const zGetFalAiVideoUnderstandingRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3036,43 +2000,25 @@ export const zGetFalAiVideoUnderstandingRequestsByRequestIdResponse =
 
 export const zPutFalAiVideoUnderstandingRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiVideoUnderstandingRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutFalAiVideoUnderstandingRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetFalAiVideoUnderstandingRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetFalAiVideoUnderstandingRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3089,9 +2035,7 @@ export const zPostFalAiXAilabNsfwBody = zXAilabNsfwInput;
 export const zPostFalAiXAilabNsfwResponse = zQueueStatus;
 
 export const zGetFalAiXAilabNsfwRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3100,41 +2044,22 @@ export const zGetFalAiXAilabNsfwRequestsByRequestIdPath = z.object({
 export const zGetFalAiXAilabNsfwRequestsByRequestIdResponse = zXAilabNsfwOutput;
 
 export const zPutFalAiXAilabNsfwRequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutFalAiXAilabNsfwRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutFalAiXAilabNsfwRequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetFalAiXAilabNsfwRequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetFalAiXAilabNsfwRequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
@@ -3151,9 +2076,7 @@ export const zPostOpenrouterRouterVisionBody = zRouterVisionInput;
 export const zPostOpenrouterRouterVisionResponse = zQueueStatus;
 
 export const zGetOpenrouterRouterVisionRequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3164,45 +2087,27 @@ export const zGetOpenrouterRouterVisionRequestsByRequestIdResponse =
 
 export const zPutOpenrouterRouterVisionRequestsByRequestIdCancelPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 /**
  * The request was cancelled.
  */
-export const zPutOpenrouterRouterVisionRequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
+export const zPutOpenrouterRouterVisionRequestsByRequestIdCancelResponse =
+  z.object({
+    success: z.boolean().optional(),
   });
 
 export const zGetOpenrouterRouterVisionRequestsByRequestIdStatusPath = z.object(
   {
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   },
 );
 
 export const zGetOpenrouterRouterVisionRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3229,9 +2134,7 @@ export const zPostPerceptronIsaac01OpenaiV1ChatCompletionsResponse =
 
 export const zGetPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
@@ -3242,44 +2145,25 @@ export const zGetPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdResp
 
 export const zPutPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdCancelPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 /**
  * The request was cancelled.
  */
 export const zPutPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdCancelResponse =
-  z
-    .object({
-      success: z
-        .boolean()
-        .register(z.globalRegistry, {
-          description: "Whether the request was cancelled successfully.",
-        })
-        .optional(),
-    })
-    .register(z.globalRegistry, {
-      description: "The request was cancelled.",
-    });
+  z.object({
+    success: z.boolean().optional(),
+  });
 
 export const zGetPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdStatusPath =
   z.object({
-    request_id: z.string().register(z.globalRegistry, {
-      description: "Request ID",
-    }),
+    request_id: z.string(),
   });
 
 export const zGetPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdStatusQuery =
   z.object({
-    logs: z
-      .number()
-      .register(z.globalRegistry, {
-        description:
-          "Whether to include logs (`1`) in the response or not (`0`).",
-      })
-      .optional(),
+    logs: z.number().optional(),
   });
 
 /**
@@ -3289,9 +2173,7 @@ export const zGetPerceptronIsaac01OpenaiV1ChatCompletionsRequestsByRequestIdStat
   zQueueStatus;
 
 export const zGetPerceptronIsaac01RequestsByRequestIdPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
@@ -3300,41 +2182,22 @@ export const zGetPerceptronIsaac01RequestsByRequestIdPath = z.object({
 export const zGetPerceptronIsaac01RequestsByRequestIdResponse = zIsaac01Output;
 
 export const zPutPerceptronIsaac01RequestsByRequestIdCancelPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 /**
  * The request was cancelled.
  */
-export const zPutPerceptronIsaac01RequestsByRequestIdCancelResponse = z
-  .object({
-    success: z
-      .boolean()
-      .register(z.globalRegistry, {
-        description: "Whether the request was cancelled successfully.",
-      })
-      .optional(),
-  })
-  .register(z.globalRegistry, {
-    description: "The request was cancelled.",
-  });
+export const zPutPerceptronIsaac01RequestsByRequestIdCancelResponse = z.object({
+  success: z.boolean().optional(),
+});
 
 export const zGetPerceptronIsaac01RequestsByRequestIdStatusPath = z.object({
-  request_id: z.string().register(z.globalRegistry, {
-    description: "Request ID",
-  }),
+  request_id: z.string(),
 });
 
 export const zGetPerceptronIsaac01RequestsByRequestIdStatusQuery = z.object({
-  logs: z
-    .number()
-    .register(z.globalRegistry, {
-      description:
-        "Whether to include logs (`1`) in the response or not (`0`).",
-    })
-    .optional(),
+  logs: z.number().optional(),
 });
 
 /**
