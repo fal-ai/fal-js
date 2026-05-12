@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { ImageEndpointId } from "./endpoint-zod-map.js";
 import {
   AuraFlowInputSchema,
   AuraFlowOutputSchema,
@@ -1101,17 +1100,2205 @@ import {
   ZImageTurboTilingOutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of image endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const imageEndpointSchemaMap: Record<
-  ImageEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const imageEndpointSchemaMap: {
+  readonly "bria/embed-product": {
+    readonly input: typeof EmbedProductInputSchema;
+    readonly output: typeof EmbedProductOutputSchema;
+  };
+  readonly "bria/fibo-bbq-preview/generate": {
+    readonly input: typeof FiboBbqPreviewGenerateInputSchema;
+    readonly output: typeof FiboBbqPreviewGenerateOutputSchema;
+  };
+  readonly "bria/fibo-edit/add_object_by_text": {
+    readonly input: typeof FiboEditAdd_object_by_textInputSchema;
+    readonly output: typeof FiboEditAdd_object_by_textOutputSchema;
+  };
+  readonly "bria/fibo-edit/blend": {
+    readonly input: typeof FiboEditBlendInputSchema;
+    readonly output: typeof FiboEditBlendOutputSchema;
+  };
+  readonly "bria/fibo-edit/colorize": {
+    readonly input: typeof FiboEditColorizeInputSchema;
+    readonly output: typeof FiboEditColorizeOutputSchema;
+  };
+  readonly "bria/fibo-edit/edit": {
+    readonly input: typeof FiboEditEditInputSchema;
+    readonly output: typeof FiboEditEditOutputSchema;
+  };
+  readonly "bria/fibo-edit/erase_by_text": {
+    readonly input: typeof FiboEditErase_by_textInputSchema;
+    readonly output: typeof FiboEditErase_by_textOutputSchema;
+  };
+  readonly "bria/fibo-edit/relight": {
+    readonly input: typeof FiboEditRelightInputSchema;
+    readonly output: typeof FiboEditRelightOutputSchema;
+  };
+  readonly "bria/fibo-edit/replace_object_by_text": {
+    readonly input: typeof FiboEditReplace_object_by_textInputSchema;
+    readonly output: typeof FiboEditReplace_object_by_textOutputSchema;
+  };
+  readonly "bria/fibo-edit/reseason": {
+    readonly input: typeof FiboEditReseasonInputSchema;
+    readonly output: typeof FiboEditReseasonOutputSchema;
+  };
+  readonly "bria/fibo-edit/restore": {
+    readonly input: typeof FiboEditRestoreInputSchema;
+    readonly output: typeof FiboEditRestoreOutputSchema;
+  };
+  readonly "bria/fibo-edit/restyle": {
+    readonly input: typeof FiboEditRestyleInputSchema;
+    readonly output: typeof FiboEditRestyleOutputSchema;
+  };
+  readonly "bria/fibo-edit/rewrite_text": {
+    readonly input: typeof FiboEditRewrite_textInputSchema;
+    readonly output: typeof FiboEditRewrite_textOutputSchema;
+  };
+  readonly "bria/fibo-edit/sketch_to_colored_image": {
+    readonly input: typeof FiboEditSketch_to_colored_imageInputSchema;
+    readonly output: typeof FiboEditSketch_to_colored_imageOutputSchema;
+  };
+  readonly "bria/fibo-lite/generate": {
+    readonly input: typeof FiboLiteGenerateInputSchema;
+    readonly output: typeof FiboLiteGenerateOutputSchema;
+  };
+  readonly "bria/fibo/generate": {
+    readonly input: typeof FiboGenerateInputSchema;
+    readonly output: typeof FiboGenerateOutputSchema;
+  };
+  readonly "bria/reimagine/3.2": {
+    readonly input: typeof Reimagine32InputSchema;
+    readonly output: typeof Reimagine32OutputSchema;
+  };
+  readonly "bria/replace-background": {
+    readonly input: typeof ReplaceBackgroundInputSchema;
+    readonly output: typeof ReplaceBackgroundOutputSchema;
+  };
+  readonly "bria/upscale/creative": {
+    readonly input: typeof UpscaleCreativeInputSchema;
+    readonly output: typeof UpscaleCreativeOutputSchema;
+  };
+  readonly "clarityai/crystal-upscaler": {
+    readonly input: typeof CrystalUpscalerInputSchema;
+    readonly output: typeof CrystalUpscalerOutputSchema;
+  };
+  readonly "fal-ai/aura-flow": {
+    readonly input: typeof AuraFlowInputSchema;
+    readonly output: typeof AuraFlowOutputSchema;
+  };
+  readonly "fal-ai/aura-sr": {
+    readonly input: typeof AuraSrInputSchema;
+    readonly output: typeof AuraSrOutputSchema;
+  };
+  readonly "fal-ai/bagel": {
+    readonly input: typeof BagelInputSchema;
+    readonly output: typeof BagelOutputSchema;
+  };
+  readonly "fal-ai/bagel/edit": {
+    readonly input: typeof BagelEditInputSchema;
+    readonly output: typeof BagelEditOutputSchema;
+  };
+  readonly "fal-ai/ben/v2/image": {
+    readonly input: typeof BenV2ImageInputSchema;
+    readonly output: typeof BenV2ImageOutputSchema;
+  };
+  readonly "fal-ai/bitdance": {
+    readonly input: typeof BitdanceInputSchema;
+    readonly output: typeof BitdanceOutputSchema;
+  };
+  readonly "fal-ai/bria/background/remove": {
+    readonly input: typeof BriaBackgroundRemoveInputSchema;
+    readonly output: typeof BriaBackgroundRemoveOutputSchema;
+  };
+  readonly "fal-ai/bria/background/replace": {
+    readonly input: typeof BriaBackgroundReplaceInputSchema;
+    readonly output: typeof BriaBackgroundReplaceOutputSchema;
+  };
+  readonly "fal-ai/bria/eraser": {
+    readonly input: typeof BriaEraserInputSchema;
+    readonly output: typeof BriaEraserOutputSchema;
+  };
+  readonly "fal-ai/bria/expand": {
+    readonly input: typeof BriaExpandInputSchema;
+    readonly output: typeof BriaExpandOutputSchema;
+  };
+  readonly "fal-ai/bria/genfill": {
+    readonly input: typeof BriaGenfillInputSchema;
+    readonly output: typeof BriaGenfillOutputSchema;
+  };
+  readonly "fal-ai/bria/product-shot": {
+    readonly input: typeof BriaProductShotInputSchema;
+    readonly output: typeof BriaProductShotOutputSchema;
+  };
+  readonly "fal-ai/bria/reimagine": {
+    readonly input: typeof BriaReimagineInputSchema;
+    readonly output: typeof BriaReimagineOutputSchema;
+  };
+  readonly "fal-ai/bria/text-to-image/base": {
+    readonly input: typeof BriaTextToImageBaseInputSchema;
+    readonly output: typeof BriaTextToImageBaseOutputSchema;
+  };
+  readonly "fal-ai/bria/text-to-image/fast": {
+    readonly input: typeof BriaTextToImageFastInputSchema;
+    readonly output: typeof BriaTextToImageFastOutputSchema;
+  };
+  readonly "fal-ai/bria/text-to-image/hd": {
+    readonly input: typeof BriaTextToImageHdInputSchema;
+    readonly output: typeof BriaTextToImageHdOutputSchema;
+  };
+  readonly "fal-ai/bytedance/dreamina/v3.1/text-to-image": {
+    readonly input: typeof BytedanceDreaminaV31TextToImageInputSchema;
+    readonly output: typeof BytedanceDreaminaV31TextToImageOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v3/text-to-image": {
+    readonly input: typeof BytedanceSeedreamV3TextToImageInputSchema;
+    readonly output: typeof BytedanceSeedreamV3TextToImageOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v4.5/edit": {
+    readonly input: typeof BytedanceSeedreamV45EditInputSchema;
+    readonly output: typeof BytedanceSeedreamV45EditOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v4.5/text-to-image": {
+    readonly input: typeof BytedanceSeedreamV45TextToImageInputSchema;
+    readonly output: typeof BytedanceSeedreamV45TextToImageOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v4/edit": {
+    readonly input: typeof BytedanceSeedreamV4EditInputSchema;
+    readonly output: typeof BytedanceSeedreamV4EditOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v4/text-to-image": {
+    readonly input: typeof BytedanceSeedreamV4TextToImageInputSchema;
+    readonly output: typeof BytedanceSeedreamV4TextToImageOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v5/lite/edit": {
+    readonly input: typeof BytedanceSeedreamV5LiteEditInputSchema;
+    readonly output: typeof BytedanceSeedreamV5LiteEditOutputSchema;
+  };
+  readonly "fal-ai/bytedance/seedream/v5/lite/text-to-image": {
+    readonly input: typeof BytedanceSeedreamV5LiteTextToImageInputSchema;
+    readonly output: typeof BytedanceSeedreamV5LiteTextToImageOutputSchema;
+  };
+  readonly "fal-ai/cartoonify": {
+    readonly input: typeof CartoonifyInputSchema;
+    readonly output: typeof CartoonifyOutputSchema;
+  };
+  readonly "fal-ai/cat-vton": {
+    readonly input: typeof CatVtonInputSchema;
+    readonly output: typeof CatVtonOutputSchema;
+  };
+  readonly "fal-ai/ccsr": {
+    readonly input: typeof CcsrInputSchema;
+    readonly output: typeof CcsrOutputSchema;
+  };
+  readonly "fal-ai/chain-of-zoom": {
+    readonly input: typeof ChainOfZoomInputSchema;
+    readonly output: typeof ChainOfZoomOutputSchema;
+  };
+  readonly "fal-ai/chrono-edit": {
+    readonly input: typeof ChronoEditInputSchema;
+    readonly output: typeof ChronoEditOutputSchema;
+  };
+  readonly "fal-ai/chrono-edit-lora": {
+    readonly input: typeof ChronoEditLoraInputSchema;
+    readonly output: typeof ChronoEditLoraOutputSchema;
+  };
+  readonly "fal-ai/chrono-edit-lora-gallery/paintbrush": {
+    readonly input: typeof ChronoEditLoraGalleryPaintbrushInputSchema;
+    readonly output: typeof ChronoEditLoraGalleryPaintbrushOutputSchema;
+  };
+  readonly "fal-ai/chrono-edit-lora-gallery/upscaler": {
+    readonly input: typeof ChronoEditLoraGalleryUpscalerInputSchema;
+    readonly output: typeof ChronoEditLoraGalleryUpscalerOutputSchema;
+  };
+  readonly "fal-ai/clarity-upscaler": {
+    readonly input: typeof ClarityUpscalerInputSchema;
+    readonly output: typeof ClarityUpscalerOutputSchema;
+  };
+  readonly "fal-ai/codeformer": {
+    readonly input: typeof CodeformerInputSchema;
+    readonly output: typeof CodeformerOutputSchema;
+  };
+  readonly "fal-ai/cogview4": {
+    readonly input: typeof Cogview4InputSchema;
+    readonly output: typeof Cogview4OutputSchema;
+  };
+  readonly "fal-ai/creative-upscaler": {
+    readonly input: typeof CreativeUpscalerInputSchema;
+    readonly output: typeof CreativeUpscalerOutputSchema;
+  };
+  readonly "fal-ai/ddcolor": {
+    readonly input: typeof DdcolorInputSchema;
+    readonly output: typeof DdcolorOutputSchema;
+  };
+  readonly "fal-ai/docres": {
+    readonly input: typeof DocresInputSchema;
+    readonly output: typeof DocresOutputSchema;
+  };
+  readonly "fal-ai/docres/dewarp": {
+    readonly input: typeof DocresDewarpInputSchema;
+    readonly output: typeof DocresDewarpOutputSchema;
+  };
+  readonly "fal-ai/drct-super-resolution": {
+    readonly input: typeof DrctSuperResolutionInputSchema;
+    readonly output: typeof DrctSuperResolutionOutputSchema;
+  };
+  readonly "fal-ai/dreamo": {
+    readonly input: typeof DreamoInputSchema;
+    readonly output: typeof DreamoOutputSchema;
+  };
+  readonly "fal-ai/dreamomni2/edit": {
+    readonly input: typeof Dreamomni2EditInputSchema;
+    readonly output: typeof Dreamomni2EditOutputSchema;
+  };
+  readonly "fal-ai/dreamshaper": {
+    readonly input: typeof DreamshaperInputSchema;
+    readonly output: typeof DreamshaperOutputSchema;
+  };
+  readonly "fal-ai/dwpose": {
+    readonly input: typeof DwposeInputSchema;
+    readonly output: typeof DwposeOutputSchema;
+  };
+  readonly "fal-ai/emu-3.5-image/edit-image": {
+    readonly input: typeof Emu35ImageEditImageInputSchema;
+    readonly output: typeof Emu35ImageEditImageOutputSchema;
+  };
+  readonly "fal-ai/emu-3.5-image/text-to-image": {
+    readonly input: typeof Emu35ImageTextToImageInputSchema;
+    readonly output: typeof Emu35ImageTextToImageOutputSchema;
+  };
+  readonly "fal-ai/era-3d": {
+    readonly input: typeof Era3dInputSchema;
+    readonly output: typeof Era3dOutputSchema;
+  };
+  readonly "fal-ai/ernie-image": {
+    readonly input: typeof ErnieImageInputSchema;
+    readonly output: typeof ErnieImageOutputSchema;
+  };
+  readonly "fal-ai/ernie-image/lora": {
+    readonly input: typeof ErnieImageLoraInputSchema;
+    readonly output: typeof ErnieImageLoraOutputSchema;
+  };
+  readonly "fal-ai/ernie-image/lora/turbo": {
+    readonly input: typeof ErnieImageLoraTurboInputSchema;
+    readonly output: typeof ErnieImageLoraTurboOutputSchema;
+  };
+  readonly "fal-ai/ernie-image/turbo": {
+    readonly input: typeof ErnieImageTurboInputSchema;
+    readonly output: typeof ErnieImageTurboOutputSchema;
+  };
+  readonly "fal-ai/esrgan": {
+    readonly input: typeof EsrganInputSchema;
+    readonly output: typeof EsrganOutputSchema;
+  };
+  readonly "fal-ai/evf-sam": {
+    readonly input: typeof EvfSamInputSchema;
+    readonly output: typeof EvfSamOutputSchema;
+  };
+  readonly "fal-ai/f-lite/standard": {
+    readonly input: typeof FLiteStandardInputSchema;
+    readonly output: typeof FLiteStandardOutputSchema;
+  };
+  readonly "fal-ai/f-lite/texture": {
+    readonly input: typeof FLiteTextureInputSchema;
+    readonly output: typeof FLiteTextureOutputSchema;
+  };
+  readonly "fal-ai/face-to-sticker": {
+    readonly input: typeof FaceToStickerInputSchema;
+    readonly output: typeof FaceToStickerOutputSchema;
+  };
+  readonly "fal-ai/fashn/tryon/v1.5": {
+    readonly input: typeof FashnTryonV15InputSchema;
+    readonly output: typeof FashnTryonV15OutputSchema;
+  };
+  readonly "fal-ai/fashn/tryon/v1.6": {
+    readonly input: typeof FashnTryonV16InputSchema;
+    readonly output: typeof FashnTryonV16OutputSchema;
+  };
+  readonly "fal-ai/fast-fooocus-sdxl": {
+    readonly input: typeof FastFooocusSdxlInputSchema;
+    readonly output: typeof FastFooocusSdxlOutputSchema;
+  };
+  readonly "fal-ai/fast-fooocus-sdxl/image-to-image": {
+    readonly input: typeof FastFooocusSdxlImageToImageInputSchema;
+    readonly output: typeof FastFooocusSdxlImageToImageOutputSchema;
+  };
+  readonly "fal-ai/fast-lcm-diffusion": {
+    readonly input: typeof FastLcmDiffusionInputSchema;
+    readonly output: typeof FastLcmDiffusionOutputSchema;
+  };
+  readonly "fal-ai/fast-lcm-diffusion/image-to-image": {
+    readonly input: typeof FastLcmDiffusionImageToImageInputSchema;
+    readonly output: typeof FastLcmDiffusionImageToImageOutputSchema;
+  };
+  readonly "fal-ai/fast-lcm-diffusion/inpainting": {
+    readonly input: typeof FastLcmDiffusionInpaintingInputSchema;
+    readonly output: typeof FastLcmDiffusionInpaintingOutputSchema;
+  };
+  readonly "fal-ai/fast-lightning-sdxl": {
+    readonly input: typeof FastLightningSdxlInputSchema;
+    readonly output: typeof FastLightningSdxlOutputSchema;
+  };
+  readonly "fal-ai/fast-lightning-sdxl/image-to-image": {
+    readonly input: typeof FastLightningSdxlImageToImageInputSchema;
+    readonly output: typeof FastLightningSdxlImageToImageOutputSchema;
+  };
+  readonly "fal-ai/fast-lightning-sdxl/inpainting": {
+    readonly input: typeof FastLightningSdxlInpaintingInputSchema;
+    readonly output: typeof FastLightningSdxlInpaintingOutputSchema;
+  };
+  readonly "fal-ai/fast-sdxl": {
+    readonly input: typeof FastSdxlInputSchema;
+    readonly output: typeof FastSdxlOutputSchema;
+  };
+  readonly "fal-ai/fast-sdxl-controlnet-canny": {
+    readonly input: typeof FastSdxlControlnetCannyInputSchema;
+    readonly output: typeof FastSdxlControlnetCannyOutputSchema;
+  };
+  readonly "fal-ai/fast-sdxl-controlnet-canny/image-to-image": {
+    readonly input: typeof FastSdxlControlnetCannyImageToImageInputSchema;
+    readonly output: typeof FastSdxlControlnetCannyImageToImageOutputSchema;
+  };
+  readonly "fal-ai/fast-sdxl-controlnet-canny/inpainting": {
+    readonly input: typeof FastSdxlControlnetCannyInpaintingInputSchema;
+    readonly output: typeof FastSdxlControlnetCannyInpaintingOutputSchema;
+  };
+  readonly "fal-ai/fast-sdxl/image-to-image": {
+    readonly input: typeof FastSdxlImageToImageInputSchema;
+    readonly output: typeof FastSdxlImageToImageOutputSchema;
+  };
+  readonly "fal-ai/fast-sdxl/inpainting": {
+    readonly input: typeof FastSdxlInpaintingInputSchema;
+    readonly output: typeof FastSdxlInpaintingOutputSchema;
+  };
+  readonly "fal-ai/firered-image-edit": {
+    readonly input: typeof FireredImageEditInputSchema;
+    readonly output: typeof FireredImageEditOutputSchema;
+  };
+  readonly "fal-ai/firered-image-edit-v1.1": {
+    readonly input: typeof FireredImageEditV11InputSchema;
+    readonly output: typeof FireredImageEditV11OutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/caption-to-phrase-grounding": {
+    readonly input: typeof Florence2LargeCaptionToPhraseGroundingInputSchema;
+    readonly output: typeof Florence2LargeCaptionToPhraseGroundingOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/dense-region-caption": {
+    readonly input: typeof Florence2LargeDenseRegionCaptionInputSchema;
+    readonly output: typeof Florence2LargeDenseRegionCaptionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/object-detection": {
+    readonly input: typeof Florence2LargeObjectDetectionInputSchema;
+    readonly output: typeof Florence2LargeObjectDetectionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/ocr-with-region": {
+    readonly input: typeof Florence2LargeOcrWithRegionInputSchema;
+    readonly output: typeof Florence2LargeOcrWithRegionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/open-vocabulary-detection": {
+    readonly input: typeof Florence2LargeOpenVocabularyDetectionInputSchema;
+    readonly output: typeof Florence2LargeOpenVocabularyDetectionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/referring-expression-segmentation": {
+    readonly input: typeof Florence2LargeReferringExpressionSegmentationInputSchema;
+    readonly output: typeof Florence2LargeReferringExpressionSegmentationOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/region-proposal": {
+    readonly input: typeof Florence2LargeRegionProposalInputSchema;
+    readonly output: typeof Florence2LargeRegionProposalOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/region-to-segmentation": {
+    readonly input: typeof Florence2LargeRegionToSegmentationInputSchema;
+    readonly output: typeof Florence2LargeRegionToSegmentationOutputSchema;
+  };
+  readonly "fal-ai/flowedit": {
+    readonly input: typeof FloweditInputSchema;
+    readonly output: typeof FloweditOutputSchema;
+  };
+  readonly "fal-ai/flux-1/dev": {
+    readonly input: typeof Flux1DevInputSchema;
+    readonly output: typeof Flux1DevOutputSchema;
+  };
+  readonly "fal-ai/flux-1/dev/image-to-image": {
+    readonly input: typeof Flux1DevImageToImageInputSchema;
+    readonly output: typeof Flux1DevImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-1/dev/redux": {
+    readonly input: typeof Flux1DevReduxInputSchema;
+    readonly output: typeof Flux1DevReduxOutputSchema;
+  };
+  readonly "fal-ai/flux-1/krea": {
+    readonly input: typeof Flux1KreaInputSchema;
+    readonly output: typeof Flux1KreaOutputSchema;
+  };
+  readonly "fal-ai/flux-1/krea/image-to-image": {
+    readonly input: typeof Flux1KreaImageToImageInputSchema;
+    readonly output: typeof Flux1KreaImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-1/krea/redux": {
+    readonly input: typeof Flux1KreaReduxInputSchema;
+    readonly output: typeof Flux1KreaReduxOutputSchema;
+  };
+  readonly "fal-ai/flux-1/schnell": {
+    readonly input: typeof Flux1SchnellInputSchema;
+    readonly output: typeof Flux1SchnellOutputSchema;
+  };
+  readonly "fal-ai/flux-1/schnell/redux": {
+    readonly input: typeof Flux1SchnellReduxInputSchema;
+    readonly output: typeof Flux1SchnellReduxOutputSchema;
+  };
+  readonly "fal-ai/flux-1/srpo": {
+    readonly input: typeof Flux1SrpoInputSchema;
+    readonly output: typeof Flux1SrpoOutputSchema;
+  };
+  readonly "fal-ai/flux-1/srpo/image-to-image": {
+    readonly input: typeof Flux1SrpoImageToImageInputSchema;
+    readonly output: typeof Flux1SrpoImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-2": {
+    readonly input: typeof Flux2InputSchema;
+    readonly output: typeof Flux2OutputSchema;
+  };
+  readonly "fal-ai/flux-2-flex": {
+    readonly input: typeof Flux2FlexInputSchema;
+    readonly output: typeof Flux2FlexOutputSchema;
+  };
+  readonly "fal-ai/flux-2-flex/edit": {
+    readonly input: typeof Flux2FlexEditInputSchema;
+    readonly output: typeof Flux2FlexEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/add-background": {
+    readonly input: typeof Flux2LoraGalleryAddBackgroundInputSchema;
+    readonly output: typeof Flux2LoraGalleryAddBackgroundOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/apartment-staging": {
+    readonly input: typeof Flux2LoraGalleryApartmentStagingInputSchema;
+    readonly output: typeof Flux2LoraGalleryApartmentStagingOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/ballpoint-pen-sketch": {
+    readonly input: typeof Flux2LoraGalleryBallpointPenSketchInputSchema;
+    readonly output: typeof Flux2LoraGalleryBallpointPenSketchOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/digital-comic-art": {
+    readonly input: typeof Flux2LoraGalleryDigitalComicArtInputSchema;
+    readonly output: typeof Flux2LoraGalleryDigitalComicArtOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/face-to-full-portrait": {
+    readonly input: typeof Flux2LoraGalleryFaceToFullPortraitInputSchema;
+    readonly output: typeof Flux2LoraGalleryFaceToFullPortraitOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/hdr-style": {
+    readonly input: typeof Flux2LoraGalleryHdrStyleInputSchema;
+    readonly output: typeof Flux2LoraGalleryHdrStyleOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/multiple-angles": {
+    readonly input: typeof Flux2LoraGalleryMultipleAnglesInputSchema;
+    readonly output: typeof Flux2LoraGalleryMultipleAnglesOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/realism": {
+    readonly input: typeof Flux2LoraGalleryRealismInputSchema;
+    readonly output: typeof Flux2LoraGalleryRealismOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/satellite-view-style": {
+    readonly input: typeof Flux2LoraGallerySatelliteViewStyleInputSchema;
+    readonly output: typeof Flux2LoraGallerySatelliteViewStyleOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/sepia-vintage": {
+    readonly input: typeof Flux2LoraGallerySepiaVintageInputSchema;
+    readonly output: typeof Flux2LoraGallerySepiaVintageOutputSchema;
+  };
+  readonly "fal-ai/flux-2-lora-gallery/virtual-tryon": {
+    readonly input: typeof Flux2LoraGalleryVirtualTryonInputSchema;
+    readonly output: typeof Flux2LoraGalleryVirtualTryonOutputSchema;
+  };
+  readonly "fal-ai/flux-2-max": {
+    readonly input: typeof Flux2MaxInputSchema;
+    readonly output: typeof Flux2MaxOutputSchema;
+  };
+  readonly "fal-ai/flux-2-max/edit": {
+    readonly input: typeof Flux2MaxEditInputSchema;
+    readonly output: typeof Flux2MaxEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2-pro": {
+    readonly input: typeof Flux2ProInputSchema;
+    readonly output: typeof Flux2ProOutputSchema;
+  };
+  readonly "fal-ai/flux-2-pro/edit": {
+    readonly input: typeof Flux2ProEditInputSchema;
+    readonly output: typeof Flux2ProEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/edit": {
+    readonly input: typeof Flux2EditInputSchema;
+    readonly output: typeof Flux2EditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/flash": {
+    readonly input: typeof Flux2FlashInputSchema;
+    readonly output: typeof Flux2FlashOutputSchema;
+  };
+  readonly "fal-ai/flux-2/flash/edit": {
+    readonly input: typeof Flux2FlashEditInputSchema;
+    readonly output: typeof Flux2FlashEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b": {
+    readonly input: typeof Flux2Klein4bInputSchema;
+    readonly output: typeof Flux2Klein4bOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/base": {
+    readonly input: typeof Flux2Klein4bBaseInputSchema;
+    readonly output: typeof Flux2Klein4bBaseOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/base/edit": {
+    readonly input: typeof Flux2Klein4bBaseEditInputSchema;
+    readonly output: typeof Flux2Klein4bBaseEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/base/edit/lora": {
+    readonly input: typeof Flux2Klein4bBaseEditLoraInputSchema;
+    readonly output: typeof Flux2Klein4bBaseEditLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/base/lora": {
+    readonly input: typeof Flux2Klein4bBaseLoraInputSchema;
+    readonly output: typeof Flux2Klein4bBaseLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/edit": {
+    readonly input: typeof Flux2Klein4bEditInputSchema;
+    readonly output: typeof Flux2Klein4bEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/edit/lora": {
+    readonly input: typeof Flux2Klein4bEditLoraInputSchema;
+    readonly output: typeof Flux2Klein4bEditLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/4b/lora": {
+    readonly input: typeof Flux2Klein4bLoraInputSchema;
+    readonly output: typeof Flux2Klein4bLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b": {
+    readonly input: typeof Flux2Klein9bInputSchema;
+    readonly output: typeof Flux2Klein9bOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/base": {
+    readonly input: typeof Flux2Klein9bBaseInputSchema;
+    readonly output: typeof Flux2Klein9bBaseOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/base/edit": {
+    readonly input: typeof Flux2Klein9bBaseEditInputSchema;
+    readonly output: typeof Flux2Klein9bBaseEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/base/edit/lora": {
+    readonly input: typeof Flux2Klein9bBaseEditLoraInputSchema;
+    readonly output: typeof Flux2Klein9bBaseEditLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/base/lora": {
+    readonly input: typeof Flux2Klein9bBaseLoraInputSchema;
+    readonly output: typeof Flux2Klein9bBaseLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/edit": {
+    readonly input: typeof Flux2Klein9bEditInputSchema;
+    readonly output: typeof Flux2Klein9bEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/edit/lora": {
+    readonly input: typeof Flux2Klein9bEditLoraInputSchema;
+    readonly output: typeof Flux2Klein9bEditLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/9b/lora": {
+    readonly input: typeof Flux2Klein9bLoraInputSchema;
+    readonly output: typeof Flux2Klein9bLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/klein/realtime": {
+    readonly input: typeof Flux2KleinRealtimeInputSchema;
+    readonly output: typeof Flux2KleinRealtimeOutputSchema;
+  };
+  readonly "fal-ai/flux-2/lora": {
+    readonly input: typeof Flux2LoraInputSchema;
+    readonly output: typeof Flux2LoraOutputSchema;
+  };
+  readonly "fal-ai/flux-2/lora/edit": {
+    readonly input: typeof Flux2LoraEditInputSchema;
+    readonly output: typeof Flux2LoraEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2/turbo": {
+    readonly input: typeof Flux2TurboInputSchema;
+    readonly output: typeof Flux2TurboOutputSchema;
+  };
+  readonly "fal-ai/flux-2/turbo/edit": {
+    readonly input: typeof Flux2TurboEditInputSchema;
+    readonly output: typeof Flux2TurboEditOutputSchema;
+  };
+  readonly "fal-ai/flux-control-lora-canny": {
+    readonly input: typeof FluxControlLoraCannyInputSchema;
+    readonly output: typeof FluxControlLoraCannyOutputSchema;
+  };
+  readonly "fal-ai/flux-control-lora-canny/image-to-image": {
+    readonly input: typeof FluxControlLoraCannyImageToImageInputSchema;
+    readonly output: typeof FluxControlLoraCannyImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-control-lora-depth": {
+    readonly input: typeof FluxControlLoraDepthInputSchema;
+    readonly output: typeof FluxControlLoraDepthOutputSchema;
+  };
+  readonly "fal-ai/flux-control-lora-depth/image-to-image": {
+    readonly input: typeof FluxControlLoraDepthImageToImageInputSchema;
+    readonly output: typeof FluxControlLoraDepthImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-differential-diffusion": {
+    readonly input: typeof FluxDifferentialDiffusionInputSchema;
+    readonly output: typeof FluxDifferentialDiffusionOutputSchema;
+  };
+  readonly "fal-ai/flux-general": {
+    readonly input: typeof FluxGeneralInputSchema;
+    readonly output: typeof FluxGeneralOutputSchema;
+  };
+  readonly "fal-ai/flux-general/differential-diffusion": {
+    readonly input: typeof FluxGeneralDifferentialDiffusionInputSchema;
+    readonly output: typeof FluxGeneralDifferentialDiffusionOutputSchema;
+  };
+  readonly "fal-ai/flux-general/image-to-image": {
+    readonly input: typeof FluxGeneralImageToImageInputSchema;
+    readonly output: typeof FluxGeneralImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-general/inpainting": {
+    readonly input: typeof FluxGeneralInpaintingInputSchema;
+    readonly output: typeof FluxGeneralInpaintingOutputSchema;
+  };
+  readonly "fal-ai/flux-general/rf-inversion": {
+    readonly input: typeof FluxGeneralRfInversionInputSchema;
+    readonly output: typeof FluxGeneralRfInversionOutputSchema;
+  };
+  readonly "fal-ai/flux-kontext-lora": {
+    readonly input: typeof FluxKontextLoraInputSchema;
+    readonly output: typeof FluxKontextLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-kontext-lora/inpaint": {
+    readonly input: typeof FluxKontextLoraInpaintInputSchema;
+    readonly output: typeof FluxKontextLoraInpaintOutputSchema;
+  };
+  readonly "fal-ai/flux-kontext-lora/text-to-image": {
+    readonly input: typeof FluxKontextLoraTextToImageInputSchema;
+    readonly output: typeof FluxKontextLoraTextToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-kontext/dev": {
+    readonly input: typeof FluxKontextDevInputSchema;
+    readonly output: typeof FluxKontextDevOutputSchema;
+  };
+  readonly "fal-ai/flux-krea-lora": {
+    readonly input: typeof FluxKreaLoraInputSchema;
+    readonly output: typeof FluxKreaLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-krea-lora/image-to-image": {
+    readonly input: typeof FluxKreaLoraImageToImageInputSchema;
+    readonly output: typeof FluxKreaLoraImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-krea-lora/inpainting": {
+    readonly input: typeof FluxKreaLoraInpaintingInputSchema;
+    readonly output: typeof FluxKreaLoraInpaintingOutputSchema;
+  };
+  readonly "fal-ai/flux-krea-lora/stream": {
+    readonly input: typeof FluxKreaLoraStreamInputSchema;
+    readonly output: typeof FluxKreaLoraStreamOutputSchema;
+  };
+  readonly "fal-ai/flux-lora": {
+    readonly input: typeof FluxLoraInputSchema;
+    readonly output: typeof FluxLoraOutputSchema;
+  };
+  readonly "fal-ai/flux-lora-canny": {
+    readonly input: typeof FluxLoraCannyInputSchema;
+    readonly output: typeof FluxLoraCannyOutputSchema;
+  };
+  readonly "fal-ai/flux-lora-depth": {
+    readonly input: typeof FluxLoraDepthInputSchema;
+    readonly output: typeof FluxLoraDepthOutputSchema;
+  };
+  readonly "fal-ai/flux-lora-fill": {
+    readonly input: typeof FluxLoraFillInputSchema;
+    readonly output: typeof FluxLoraFillOutputSchema;
+  };
+  readonly "fal-ai/flux-lora/image-to-image": {
+    readonly input: typeof FluxLoraImageToImageInputSchema;
+    readonly output: typeof FluxLoraImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-lora/inpainting": {
+    readonly input: typeof FluxLoraInpaintingInputSchema;
+    readonly output: typeof FluxLoraInpaintingOutputSchema;
+  };
+  readonly "fal-ai/flux-lora/stream": {
+    readonly input: typeof FluxLoraStreamInputSchema;
+    readonly output: typeof FluxLoraStreamOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/kontext": {
+    readonly input: typeof FluxProKontextInputSchema;
+    readonly output: typeof FluxProKontextOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/kontext/max": {
+    readonly input: typeof FluxProKontextMaxInputSchema;
+    readonly output: typeof FluxProKontextMaxOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/kontext/max/multi": {
+    readonly input: typeof FluxProKontextMaxMultiInputSchema;
+    readonly output: typeof FluxProKontextMaxMultiOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/kontext/max/text-to-image": {
+    readonly input: typeof FluxProKontextMaxTextToImageInputSchema;
+    readonly output: typeof FluxProKontextMaxTextToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/kontext/multi": {
+    readonly input: typeof FluxProKontextMultiInputSchema;
+    readonly output: typeof FluxProKontextMultiOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/kontext/text-to-image": {
+    readonly input: typeof FluxProKontextTextToImageInputSchema;
+    readonly output: typeof FluxProKontextTextToImageOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1.1": {
+    readonly input: typeof FluxProV11InputSchema;
+    readonly output: typeof FluxProV11OutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1.1-ultra": {
+    readonly input: typeof FluxProV11UltraInputSchema;
+    readonly output: typeof FluxProV11UltraOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1.1-ultra-finetuned": {
+    readonly input: typeof FluxProV11UltraFinetunedInputSchema;
+    readonly output: typeof FluxProV11UltraFinetunedOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1.1-ultra/redux": {
+    readonly input: typeof FluxProV11UltraReduxInputSchema;
+    readonly output: typeof FluxProV11UltraReduxOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1.1/redux": {
+    readonly input: typeof FluxProV11ReduxInputSchema;
+    readonly output: typeof FluxProV11ReduxOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1/fill": {
+    readonly input: typeof FluxProV1FillInputSchema;
+    readonly output: typeof FluxProV1FillOutputSchema;
+  };
+  readonly "fal-ai/flux-pro/v1/fill-finetuned": {
+    readonly input: typeof FluxProV1FillFinetunedInputSchema;
+    readonly output: typeof FluxProV1FillFinetunedOutputSchema;
+  };
+  readonly "fal-ai/flux-pulid": {
+    readonly input: typeof FluxPulidInputSchema;
+    readonly output: typeof FluxPulidOutputSchema;
+  };
+  readonly "fal-ai/flux-subject": {
+    readonly input: typeof FluxSubjectInputSchema;
+    readonly output: typeof FluxSubjectOutputSchema;
+  };
+  readonly "fal-ai/flux-vision-upscaler": {
+    readonly input: typeof FluxVisionUpscalerInputSchema;
+    readonly output: typeof FluxVisionUpscalerOutputSchema;
+  };
+  readonly "fal-ai/flux/dev": {
+    readonly input: typeof FluxDevInputSchema;
+    readonly output: typeof FluxDevOutputSchema;
+  };
+  readonly "fal-ai/flux/dev/image-to-image": {
+    readonly input: typeof FluxDevImageToImageInputSchema;
+    readonly output: typeof FluxDevImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux/dev/redux": {
+    readonly input: typeof FluxDevReduxInputSchema;
+    readonly output: typeof FluxDevReduxOutputSchema;
+  };
+  readonly "fal-ai/flux/krea": {
+    readonly input: typeof FluxKreaInputSchema;
+    readonly output: typeof FluxKreaOutputSchema;
+  };
+  readonly "fal-ai/flux/krea/image-to-image": {
+    readonly input: typeof FluxKreaImageToImageInputSchema;
+    readonly output: typeof FluxKreaImageToImageOutputSchema;
+  };
+  readonly "fal-ai/flux/krea/redux": {
+    readonly input: typeof FluxKreaReduxInputSchema;
+    readonly output: typeof FluxKreaReduxOutputSchema;
+  };
+  readonly "fal-ai/flux/schnell": {
+    readonly input: typeof FluxSchnellInputSchema;
+    readonly output: typeof FluxSchnellOutputSchema;
+  };
+  readonly "fal-ai/flux/schnell/redux": {
+    readonly input: typeof FluxSchnellReduxInputSchema;
+    readonly output: typeof FluxSchnellReduxOutputSchema;
+  };
+  readonly "fal-ai/flux/srpo": {
+    readonly input: typeof FluxSrpoInputSchema;
+    readonly output: typeof FluxSrpoOutputSchema;
+  };
+  readonly "fal-ai/flux/srpo/image-to-image": {
+    readonly input: typeof FluxSrpoImageToImageInputSchema;
+    readonly output: typeof FluxSrpoImageToImageOutputSchema;
+  };
+  readonly "fal-ai/fooocus": {
+    readonly input: typeof FooocusInputSchema;
+    readonly output: typeof FooocusOutputSchema;
+  };
+  readonly "fal-ai/fooocus/image-prompt": {
+    readonly input: typeof FooocusImagePromptInputSchema;
+    readonly output: typeof FooocusImagePromptOutputSchema;
+  };
+  readonly "fal-ai/fooocus/inpaint": {
+    readonly input: typeof FooocusInpaintInputSchema;
+    readonly output: typeof FooocusInpaintOutputSchema;
+  };
+  readonly "fal-ai/fooocus/upscale-or-vary": {
+    readonly input: typeof FooocusUpscaleOrVaryInputSchema;
+    readonly output: typeof FooocusUpscaleOrVaryOutputSchema;
+  };
+  readonly "fal-ai/gemini-25-flash-image": {
+    readonly input: typeof Gemini25FlashImageInputSchema;
+    readonly output: typeof Gemini25FlashImageOutputSchema;
+  };
+  readonly "fal-ai/gemini-25-flash-image/edit": {
+    readonly input: typeof Gemini25FlashImageEditInputSchema;
+    readonly output: typeof Gemini25FlashImageEditOutputSchema;
+  };
+  readonly "fal-ai/gemini-3-pro-image-preview": {
+    readonly input: typeof Gemini3ProImagePreviewInputSchema;
+    readonly output: typeof Gemini3ProImagePreviewOutputSchema;
+  };
+  readonly "fal-ai/gemini-3-pro-image-preview/edit": {
+    readonly input: typeof Gemini3ProImagePreviewEditInputSchema;
+    readonly output: typeof Gemini3ProImagePreviewEditOutputSchema;
+  };
+  readonly "fal-ai/gemini-3.1-flash-image-preview": {
+    readonly input: typeof Gemini31FlashImagePreviewInputSchema;
+    readonly output: typeof Gemini31FlashImagePreviewOutputSchema;
+  };
+  readonly "fal-ai/gemini-3.1-flash-image-preview/edit": {
+    readonly input: typeof Gemini31FlashImagePreviewEditInputSchema;
+    readonly output: typeof Gemini31FlashImagePreviewEditOutputSchema;
+  };
+  readonly "fal-ai/genfocus": {
+    readonly input: typeof GenfocusInputSchema;
+    readonly output: typeof GenfocusOutputSchema;
+  };
+  readonly "fal-ai/genfocus/all-in-focus": {
+    readonly input: typeof GenfocusAllInFocusInputSchema;
+    readonly output: typeof GenfocusAllInFocusOutputSchema;
+  };
+  readonly "fal-ai/ghiblify": {
+    readonly input: typeof GhiblifyInputSchema;
+    readonly output: typeof GhiblifyOutputSchema;
+  };
+  readonly "fal-ai/glm-image": {
+    readonly input: typeof GlmImageInputSchema;
+    readonly output: typeof GlmImageOutputSchema;
+  };
+  readonly "fal-ai/glm-image/image-to-image": {
+    readonly input: typeof GlmImageImageToImageInputSchema;
+    readonly output: typeof GlmImageImageToImageOutputSchema;
+  };
+  readonly "fal-ai/gpt-image-1-mini": {
+    readonly input: typeof GptImage1MiniInputSchema;
+    readonly output: typeof GptImage1MiniOutputSchema;
+  };
+  readonly "fal-ai/gpt-image-1-mini/edit": {
+    readonly input: typeof GptImage1MiniEditInputSchema;
+    readonly output: typeof GptImage1MiniEditOutputSchema;
+  };
+  readonly "fal-ai/gpt-image-1.5": {
+    readonly input: typeof GptImage15InputSchema;
+    readonly output: typeof GptImage15OutputSchema;
+  };
+  readonly "fal-ai/gpt-image-1.5/edit": {
+    readonly input: typeof GptImage15EditInputSchema;
+    readonly output: typeof GptImage15EditOutputSchema;
+  };
+  readonly "fal-ai/gpt-image-1/edit-image": {
+    readonly input: typeof GptImage1EditImageInputSchema;
+    readonly output: typeof GptImage1EditImageOutputSchema;
+  };
+  readonly "fal-ai/gpt-image-1/text-to-image": {
+    readonly input: typeof GptImage1TextToImageInputSchema;
+    readonly output: typeof GptImage1TextToImageOutputSchema;
+  };
+  readonly "fal-ai/hidream-e1-1": {
+    readonly input: typeof HidreamE11InputSchema;
+    readonly output: typeof HidreamE11OutputSchema;
+  };
+  readonly "fal-ai/hidream-i1-dev": {
+    readonly input: typeof HidreamI1DevInputSchema;
+    readonly output: typeof HidreamI1DevOutputSchema;
+  };
+  readonly "fal-ai/hidream-i1-fast": {
+    readonly input: typeof HidreamI1FastInputSchema;
+    readonly output: typeof HidreamI1FastOutputSchema;
+  };
+  readonly "fal-ai/hidream-i1-full": {
+    readonly input: typeof HidreamI1FullInputSchema;
+    readonly output: typeof HidreamI1FullOutputSchema;
+  };
+  readonly "fal-ai/hidream-i1-full/image-to-image": {
+    readonly input: typeof HidreamI1FullImageToImageInputSchema;
+    readonly output: typeof HidreamI1FullImageToImageOutputSchema;
+  };
+  readonly "fal-ai/hidream-o1-image": {
+    readonly input: typeof HidreamO1ImageInputSchema;
+    readonly output: typeof HidreamO1ImageOutputSchema;
+  };
+  readonly "fal-ai/hidream-o1-image/dev": {
+    readonly input: typeof HidreamO1ImageDevInputSchema;
+    readonly output: typeof HidreamO1ImageDevOutputSchema;
+  };
+  readonly "fal-ai/hidream-o1-image/dev/edit": {
+    readonly input: typeof HidreamO1ImageDevEditInputSchema;
+    readonly output: typeof HidreamO1ImageDevEditOutputSchema;
+  };
+  readonly "fal-ai/hidream-o1-image/edit": {
+    readonly input: typeof HidreamO1ImageEditInputSchema;
+    readonly output: typeof HidreamO1ImageEditOutputSchema;
+  };
+  readonly "fal-ai/hunyuan_world": {
+    readonly input: typeof Hunyuan_worldInputSchema;
+    readonly output: typeof Hunyuan_worldOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-image/v2.1/text-to-image": {
+    readonly input: typeof HunyuanImageV21TextToImageInputSchema;
+    readonly output: typeof HunyuanImageV21TextToImageOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-image/v3/instruct/edit": {
+    readonly input: typeof HunyuanImageV3InstructEditInputSchema;
+    readonly output: typeof HunyuanImageV3InstructEditOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-image/v3/instruct/text-to-image": {
+    readonly input: typeof HunyuanImageV3InstructTextToImageInputSchema;
+    readonly output: typeof HunyuanImageV3InstructTextToImageOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-image/v3/text-to-image": {
+    readonly input: typeof HunyuanImageV3TextToImageInputSchema;
+    readonly output: typeof HunyuanImageV3TextToImageOutputSchema;
+  };
+  readonly "fal-ai/hy-wu-edit": {
+    readonly input: typeof HyWuEditInputSchema;
+    readonly output: typeof HyWuEditOutputSchema;
+  };
+  readonly "fal-ai/iclight-v2": {
+    readonly input: typeof IclightV2InputSchema;
+    readonly output: typeof IclightV2OutputSchema;
+  };
+  readonly "fal-ai/ideogram/character": {
+    readonly input: typeof IdeogramCharacterInputSchema;
+    readonly output: typeof IdeogramCharacterOutputSchema;
+  };
+  readonly "fal-ai/ideogram/character/edit": {
+    readonly input: typeof IdeogramCharacterEditInputSchema;
+    readonly output: typeof IdeogramCharacterEditOutputSchema;
+  };
+  readonly "fal-ai/ideogram/character/remix": {
+    readonly input: typeof IdeogramCharacterRemixInputSchema;
+    readonly output: typeof IdeogramCharacterRemixOutputSchema;
+  };
+  readonly "fal-ai/ideogram/custom-models/generate": {
+    readonly input: typeof IdeogramCustomModelsGenerateInputSchema;
+    readonly output: typeof IdeogramCustomModelsGenerateOutputSchema;
+  };
+  readonly "fal-ai/ideogram/remove-background": {
+    readonly input: typeof IdeogramRemoveBackgroundInputSchema;
+    readonly output: typeof IdeogramRemoveBackgroundOutputSchema;
+  };
+  readonly "fal-ai/ideogram/upscale": {
+    readonly input: typeof IdeogramUpscaleInputSchema;
+    readonly output: typeof IdeogramUpscaleOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2": {
+    readonly input: typeof IdeogramV2InputSchema;
+    readonly output: typeof IdeogramV2OutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2/edit": {
+    readonly input: typeof IdeogramV2EditInputSchema;
+    readonly output: typeof IdeogramV2EditOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2/remix": {
+    readonly input: typeof IdeogramV2RemixInputSchema;
+    readonly output: typeof IdeogramV2RemixOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2/turbo": {
+    readonly input: typeof IdeogramV2TurboInputSchema;
+    readonly output: typeof IdeogramV2TurboOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2/turbo/edit": {
+    readonly input: typeof IdeogramV2TurboEditInputSchema;
+    readonly output: typeof IdeogramV2TurboEditOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2/turbo/remix": {
+    readonly input: typeof IdeogramV2TurboRemixInputSchema;
+    readonly output: typeof IdeogramV2TurboRemixOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2a": {
+    readonly input: typeof IdeogramV2aInputSchema;
+    readonly output: typeof IdeogramV2aOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2a/remix": {
+    readonly input: typeof IdeogramV2aRemixInputSchema;
+    readonly output: typeof IdeogramV2aRemixOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2a/turbo": {
+    readonly input: typeof IdeogramV2aTurboInputSchema;
+    readonly output: typeof IdeogramV2aTurboOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v2a/turbo/remix": {
+    readonly input: typeof IdeogramV2aTurboRemixInputSchema;
+    readonly output: typeof IdeogramV2aTurboRemixOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3": {
+    readonly input: typeof IdeogramV3InputSchema;
+    readonly output: typeof IdeogramV3OutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3/edit": {
+    readonly input: typeof IdeogramV3EditInputSchema;
+    readonly output: typeof IdeogramV3EditOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3/generate-transparent": {
+    readonly input: typeof IdeogramV3GenerateTransparentInputSchema;
+    readonly output: typeof IdeogramV3GenerateTransparentOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3/layerize-text": {
+    readonly input: typeof IdeogramV3LayerizeTextInputSchema;
+    readonly output: typeof IdeogramV3LayerizeTextOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3/reframe": {
+    readonly input: typeof IdeogramV3ReframeInputSchema;
+    readonly output: typeof IdeogramV3ReframeOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3/remix": {
+    readonly input: typeof IdeogramV3RemixInputSchema;
+    readonly output: typeof IdeogramV3RemixOutputSchema;
+  };
+  readonly "fal-ai/ideogram/v3/replace-background": {
+    readonly input: typeof IdeogramV3ReplaceBackgroundInputSchema;
+    readonly output: typeof IdeogramV3ReplaceBackgroundOutputSchema;
+  };
+  readonly "fal-ai/illusion-diffusion": {
+    readonly input: typeof IllusionDiffusionInputSchema;
+    readonly output: typeof IllusionDiffusionOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/age-modify": {
+    readonly input: typeof ImageAppsV2AgeModifyInputSchema;
+    readonly output: typeof ImageAppsV2AgeModifyOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/city-teleport": {
+    readonly input: typeof ImageAppsV2CityTeleportInputSchema;
+    readonly output: typeof ImageAppsV2CityTeleportOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/expression-change": {
+    readonly input: typeof ImageAppsV2ExpressionChangeInputSchema;
+    readonly output: typeof ImageAppsV2ExpressionChangeOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/hair-change": {
+    readonly input: typeof ImageAppsV2HairChangeInputSchema;
+    readonly output: typeof ImageAppsV2HairChangeOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/headshot-photo": {
+    readonly input: typeof ImageAppsV2HeadshotPhotoInputSchema;
+    readonly output: typeof ImageAppsV2HeadshotPhotoOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/makeup-application": {
+    readonly input: typeof ImageAppsV2MakeupApplicationInputSchema;
+    readonly output: typeof ImageAppsV2MakeupApplicationOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/object-removal": {
+    readonly input: typeof ImageAppsV2ObjectRemovalInputSchema;
+    readonly output: typeof ImageAppsV2ObjectRemovalOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/outpaint": {
+    readonly input: typeof ImageAppsV2OutpaintInputSchema;
+    readonly output: typeof ImageAppsV2OutpaintOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/perspective": {
+    readonly input: typeof ImageAppsV2PerspectiveInputSchema;
+    readonly output: typeof ImageAppsV2PerspectiveOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/photo-restoration": {
+    readonly input: typeof ImageAppsV2PhotoRestorationInputSchema;
+    readonly output: typeof ImageAppsV2PhotoRestorationOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/photography-effects": {
+    readonly input: typeof ImageAppsV2PhotographyEffectsInputSchema;
+    readonly output: typeof ImageAppsV2PhotographyEffectsOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/portrait-enhance": {
+    readonly input: typeof ImageAppsV2PortraitEnhanceInputSchema;
+    readonly output: typeof ImageAppsV2PortraitEnhanceOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/product-holding": {
+    readonly input: typeof ImageAppsV2ProductHoldingInputSchema;
+    readonly output: typeof ImageAppsV2ProductHoldingOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/product-photography": {
+    readonly input: typeof ImageAppsV2ProductPhotographyInputSchema;
+    readonly output: typeof ImageAppsV2ProductPhotographyOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/relighting": {
+    readonly input: typeof ImageAppsV2RelightingInputSchema;
+    readonly output: typeof ImageAppsV2RelightingOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/style-transfer": {
+    readonly input: typeof ImageAppsV2StyleTransferInputSchema;
+    readonly output: typeof ImageAppsV2StyleTransferOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/texture-transform": {
+    readonly input: typeof ImageAppsV2TextureTransformInputSchema;
+    readonly output: typeof ImageAppsV2TextureTransformOutputSchema;
+  };
+  readonly "fal-ai/image-apps-v2/virtual-try-on": {
+    readonly input: typeof ImageAppsV2VirtualTryOnInputSchema;
+    readonly output: typeof ImageAppsV2VirtualTryOnOutputSchema;
+  };
+  readonly "fal-ai/image-editing/age-progression": {
+    readonly input: typeof ImageEditingAgeProgressionInputSchema;
+    readonly output: typeof ImageEditingAgeProgressionOutputSchema;
+  };
+  readonly "fal-ai/image-editing/baby-version": {
+    readonly input: typeof ImageEditingBabyVersionInputSchema;
+    readonly output: typeof ImageEditingBabyVersionOutputSchema;
+  };
+  readonly "fal-ai/image-editing/background-change": {
+    readonly input: typeof ImageEditingBackgroundChangeInputSchema;
+    readonly output: typeof ImageEditingBackgroundChangeOutputSchema;
+  };
+  readonly "fal-ai/image-editing/broccoli-haircut": {
+    readonly input: typeof ImageEditingBroccoliHaircutInputSchema;
+    readonly output: typeof ImageEditingBroccoliHaircutOutputSchema;
+  };
+  readonly "fal-ai/image-editing/cartoonify": {
+    readonly input: typeof ImageEditingCartoonifyInputSchema;
+    readonly output: typeof ImageEditingCartoonifyOutputSchema;
+  };
+  readonly "fal-ai/image-editing/color-correction": {
+    readonly input: typeof ImageEditingColorCorrectionInputSchema;
+    readonly output: typeof ImageEditingColorCorrectionOutputSchema;
+  };
+  readonly "fal-ai/image-editing/expression-change": {
+    readonly input: typeof ImageEditingExpressionChangeInputSchema;
+    readonly output: typeof ImageEditingExpressionChangeOutputSchema;
+  };
+  readonly "fal-ai/image-editing/face-enhancement": {
+    readonly input: typeof ImageEditingFaceEnhancementInputSchema;
+    readonly output: typeof ImageEditingFaceEnhancementOutputSchema;
+  };
+  readonly "fal-ai/image-editing/hair-change": {
+    readonly input: typeof ImageEditingHairChangeInputSchema;
+    readonly output: typeof ImageEditingHairChangeOutputSchema;
+  };
+  readonly "fal-ai/image-editing/object-removal": {
+    readonly input: typeof ImageEditingObjectRemovalInputSchema;
+    readonly output: typeof ImageEditingObjectRemovalOutputSchema;
+  };
+  readonly "fal-ai/image-editing/photo-restoration": {
+    readonly input: typeof ImageEditingPhotoRestorationInputSchema;
+    readonly output: typeof ImageEditingPhotoRestorationOutputSchema;
+  };
+  readonly "fal-ai/image-editing/plushie-style": {
+    readonly input: typeof ImageEditingPlushieStyleInputSchema;
+    readonly output: typeof ImageEditingPlushieStyleOutputSchema;
+  };
+  readonly "fal-ai/image-editing/professional-photo": {
+    readonly input: typeof ImageEditingProfessionalPhotoInputSchema;
+    readonly output: typeof ImageEditingProfessionalPhotoOutputSchema;
+  };
+  readonly "fal-ai/image-editing/realism": {
+    readonly input: typeof ImageEditingRealismInputSchema;
+    readonly output: typeof ImageEditingRealismOutputSchema;
+  };
+  readonly "fal-ai/image-editing/reframe": {
+    readonly input: typeof ImageEditingReframeInputSchema;
+    readonly output: typeof ImageEditingReframeOutputSchema;
+  };
+  readonly "fal-ai/image-editing/retouch": {
+    readonly input: typeof ImageEditingRetouchInputSchema;
+    readonly output: typeof ImageEditingRetouchOutputSchema;
+  };
+  readonly "fal-ai/image-editing/scene-composition": {
+    readonly input: typeof ImageEditingSceneCompositionInputSchema;
+    readonly output: typeof ImageEditingSceneCompositionOutputSchema;
+  };
+  readonly "fal-ai/image-editing/style-transfer": {
+    readonly input: typeof ImageEditingStyleTransferInputSchema;
+    readonly output: typeof ImageEditingStyleTransferOutputSchema;
+  };
+  readonly "fal-ai/image-editing/text-removal": {
+    readonly input: typeof ImageEditingTextRemovalInputSchema;
+    readonly output: typeof ImageEditingTextRemovalOutputSchema;
+  };
+  readonly "fal-ai/image-editing/time-of-day": {
+    readonly input: typeof ImageEditingTimeOfDayInputSchema;
+    readonly output: typeof ImageEditingTimeOfDayOutputSchema;
+  };
+  readonly "fal-ai/image-editing/weather-effect": {
+    readonly input: typeof ImageEditingWeatherEffectInputSchema;
+    readonly output: typeof ImageEditingWeatherEffectOutputSchema;
+  };
+  readonly "fal-ai/image-editing/wojak-style": {
+    readonly input: typeof ImageEditingWojakStyleInputSchema;
+    readonly output: typeof ImageEditingWojakStyleOutputSchema;
+  };
+  readonly "fal-ai/image-editing/youtube-thumbnails": {
+    readonly input: typeof ImageEditingYoutubeThumbnailsInputSchema;
+    readonly output: typeof ImageEditingYoutubeThumbnailsOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/depth-anything/v2": {
+    readonly input: typeof ImagePreprocessorsDepthAnythingV2InputSchema;
+    readonly output: typeof ImagePreprocessorsDepthAnythingV2OutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/hed": {
+    readonly input: typeof ImagePreprocessorsHedInputSchema;
+    readonly output: typeof ImagePreprocessorsHedOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/lineart": {
+    readonly input: typeof ImagePreprocessorsLineartInputSchema;
+    readonly output: typeof ImagePreprocessorsLineartOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/midas": {
+    readonly input: typeof ImagePreprocessorsMidasInputSchema;
+    readonly output: typeof ImagePreprocessorsMidasOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/mlsd": {
+    readonly input: typeof ImagePreprocessorsMlsdInputSchema;
+    readonly output: typeof ImagePreprocessorsMlsdOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/pidi": {
+    readonly input: typeof ImagePreprocessorsPidiInputSchema;
+    readonly output: typeof ImagePreprocessorsPidiOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/sam": {
+    readonly input: typeof ImagePreprocessorsSamInputSchema;
+    readonly output: typeof ImagePreprocessorsSamOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/scribble": {
+    readonly input: typeof ImagePreprocessorsScribbleInputSchema;
+    readonly output: typeof ImagePreprocessorsScribbleOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/teed": {
+    readonly input: typeof ImagePreprocessorsTeedInputSchema;
+    readonly output: typeof ImagePreprocessorsTeedOutputSchema;
+  };
+  readonly "fal-ai/image-preprocessors/zoe": {
+    readonly input: typeof ImagePreprocessorsZoeInputSchema;
+    readonly output: typeof ImagePreprocessorsZoeOutputSchema;
+  };
+  readonly "fal-ai/image2pixel": {
+    readonly input: typeof Image2pixelInputSchema;
+    readonly output: typeof Image2pixelOutputSchema;
+  };
+  readonly "fal-ai/image2svg": {
+    readonly input: typeof Image2svgInputSchema;
+    readonly output: typeof Image2svgOutputSchema;
+  };
+  readonly "fal-ai/imagen3": {
+    readonly input: typeof Imagen3InputSchema;
+    readonly output: typeof Imagen3OutputSchema;
+  };
+  readonly "fal-ai/imagen3/fast": {
+    readonly input: typeof Imagen3FastInputSchema;
+    readonly output: typeof Imagen3FastOutputSchema;
+  };
+  readonly "fal-ai/imagen4/preview": {
+    readonly input: typeof Imagen4PreviewInputSchema;
+    readonly output: typeof Imagen4PreviewOutputSchema;
+  };
+  readonly "fal-ai/imagen4/preview/fast": {
+    readonly input: typeof Imagen4PreviewFastInputSchema;
+    readonly output: typeof Imagen4PreviewFastOutputSchema;
+  };
+  readonly "fal-ai/imagen4/preview/ultra": {
+    readonly input: typeof Imagen4PreviewUltraInputSchema;
+    readonly output: typeof Imagen4PreviewUltraOutputSchema;
+  };
+  readonly "fal-ai/imageutils/depth": {
+    readonly input: typeof ImageutilsDepthInputSchema;
+    readonly output: typeof ImageutilsDepthOutputSchema;
+  };
+  readonly "fal-ai/imageutils/marigold-depth": {
+    readonly input: typeof ImageutilsMarigoldDepthInputSchema;
+    readonly output: typeof ImageutilsMarigoldDepthOutputSchema;
+  };
+  readonly "fal-ai/imageutils/rembg": {
+    readonly input: typeof ImageutilsRembgInputSchema;
+    readonly output: typeof ImageutilsRembgOutputSchema;
+  };
+  readonly "fal-ai/inpaint": {
+    readonly input: typeof InpaintInputSchema;
+    readonly output: typeof InpaintOutputSchema;
+  };
+  readonly "fal-ai/instant-character": {
+    readonly input: typeof InstantCharacterInputSchema;
+    readonly output: typeof InstantCharacterOutputSchema;
+  };
+  readonly "fal-ai/invisible-watermark": {
+    readonly input: typeof InvisibleWatermarkInputSchema;
+    readonly output: typeof InvisibleWatermarkOutputSchema;
+  };
+  readonly "fal-ai/ip-adapter-face-id": {
+    readonly input: typeof IpAdapterFaceIdInputSchema;
+    readonly output: typeof IpAdapterFaceIdOutputSchema;
+  };
+  readonly "fal-ai/janus": {
+    readonly input: typeof JanusInputSchema;
+    readonly output: typeof JanusOutputSchema;
+  };
+  readonly "fal-ai/joyai-image-edit": {
+    readonly input: typeof JoyaiImageEditInputSchema;
+    readonly output: typeof JoyaiImageEditOutputSchema;
+  };
+  readonly "fal-ai/kling-image/o1": {
+    readonly input: typeof KlingImageO1InputSchema;
+    readonly output: typeof KlingImageO1OutputSchema;
+  };
+  readonly "fal-ai/kling-image/o3/image-to-image": {
+    readonly input: typeof KlingImageO3ImageToImageInputSchema;
+    readonly output: typeof KlingImageO3ImageToImageOutputSchema;
+  };
+  readonly "fal-ai/kling-image/o3/text-to-image": {
+    readonly input: typeof KlingImageO3TextToImageInputSchema;
+    readonly output: typeof KlingImageO3TextToImageOutputSchema;
+  };
+  readonly "fal-ai/kling-image/v3/image-to-image": {
+    readonly input: typeof KlingImageV3ImageToImageInputSchema;
+    readonly output: typeof KlingImageV3ImageToImageOutputSchema;
+  };
+  readonly "fal-ai/kling-image/v3/text-to-image": {
+    readonly input: typeof KlingImageV3TextToImageInputSchema;
+    readonly output: typeof KlingImageV3TextToImageOutputSchema;
+  };
+  readonly "fal-ai/kling/v1-5/kolors-virtual-try-on": {
+    readonly input: typeof KlingV15KolorsVirtualTryOnInputSchema;
+    readonly output: typeof KlingV15KolorsVirtualTryOnOutputSchema;
+  };
+  readonly "fal-ai/kolors": {
+    readonly input: typeof KolorsInputSchema;
+    readonly output: typeof KolorsOutputSchema;
+  };
+  readonly "fal-ai/kolors/image-to-image": {
+    readonly input: typeof KolorsImageToImageInputSchema;
+    readonly output: typeof KolorsImageToImageOutputSchema;
+  };
+  readonly "fal-ai/layer-diffusion": {
+    readonly input: typeof LayerDiffusionInputSchema;
+    readonly output: typeof LayerDiffusionOutputSchema;
+  };
+  readonly "fal-ai/lcm": {
+    readonly input: typeof LcmInputSchema;
+    readonly output: typeof LcmOutputSchema;
+  };
+  readonly "fal-ai/lcm-sd15-i2i": {
+    readonly input: typeof LcmSd15I2iInputSchema;
+    readonly output: typeof LcmSd15I2iOutputSchema;
+  };
+  readonly "fal-ai/leffa/pose-transfer": {
+    readonly input: typeof LeffaPoseTransferInputSchema;
+    readonly output: typeof LeffaPoseTransferOutputSchema;
+  };
+  readonly "fal-ai/leffa/virtual-tryon": {
+    readonly input: typeof LeffaVirtualTryonInputSchema;
+    readonly output: typeof LeffaVirtualTryonOutputSchema;
+  };
+  readonly "fal-ai/lightning-models": {
+    readonly input: typeof LightningModelsInputSchema;
+    readonly output: typeof LightningModelsOutputSchema;
+  };
+  readonly "fal-ai/live-portrait/image": {
+    readonly input: typeof LivePortraitImageInputSchema;
+    readonly output: typeof LivePortraitImageOutputSchema;
+  };
+  readonly "fal-ai/longcat-image": {
+    readonly input: typeof LongcatImageInputSchema;
+    readonly output: typeof LongcatImageOutputSchema;
+  };
+  readonly "fal-ai/longcat-image/edit": {
+    readonly input: typeof LongcatImageEditInputSchema;
+    readonly output: typeof LongcatImageEditOutputSchema;
+  };
+  readonly "fal-ai/lora": {
+    readonly input: typeof LoraInputSchema;
+    readonly output: typeof LoraOutputSchema;
+  };
+  readonly "fal-ai/lora/image-to-image": {
+    readonly input: typeof LoraImageToImageInputSchema;
+    readonly output: typeof LoraImageToImageOutputSchema;
+  };
+  readonly "fal-ai/lora/inpaint": {
+    readonly input: typeof LoraInpaintInputSchema;
+    readonly output: typeof LoraInpaintOutputSchema;
+  };
+  readonly "fal-ai/lucidflux": {
+    readonly input: typeof LucidfluxInputSchema;
+    readonly output: typeof LucidfluxOutputSchema;
+  };
+  readonly "fal-ai/luma-photon": {
+    readonly input: typeof LumaPhotonInputSchema;
+    readonly output: typeof LumaPhotonOutputSchema;
+  };
+  readonly "fal-ai/luma-photon/flash": {
+    readonly input: typeof LumaPhotonFlashInputSchema;
+    readonly output: typeof LumaPhotonFlashOutputSchema;
+  };
+  readonly "fal-ai/luma-photon/flash/modify": {
+    readonly input: typeof LumaPhotonFlashModifyInputSchema;
+    readonly output: typeof LumaPhotonFlashModifyOutputSchema;
+  };
+  readonly "fal-ai/luma-photon/flash/reframe": {
+    readonly input: typeof LumaPhotonFlashReframeInputSchema;
+    readonly output: typeof LumaPhotonFlashReframeOutputSchema;
+  };
+  readonly "fal-ai/luma-photon/modify": {
+    readonly input: typeof LumaPhotonModifyInputSchema;
+    readonly output: typeof LumaPhotonModifyOutputSchema;
+  };
+  readonly "fal-ai/luma-photon/reframe": {
+    readonly input: typeof LumaPhotonReframeInputSchema;
+    readonly output: typeof LumaPhotonReframeOutputSchema;
+  };
+  readonly "fal-ai/lumina-image/v2": {
+    readonly input: typeof LuminaImageV2InputSchema;
+    readonly output: typeof LuminaImageV2OutputSchema;
+  };
+  readonly "fal-ai/minimax/image-01": {
+    readonly input: typeof MinimaxImage01InputSchema;
+    readonly output: typeof MinimaxImage01OutputSchema;
+  };
+  readonly "fal-ai/minimax/image-01/subject-reference": {
+    readonly input: typeof MinimaxImage01SubjectReferenceInputSchema;
+    readonly output: typeof MinimaxImage01SubjectReferenceOutputSchema;
+  };
+  readonly "fal-ai/mix-dehaze-net": {
+    readonly input: typeof MixDehazeNetInputSchema;
+    readonly output: typeof MixDehazeNetOutputSchema;
+  };
+  readonly "fal-ai/moondream-next/detection": {
+    readonly input: typeof MoondreamNextDetectionInputSchema;
+    readonly output: typeof MoondreamNextDetectionOutputSchema;
+  };
+  readonly "fal-ai/moondream3-preview/segment": {
+    readonly input: typeof Moondream3PreviewSegmentInputSchema;
+    readonly output: typeof Moondream3PreviewSegmentOutputSchema;
+  };
+  readonly "fal-ai/nafnet/deblur": {
+    readonly input: typeof NafnetDeblurInputSchema;
+    readonly output: typeof NafnetDeblurOutputSchema;
+  };
+  readonly "fal-ai/nafnet/denoise": {
+    readonly input: typeof NafnetDenoiseInputSchema;
+    readonly output: typeof NafnetDenoiseOutputSchema;
+  };
+  readonly "fal-ai/nano-banana": {
+    readonly input: typeof NanoBananaInputSchema;
+    readonly output: typeof NanoBananaOutputSchema;
+  };
+  readonly "fal-ai/nano-banana-2": {
+    readonly input: typeof NanoBanana2InputSchema;
+    readonly output: typeof NanoBanana2OutputSchema;
+  };
+  readonly "fal-ai/nano-banana-2/edit": {
+    readonly input: typeof NanoBanana2EditInputSchema;
+    readonly output: typeof NanoBanana2EditOutputSchema;
+  };
+  readonly "fal-ai/nano-banana-pro": {
+    readonly input: typeof NanoBananaProInputSchema;
+    readonly output: typeof NanoBananaProOutputSchema;
+  };
+  readonly "fal-ai/nano-banana-pro/edit": {
+    readonly input: typeof NanoBananaProEditInputSchema;
+    readonly output: typeof NanoBananaProEditOutputSchema;
+  };
+  readonly "fal-ai/nano-banana/edit": {
+    readonly input: typeof NanoBananaEditInputSchema;
+    readonly output: typeof NanoBananaEditOutputSchema;
+  };
+  readonly "fal-ai/nucleus-image": {
+    readonly input: typeof NucleusImageInputSchema;
+    readonly output: typeof NucleusImageOutputSchema;
+  };
+  readonly "fal-ai/object-removal": {
+    readonly input: typeof ObjectRemovalInputSchema;
+    readonly output: typeof ObjectRemovalOutputSchema;
+  };
+  readonly "fal-ai/object-removal/bbox": {
+    readonly input: typeof ObjectRemovalBboxInputSchema;
+    readonly output: typeof ObjectRemovalBboxOutputSchema;
+  };
+  readonly "fal-ai/object-removal/mask": {
+    readonly input: typeof ObjectRemovalMaskInputSchema;
+    readonly output: typeof ObjectRemovalMaskOutputSchema;
+  };
+  readonly "fal-ai/omni-zero": {
+    readonly input: typeof OmniZeroInputSchema;
+    readonly output: typeof OmniZeroOutputSchema;
+  };
+  readonly "fal-ai/omnigen-v1": {
+    readonly input: typeof OmnigenV1InputSchema;
+    readonly output: typeof OmnigenV1OutputSchema;
+  };
+  readonly "fal-ai/omnigen-v2": {
+    readonly input: typeof OmnigenV2InputSchema;
+    readonly output: typeof OmnigenV2OutputSchema;
+  };
+  readonly "fal-ai/onereward": {
+    readonly input: typeof OnerewardInputSchema;
+    readonly output: typeof OnerewardOutputSchema;
+  };
+  readonly "fal-ai/ovis-image": {
+    readonly input: typeof OvisImageInputSchema;
+    readonly output: typeof OvisImageOutputSchema;
+  };
+  readonly "fal-ai/pasd": {
+    readonly input: typeof PasdInputSchema;
+    readonly output: typeof PasdOutputSchema;
+  };
+  readonly "fal-ai/patina": {
+    readonly input: typeof PatinaInputSchema;
+    readonly output: typeof PatinaOutputSchema;
+  };
+  readonly "fal-ai/patina/material": {
+    readonly input: typeof PatinaMaterialInputSchema;
+    readonly output: typeof PatinaMaterialOutputSchema;
+  };
+  readonly "fal-ai/patina/material/extract": {
+    readonly input: typeof PatinaMaterialExtractInputSchema;
+    readonly output: typeof PatinaMaterialExtractOutputSchema;
+  };
+  readonly "fal-ai/phota": {
+    readonly input: typeof PhotaInputSchema;
+    readonly output: typeof PhotaOutputSchema;
+  };
+  readonly "fal-ai/phota/edit": {
+    readonly input: typeof PhotaEditInputSchema;
+    readonly output: typeof PhotaEditOutputSchema;
+  };
+  readonly "fal-ai/phota/enhance": {
+    readonly input: typeof PhotaEnhanceInputSchema;
+    readonly output: typeof PhotaEnhanceOutputSchema;
+  };
+  readonly "fal-ai/photomaker": {
+    readonly input: typeof PhotomakerInputSchema;
+    readonly output: typeof PhotomakerOutputSchema;
+  };
+  readonly "fal-ai/physic-edit": {
+    readonly input: typeof PhysicEditInputSchema;
+    readonly output: typeof PhysicEditOutputSchema;
+  };
+  readonly "fal-ai/piflow": {
+    readonly input: typeof PiflowInputSchema;
+    readonly output: typeof PiflowOutputSchema;
+  };
+  readonly "fal-ai/pixart-sigma": {
+    readonly input: typeof PixartSigmaInputSchema;
+    readonly output: typeof PixartSigmaOutputSchema;
+  };
+  readonly "fal-ai/playground-v25": {
+    readonly input: typeof PlaygroundV25InputSchema;
+    readonly output: typeof PlaygroundV25OutputSchema;
+  };
+  readonly "fal-ai/playground-v25/image-to-image": {
+    readonly input: typeof PlaygroundV25ImageToImageInputSchema;
+    readonly output: typeof PlaygroundV25ImageToImageOutputSchema;
+  };
+  readonly "fal-ai/playground-v25/inpainting": {
+    readonly input: typeof PlaygroundV25InpaintingInputSchema;
+    readonly output: typeof PlaygroundV25InpaintingOutputSchema;
+  };
+  readonly "fal-ai/plushify": {
+    readonly input: typeof PlushifyInputSchema;
+    readonly output: typeof PlushifyOutputSchema;
+  };
+  readonly "fal-ai/pony-v7": {
+    readonly input: typeof PonyV7InputSchema;
+    readonly output: typeof PonyV7OutputSchema;
+  };
+  readonly "fal-ai/post-processing": {
+    readonly input: typeof PostProcessingInputSchema;
+    readonly output: typeof PostProcessingOutputSchema;
+  };
+  readonly "fal-ai/post-processing/blur": {
+    readonly input: typeof PostProcessingBlurInputSchema;
+    readonly output: typeof PostProcessingBlurOutputSchema;
+  };
+  readonly "fal-ai/post-processing/chromatic-aberration": {
+    readonly input: typeof PostProcessingChromaticAberrationInputSchema;
+    readonly output: typeof PostProcessingChromaticAberrationOutputSchema;
+  };
+  readonly "fal-ai/post-processing/color-correction": {
+    readonly input: typeof PostProcessingColorCorrectionInputSchema;
+    readonly output: typeof PostProcessingColorCorrectionOutputSchema;
+  };
+  readonly "fal-ai/post-processing/color-tint": {
+    readonly input: typeof PostProcessingColorTintInputSchema;
+    readonly output: typeof PostProcessingColorTintOutputSchema;
+  };
+  readonly "fal-ai/post-processing/desaturate": {
+    readonly input: typeof PostProcessingDesaturateInputSchema;
+    readonly output: typeof PostProcessingDesaturateOutputSchema;
+  };
+  readonly "fal-ai/post-processing/dissolve": {
+    readonly input: typeof PostProcessingDissolveInputSchema;
+    readonly output: typeof PostProcessingDissolveOutputSchema;
+  };
+  readonly "fal-ai/post-processing/dodge-burn": {
+    readonly input: typeof PostProcessingDodgeBurnInputSchema;
+    readonly output: typeof PostProcessingDodgeBurnOutputSchema;
+  };
+  readonly "fal-ai/post-processing/grain": {
+    readonly input: typeof PostProcessingGrainInputSchema;
+    readonly output: typeof PostProcessingGrainOutputSchema;
+  };
+  readonly "fal-ai/post-processing/parabolize": {
+    readonly input: typeof PostProcessingParabolizeInputSchema;
+    readonly output: typeof PostProcessingParabolizeOutputSchema;
+  };
+  readonly "fal-ai/post-processing/sharpen": {
+    readonly input: typeof PostProcessingSharpenInputSchema;
+    readonly output: typeof PostProcessingSharpenOutputSchema;
+  };
+  readonly "fal-ai/post-processing/solarize": {
+    readonly input: typeof PostProcessingSolarizeInputSchema;
+    readonly output: typeof PostProcessingSolarizeOutputSchema;
+  };
+  readonly "fal-ai/post-processing/vignette": {
+    readonly input: typeof PostProcessingVignetteInputSchema;
+    readonly output: typeof PostProcessingVignetteOutputSchema;
+  };
+  readonly "fal-ai/pulid": {
+    readonly input: typeof PulidInputSchema;
+    readonly output: typeof PulidOutputSchema;
+  };
+  readonly "fal-ai/qwen-image": {
+    readonly input: typeof QwenImageInputSchema;
+    readonly output: typeof QwenImageOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2/edit": {
+    readonly input: typeof QwenImage2EditInputSchema;
+    readonly output: typeof QwenImage2EditOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2/pro/edit": {
+    readonly input: typeof QwenImage2ProEditInputSchema;
+    readonly output: typeof QwenImage2ProEditOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2/pro/text-to-image": {
+    readonly input: typeof QwenImage2ProTextToImageInputSchema;
+    readonly output: typeof QwenImage2ProTextToImageOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2/text-to-image": {
+    readonly input: typeof QwenImage2TextToImageInputSchema;
+    readonly output: typeof QwenImage2TextToImageOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2512": {
+    readonly input: typeof QwenImage2512InputSchema;
+    readonly output: typeof QwenImage2512OutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2512/lora": {
+    readonly input: typeof QwenImage2512LoraInputSchema;
+    readonly output: typeof QwenImage2512LoraOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit": {
+    readonly input: typeof QwenImageEditInputSchema;
+    readonly output: typeof QwenImageEditOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509": {
+    readonly input: typeof QwenImageEdit2509InputSchema;
+    readonly output: typeof QwenImageEdit2509OutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora": {
+    readonly input: typeof QwenImageEdit2509LoraInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/add-background": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryAddBackgroundInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryAddBackgroundOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/face-to-full-portrait": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryFaceToFullPortraitInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryFaceToFullPortraitOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/group-photo": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryGroupPhotoInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryGroupPhotoOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/integrate-product": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryIntegrateProductInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryIntegrateProductOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/lighting-restoration": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryLightingRestorationInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryLightingRestorationOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/multiple-angles": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryMultipleAnglesInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryMultipleAnglesOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/next-scene": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryNextSceneInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryNextSceneOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/remove-element": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryRemoveElementInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryRemoveElementOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/remove-lighting": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryRemoveLightingInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryRemoveLightingOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-lora-gallery/shirt-design": {
+    readonly input: typeof QwenImageEdit2509LoraGalleryShirtDesignInputSchema;
+    readonly output: typeof QwenImageEdit2509LoraGalleryShirtDesignOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2511": {
+    readonly input: typeof QwenImageEdit2511InputSchema;
+    readonly output: typeof QwenImageEdit2511OutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2511-multiple-angles": {
+    readonly input: typeof QwenImageEdit2511MultipleAnglesInputSchema;
+    readonly output: typeof QwenImageEdit2511MultipleAnglesOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2511/lora": {
+    readonly input: typeof QwenImageEdit2511LoraInputSchema;
+    readonly output: typeof QwenImageEdit2511LoraOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-lora": {
+    readonly input: typeof QwenImageEditLoraInputSchema;
+    readonly output: typeof QwenImageEditLoraOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus": {
+    readonly input: typeof QwenImageEditPlusInputSchema;
+    readonly output: typeof QwenImageEditPlusOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora": {
+    readonly input: typeof QwenImageEditPlusLoraInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/add-background": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryAddBackgroundInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryAddBackgroundOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/face-to-full-portrait": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryFaceToFullPortraitInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryFaceToFullPortraitOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/group-photo": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryGroupPhotoInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryGroupPhotoOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/integrate-product": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryIntegrateProductInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryIntegrateProductOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/lighting-restoration": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryLightingRestorationInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryLightingRestorationOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/multiple-angles": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryMultipleAnglesInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryMultipleAnglesOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/next-scene": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryNextSceneInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryNextSceneOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/remove-element": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryRemoveElementInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryRemoveElementOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/remove-lighting": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryRemoveLightingInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryRemoveLightingOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-lora-gallery/shirt-design": {
+    readonly input: typeof QwenImageEditPlusLoraGalleryShirtDesignInputSchema;
+    readonly output: typeof QwenImageEditPlusLoraGalleryShirtDesignOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit/image-to-image": {
+    readonly input: typeof QwenImageEditImageToImageInputSchema;
+    readonly output: typeof QwenImageEditImageToImageOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit/inpaint": {
+    readonly input: typeof QwenImageEditInpaintInputSchema;
+    readonly output: typeof QwenImageEditInpaintOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-layered": {
+    readonly input: typeof QwenImageLayeredInputSchema;
+    readonly output: typeof QwenImageLayeredOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-layered/lora": {
+    readonly input: typeof QwenImageLayeredLoraInputSchema;
+    readonly output: typeof QwenImageLayeredLoraOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-max/edit": {
+    readonly input: typeof QwenImageMaxEditInputSchema;
+    readonly output: typeof QwenImageMaxEditOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-max/text-to-image": {
+    readonly input: typeof QwenImageMaxTextToImageInputSchema;
+    readonly output: typeof QwenImageMaxTextToImageOutputSchema;
+  };
+  readonly "fal-ai/qwen-image/image-to-image": {
+    readonly input: typeof QwenImageImageToImageInputSchema;
+    readonly output: typeof QwenImageImageToImageOutputSchema;
+  };
+  readonly "fal-ai/realistic-vision": {
+    readonly input: typeof RealisticVisionInputSchema;
+    readonly output: typeof RealisticVisionOutputSchema;
+  };
+  readonly "fal-ai/recraft-20b": {
+    readonly input: typeof Recraft20bInputSchema;
+    readonly output: typeof Recraft20bOutputSchema;
+  };
+  readonly "fal-ai/recraft/upscale/creative": {
+    readonly input: typeof RecraftUpscaleCreativeInputSchema;
+    readonly output: typeof RecraftUpscaleCreativeOutputSchema;
+  };
+  readonly "fal-ai/recraft/upscale/crisp": {
+    readonly input: typeof RecraftUpscaleCrispInputSchema;
+    readonly output: typeof RecraftUpscaleCrispOutputSchema;
+  };
+  readonly "fal-ai/recraft/v3/image-to-image": {
+    readonly input: typeof RecraftV3ImageToImageInputSchema;
+    readonly output: typeof RecraftV3ImageToImageOutputSchema;
+  };
+  readonly "fal-ai/recraft/v3/text-to-image": {
+    readonly input: typeof RecraftV3TextToImageInputSchema;
+    readonly output: typeof RecraftV3TextToImageOutputSchema;
+  };
+  readonly "fal-ai/recraft/v4/pro/text-to-image": {
+    readonly input: typeof RecraftV4ProTextToImageInputSchema;
+    readonly output: typeof RecraftV4ProTextToImageOutputSchema;
+  };
+  readonly "fal-ai/recraft/v4/pro/text-to-vector": {
+    readonly input: typeof RecraftV4ProTextToVectorInputSchema;
+    readonly output: typeof RecraftV4ProTextToVectorOutputSchema;
+  };
+  readonly "fal-ai/recraft/v4/text-to-image": {
+    readonly input: typeof RecraftV4TextToImageInputSchema;
+    readonly output: typeof RecraftV4TextToImageOutputSchema;
+  };
+  readonly "fal-ai/recraft/v4/text-to-vector": {
+    readonly input: typeof RecraftV4TextToVectorInputSchema;
+    readonly output: typeof RecraftV4TextToVectorOutputSchema;
+  };
+  readonly "fal-ai/recraft/vectorize": {
+    readonly input: typeof RecraftVectorizeInputSchema;
+    readonly output: typeof RecraftVectorizeOutputSchema;
+  };
+  readonly "fal-ai/retoucher": {
+    readonly input: typeof RetoucherInputSchema;
+    readonly output: typeof RetoucherOutputSchema;
+  };
+  readonly "fal-ai/rife": {
+    readonly input: typeof RifeInputSchema;
+    readonly output: typeof RifeOutputSchema;
+  };
+  readonly "fal-ai/sam-3-1/image": {
+    readonly input: typeof Sam31ImageInputSchema;
+    readonly output: typeof Sam31ImageOutputSchema;
+  };
+  readonly "fal-ai/sam-3-1/image-rle": {
+    readonly input: typeof Sam31ImageRleInputSchema;
+    readonly output: typeof Sam31ImageRleOutputSchema;
+  };
+  readonly "fal-ai/sam-3/image": {
+    readonly input: typeof Sam3ImageInputSchema;
+    readonly output: typeof Sam3ImageOutputSchema;
+  };
+  readonly "fal-ai/sam-3/image-rle": {
+    readonly input: typeof Sam3ImageRleInputSchema;
+    readonly output: typeof Sam3ImageRleOutputSchema;
+  };
+  readonly "fal-ai/sam2/auto-segment": {
+    readonly input: typeof Sam2AutoSegmentInputSchema;
+    readonly output: typeof Sam2AutoSegmentOutputSchema;
+  };
+  readonly "fal-ai/sam2/image": {
+    readonly input: typeof Sam2ImageInputSchema;
+    readonly output: typeof Sam2ImageOutputSchema;
+  };
+  readonly "fal-ai/sana": {
+    readonly input: typeof SanaInputSchema;
+    readonly output: typeof SanaOutputSchema;
+  };
+  readonly "fal-ai/sana/sprint": {
+    readonly input: typeof SanaSprintInputSchema;
+    readonly output: typeof SanaSprintOutputSchema;
+  };
+  readonly "fal-ai/sana/v1.5/1.6b": {
+    readonly input: typeof SanaV151_6bInputSchema;
+    readonly output: typeof SanaV151_6bOutputSchema;
+  };
+  readonly "fal-ai/sana/v1.5/4.8b": {
+    readonly input: typeof SanaV154_8bInputSchema;
+    readonly output: typeof SanaV154_8bOutputSchema;
+  };
+  readonly "fal-ai/sd15-depth-controlnet": {
+    readonly input: typeof Sd15DepthControlnetInputSchema;
+    readonly output: typeof Sd15DepthControlnetOutputSchema;
+  };
+  readonly "fal-ai/sdxl-controlnet-union": {
+    readonly input: typeof SdxlControlnetUnionInputSchema;
+    readonly output: typeof SdxlControlnetUnionOutputSchema;
+  };
+  readonly "fal-ai/sdxl-controlnet-union/image-to-image": {
+    readonly input: typeof SdxlControlnetUnionImageToImageInputSchema;
+    readonly output: typeof SdxlControlnetUnionImageToImageOutputSchema;
+  };
+  readonly "fal-ai/sdxl-controlnet-union/inpainting": {
+    readonly input: typeof SdxlControlnetUnionInpaintingInputSchema;
+    readonly output: typeof SdxlControlnetUnionInpaintingOutputSchema;
+  };
+  readonly "fal-ai/seedvr/upscale/image": {
+    readonly input: typeof SeedvrUpscaleImageInputSchema;
+    readonly output: typeof SeedvrUpscaleImageOutputSchema;
+  };
+  readonly "fal-ai/seedvr/upscale/image/seamless": {
+    readonly input: typeof SeedvrUpscaleImageSeamlessInputSchema;
+    readonly output: typeof SeedvrUpscaleImageSeamlessOutputSchema;
+  };
+  readonly "fal-ai/smart-resize": {
+    readonly input: typeof SmartResizeInputSchema;
+    readonly output: typeof SmartResizeOutputSchema;
+  };
+  readonly "fal-ai/stable-cascade": {
+    readonly input: typeof StableCascadeInputSchema;
+    readonly output: typeof StableCascadeOutputSchema;
+  };
+  readonly "fal-ai/stable-cascade/sote-diffusion": {
+    readonly input: typeof StableCascadeSoteDiffusionInputSchema;
+    readonly output: typeof StableCascadeSoteDiffusionOutputSchema;
+  };
+  readonly "fal-ai/stable-diffusion-v15": {
+    readonly input: typeof StableDiffusionV15InputSchema;
+    readonly output: typeof StableDiffusionV15OutputSchema;
+  };
+  readonly "fal-ai/stable-diffusion-v3-medium": {
+    readonly input: typeof StableDiffusionV3MediumInputSchema;
+    readonly output: typeof StableDiffusionV3MediumOutputSchema;
+  };
+  readonly "fal-ai/stable-diffusion-v3-medium/image-to-image": {
+    readonly input: typeof StableDiffusionV3MediumImageToImageInputSchema;
+    readonly output: typeof StableDiffusionV3MediumImageToImageOutputSchema;
+  };
+  readonly "fal-ai/stable-diffusion-v35-large": {
+    readonly input: typeof StableDiffusionV35LargeInputSchema;
+    readonly output: typeof StableDiffusionV35LargeOutputSchema;
+  };
+  readonly "fal-ai/stable-diffusion-v35-medium": {
+    readonly input: typeof StableDiffusionV35MediumInputSchema;
+    readonly output: typeof StableDiffusionV35MediumOutputSchema;
+  };
+  readonly "fal-ai/star-vector": {
+    readonly input: typeof StarVectorInputSchema;
+    readonly output: typeof StarVectorOutputSchema;
+  };
+  readonly "fal-ai/step1x-edit": {
+    readonly input: typeof Step1xEditInputSchema;
+    readonly output: typeof Step1xEditOutputSchema;
+  };
+  readonly "fal-ai/stepx-edit2": {
+    readonly input: typeof StepxEdit2InputSchema;
+    readonly output: typeof StepxEdit2OutputSchema;
+  };
+  readonly "fal-ai/swin2sr": {
+    readonly input: typeof Swin2srInputSchema;
+    readonly output: typeof Swin2srOutputSchema;
+  };
+  readonly "fal-ai/switti": {
+    readonly input: typeof SwittiInputSchema;
+    readonly output: typeof SwittiOutputSchema;
+  };
+  readonly "fal-ai/switti/512": {
+    readonly input: typeof Switti512InputSchema;
+    readonly output: typeof Switti512OutputSchema;
+  };
+  readonly "fal-ai/thera": {
+    readonly input: typeof TheraInputSchema;
+    readonly output: typeof TheraOutputSchema;
+  };
+  readonly "fal-ai/topaz/upscale/image": {
+    readonly input: typeof TopazUpscaleImageInputSchema;
+    readonly output: typeof TopazUpscaleImageOutputSchema;
+  };
+  readonly "fal-ai/uno": {
+    readonly input: typeof UnoInputSchema;
+    readonly output: typeof UnoOutputSchema;
+  };
+  readonly "fal-ai/uso": {
+    readonly input: typeof UsoInputSchema;
+    readonly output: typeof UsoOutputSchema;
+  };
+  readonly "fal-ai/vecglypher": {
+    readonly input: typeof VecglypherInputSchema;
+    readonly output: typeof VecglypherOutputSchema;
+  };
+  readonly "fal-ai/vecglypher/image-to-svg": {
+    readonly input: typeof VecglypherImageToSvgInputSchema;
+    readonly output: typeof VecglypherImageToSvgOutputSchema;
+  };
+  readonly "fal-ai/vidu/q2/reference-to-image": {
+    readonly input: typeof ViduQ2ReferenceToImageInputSchema;
+    readonly output: typeof ViduQ2ReferenceToImageOutputSchema;
+  };
+  readonly "fal-ai/vidu/q2/text-to-image": {
+    readonly input: typeof ViduQ2TextToImageInputSchema;
+    readonly output: typeof ViduQ2TextToImageOutputSchema;
+  };
+  readonly "fal-ai/vidu/reference-to-image": {
+    readonly input: typeof ViduReferenceToImageInputSchema;
+    readonly output: typeof ViduReferenceToImageOutputSchema;
+  };
+  readonly "fal-ai/wan-25-preview/image-to-image": {
+    readonly input: typeof Wan25PreviewImageToImageInputSchema;
+    readonly output: typeof Wan25PreviewImageToImageOutputSchema;
+  };
+  readonly "fal-ai/wan-25-preview/text-to-image": {
+    readonly input: typeof Wan25PreviewTextToImageInputSchema;
+    readonly output: typeof Wan25PreviewTextToImageOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.2-5b/text-to-image": {
+    readonly input: typeof WanV225bTextToImageInputSchema;
+    readonly output: typeof WanV225bTextToImageOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.2-a14b/image-to-image": {
+    readonly input: typeof WanV22A14bImageToImageInputSchema;
+    readonly output: typeof WanV22A14bImageToImageOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.2-a14b/text-to-image": {
+    readonly input: typeof WanV22A14bTextToImageInputSchema;
+    readonly output: typeof WanV22A14bTextToImageOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.2-a14b/text-to-image/lora": {
+    readonly input: typeof WanV22A14bTextToImageLoraInputSchema;
+    readonly output: typeof WanV22A14bTextToImageLoraOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.7/edit": {
+    readonly input: typeof WanV27EditInputSchema;
+    readonly output: typeof WanV27EditOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.7/pro/edit": {
+    readonly input: typeof WanV27ProEditInputSchema;
+    readonly output: typeof WanV27ProEditOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.7/pro/text-to-image": {
+    readonly input: typeof WanV27ProTextToImageInputSchema;
+    readonly output: typeof WanV27ProTextToImageOutputSchema;
+  };
+  readonly "fal-ai/wan/v2.7/text-to-image": {
+    readonly input: typeof WanV27TextToImageInputSchema;
+    readonly output: typeof WanV27TextToImageOutputSchema;
+  };
+  readonly "fal-ai/workflow-utilities/extract-nth-frame": {
+    readonly input: typeof WorkflowUtilitiesExtractNthFrameInputSchema;
+    readonly output: typeof WorkflowUtilitiesExtractNthFrameOutputSchema;
+  };
+  readonly "fal-ai/z-image/base": {
+    readonly input: typeof ZImageBaseInputSchema;
+    readonly output: typeof ZImageBaseOutputSchema;
+  };
+  readonly "fal-ai/z-image/base/lora": {
+    readonly input: typeof ZImageBaseLoraInputSchema;
+    readonly output: typeof ZImageBaseLoraOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo": {
+    readonly input: typeof ZImageTurboInputSchema;
+    readonly output: typeof ZImageTurboOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/controlnet": {
+    readonly input: typeof ZImageTurboControlnetInputSchema;
+    readonly output: typeof ZImageTurboControlnetOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/controlnet/lora": {
+    readonly input: typeof ZImageTurboControlnetLoraInputSchema;
+    readonly output: typeof ZImageTurboControlnetLoraOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/image-to-image": {
+    readonly input: typeof ZImageTurboImageToImageInputSchema;
+    readonly output: typeof ZImageTurboImageToImageOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/image-to-image/lora": {
+    readonly input: typeof ZImageTurboImageToImageLoraInputSchema;
+    readonly output: typeof ZImageTurboImageToImageLoraOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/inpaint": {
+    readonly input: typeof ZImageTurboInpaintInputSchema;
+    readonly output: typeof ZImageTurboInpaintOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/inpaint/lora": {
+    readonly input: typeof ZImageTurboInpaintLoraInputSchema;
+    readonly output: typeof ZImageTurboInpaintLoraOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/lora": {
+    readonly input: typeof ZImageTurboLoraInputSchema;
+    readonly output: typeof ZImageTurboLoraOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/tiling": {
+    readonly input: typeof ZImageTurboTilingInputSchema;
+    readonly output: typeof ZImageTurboTilingOutputSchema;
+  };
+  readonly "fal-ai/z-image/turbo/tiling/lora": {
+    readonly input: typeof ZImageTurboTilingLoraInputSchema;
+    readonly output: typeof ZImageTurboTilingLoraOutputSchema;
+  };
+  readonly "imagineart/imagineart-1.5-preview/text-to-image": {
+    readonly input: typeof Imagineart15PreviewTextToImageInputSchema;
+    readonly output: typeof Imagineart15PreviewTextToImageOutputSchema;
+  };
+  readonly "imagineart/imagineart-1.5-pro-preview/text-to-image": {
+    readonly input: typeof Imagineart15ProPreviewTextToImageInputSchema;
+    readonly output: typeof Imagineart15ProPreviewTextToImageOutputSchema;
+  };
+  readonly "imagineart/imagineart-2.0-preview/text-to-image": {
+    readonly input: typeof Imagineart20PreviewTextToImageInputSchema;
+    readonly output: typeof Imagineart20PreviewTextToImageOutputSchema;
+  };
+  readonly "openai/gpt-image-2": {
+    readonly input: typeof GptImage2InputSchema;
+    readonly output: typeof GptImage2OutputSchema;
+  };
+  readonly "openai/gpt-image-2/edit": {
+    readonly input: typeof GptImage2EditInputSchema;
+    readonly output: typeof GptImage2EditOutputSchema;
+  };
+  readonly "pixelcut/background-removal": {
+    readonly input: typeof BackgroundRemovalInputSchema;
+    readonly output: typeof BackgroundRemovalOutputSchema;
+  };
+  readonly "rundiffusion-fal/juggernaut-flux-lora": {
+    readonly input: typeof JuggernautFluxLoraInputSchema;
+    readonly output: typeof JuggernautFluxLoraOutputSchema;
+  };
+  readonly "rundiffusion-fal/juggernaut-flux-lora/inpainting": {
+    readonly input: typeof JuggernautFluxLoraInpaintingInputSchema;
+    readonly output: typeof JuggernautFluxLoraInpaintingOutputSchema;
+  };
+  readonly "rundiffusion-fal/rundiffusion-photo-flux": {
+    readonly input: typeof RundiffusionPhotoFluxInputSchema;
+    readonly output: typeof RundiffusionPhotoFluxOutputSchema;
+  };
+  readonly "smoretalk-ai/rembg-enhance": {
+    readonly input: typeof RembgEnhanceInputSchema;
+    readonly output: typeof RembgEnhanceOutputSchema;
+  };
+  readonly "wan/v2.6/image-to-image": {
+    readonly input: typeof V26ImageToImageInputSchema;
+    readonly output: typeof V26ImageToImageOutputSchema;
+  };
+  readonly "wan/v2.6/text-to-image": {
+    readonly input: typeof V26TextToImageInputSchema;
+    readonly output: typeof V26TextToImageOutputSchema;
+  };
+  readonly "xai/grok-imagine-image": {
+    readonly input: typeof GrokImagineImageInputSchema;
+    readonly output: typeof GrokImagineImageOutputSchema;
+  };
+  readonly "xai/grok-imagine-image/edit": {
+    readonly input: typeof GrokImagineImageEditInputSchema;
+    readonly output: typeof GrokImagineImageEditOutputSchema;
+  };
+  readonly "xai/grok-imagine-image/quality/edit": {
+    readonly input: typeof GrokImagineImageQualityEditInputSchema;
+    readonly output: typeof GrokImagineImageQualityEditOutputSchema;
+  };
+  readonly "xai/grok-imagine-image/quality/text-to-image": {
+    readonly input: typeof GrokImagineImageQualityTextToImageInputSchema;
+    readonly output: typeof GrokImagineImageQualityTextToImageOutputSchema;
+  };
+} = {
   "bria/embed-product": {
     input: EmbedProductInputSchema,
     output: EmbedProductOutputSchema,

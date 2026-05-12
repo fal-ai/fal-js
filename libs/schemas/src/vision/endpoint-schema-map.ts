@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { VisionEndpointId } from "./endpoint-zod-map.js";
 import {
   ArbiterImageImageInputSchema,
   ArbiterImageImageOutputSchema,
@@ -71,17 +70,145 @@ import {
   XAilabNsfwOutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of vision endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const visionEndpointSchemaMap: Record<
-  VisionEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const visionEndpointSchemaMap: {
+  readonly "fal-ai/arbiter/image": {
+    readonly input: typeof ArbiterImageInputSchema;
+    readonly output: typeof ArbiterImageOutputSchema;
+  };
+  readonly "fal-ai/arbiter/image/image": {
+    readonly input: typeof ArbiterImageImageInputSchema;
+    readonly output: typeof ArbiterImageImageOutputSchema;
+  };
+  readonly "fal-ai/arbiter/image/text": {
+    readonly input: typeof ArbiterImageTextInputSchema;
+    readonly output: typeof ArbiterImageTextOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/caption": {
+    readonly input: typeof Florence2LargeCaptionInputSchema;
+    readonly output: typeof Florence2LargeCaptionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/detailed-caption": {
+    readonly input: typeof Florence2LargeDetailedCaptionInputSchema;
+    readonly output: typeof Florence2LargeDetailedCaptionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/more-detailed-caption": {
+    readonly input: typeof Florence2LargeMoreDetailedCaptionInputSchema;
+    readonly output: typeof Florence2LargeMoreDetailedCaptionOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/ocr": {
+    readonly input: typeof Florence2LargeOcrInputSchema;
+    readonly output: typeof Florence2LargeOcrOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/region-to-category": {
+    readonly input: typeof Florence2LargeRegionToCategoryInputSchema;
+    readonly output: typeof Florence2LargeRegionToCategoryOutputSchema;
+  };
+  readonly "fal-ai/florence-2-large/region-to-description": {
+    readonly input: typeof Florence2LargeRegionToDescriptionInputSchema;
+    readonly output: typeof Florence2LargeRegionToDescriptionOutputSchema;
+  };
+  readonly "fal-ai/got-ocr/v2": {
+    readonly input: typeof GotOcrV2InputSchema;
+    readonly output: typeof GotOcrV2OutputSchema;
+  };
+  readonly "fal-ai/imageutils/nsfw": {
+    readonly input: typeof ImageutilsNsfwInputSchema;
+    readonly output: typeof ImageutilsNsfwOutputSchema;
+  };
+  readonly "fal-ai/llava-next": {
+    readonly input: typeof LlavaNextInputSchema;
+    readonly output: typeof LlavaNextOutputSchema;
+  };
+  readonly "fal-ai/moondream-next": {
+    readonly input: typeof MoondreamNextInputSchema;
+    readonly output: typeof MoondreamNextOutputSchema;
+  };
+  readonly "fal-ai/moondream-next/batch": {
+    readonly input: typeof MoondreamNextBatchInputSchema;
+    readonly output: typeof MoondreamNextBatchOutputSchema;
+  };
+  readonly "fal-ai/moondream/batched": {
+    readonly input: typeof MoondreamBatchedInputSchema;
+    readonly output: typeof MoondreamBatchedOutputSchema;
+  };
+  readonly "fal-ai/moondream2": {
+    readonly input: typeof Moondream2InputSchema;
+    readonly output: typeof Moondream2OutputSchema;
+  };
+  readonly "fal-ai/moondream2/object-detection": {
+    readonly input: typeof Moondream2ObjectDetectionInputSchema;
+    readonly output: typeof Moondream2ObjectDetectionOutputSchema;
+  };
+  readonly "fal-ai/moondream2/point-object-detection": {
+    readonly input: typeof Moondream2PointObjectDetectionInputSchema;
+    readonly output: typeof Moondream2PointObjectDetectionOutputSchema;
+  };
+  readonly "fal-ai/moondream2/visual-query": {
+    readonly input: typeof Moondream2VisualQueryInputSchema;
+    readonly output: typeof Moondream2VisualQueryOutputSchema;
+  };
+  readonly "fal-ai/moondream3-preview/caption": {
+    readonly input: typeof Moondream3PreviewCaptionInputSchema;
+    readonly output: typeof Moondream3PreviewCaptionOutputSchema;
+  };
+  readonly "fal-ai/moondream3-preview/detect": {
+    readonly input: typeof Moondream3PreviewDetectInputSchema;
+    readonly output: typeof Moondream3PreviewDetectOutputSchema;
+  };
+  readonly "fal-ai/moondream3-preview/point": {
+    readonly input: typeof Moondream3PreviewPointInputSchema;
+    readonly output: typeof Moondream3PreviewPointOutputSchema;
+  };
+  readonly "fal-ai/moondream3-preview/query": {
+    readonly input: typeof Moondream3PreviewQueryInputSchema;
+    readonly output: typeof Moondream3PreviewQueryOutputSchema;
+  };
+  readonly "fal-ai/sa2va/4b/image": {
+    readonly input: typeof Sa2va4bImageInputSchema;
+    readonly output: typeof Sa2va4bImageOutputSchema;
+  };
+  readonly "fal-ai/sa2va/4b/video": {
+    readonly input: typeof Sa2va4bVideoInputSchema;
+    readonly output: typeof Sa2va4bVideoOutputSchema;
+  };
+  readonly "fal-ai/sa2va/8b/image": {
+    readonly input: typeof Sa2va8bImageInputSchema;
+    readonly output: typeof Sa2va8bImageOutputSchema;
+  };
+  readonly "fal-ai/sa2va/8b/video": {
+    readonly input: typeof Sa2va8bVideoInputSchema;
+    readonly output: typeof Sa2va8bVideoOutputSchema;
+  };
+  readonly "fal-ai/sam-3/image/embed": {
+    readonly input: typeof Sam3ImageEmbedInputSchema;
+    readonly output: typeof Sam3ImageEmbedOutputSchema;
+  };
+  readonly "fal-ai/video-understanding": {
+    readonly input: typeof VideoUnderstandingInputSchema;
+    readonly output: typeof VideoUnderstandingOutputSchema;
+  };
+  readonly "fal-ai/x-ailab/nsfw": {
+    readonly input: typeof XAilabNsfwInputSchema;
+    readonly output: typeof XAilabNsfwOutputSchema;
+  };
+  readonly "openrouter/router/vision": {
+    readonly input: typeof RouterVisionInputSchema;
+    readonly output: typeof RouterVisionOutputSchema;
+  };
+  readonly "perceptron/isaac-01": {
+    readonly input: typeof Isaac01InputSchema;
+    readonly output: typeof Isaac01OutputSchema;
+  };
+  readonly "perceptron/isaac-01/openai/v1/chat/completions": {
+    readonly input: typeof Isaac01OpenaiV1ChatCompletionsInputSchema;
+    readonly output: typeof Isaac01OpenaiV1ChatCompletionsOutputSchema;
+  };
+} = {
   "fal-ai/arbiter/image": {
     input: ArbiterImageInputSchema,
     output: ArbiterImageOutputSchema,

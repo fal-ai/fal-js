@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { SpeechEndpointId } from "./endpoint-zod-map.js";
 import {
   ChatterboxSpeechToSpeechInputSchema,
   ChatterboxSpeechToSpeechOutputSchema,
@@ -71,17 +70,145 @@ import {
   VibevoiceOutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of speech endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const speechEndpointSchemaMap: Record<
-  SpeechEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const speechEndpointSchemaMap: {
+  readonly "fal-ai/chatterbox/speech-to-speech": {
+    readonly input: typeof ChatterboxSpeechToSpeechInputSchema;
+    readonly output: typeof ChatterboxSpeechToSpeechOutputSchema;
+  };
+  readonly "fal-ai/chatterbox/text-to-speech": {
+    readonly input: typeof ChatterboxTextToSpeechInputSchema;
+    readonly output: typeof ChatterboxTextToSpeechOutputSchema;
+  };
+  readonly "fal-ai/chatterbox/text-to-speech/multilingual": {
+    readonly input: typeof ChatterboxTextToSpeechMultilingualInputSchema;
+    readonly output: typeof ChatterboxTextToSpeechMultilingualOutputSchema;
+  };
+  readonly "fal-ai/dia-tts": {
+    readonly input: typeof DiaTtsInputSchema;
+    readonly output: typeof DiaTtsOutputSchema;
+  };
+  readonly "fal-ai/elevenlabs/tts/turbo-v2.5": {
+    readonly input: typeof ElevenlabsTtsTurboV25InputSchema;
+    readonly output: typeof ElevenlabsTtsTurboV25OutputSchema;
+  };
+  readonly "fal-ai/gemini-3.1-flash-tts": {
+    readonly input: typeof Gemini31FlashTtsInputSchema;
+    readonly output: typeof Gemini31FlashTtsOutputSchema;
+  };
+  readonly "fal-ai/index-tts-2/text-to-speech": {
+    readonly input: typeof IndexTts2TextToSpeechInputSchema;
+    readonly output: typeof IndexTts2TextToSpeechOutputSchema;
+  };
+  readonly "fal-ai/inworld-tts": {
+    readonly input: typeof InworldTtsInputSchema;
+    readonly output: typeof InworldTtsOutputSchema;
+  };
+  readonly "fal-ai/kling-video/v1/tts": {
+    readonly input: typeof KlingVideoV1TtsInputSchema;
+    readonly output: typeof KlingVideoV1TtsOutputSchema;
+  };
+  readonly "fal-ai/lux-tts": {
+    readonly input: typeof LuxTtsInputSchema;
+    readonly output: typeof LuxTtsOutputSchema;
+  };
+  readonly "fal-ai/maya": {
+    readonly input: typeof MayaInputSchema;
+    readonly output: typeof MayaOutputSchema;
+  };
+  readonly "fal-ai/maya/batch": {
+    readonly input: typeof MayaBatchInputSchema;
+    readonly output: typeof MayaBatchOutputSchema;
+  };
+  readonly "fal-ai/maya/stream": {
+    readonly input: typeof MayaStreamInputSchema;
+    readonly output: typeof MayaStreamOutputSchema;
+  };
+  readonly "fal-ai/minimax/preview/speech-2.5-hd": {
+    readonly input: typeof MinimaxPreviewSpeech25HdInputSchema;
+    readonly output: typeof MinimaxPreviewSpeech25HdOutputSchema;
+  };
+  readonly "fal-ai/minimax/preview/speech-2.5-turbo": {
+    readonly input: typeof MinimaxPreviewSpeech25TurboInputSchema;
+    readonly output: typeof MinimaxPreviewSpeech25TurboOutputSchema;
+  };
+  readonly "fal-ai/minimax/speech-02-hd": {
+    readonly input: typeof MinimaxSpeech02HdInputSchema;
+    readonly output: typeof MinimaxSpeech02HdOutputSchema;
+  };
+  readonly "fal-ai/minimax/speech-02-turbo": {
+    readonly input: typeof MinimaxSpeech02TurboInputSchema;
+    readonly output: typeof MinimaxSpeech02TurboOutputSchema;
+  };
+  readonly "fal-ai/minimax/speech-2.6-hd": {
+    readonly input: typeof MinimaxSpeech26HdInputSchema;
+    readonly output: typeof MinimaxSpeech26HdOutputSchema;
+  };
+  readonly "fal-ai/minimax/speech-2.6-turbo": {
+    readonly input: typeof MinimaxSpeech26TurboInputSchema;
+    readonly output: typeof MinimaxSpeech26TurboOutputSchema;
+  };
+  readonly "fal-ai/minimax/speech-2.8-hd": {
+    readonly input: typeof MinimaxSpeech28HdInputSchema;
+    readonly output: typeof MinimaxSpeech28HdOutputSchema;
+  };
+  readonly "fal-ai/minimax/speech-2.8-turbo": {
+    readonly input: typeof MinimaxSpeech28TurboInputSchema;
+    readonly output: typeof MinimaxSpeech28TurboOutputSchema;
+  };
+  readonly "fal-ai/minimax/voice-clone": {
+    readonly input: typeof MinimaxVoiceCloneInputSchema;
+    readonly output: typeof MinimaxVoiceCloneOutputSchema;
+  };
+  readonly "fal-ai/minimax/voice-design": {
+    readonly input: typeof MinimaxVoiceDesignInputSchema;
+    readonly output: typeof MinimaxVoiceDesignOutputSchema;
+  };
+  readonly "fal-ai/orpheus-tts": {
+    readonly input: typeof OrpheusTtsInputSchema;
+    readonly output: typeof OrpheusTtsOutputSchema;
+  };
+  readonly "fal-ai/qwen-3-tts/text-to-speech/0.6b": {
+    readonly input: typeof Qwen3TtsTextToSpeech06bInputSchema;
+    readonly output: typeof Qwen3TtsTextToSpeech06bOutputSchema;
+  };
+  readonly "fal-ai/qwen-3-tts/text-to-speech/1.7b": {
+    readonly input: typeof Qwen3TtsTextToSpeech17bInputSchema;
+    readonly output: typeof Qwen3TtsTextToSpeech17bOutputSchema;
+  };
+  readonly "fal-ai/qwen-3-tts/voice-design/1.7b": {
+    readonly input: typeof Qwen3TtsVoiceDesign17bInputSchema;
+    readonly output: typeof Qwen3TtsVoiceDesign17bOutputSchema;
+  };
+  readonly "fal-ai/vibevoice": {
+    readonly input: typeof VibevoiceInputSchema;
+    readonly output: typeof VibevoiceOutputSchema;
+  };
+  readonly "fal-ai/vibevoice/0.5b": {
+    readonly input: typeof Vibevoice05bInputSchema;
+    readonly output: typeof Vibevoice05bOutputSchema;
+  };
+  readonly "fal-ai/vibevoice/7b": {
+    readonly input: typeof Vibevoice7bInputSchema;
+    readonly output: typeof Vibevoice7bOutputSchema;
+  };
+  readonly "resemble-ai/chatterboxhd/speech-to-speech": {
+    readonly input: typeof ChatterboxhdSpeechToSpeechInputSchema;
+    readonly output: typeof ChatterboxhdSpeechToSpeechOutputSchema;
+  };
+  readonly "resemble-ai/chatterboxhd/text-to-speech": {
+    readonly input: typeof ChatterboxhdTextToSpeechInputSchema;
+    readonly output: typeof ChatterboxhdTextToSpeechOutputSchema;
+  };
+  readonly "xai/tts/v1": {
+    readonly input: typeof TtsV1InputSchema;
+    readonly output: typeof TtsV1OutputSchema;
+  };
+} = {
   "fal-ai/chatterbox/speech-to-speech": {
     input: ChatterboxSpeechToSpeechInputSchema,
     output: ChatterboxSpeechToSpeechOutputSchema,

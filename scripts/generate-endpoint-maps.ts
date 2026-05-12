@@ -407,18 +407,17 @@ async function generateEndpointZodMap(
  * in `$defs` on the schema itself) so the values can be passed straight to
  * Anthropic / OpenAI tool APIs or `z.fromJSONSchema`.
  *
- * Typed as `Record<EndpointId, { input: JsonSchema; output: JsonSchema }>`
- * rather than the precise literal types — the literal type would blow TS's
- * declaration budget for image/video.
+ * Explicit `typeof XxxSchema` annotation per entry (mirroring the Zod map)
+ * so consumers reading `videoEndpointSchemaMap[id].input.properties.foo.enum`
+ * get the literal `as const` types, and so TS doesn't have to infer the
+ * structural type for hundreds of complex schema literals (TS7056).
  */
 async function generateEndpointSchemaMap(
   category: string,
   categoryPath: string,
   endpoints: Array<EndpointInfo>,
 ): Promise<void> {
-  const typeName = toPascalCase(category);
   const constName = `${toCamelCase(category)}EndpointSchemaMap`;
-  const idTypeName = `${typeName}EndpointId`;
   const schemaExports = buildSchemaExportLookup(categoryPath);
 
   const resolveSchemaName = (
@@ -452,20 +451,23 @@ async function generateEndpointSchemaMap(
     `// AUTO-GENERATED - Do not edit manually`,
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
-    `import type { ${idTypeName} } from './endpoint-zod-map.js'`,
     `import {`,
     ...schemaImports.map((t) => `  ${t},`),
     `} from './schemas.gen.js'`,
-    ``,
-    `type JsonSchema = Readonly<Record<string, unknown>>`,
     ``,
     `/**`,
     ` * Map of ${category} endpoint id -> self-contained JSON Schemas.`,
     ` * Each input/output schema bundles its $ref closure under \`$defs\`, so it`,
     ` * can be handed directly to LLM tool APIs or \`z.fromJSONSchema\`.`,
     ` */`,
-    `export const ${constName}: Record<${idTypeName}, { readonly input: JsonSchema; readonly output: JsonSchema }> = {`,
+    `export const ${constName}: {`,
   ];
+  for (const { endpointId, inputName, outputName } of resolved) {
+    lines.push(
+      `  readonly '${endpointId}': { readonly input: typeof ${inputName}; readonly output: typeof ${outputName} },`,
+    );
+  }
+  lines.push(`} = {`);
   for (const { endpointId, inputName, outputName } of resolved) {
     lines.push(
       `  '${endpointId}': { input: ${inputName}, output: ${outputName} },`,

@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { TextEndpointId } from "./endpoint-zod-map.js";
 import {
   CohereTranscribeInputSchema,
   CohereTranscribeOutputSchema,
@@ -35,17 +34,73 @@ import {
   WizperOutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of text endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const textEndpointSchemaMap: Record<
-  TextEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const textEndpointSchemaMap: {
+  readonly "fal-ai/cohere-transcribe": {
+    readonly input: typeof CohereTranscribeInputSchema;
+    readonly output: typeof CohereTranscribeOutputSchema;
+  };
+  readonly "fal-ai/elevenlabs/speech-to-text": {
+    readonly input: typeof ElevenlabsSpeechToTextInputSchema;
+    readonly output: typeof ElevenlabsSpeechToTextOutputSchema;
+  };
+  readonly "fal-ai/elevenlabs/speech-to-text/scribe-v2": {
+    readonly input: typeof ElevenlabsSpeechToTextScribeV2InputSchema;
+    readonly output: typeof ElevenlabsSpeechToTextScribeV2OutputSchema;
+  };
+  readonly "fal-ai/silero-vad": {
+    readonly input: typeof SileroVadInputSchema;
+    readonly output: typeof SileroVadOutputSchema;
+  };
+  readonly "fal-ai/smart-turn": {
+    readonly input: typeof SmartTurnInputSchema;
+    readonly output: typeof SmartTurnOutputSchema;
+  };
+  readonly "fal-ai/speech-to-text": {
+    readonly input: typeof SpeechToTextInputSchema;
+    readonly output: typeof SpeechToTextOutputSchema;
+  };
+  readonly "fal-ai/speech-to-text/stream": {
+    readonly input: typeof SpeechToTextStreamInputSchema;
+    readonly output: typeof SpeechToTextStreamOutputSchema;
+  };
+  readonly "fal-ai/speech-to-text/turbo": {
+    readonly input: typeof SpeechToTextTurboInputSchema;
+    readonly output: typeof SpeechToTextTurboOutputSchema;
+  };
+  readonly "fal-ai/speech-to-text/turbo/stream": {
+    readonly input: typeof SpeechToTextTurboStreamInputSchema;
+    readonly output: typeof SpeechToTextTurboStreamOutputSchema;
+  };
+  readonly "fal-ai/wizper": {
+    readonly input: typeof WizperInputSchema;
+    readonly output: typeof WizperOutputSchema;
+  };
+  readonly "nvidia/nemotron-3-nano-omni/audio": {
+    readonly input: typeof Nemotron3NanoOmniAudioInputSchema;
+    readonly output: typeof Nemotron3NanoOmniAudioOutputSchema;
+  };
+  readonly "nvidia/nemotron-3-nano-omni/video": {
+    readonly input: typeof Nemotron3NanoOmniVideoInputSchema;
+    readonly output: typeof Nemotron3NanoOmniVideoOutputSchema;
+  };
+  readonly "nvidia/nemotron-3-nano-omni/vision": {
+    readonly input: typeof Nemotron3NanoOmniVisionInputSchema;
+    readonly output: typeof Nemotron3NanoOmniVisionOutputSchema;
+  };
+  readonly "openrouter/router/video": {
+    readonly input: typeof RouterVideoInputSchema;
+    readonly output: typeof RouterVideoOutputSchema;
+  };
+  readonly "openrouter/router/video/enterprise": {
+    readonly input: typeof RouterVideoEnterpriseInputSchema;
+    readonly output: typeof RouterVideoEnterpriseOutputSchema;
+  };
+} = {
   "fal-ai/cohere-transcribe": {
     input: CohereTranscribeInputSchema,
     output: CohereTranscribeOutputSchema,

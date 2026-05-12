@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { TrainingEndpointId } from "./endpoint-zod-map.js";
 import {
   ErnieImageTrainerInputSchema,
   ErnieImageTrainerOutputSchema,
@@ -89,17 +88,181 @@ import {
   ZImageTurboTrainerV2OutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of training endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const trainingEndpointSchemaMap: Record<
-  TrainingEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const trainingEndpointSchemaMap: {
+  readonly "fal-ai/ernie-image-trainer": {
+    readonly input: typeof ErnieImageTrainerInputSchema;
+    readonly output: typeof ErnieImageTrainerOutputSchema;
+  };
+  readonly "fal-ai/flux-2-klein-4b-base-trainer": {
+    readonly input: typeof Flux2Klein4bBaseTrainerInputSchema;
+    readonly output: typeof Flux2Klein4bBaseTrainerOutputSchema;
+  };
+  readonly "fal-ai/flux-2-klein-4b-base-trainer/edit": {
+    readonly input: typeof Flux2Klein4bBaseTrainerEditInputSchema;
+    readonly output: typeof Flux2Klein4bBaseTrainerEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2-klein-9b-base-trainer": {
+    readonly input: typeof Flux2Klein9bBaseTrainerInputSchema;
+    readonly output: typeof Flux2Klein9bBaseTrainerOutputSchema;
+  };
+  readonly "fal-ai/flux-2-klein-9b-base-trainer/edit": {
+    readonly input: typeof Flux2Klein9bBaseTrainerEditInputSchema;
+    readonly output: typeof Flux2Klein9bBaseTrainerEditOutputSchema;
+  };
+  readonly "fal-ai/flux-2-trainer": {
+    readonly input: typeof Flux2TrainerInputSchema;
+    readonly output: typeof Flux2TrainerOutputSchema;
+  };
+  readonly "fal-ai/flux-2-trainer-v2": {
+    readonly input: typeof Flux2TrainerV2InputSchema;
+    readonly output: typeof Flux2TrainerV2OutputSchema;
+  };
+  readonly "fal-ai/flux-2-trainer-v2/edit": {
+    readonly input: typeof Flux2TrainerV2EditInputSchema;
+    readonly output: typeof Flux2TrainerV2EditOutputSchema;
+  };
+  readonly "fal-ai/flux-2-trainer/edit": {
+    readonly input: typeof Flux2TrainerEditInputSchema;
+    readonly output: typeof Flux2TrainerEditOutputSchema;
+  };
+  readonly "fal-ai/flux-kontext-trainer": {
+    readonly input: typeof FluxKontextTrainerInputSchema;
+    readonly output: typeof FluxKontextTrainerOutputSchema;
+  };
+  readonly "fal-ai/flux-krea-trainer": {
+    readonly input: typeof FluxKreaTrainerInputSchema;
+    readonly output: typeof FluxKreaTrainerOutputSchema;
+  };
+  readonly "fal-ai/flux-lora-fast-training": {
+    readonly input: typeof FluxLoraFastTrainingInputSchema;
+    readonly output: typeof FluxLoraFastTrainingOutputSchema;
+  };
+  readonly "fal-ai/flux-lora-portrait-trainer": {
+    readonly input: typeof FluxLoraPortraitTrainerInputSchema;
+    readonly output: typeof FluxLoraPortraitTrainerOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-video-lora-training": {
+    readonly input: typeof HunyuanVideoLoraTrainingInputSchema;
+    readonly output: typeof HunyuanVideoLoraTrainingOutputSchema;
+  };
+  readonly "fal-ai/ideogram/custom-models": {
+    readonly input: typeof IdeogramCustomModelsInputSchema;
+    readonly output: typeof IdeogramCustomModelsOutputSchema;
+  };
+  readonly "fal-ai/ltx-video-trainer": {
+    readonly input: typeof LtxVideoTrainerInputSchema;
+    readonly output: typeof LtxVideoTrainerOutputSchema;
+  };
+  readonly "fal-ai/ltx2-video-trainer": {
+    readonly input: typeof Ltx2VideoTrainerInputSchema;
+    readonly output: typeof Ltx2VideoTrainerOutputSchema;
+  };
+  readonly "fal-ai/ltx23-v2v-trainer": {
+    readonly input: typeof Ltx23V2vTrainerInputSchema;
+    readonly output: typeof Ltx23V2vTrainerOutputSchema;
+  };
+  readonly "fal-ai/ltx23-video-trainer": {
+    readonly input: typeof Ltx23VideoTrainerInputSchema;
+    readonly output: typeof Ltx23VideoTrainerOutputSchema;
+  };
+  readonly "fal-ai/phota/create-profile": {
+    readonly input: typeof PhotaCreateProfileInputSchema;
+    readonly output: typeof PhotaCreateProfileOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2512-trainer": {
+    readonly input: typeof QwenImage2512TrainerInputSchema;
+    readonly output: typeof QwenImage2512TrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-2512-trainer-v2": {
+    readonly input: typeof QwenImage2512TrainerV2InputSchema;
+    readonly output: typeof QwenImage2512TrainerV2OutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2509-trainer": {
+    readonly input: typeof QwenImageEdit2509TrainerInputSchema;
+    readonly output: typeof QwenImageEdit2509TrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-2511-trainer": {
+    readonly input: typeof QwenImageEdit2511TrainerInputSchema;
+    readonly output: typeof QwenImageEdit2511TrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-plus-trainer": {
+    readonly input: typeof QwenImageEditPlusTrainerInputSchema;
+    readonly output: typeof QwenImageEditPlusTrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-edit-trainer": {
+    readonly input: typeof QwenImageEditTrainerInputSchema;
+    readonly output: typeof QwenImageEditTrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-layered-trainer": {
+    readonly input: typeof QwenImageLayeredTrainerInputSchema;
+    readonly output: typeof QwenImageLayeredTrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-trainer": {
+    readonly input: typeof QwenImageTrainerInputSchema;
+    readonly output: typeof QwenImageTrainerOutputSchema;
+  };
+  readonly "fal-ai/qwen-image-trainer-v2": {
+    readonly input: typeof QwenImageTrainerV2InputSchema;
+    readonly output: typeof QwenImageTrainerV2OutputSchema;
+  };
+  readonly "fal-ai/recraft/v3/create-style": {
+    readonly input: typeof RecraftV3CreateStyleInputSchema;
+    readonly output: typeof RecraftV3CreateStyleOutputSchema;
+  };
+  readonly "fal-ai/turbo-flux-trainer": {
+    readonly input: typeof TurboFluxTrainerInputSchema;
+    readonly output: typeof TurboFluxTrainerOutputSchema;
+  };
+  readonly "fal-ai/wan-22-image-trainer": {
+    readonly input: typeof Wan22ImageTrainerInputSchema;
+    readonly output: typeof Wan22ImageTrainerOutputSchema;
+  };
+  readonly "fal-ai/wan-22-trainer/i2v-a14b": {
+    readonly input: typeof Wan22TrainerI2vA14bInputSchema;
+    readonly output: typeof Wan22TrainerI2vA14bOutputSchema;
+  };
+  readonly "fal-ai/wan-22-trainer/t2v-a14b": {
+    readonly input: typeof Wan22TrainerT2vA14bInputSchema;
+    readonly output: typeof Wan22TrainerT2vA14bOutputSchema;
+  };
+  readonly "fal-ai/wan-trainer": {
+    readonly input: typeof WanTrainerInputSchema;
+    readonly output: typeof WanTrainerOutputSchema;
+  };
+  readonly "fal-ai/wan-trainer/flf2v-720p": {
+    readonly input: typeof WanTrainerFlf2v720pInputSchema;
+    readonly output: typeof WanTrainerFlf2v720pOutputSchema;
+  };
+  readonly "fal-ai/wan-trainer/i2v-720p": {
+    readonly input: typeof WanTrainerI2v720pInputSchema;
+    readonly output: typeof WanTrainerI2v720pOutputSchema;
+  };
+  readonly "fal-ai/wan-trainer/t2v": {
+    readonly input: typeof WanTrainerT2vInputSchema;
+    readonly output: typeof WanTrainerT2vOutputSchema;
+  };
+  readonly "fal-ai/wan-trainer/t2v-14b": {
+    readonly input: typeof WanTrainerT2v14bInputSchema;
+    readonly output: typeof WanTrainerT2v14bOutputSchema;
+  };
+  readonly "fal-ai/z-image-base-trainer": {
+    readonly input: typeof ZImageBaseTrainerInputSchema;
+    readonly output: typeof ZImageBaseTrainerOutputSchema;
+  };
+  readonly "fal-ai/z-image-trainer": {
+    readonly input: typeof ZImageTrainerInputSchema;
+    readonly output: typeof ZImageTrainerOutputSchema;
+  };
+  readonly "fal-ai/z-image-turbo-trainer-v2": {
+    readonly input: typeof ZImageTurboTrainerV2InputSchema;
+    readonly output: typeof ZImageTurboTrainerV2OutputSchema;
+  };
+} = {
   "fal-ai/ernie-image-trainer": {
     input: ErnieImageTrainerInputSchema,
     output: ErnieImageTrainerOutputSchema,

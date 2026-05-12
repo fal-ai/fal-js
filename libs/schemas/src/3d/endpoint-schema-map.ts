@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { Gen3dEndpointId } from "./endpoint-zod-map.js";
 import {
   H31ImageTo3dInputSchema,
   H31ImageTo3dOutputSchema,
@@ -85,17 +84,173 @@ import {
   UltrashapeOutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of 3d endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const gen3dEndpointSchemaMap: Record<
-  Gen3dEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const gen3dEndpointSchemaMap: {
+  readonly "fal-ai/hunyuan_world/image-to-world": {
+    readonly input: typeof Hunyuan_worldImageToWorldInputSchema;
+    readonly output: typeof Hunyuan_worldImageToWorldOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-3d/v3.1/part": {
+    readonly input: typeof Hunyuan3dV31PartInputSchema;
+    readonly output: typeof Hunyuan3dV31PartOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-3d/v3.1/pro/image-to-3d": {
+    readonly input: typeof Hunyuan3dV31ProImageTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV31ProImageTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-3d/v3.1/pro/text-to-3d": {
+    readonly input: typeof Hunyuan3dV31ProTextTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV31ProTextTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d": {
+    readonly input: typeof Hunyuan3dV31RapidImageTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV31RapidImageTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-3d/v3.1/rapid/text-to-3d": {
+    readonly input: typeof Hunyuan3dV31RapidTextTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV31RapidTextTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-3d/v3.1/smart-topology": {
+    readonly input: typeof Hunyuan3dV31SmartTopologyInputSchema;
+    readonly output: typeof Hunyuan3dV31SmartTopologyOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-motion": {
+    readonly input: typeof HunyuanMotionInputSchema;
+    readonly output: typeof HunyuanMotionOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-motion/fast": {
+    readonly input: typeof HunyuanMotionFastInputSchema;
+    readonly output: typeof HunyuanMotionFastOutputSchema;
+  };
+  readonly "fal-ai/hunyuan-part": {
+    readonly input: typeof HunyuanPartInputSchema;
+    readonly output: typeof HunyuanPartOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d-v3/image-to-3d": {
+    readonly input: typeof Hunyuan3dV3ImageTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV3ImageTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d-v3/sketch-to-3d": {
+    readonly input: typeof Hunyuan3dV3SketchTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV3SketchTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d-v3/text-to-3d": {
+    readonly input: typeof Hunyuan3dV3TextTo3dInputSchema;
+    readonly output: typeof Hunyuan3dV3TextTo3dOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d/v2": {
+    readonly input: typeof Hunyuan3dV2InputSchema;
+    readonly output: typeof Hunyuan3dV2OutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d/v2/mini": {
+    readonly input: typeof Hunyuan3dV2MiniInputSchema;
+    readonly output: typeof Hunyuan3dV2MiniOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d/v2/mini/turbo": {
+    readonly input: typeof Hunyuan3dV2MiniTurboInputSchema;
+    readonly output: typeof Hunyuan3dV2MiniTurboOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d/v2/multi-view": {
+    readonly input: typeof Hunyuan3dV2MultiViewInputSchema;
+    readonly output: typeof Hunyuan3dV2MultiViewOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d/v2/multi-view/turbo": {
+    readonly input: typeof Hunyuan3dV2MultiViewTurboInputSchema;
+    readonly output: typeof Hunyuan3dV2MultiViewTurboOutputSchema;
+  };
+  readonly "fal-ai/hunyuan3d/v2/turbo": {
+    readonly input: typeof Hunyuan3dV2TurboInputSchema;
+    readonly output: typeof Hunyuan3dV2TurboOutputSchema;
+  };
+  readonly "fal-ai/hyper3d/rodin": {
+    readonly input: typeof Hyper3dRodinInputSchema;
+    readonly output: typeof Hyper3dRodinOutputSchema;
+  };
+  readonly "fal-ai/hyper3d/rodin/v2": {
+    readonly input: typeof Hyper3dRodinV2InputSchema;
+    readonly output: typeof Hyper3dRodinV2OutputSchema;
+  };
+  readonly "fal-ai/omnipart": {
+    readonly input: typeof OmnipartInputSchema;
+    readonly output: typeof OmnipartOutputSchema;
+  };
+  readonly "fal-ai/pshuman": {
+    readonly input: typeof PshumanInputSchema;
+    readonly output: typeof PshumanOutputSchema;
+  };
+  readonly "fal-ai/reconviagen-0.5": {
+    readonly input: typeof Reconviagen05InputSchema;
+    readonly output: typeof Reconviagen05OutputSchema;
+  };
+  readonly "fal-ai/sam-3/3d-align": {
+    readonly input: typeof Sam33dAlignInputSchema;
+    readonly output: typeof Sam33dAlignOutputSchema;
+  };
+  readonly "fal-ai/sam-3/3d-body": {
+    readonly input: typeof Sam33dBodyInputSchema;
+    readonly output: typeof Sam33dBodyOutputSchema;
+  };
+  readonly "fal-ai/sam-3/3d-objects": {
+    readonly input: typeof Sam33dObjectsInputSchema;
+    readonly output: typeof Sam33dObjectsOutputSchema;
+  };
+  readonly "fal-ai/trellis": {
+    readonly input: typeof TrellisInputSchema;
+    readonly output: typeof TrellisOutputSchema;
+  };
+  readonly "fal-ai/trellis-2": {
+    readonly input: typeof Trellis2InputSchema;
+    readonly output: typeof Trellis2OutputSchema;
+  };
+  readonly "fal-ai/trellis-2/retexture": {
+    readonly input: typeof Trellis2RetextureInputSchema;
+    readonly output: typeof Trellis2RetextureOutputSchema;
+  };
+  readonly "fal-ai/trellis/multi": {
+    readonly input: typeof TrellisMultiInputSchema;
+    readonly output: typeof TrellisMultiOutputSchema;
+  };
+  readonly "fal-ai/triposr": {
+    readonly input: typeof TriposrInputSchema;
+    readonly output: typeof TriposrOutputSchema;
+  };
+  readonly "fal-ai/ultrashape": {
+    readonly input: typeof UltrashapeInputSchema;
+    readonly output: typeof UltrashapeOutputSchema;
+  };
+  readonly "tripo3d/h3.1/image-to-3d": {
+    readonly input: typeof H31ImageTo3dInputSchema;
+    readonly output: typeof H31ImageTo3dOutputSchema;
+  };
+  readonly "tripo3d/h3.1/multiview-to-3d": {
+    readonly input: typeof H31MultiviewTo3dInputSchema;
+    readonly output: typeof H31MultiviewTo3dOutputSchema;
+  };
+  readonly "tripo3d/h3.1/text-to-3d": {
+    readonly input: typeof H31TextTo3dInputSchema;
+    readonly output: typeof H31TextTo3dOutputSchema;
+  };
+  readonly "tripo3d/p1/image-to-3d": {
+    readonly input: typeof P1ImageTo3dInputSchema;
+    readonly output: typeof P1ImageTo3dOutputSchema;
+  };
+  readonly "tripo3d/p1/text-to-3d": {
+    readonly input: typeof P1TextTo3dInputSchema;
+    readonly output: typeof P1TextTo3dOutputSchema;
+  };
+  readonly "tripo3d/tripo/v2.5/image-to-3d": {
+    readonly input: typeof TripoV25ImageTo3dInputSchema;
+    readonly output: typeof TripoV25ImageTo3dOutputSchema;
+  };
+  readonly "tripo3d/tripo/v2.5/multiview-to-3d": {
+    readonly input: typeof TripoV25MultiviewTo3dInputSchema;
+    readonly output: typeof TripoV25MultiviewTo3dOutputSchema;
+  };
+} = {
   "fal-ai/hunyuan_world/image-to-world": {
     input: Hunyuan_worldImageToWorldInputSchema,
     output: Hunyuan_worldImageToWorldOutputSchema,

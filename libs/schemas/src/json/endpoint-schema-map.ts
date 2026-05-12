@@ -1,7 +1,6 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import type { JsonEndpointId } from "./endpoint-zod-map.js";
 import {
   BagelUnderstandInputSchema,
   BagelUnderstandOutputSchema,
@@ -21,17 +20,45 @@ import {
   OmnilottieVideoToLottieOutputSchema,
 } from "./schemas.gen.js";
 
-type JsonSchema = Readonly<Record<string, unknown>>;
-
 /**
  * Map of json endpoint id -> self-contained JSON Schemas.
  * Each input/output schema bundles its $ref closure under `$defs`, so it
  * can be handed directly to LLM tool APIs or `z.fromJSONSchema`.
  */
-export const jsonEndpointSchemaMap: Record<
-  JsonEndpointId,
-  { readonly input: JsonSchema; readonly output: JsonSchema }
-> = {
+export const jsonEndpointSchemaMap: {
+  readonly "bria/fibo-edit/edit/structured_instruction": {
+    readonly input: typeof FiboEditEditStructured_instructionInputSchema;
+    readonly output: typeof FiboEditEditStructured_instructionOutputSchema;
+  };
+  readonly "bria/fibo-lite/generate/structured_prompt": {
+    readonly input: typeof FiboLiteGenerateStructured_promptInputSchema;
+    readonly output: typeof FiboLiteGenerateStructured_promptOutputSchema;
+  };
+  readonly "bria/fibo-lite/generate/structured_prompt/lite": {
+    readonly input: typeof FiboLiteGenerateStructured_promptLiteInputSchema;
+    readonly output: typeof FiboLiteGenerateStructured_promptLiteOutputSchema;
+  };
+  readonly "bria/fibo/generate/structured_prompt": {
+    readonly input: typeof FiboGenerateStructured_promptInputSchema;
+    readonly output: typeof FiboGenerateStructured_promptOutputSchema;
+  };
+  readonly "fal-ai/bagel/understand": {
+    readonly input: typeof BagelUnderstandInputSchema;
+    readonly output: typeof BagelUnderstandOutputSchema;
+  };
+  readonly "fal-ai/omnilottie": {
+    readonly input: typeof OmnilottieInputSchema;
+    readonly output: typeof OmnilottieOutputSchema;
+  };
+  readonly "fal-ai/omnilottie/image-to-lottie": {
+    readonly input: typeof OmnilottieImageToLottieInputSchema;
+    readonly output: typeof OmnilottieImageToLottieOutputSchema;
+  };
+  readonly "fal-ai/omnilottie/video-to-lottie": {
+    readonly input: typeof OmnilottieVideoToLottieInputSchema;
+    readonly output: typeof OmnilottieVideoToLottieOutputSchema;
+  };
+} = {
   "bria/fibo-edit/edit/structured_instruction": {
     input: FiboEditEditStructured_instructionInputSchema,
     output: FiboEditEditStructured_instructionOutputSchema,
