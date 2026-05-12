@@ -1,30 +1,36 @@
 #!/usr/bin/env tsx
 /**
- * Generate category-specific EndpointTypeMap files from heyapi-generated types
+ * Generate per-category endpoint Zod schemas plus top-level barrels for
+ * @fal-ai/schemas.
  *
- * This script:
- * 1. Scans each category directory for types.gen.ts
- * 2. Extracts endpoint information from Post*Data and Get*Responses types
- * 3. For each category, generates:
- *    - {category}/endpoint-map.ts: TypeScript types (EndpointMap, Model, ModelInput, ModelOutput)
- *    - {category}/endpoint-schema.ts: Zod discriminatedUnion schema
- * 4. Generates unified files:
- *    - schemas.ts: Combined Zod discriminatedUnion of all endpoint schemas
- *    - client.ts: EndpointType, InputType<T>, OutputType<T>, and EndpointTypeMap
+ * For each category we emit:
+ *   - {category}/endpoint-schema.ts  Zod discriminatedUnion over {endpoint, input, output}
+ *
+ * And at the package root:
+ *   - schemas.ts       re-exports every category's endpoint-schema.ts
+ *   - json-schemas.ts  re-exports every category's schemas.gen.ts (JSON Schemas)
+ *   - index.ts         re-exports from schemas.ts
+ *
+ * This script does NOT emit any TypeScript types. Consumers wanting types
+ * should `z.infer` from the discriminated unions in schemas.ts.
+ *
+ * Endpoint metadata is derived from the same merged OpenAPI specs that feed
+ * @hey-api/openapi-ts (via scripts/lib/merge-openapi-specs.ts), so renamed
+ * schemas (e.g. FileTypeInputType2) resolve to the actual emitted zod names.
  */
 
-import {
-  existsSync,
-  readFileSync,
-  readdirSync,
-  unlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as prettier from "prettier";
 
+import {
+  buildMergedCategorySpecs,
+  type MergedSpec,
+} from "./merge-openapi-specs";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const SCHEMAS_SRC = join(__dirname, "..", "libs", "schemas", "src");
 
 interface EndpointInfo {
   endpointId: string;
@@ -33,190 +39,119 @@ interface EndpointInfo {
 }
 
 /**
- * Extract endpoints from types.gen.ts file
+ * Walk a merged spec's paths and pull out (endpointId, inputSchema, outputSchema)
+ * triples for every POST operation. Uses the post-rename schema names so the
+ * generated imports match the schemas emitted by heyapi.
  */
-function extractEndpointsFromTypes(categoryPath: string): Array<EndpointInfo> {
-  const typesPath = join(categoryPath, "types.gen.ts");
-  if (!existsSync(typesPath)) {
-    return [];
-  }
-
-  const content = readFileSync(typesPath, "utf-8");
+function extractEndpointsFromSpec(mergedSpec: MergedSpec): Array<EndpointInfo> {
   const endpoints: Array<EndpointInfo> = [];
 
-  // Match: export type Post*Data = {
-  //   body: SchemaXxxInput
-  //   ...
-  //   url: '/endpoint-path'
-  // }
-  const postTypeRegex =
-    /export type (Post\w+)Data = \{[\s\S]*?body:\s*(\b\w+\b);?[\s\S]*?url:\s*["']([^"']+)["']/g;
+  for (const [pathKey, pathItem] of Object.entries(mergedSpec.paths)) {
+    const post = (pathItem as { post?: Record<string, any> }).post;
+    if (!post) continue;
 
-  let match;
-  while ((match = postTypeRegex.exec(content)) !== null) {
-    const inputType = match[2]!;
-    const urlPath = match[3]!;
+    const inputRef =
+      post.requestBody?.content?.["application/json"]?.schema?.$ref;
+    const outputRef =
+      post.responses?.["200"]?.content?.["application/json"]?.schema?.$ref;
+    if (typeof inputRef !== "string" || typeof outputRef !== "string") continue;
 
-    // Remove leading slash from URL to get endpoint ID
-    const endpointId = urlPath.replace(/^\//, "");
-
-    // Derive output type from input type by replacing "Input" with "Output"
-    const outputType = inputType.replace(/Input(Type\d+)?$/, "Output$1");
-
-    // Verify the output type exists in the content
-    if (!content.includes(`export type ${outputType}`)) {
-      console.warn(
-        `  Warning: Could not find output type ${outputType} for ${endpointId}`,
-      );
-      continue;
-    }
-
-    endpoints.push({
-      endpointId,
-      inputType,
-      outputType,
-    });
+    const inputType = inputRef.replace(/^#\/components\/schemas\//, "");
+    const outputType = outputRef.replace(/^#\/components\/schemas\//, "");
+    const endpointId = pathKey.replace(/^\//, "");
+    endpoints.push({ endpointId, inputType, outputType });
   }
 
-  return endpoints;
+  return endpoints.sort((a, b) => a.endpointId.localeCompare(b.endpointId));
 }
 
 /**
- * Get Zod schema name from TypeScript type name
- * SchemaWanEffectsInput -> zSchemaWanEffectsInput
+ * Normalize a name to alphanumeric-lowercase. Used to resolve our source schema
+ * names against the (PascalCased, separator-stripped) `z*` exports emitted by
+ * the heyapi zod plugin — heyapi's exact naming rules are non-trivial, so we
+ * match on the lossy normalized form instead of trying to reproduce them.
  */
-function getZodSchemaName(typeName: string): string {
-  return "z" + typeName;
+function normalizeId(name: string): string {
+  return name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 }
 
 /**
- * Convert category name to PascalCase
- * Prefix with "Gen" if starts with a digit
+ * Read `zod.gen.ts` and build a normalized -> actual export-name map for every
+ * top-level `export const z*` it declares.
+ */
+function buildZodExportLookup(categoryPath: string): Map<string, string> {
+  const zodGenPath = join(categoryPath, "zod.gen.ts");
+  const source = readFileSync(zodGenPath, "utf-8");
+  const lookup = new Map<string, string>();
+  const exportRegex = /export const (z[A-Za-z0-9_$]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = exportRegex.exec(source)) !== null) {
+    const exportName = match[1]!;
+    lookup.set(normalizeId(exportName.slice(1)), exportName);
+  }
+  return lookup;
+}
+
+/**
+ * PascalCase a category name; prefix with "Gen" if it'd otherwise start with
+ * a digit (TypeScript identifiers cannot start with a number).
  */
 function toPascalCase(str: string): string {
   const pascalCase = str
     .split(/[-_]/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join("");
-
-  // TypeScript identifiers cannot start with a number
-  // Prefix with "Gen" if it starts with a digit
-  if (/^\d/.test(pascalCase)) {
-    return "Gen" + pascalCase;
-  }
-
-  return pascalCase;
+  return /^\d/.test(pascalCase) ? "Gen" + pascalCase : pascalCase;
 }
 
-/**
- * Format TypeScript code using prettier
- */
 async function formatTypeScript(content: string): Promise<string> {
   const config = await prettier.resolveConfig(process.cwd());
-  return prettier.format(content, {
-    ...config,
-    parser: "typescript",
-  });
+  return prettier.format(content, { ...config, parser: "typescript" });
 }
 
-/**
- * Generate endpoint-map.ts for a category (TypeScript types only)
- */
-async function generateEndpointMap(
-  category: string,
-  categoryPath: string,
-  endpoints: Array<EndpointInfo>,
-): Promise<void> {
-  const typeName = toPascalCase(category);
-
-  // Collect unique type names
-  const inputTypes = new Set<string>();
-  const outputTypes = new Set<string>();
-
-  for (const { inputType, outputType } of endpoints) {
-    inputTypes.add(inputType);
-    outputTypes.add(outputType);
-  }
-
-  // Generate imports
-  const typeImports = Array.from(
-    new Set([...inputTypes, ...outputTypes]),
-  ).sort();
-
-  const lines = [
-    `// AUTO-GENERATED - Do not edit manually`,
-    `// Generated from types.gen.ts via scripts/generate-endpoint-maps.ts`,
-    ``,
-    `import type {`,
-    ...typeImports.map((t) => `  ${t},`),
-    `} from './types.gen'`,
-    ``,
-  ];
-
-  // Generate TypeScript EndpointMap type
-  lines.push(`export type ${typeName}EndpointMap = {`);
-
-  for (const { endpointId, inputType, outputType } of endpoints) {
-    lines.push(`  '${endpointId}': {`);
-    lines.push(`    input: ${inputType}`);
-    lines.push(`    output: ${outputType}`);
-    lines.push(`  }`);
-  }
-
-  lines.push(`}`);
-
-  // Generate Model type
-  lines.push(``);
-  lines.push(`/** Union type of all ${category} model endpoint IDs */`);
-  lines.push(`export type ${typeName}Model = keyof ${typeName}EndpointMap`);
-
-  // Generate utility types
-  lines.push(``);
-  lines.push(`/** Get the input type for a specific ${category} model */`);
-  lines.push(
-    `export type ${typeName}ModelInput<T extends ${typeName}Model> = ${typeName}EndpointMap[T]['input']`,
-  );
-  lines.push(``);
-  lines.push(`/** Get the output type for a specific ${category} model */`);
-  lines.push(
-    `export type ${typeName}ModelOutput<T extends ${typeName}Model> = ${typeName}EndpointMap[T]['output']`,
-  );
-
-  // Format and write to file
-  const outputPath = join(categoryPath, "endpoint-map.ts");
-  const formattedContent = await formatTypeScript(lines.join("\n"));
-  writeFileSync(outputPath, formattedContent);
-  console.log(
-    `  ✓ Generated ${category}/endpoint-map.ts (${endpoints.length} endpoints)`,
-  );
-}
-
-/**
- * Generate endpoint-schema.ts for a category (Zod discriminatedUnion)
- */
 async function generateEndpointSchema(
   category: string,
   categoryPath: string,
   endpoints: Array<EndpointInfo>,
 ): Promise<void> {
   const typeName = toPascalCase(category);
+  const zodExports = buildZodExportLookup(categoryPath);
 
-  // Collect unique schema names
-  const inputSchemas = new Set<string>();
-  const outputSchemas = new Set<string>();
+  const resolveZodName = (
+    schemaName: string,
+    endpointId: string,
+  ): string | null => {
+    const hit = zodExports.get(normalizeId(schemaName));
+    if (!hit) {
+      console.warn(
+        `  Warning: no zod export found for schema "${schemaName}" (endpoint ${endpointId}) in ${category}/zod.gen.ts`,
+      );
+      return null;
+    }
+    return hit;
+  };
 
-  for (const { inputType, outputType } of endpoints) {
-    inputSchemas.add(getZodSchemaName(inputType));
-    outputSchemas.add(getZodSchemaName(outputType));
-  }
+  const resolvedEndpoints = endpoints.flatMap(
+    ({ endpointId, inputType, outputType }) => {
+      const inputName = resolveZodName(inputType, endpointId);
+      const outputName = resolveZodName(outputType, endpointId);
+      if (!inputName || !outputName) return [];
+      return [{ endpointId, inputName, outputName }];
+    },
+  );
 
   const schemaImports = Array.from(
-    new Set([...inputSchemas, ...outputSchemas]),
+    new Set(
+      resolvedEndpoints.flatMap(({ inputName, outputName }) => [
+        inputName,
+        outputName,
+      ]),
+    ),
   ).sort();
 
   const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
-    `// Generated from types.gen.ts via scripts/generate-endpoint-maps.ts`,
+    `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
     `import { z } from 'zod'`,
     ``,
@@ -224,47 +159,31 @@ async function generateEndpointSchema(
     ...schemaImports.map((t) => `  ${t},`),
     `} from './zod.gen'`,
     ``,
+    `/** Zod schema for ${category} endpoints using discriminatedUnion */`,
+    `export const ${typeName}EndpointSchema = z.discriminatedUnion('endpoint', [`,
   ];
 
-  // Generate Zod discriminatedUnion
-  lines.push(
-    `/** Zod schema for ${category} endpoints using discriminatedUnion */`,
-  );
-  lines.push(
-    `export const ${typeName}EndpointSchema = z.discriminatedUnion('endpoint', [`,
-  );
-
-  for (const { endpointId, inputType, outputType } of endpoints) {
-    const inputSchema = getZodSchemaName(inputType);
-    const outputSchema = getZodSchemaName(outputType);
+  for (const { endpointId, inputName, outputName } of resolvedEndpoints) {
     lines.push(`  z.object({`);
     lines.push(`    endpoint: z.literal('${endpointId}'),`);
-    lines.push(`    input: ${inputSchema},`);
-    lines.push(`    output: ${outputSchema},`);
+    lines.push(`    input: ${inputName},`);
+    lines.push(`    output: ${outputName},`);
     lines.push(`  }),`);
   }
 
   lines.push(`])`);
-
-  // Generate inferred types from the schema
   lines.push(``);
   lines.push(`/** Inferred type from ${typeName}EndpointSchema */`);
   lines.push(
     `export type ${typeName}Endpoint = z.infer<typeof ${typeName}EndpointSchema>`,
   );
 
-  // Format and write to file
   const outputPath = join(categoryPath, "endpoint-schema.ts");
-  const formattedContent = await formatTypeScript(lines.join("\n"));
-  writeFileSync(outputPath, formattedContent);
+  writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
   console.log(`  ✓ Generated ${category}/endpoint-schema.ts`);
 }
 
-/**
- * Generate schemas.ts - Re-export category endpoint schemas
- */
-async function generateSchemasFile(
-  generatedDir: string,
+async function generateSchemasBarrel(
   processedCategories: Array<string>,
 ): Promise<void> {
   const lines = [
@@ -272,227 +191,83 @@ async function generateSchemasFile(
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
     `// Re-export all category endpoint schemas`,
+    ...processedCategories.map((c) => `export * from './${c}/endpoint-schema'`),
   ];
-
-  for (const category of processedCategories) {
-    lines.push(`export * from './${category}/endpoint-schema'`);
-  }
-
-  const outputPath = join(generatedDir, "schemas.ts");
-  const formattedContent = await formatTypeScript(lines.join("\n"));
-  writeFileSync(outputPath, formattedContent);
+  const outputPath = join(SCHEMAS_SRC, "schemas.ts");
+  writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
   console.log(`  ✓ Generated schemas.ts`);
 }
 
-/**
- * Generate endpoints.ts - EndpointTypeMap
- */
-async function generateEndpointsFile(
-  generatedDir: string,
+async function generateJsonSchemasBarrel(
   processedCategories: Array<string>,
 ): Promise<void> {
+  // Categories share many schema names (e.g. `FileSchema`, `QueueStatusSchema`),
+  // so we expose each category under its own namespace to avoid collisions.
   const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
+    `// Per-category JSON Schemas (as-const objects from @hey-api/schemas).`,
+    `// Each category is namespaced to prevent name collisions across categories.`,
+    ...processedCategories.map(
+      (c) => `export * as ${toPascalCase(c)} from './${c}/schemas.gen'`,
+    ),
   ];
-
-  // Import EndpointMap from each category
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(
-      `import type { ${typeName}EndpointMap } from './${category}/endpoint-map'`,
-    );
-  }
-
-  lines.push(``);
-
-  // Generate combined EndpointTypeMap
-  lines.push(`/** Combined EndpointTypeMap for all fal.ai endpoints */`);
-  lines.push(`export type EndpointTypeMap =`);
-  for (let i = 0; i < processedCategories.length; i++) {
-    const category = processedCategories[i]!;
-    const typeName = toPascalCase(category);
-    const isLast = i === processedCategories.length - 1;
-    lines.push(`  ${typeName}EndpointMap${isLast ? "" : " &"}`);
-  }
-
-  const outputPath = join(generatedDir, "endpoints.ts");
-  const formattedContent = await formatTypeScript(lines.join("\n"));
-  writeFileSync(outputPath, formattedContent);
-  console.log(`  ✓ Generated endpoints.ts`);
+  const outputPath = join(SCHEMAS_SRC, "json-schemas.ts");
+  writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
+  console.log(`  ✓ Generated json-schemas.ts`);
 }
 
-/**
- * Generate client.ts - EndpointType, InputType<T>, OutputType<T>
- */
-async function generateClientFile(
-  generatedDir: string,
-  processedCategories: Array<string>,
-): Promise<void> {
+async function generateIndex(): Promise<void> {
   const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
+    `export * from './schemas'`,
   ];
-
-  // Import types from each category's endpoint-map.ts
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(`import type {`);
-    lines.push(`  ${typeName}Model,`);
-    lines.push(`  ${typeName}ModelInput,`);
-    lines.push(`  ${typeName}ModelOutput,`);
-    lines.push(`} from './${category}/endpoint-map'`);
-  }
-
-  lines.push(``);
-
-  // Generate strict union of only known endpoint types
-  lines.push(
-    `/** Union of only known endpoint IDs. Use this to reject unknown/custom endpoints at compile time. */`,
-  );
-  lines.push(`export type EndpointTypeStrict =`);
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(`  | ${typeName}Model`);
-  }
-
-  lines.push(``);
-
-  // Generate permissive union including (string & {}) for custom endpoints
-  lines.push(
-    `/** Union of all known endpoint IDs, plus any custom string for private endpoints. */`,
-  );
-  lines.push(`// eslint-disable-next-line @typescript-eslint/ban-types`);
-  lines.push(`export type EndpointType = EndpointTypeStrict | (string & {})`);
-
-  lines.push(``);
-
-  // Generate strict InputType - constraint is EndpointTypeStrict, fallback is never
-  lines.push(
-    `/** Get the input type for a known endpoint. Returns \`never\` for unknown endpoints. */`,
-  );
-  lines.push(`export type InputTypeStrict<T extends EndpointTypeStrict> =`);
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(`  T extends ${typeName}Model ? ${typeName}ModelInput<T> :`);
-  }
-  lines.push(`  never`);
-
-  lines.push(``);
-
-  // Generate strict OutputType - constraint is EndpointTypeStrict, fallback is never
-  lines.push(
-    `/** Get the output type for a known endpoint. Returns \`never\` for unknown endpoints. */`,
-  );
-  lines.push(`export type OutputTypeStrict<T extends EndpointTypeStrict> =`);
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(`  T extends ${typeName}Model ? ${typeName}ModelOutput<T> :`);
-  }
-  lines.push(`  never`);
-
-  lines.push(``);
-
-  // Generate permissive InputType - constraint is string, falls back to Record<string, any>
-  lines.push(
-    `/** Get the input type for an endpoint. Falls back to Record<string, any> for unknown endpoints. */`,
-  );
-  lines.push(`export type InputType<T extends string> =`);
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(`  T extends ${typeName}Model ? ${typeName}ModelInput<T> :`);
-  }
-  lines.push(`  Record<string, any>`);
-
-  lines.push(``);
-
-  // Generate permissive OutputType - constraint is string, falls back to any
-  lines.push(
-    `/** Get the output type for an endpoint. Falls back to any for unknown endpoints. */`,
-  );
-  lines.push(`export type OutputType<T extends string> =`);
-  for (const category of processedCategories) {
-    const typeName = toPascalCase(category);
-    lines.push(`  T extends ${typeName}Model ? ${typeName}ModelOutput<T> :`);
-  }
-  lines.push(`  any`);
-
-  const outputPath = join(generatedDir, "index.ts");
-  const formattedContent = await formatTypeScript(lines.join("\n"));
-  writeFileSync(outputPath, formattedContent);
+  const outputPath = join(SCHEMAS_SRC, "index.ts");
+  writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
   console.log(`  ✓ Generated index.ts`);
 }
 
 async function main() {
-  const generatedDir = join(__dirname, "..", "libs", "schemas", "src");
-
-  if (!existsSync(generatedDir)) {
+  if (!existsSync(SCHEMAS_SRC)) {
     console.error("Error: libs/schemas/src/ directory not found.");
     process.exit(1);
   }
 
-  console.log("Scanning libs/schemas/src/ directory for categories...");
+  console.log("Building merged OpenAPI specs per category...");
+  const merged = buildMergedCategorySpecs();
+  console.log(`Found ${merged.length} categories`);
 
-  // Get all category directories
-  const categories = readdirSync(generatedDir, { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => dirent.name)
-    .sort();
-
-  console.log(`Found ${categories.length} categories:`);
-  for (const category of categories) {
-    console.log(`  - ${category}`);
-  }
-
-  console.log("\nGenerating endpoint maps and schemas...");
-
+  console.log("\nGenerating endpoint schemas...");
   const processedCategories: Array<string> = [];
-
-  for (const category of categories) {
-    const categoryPath = join(generatedDir, category);
-
-    // Extract endpoints from types.gen.ts
-    const endpoints = extractEndpointsFromTypes(categoryPath);
-
+  for (const { category, mergedSpec } of merged) {
+    const endpoints = extractEndpointsFromSpec(mergedSpec);
     if (endpoints.length === 0) {
       console.warn(`  Warning: No endpoints found for ${category}, skipping`);
       continue;
     }
-
-    // Generate endpoint-map.ts (TypeScript types)
-    await generateEndpointMap(category, categoryPath, endpoints);
-
-    // Generate endpoint-schema.ts (Zod discriminatedUnion)
+    const categoryPath = join(SCHEMAS_SRC, category);
+    if (!existsSync(categoryPath)) {
+      console.warn(
+        `  Warning: ${categoryPath} does not exist — run generate-schemas first. Skipping.`,
+      );
+      continue;
+    }
     await generateEndpointSchema(category, categoryPath, endpoints);
-
     processedCategories.push(category);
   }
 
-  // Generate unified files
-  console.log("\nGenerating unified files...");
+  console.log("\nGenerating top-level barrels...");
+  await generateSchemasBarrel(processedCategories);
+  await generateJsonSchemasBarrel(processedCategories);
+  await generateIndex();
 
-  await generateSchemasFile(generatedDir, processedCategories);
-  await generateClientFile(generatedDir, processedCategories);
-
-  // Generate endpoints.ts
-  await generateEndpointsFile(generatedDir, processedCategories);
-
-  // Delete old files if they exist
-  const oldFiles = ["client.ts"];
-  for (const file of oldFiles) {
-    const filePath = join(generatedDir, file);
-    if (existsSync(filePath)) {
-      unlinkSync(filePath);
-      console.log(`  ✓ Deleted ${file} (no longer needed)`);
-    }
-  }
-
-  console.log(`\n✓ Done! Generated endpoint maps in libs/schemas/src/`);
+  console.log(`\n✓ Done! Generated schemas under libs/schemas/src/`);
   console.log(`\nCategories generated:`);
   for (const category of processedCategories) {
-    console.log(`  - ${category} (${toPascalCase(category)}Model)`);
+    console.log(`  - ${category}`);
   }
 }
 

@@ -18,16 +18,16 @@
   ],
   "exports": {
     ".": "./src/index.js",
-    "./endpoints": "./src/endpoints.js",
-    "./schemas": "./src/schemas.js"
+    "./schemas": "./src/schemas.js",
+    "./json-schemas": "./src/json-schemas.js"
   },
   "typesVersions": {
     "*": {
-      "endpoints": [
-        "src/endpoints.d.ts"
-      ],
       "schemas": [
         "src/schemas.d.ts"
+      ],
+      "json-schemas": [
+        "src/json-schemas.d.ts"
       ]
     }
   },

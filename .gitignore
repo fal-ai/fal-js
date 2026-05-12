@@ -43,5 +43,5 @@ Thumbs.db
 *.local
 .vercel
 
-# Fetched OpenAPI specs (regenerated via `npm run fetch-openapi-models`)
+# Fetched OpenAPI specs (regenerated via `npm run fetch-schemas`)
 /json
