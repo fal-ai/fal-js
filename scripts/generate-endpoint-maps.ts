@@ -1,22 +1,35 @@
 #!/usr/bin/env tsx
 /**
- * Generate per-category endpoint Zod schemas plus top-level barrels for
+ * Generate per-category endpoint records plus top-level barrels for
  * @fal-ai/schemas.
  *
  * For each category we emit:
- *   - {category}/endpoint-schema.ts  Zod discriminatedUnion over {endpoint, input, output}
+ *   - {category}/endpoint-schema.ts  `{category}Endpoints` const — a record keyed by
+ *                                    endpoint id with `{ input, output }` Zod schemas
+ *                                    pulled from `zod.gen.ts`, plus a
+ *                                    `{Category}EndpointId = keyof typeof ...` type.
+ *   - {category}/index.ts            Barrel that re-exports endpoint-schema + zod.gen.
  *
  * And at the package root:
- *   - schemas.ts       re-exports every category's endpoint-schema.ts
- *   - json-schemas.ts  re-exports every category's schemas.gen.ts (JSON Schemas)
- *   - index.ts         re-exports from schemas.ts
+ *   - schemas.ts  Namespaced JSON Schemas, one namespace per category.
+ *   - zod.ts      Namespaced Zod barrel (per-category raw schema names collide).
+ *   - index.ts    Default entry — re-exports schemas.ts (JSON Schemas only, no zod peer).
  *
- * This script does NOT emit any TypeScript types. Consumers wanting types
- * should `z.infer` from the discriminated unions in schemas.ts.
+ * Each category is also exposed directly through package.json `exports`:
+ *   - `@fal-ai/schemas/schemas/{category}` -> `{category}/schemas.gen.ts`
+ *   - `@fal-ai/schemas/zod/{category}`     -> `{category}/index.ts`
+ *
+ * The endpoint **input** is read from the POST's `requestBody`. The **output**
+ * is read from the sibling GET at `${pathKey}/requests/{request_id}` — the
+ * POST's 200 response is always `QueueStatus` (queue ack), not the real result.
  *
  * Endpoint metadata is derived from the same merged OpenAPI specs that feed
  * @hey-api/openapi-ts (via scripts/lib/merge-openapi-specs.ts), so renamed
  * schemas (e.g. FileTypeInputType2) resolve to the actual emitted zod names.
+ *
+ * The record shape is deliberate: a `z.discriminatedUnion('endpoint', [...])`
+ * over hundreds of branches blows past TS's declaration-emit budget (TS7056)
+ * for the largest categories. The flat record stays linear in declaration size.
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -42,6 +55,11 @@ interface EndpointInfo {
  * Walk a merged spec's paths and pull out (endpointId, inputSchema, outputSchema)
  * triples for every POST operation. Uses the post-rename schema names so the
  * generated imports match the schemas emitted by heyapi.
+ *
+ * Input comes from the POST's `requestBody`. Output comes from the **sibling
+ * GET** at `${pathKey}/requests/{request_id}` — the POST's 200 response is
+ * always `QueueStatus` (queue ack), while the real per-endpoint output lives
+ * on the GET that fetches the queued result.
  */
 function extractEndpointsFromSpec(mergedSpec: MergedSpec): Array<EndpointInfo> {
   const endpoints: Array<EndpointInfo> = [];
@@ -52,9 +70,23 @@ function extractEndpointsFromSpec(mergedSpec: MergedSpec): Array<EndpointInfo> {
 
     const inputRef =
       post.requestBody?.content?.["application/json"]?.schema?.$ref;
+    if (typeof inputRef !== "string") continue;
+
+    const resultPathKey = `${pathKey}/requests/{request_id}`;
+    const resultGet = (
+      mergedSpec.paths[resultPathKey] as
+        | { get?: Record<string, any> }
+        | undefined
+    )?.get;
     const outputRef =
-      post.responses?.["200"]?.content?.["application/json"]?.schema?.$ref;
-    if (typeof inputRef !== "string" || typeof outputRef !== "string") continue;
+      resultGet?.responses?.["200"]?.content?.["application/json"]?.schema
+        ?.$ref;
+    if (typeof outputRef !== "string") {
+      console.warn(
+        `  Warning: no sibling GET ${resultPathKey} found — skipping endpoint ${pathKey}`,
+      );
+      continue;
+    }
 
     const inputType = inputRef.replace(/^#\/components\/schemas\//, "");
     const outputType = outputRef.replace(/^#\/components\/schemas\//, "");
@@ -104,6 +136,12 @@ function toPascalCase(str: string): string {
   return /^\d/.test(pascalCase) ? "Gen" + pascalCase : pascalCase;
 }
 
+/** camelCase variant of `toPascalCase` (first char lowered). */
+function toCamelCase(str: string): string {
+  const pascal = toPascalCase(str);
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+}
+
 async function formatTypeScript(content: string): Promise<string> {
   const config = await prettier.resolveConfig(process.cwd());
   return prettier.format(content, { ...config, parser: "typescript" });
@@ -115,6 +153,8 @@ async function generateEndpointSchema(
   endpoints: Array<EndpointInfo>,
 ): Promise<void> {
   const typeName = toPascalCase(category);
+  const constName = `${toCamelCase(category)}Endpoints`;
+  const idTypeName = `${typeName}EndpointId`;
   const zodExports = buildZodExportLookup(categoryPath);
 
   const resolveZodName = (
@@ -149,56 +189,89 @@ async function generateEndpointSchema(
     ),
   ).sort();
 
+  // Explicit type annotation (rather than `as const` + inference) so TS
+  // doesn't have to materialize the full structural type for every entry's
+  // Zod schemas — that's what trips TS7056 on large categories (image, video).
+  // With the annotation, TS emits the type verbatim, sized linearly in N.
   const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
-    `import { z } from 'zod'`,
-    ``,
     `import {`,
     ...schemaImports.map((t) => `  ${t},`),
-    `} from './zod.gen'`,
+    `} from './zod.gen.js'`,
     ``,
-    `/** Zod schema for ${category} endpoints using discriminatedUnion */`,
-    `export const ${typeName}EndpointSchema = z.discriminatedUnion('endpoint', [`,
+    `/** Map of ${category} endpoint id -> Zod input/output schemas. */`,
+    `export const ${constName}: {`,
   ];
 
   for (const { endpointId, inputName, outputName } of resolvedEndpoints) {
-    lines.push(`  z.object({`);
-    lines.push(`    endpoint: z.literal('${endpointId}'),`);
-    lines.push(`    input: ${inputName},`);
-    lines.push(`    output: ${outputName},`);
-    lines.push(`  }),`);
+    lines.push(
+      `  readonly '${endpointId}': { readonly input: typeof ${inputName}; readonly output: typeof ${outputName} },`,
+    );
   }
 
-  lines.push(`])`);
+  lines.push(`} = {`);
+
+  for (const { endpointId, inputName, outputName } of resolvedEndpoints) {
+    lines.push(
+      `  '${endpointId}': { input: ${inputName}, output: ${outputName} },`,
+    );
+  }
+
+  lines.push(`}`);
   lines.push(``);
-  lines.push(`/** Inferred type from ${typeName}EndpointSchema */`);
-  lines.push(
-    `export type ${typeName}Endpoint = z.infer<typeof ${typeName}EndpointSchema>`,
-  );
+  lines.push(`/** Union of valid ${category} endpoint ids. */`);
+  lines.push(`export type ${idTypeName} = keyof typeof ${constName}`);
 
   const outputPath = join(categoryPath, "endpoint-schema.ts");
   writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
   console.log(`  ✓ Generated ${category}/endpoint-schema.ts`);
 }
 
-async function generateSchemasBarrel(
-  processedCategories: Array<string>,
+/**
+ * Per-category Zod barrel: re-exports the endpoint record + id type from
+ * `endpoint-schema.ts` alongside the raw input/output schemas in `zod.gen.ts`,
+ * so `@fal-ai/schemas/zod/{category}` exposes both through one subpath.
+ */
+async function generateCategoryZodIndex(
+  category: string,
+  categoryPath: string,
 ): Promise<void> {
   const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
-    `// Re-export all category endpoint schemas`,
-    ...processedCategories.map((c) => `export * from './${c}/endpoint-schema'`),
+    `export * from './endpoint-schema.js'`,
+    `export * from './zod.gen.js'`,
   ];
-  const outputPath = join(SCHEMAS_SRC, "schemas.ts");
+  const outputPath = join(categoryPath, "index.ts");
   writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
-  console.log(`  ✓ Generated schemas.ts`);
+  console.log(`  ✓ Generated ${category}/index.ts`);
 }
 
-async function generateJsonSchemasBarrel(
+async function generateZodBarrel(
+  processedCategories: Array<string>,
+): Promise<void> {
+  // Each category exposes its {category}Endpoints record + raw input/output
+  // schemas via its index.ts barrel. Namespace per category here because raw
+  // schema names (zFile, zImage, zQueueStatus, ...) collide across categories.
+  const lines = [
+    `// AUTO-GENERATED - Do not edit manually`,
+    `// Generated via scripts/generate-endpoint-maps.ts`,
+    ``,
+    `// Per-category Zod schemas — namespaced because raw input/output schema`,
+    `// names collide across categories.`,
+    ...processedCategories.map(
+      (c) => `export * as ${toPascalCase(c)} from './${c}/index.js'`,
+    ),
+  ];
+  const outputPath = join(SCHEMAS_SRC, "zod.ts");
+  writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
+  console.log(`  ✓ Generated zod.ts`);
+}
+
+async function generateSchemasBarrel(
   processedCategories: Array<string>,
 ): Promise<void> {
   // Categories share many schema names (e.g. `FileSchema`, `QueueStatusSchema`),
@@ -210,20 +283,22 @@ async function generateJsonSchemasBarrel(
     `// Per-category JSON Schemas (as-const objects from @hey-api/schemas).`,
     `// Each category is namespaced to prevent name collisions across categories.`,
     ...processedCategories.map(
-      (c) => `export * as ${toPascalCase(c)} from './${c}/schemas.gen'`,
+      (c) => `export * as ${toPascalCase(c)} from './${c}/schemas.gen.js'`,
     ),
   ];
-  const outputPath = join(SCHEMAS_SRC, "json-schemas.ts");
+  const outputPath = join(SCHEMAS_SRC, "schemas.ts");
   writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
-  console.log(`  ✓ Generated json-schemas.ts`);
+  console.log(`  ✓ Generated schemas.ts`);
 }
 
 async function generateIndex(): Promise<void> {
+  // Default entry intentionally re-exports only JSON Schemas so consumers can
+  // use the package without installing the optional `zod` peer dependency.
   const lines = [
     `// AUTO-GENERATED - Do not edit manually`,
     `// Generated via scripts/generate-endpoint-maps.ts`,
     ``,
-    `export * from './schemas'`,
+    `export * from './schemas.js'`,
   ];
   const outputPath = join(SCHEMAS_SRC, "index.ts");
   writeFileSync(outputPath, await formatTypeScript(lines.join("\n")));
@@ -256,12 +331,13 @@ async function main() {
       continue;
     }
     await generateEndpointSchema(category, categoryPath, endpoints);
+    await generateCategoryZodIndex(category, categoryPath);
     processedCategories.push(category);
   }
 
   console.log("\nGenerating top-level barrels...");
   await generateSchemasBarrel(processedCategories);
-  await generateJsonSchemasBarrel(processedCategories);
+  await generateZodBarrel(processedCategories);
   await generateIndex();
 
   console.log(`\n✓ Done! Generated schemas under libs/schemas/src/`);

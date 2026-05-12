@@ -1,16 +1,17 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-// Re-export all category endpoint schemas
-export * from "./3d/endpoint-schema";
-export * from "./audio/endpoint-schema";
-export * from "./image/endpoint-schema";
-export * from "./json/endpoint-schema";
-export * from "./llm/endpoint-schema";
-export * from "./speech/endpoint-schema";
-export * from "./text/endpoint-schema";
-export * from "./training/endpoint-schema";
-export * from "./unknown/endpoint-schema";
-export * from "./video/endpoint-schema";
-export * from "./vision/endpoint-schema";
-export * from "./workflow/endpoint-schema";
+// Per-category JSON Schemas (as-const objects from @hey-api/schemas).
+// Each category is namespaced to prevent name collisions across categories.
+export * as Gen3d from "./3d/schemas.gen.js";
+export * as Audio from "./audio/schemas.gen.js";
+export * as Image from "./image/schemas.gen.js";
+export * as Json from "./json/schemas.gen.js";
+export * as Llm from "./llm/schemas.gen.js";
+export * as Speech from "./speech/schemas.gen.js";
+export * as Text from "./text/schemas.gen.js";
+export * as Training from "./training/schemas.gen.js";
+export * as Unknown from "./unknown/schemas.gen.js";
+export * as Video from "./video/schemas.gen.js";
+export * as Vision from "./vision/schemas.gen.js";
+export * as Workflow from "./workflow/schemas.gen.js";

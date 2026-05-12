@@ -1,6 +1,6 @@
 {
   "name": "@fal-ai/schemas",
-  "description": "TypeScript types and Zod schemas for fal.ai API endpoints",
+  "description": "Zod schemas and JSON Schemas for fal.ai API endpoints",
   "version": "0.1.0",
   "license": "MIT",
   "repository": {
@@ -11,25 +11,45 @@
   "keywords": [
     "fal",
     "schemas",
-    "types",
+    "json-schema",
+    "zod",
     "ai",
     "ml",
     "typescript"
   ],
+  "type": "module",
+  "sideEffects": [
+    "**/zod.gen.*",
+    "**/endpoint-schema.*"
+  ],
   "exports": {
     ".": "./src/index.js",
     "./schemas": "./src/schemas.js",
-    "./json-schemas": "./src/json-schemas.js"
-  },
-  "typesVersions": {
-    "*": {
-      "schemas": [
-        "src/schemas.d.ts"
-      ],
-      "json-schemas": [
-        "src/json-schemas.d.ts"
-      ]
-    }
+    "./schemas/3d": "./src/3d/schemas.gen.js",
+    "./schemas/audio": "./src/audio/schemas.gen.js",
+    "./schemas/image": "./src/image/schemas.gen.js",
+    "./schemas/json": "./src/json/schemas.gen.js",
+    "./schemas/llm": "./src/llm/schemas.gen.js",
+    "./schemas/speech": "./src/speech/schemas.gen.js",
+    "./schemas/text": "./src/text/schemas.gen.js",
+    "./schemas/training": "./src/training/schemas.gen.js",
+    "./schemas/unknown": "./src/unknown/schemas.gen.js",
+    "./schemas/video": "./src/video/schemas.gen.js",
+    "./schemas/vision": "./src/vision/schemas.gen.js",
+    "./schemas/workflow": "./src/workflow/schemas.gen.js",
+    "./zod": "./src/zod.js",
+    "./zod/3d": "./src/3d/index.js",
+    "./zod/audio": "./src/audio/index.js",
+    "./zod/image": "./src/image/index.js",
+    "./zod/json": "./src/json/index.js",
+    "./zod/llm": "./src/llm/index.js",
+    "./zod/speech": "./src/speech/index.js",
+    "./zod/text": "./src/text/index.js",
+    "./zod/training": "./src/training/index.js",
+    "./zod/unknown": "./src/unknown/index.js",
+    "./zod/video": "./src/video/index.js",
+    "./zod/vision": "./src/vision/index.js",
+    "./zod/workflow": "./src/workflow/index.js"
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

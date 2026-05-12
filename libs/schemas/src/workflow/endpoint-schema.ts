@@ -1,21 +1,23 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import { z } from "zod";
-
 import {
-  zQueueStatus,
   zWorkflowUtilitiesPickImageByIndexInput,
-} from "./zod.gen";
+  zWorkflowUtilitiesPickImageByIndexOutput,
+} from "./zod.gen.js";
 
-/** Zod schema for workflow endpoints using discriminatedUnion */
-export const WorkflowEndpointSchema = z.discriminatedUnion("endpoint", [
-  z.object({
-    endpoint: z.literal("fal-ai/workflow-utilities/pick-image-by-index"),
+/** Map of workflow endpoint id -> Zod input/output schemas. */
+export const workflowEndpoints: {
+  readonly "fal-ai/workflow-utilities/pick-image-by-index": {
+    readonly input: typeof zWorkflowUtilitiesPickImageByIndexInput;
+    readonly output: typeof zWorkflowUtilitiesPickImageByIndexOutput;
+  };
+} = {
+  "fal-ai/workflow-utilities/pick-image-by-index": {
     input: zWorkflowUtilitiesPickImageByIndexInput,
-    output: zQueueStatus,
-  }),
-]);
+    output: zWorkflowUtilitiesPickImageByIndexOutput,
+  },
+};
 
-/** Inferred type from WorkflowEndpointSchema */
-export type WorkflowEndpoint = z.infer<typeof WorkflowEndpointSchema>;
+/** Union of valid workflow endpoint ids. */
+export type WorkflowEndpointId = keyof typeof workflowEndpoints;

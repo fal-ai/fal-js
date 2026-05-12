@@ -1,213 +1,328 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import { z } from "zod";
-
 import {
   zArbiterImageImageInput,
+  zArbiterImageImageOutput,
   zArbiterImageInput,
+  zArbiterImageOutput,
   zArbiterImageTextInput,
+  zArbiterImageTextOutput,
   zFlorence2LargeCaptionInput,
+  zFlorence2LargeCaptionOutput,
   zFlorence2LargeDetailedCaptionInput,
+  zFlorence2LargeDetailedCaptionOutput,
   zFlorence2LargeMoreDetailedCaptionInput,
+  zFlorence2LargeMoreDetailedCaptionOutput,
   zFlorence2LargeOcrInput,
+  zFlorence2LargeOcrOutput,
   zFlorence2LargeRegionToCategoryInput,
+  zFlorence2LargeRegionToCategoryOutput,
   zFlorence2LargeRegionToDescriptionInput,
+  zFlorence2LargeRegionToDescriptionOutput,
   zGotOcrV2Input,
+  zGotOcrV2Output,
   zImageutilsNsfwInput,
+  zImageutilsNsfwOutput,
   zIsaac01Input,
   zIsaac01OpenaiV1ChatCompletionsInput,
+  zIsaac01OpenaiV1ChatCompletionsOutput,
+  zIsaac01Output,
   zLlavaNextInput,
+  zLlavaNextOutput,
   zMoondream2Input,
   zMoondream2ObjectDetectionInput,
+  zMoondream2ObjectDetectionOutput,
+  zMoondream2Output,
   zMoondream2PointObjectDetectionInput,
+  zMoondream2PointObjectDetectionOutput,
   zMoondream2VisualQueryInput,
+  zMoondream2VisualQueryOutput,
   zMoondream3PreviewCaptionInput,
+  zMoondream3PreviewCaptionOutput,
   zMoondream3PreviewDetectInput,
+  zMoondream3PreviewDetectOutput,
   zMoondream3PreviewPointInput,
+  zMoondream3PreviewPointOutput,
   zMoondream3PreviewQueryInput,
+  zMoondream3PreviewQueryOutput,
   zMoondreamBatchedInput,
+  zMoondreamBatchedOutput,
   zMoondreamNextBatchInput,
+  zMoondreamNextBatchOutput,
   zMoondreamNextInput,
-  zQueueStatus,
+  zMoondreamNextOutput,
   zRouterVisionInput,
+  zRouterVisionOutput,
   zSa2Va4bImageInput,
+  zSa2Va4bImageOutput,
   zSa2Va4bVideoInput,
+  zSa2Va4bVideoOutput,
   zSa2Va8bImageInput,
+  zSa2Va8bImageOutput,
   zSa2Va8bVideoInput,
+  zSa2Va8bVideoOutput,
   zSam3ImageEmbedInput,
+  zSam3ImageEmbedOutput,
   zVideoUnderstandingInput,
+  zVideoUnderstandingOutput,
   zXAilabNsfwInput,
-} from "./zod.gen";
+  zXAilabNsfwOutput,
+} from "./zod.gen.js";
 
-/** Zod schema for vision endpoints using discriminatedUnion */
-export const VisionEndpointSchema = z.discriminatedUnion("endpoint", [
-  z.object({
-    endpoint: z.literal("fal-ai/arbiter/image"),
+/** Map of vision endpoint id -> Zod input/output schemas. */
+export const visionEndpoints: {
+  readonly "fal-ai/arbiter/image": {
+    readonly input: typeof zArbiterImageInput;
+    readonly output: typeof zArbiterImageOutput;
+  };
+  readonly "fal-ai/arbiter/image/image": {
+    readonly input: typeof zArbiterImageImageInput;
+    readonly output: typeof zArbiterImageImageOutput;
+  };
+  readonly "fal-ai/arbiter/image/text": {
+    readonly input: typeof zArbiterImageTextInput;
+    readonly output: typeof zArbiterImageTextOutput;
+  };
+  readonly "fal-ai/florence-2-large/caption": {
+    readonly input: typeof zFlorence2LargeCaptionInput;
+    readonly output: typeof zFlorence2LargeCaptionOutput;
+  };
+  readonly "fal-ai/florence-2-large/detailed-caption": {
+    readonly input: typeof zFlorence2LargeDetailedCaptionInput;
+    readonly output: typeof zFlorence2LargeDetailedCaptionOutput;
+  };
+  readonly "fal-ai/florence-2-large/more-detailed-caption": {
+    readonly input: typeof zFlorence2LargeMoreDetailedCaptionInput;
+    readonly output: typeof zFlorence2LargeMoreDetailedCaptionOutput;
+  };
+  readonly "fal-ai/florence-2-large/ocr": {
+    readonly input: typeof zFlorence2LargeOcrInput;
+    readonly output: typeof zFlorence2LargeOcrOutput;
+  };
+  readonly "fal-ai/florence-2-large/region-to-category": {
+    readonly input: typeof zFlorence2LargeRegionToCategoryInput;
+    readonly output: typeof zFlorence2LargeRegionToCategoryOutput;
+  };
+  readonly "fal-ai/florence-2-large/region-to-description": {
+    readonly input: typeof zFlorence2LargeRegionToDescriptionInput;
+    readonly output: typeof zFlorence2LargeRegionToDescriptionOutput;
+  };
+  readonly "fal-ai/got-ocr/v2": {
+    readonly input: typeof zGotOcrV2Input;
+    readonly output: typeof zGotOcrV2Output;
+  };
+  readonly "fal-ai/imageutils/nsfw": {
+    readonly input: typeof zImageutilsNsfwInput;
+    readonly output: typeof zImageutilsNsfwOutput;
+  };
+  readonly "fal-ai/llava-next": {
+    readonly input: typeof zLlavaNextInput;
+    readonly output: typeof zLlavaNextOutput;
+  };
+  readonly "fal-ai/moondream-next": {
+    readonly input: typeof zMoondreamNextInput;
+    readonly output: typeof zMoondreamNextOutput;
+  };
+  readonly "fal-ai/moondream-next/batch": {
+    readonly input: typeof zMoondreamNextBatchInput;
+    readonly output: typeof zMoondreamNextBatchOutput;
+  };
+  readonly "fal-ai/moondream/batched": {
+    readonly input: typeof zMoondreamBatchedInput;
+    readonly output: typeof zMoondreamBatchedOutput;
+  };
+  readonly "fal-ai/moondream2": {
+    readonly input: typeof zMoondream2Input;
+    readonly output: typeof zMoondream2Output;
+  };
+  readonly "fal-ai/moondream2/object-detection": {
+    readonly input: typeof zMoondream2ObjectDetectionInput;
+    readonly output: typeof zMoondream2ObjectDetectionOutput;
+  };
+  readonly "fal-ai/moondream2/point-object-detection": {
+    readonly input: typeof zMoondream2PointObjectDetectionInput;
+    readonly output: typeof zMoondream2PointObjectDetectionOutput;
+  };
+  readonly "fal-ai/moondream2/visual-query": {
+    readonly input: typeof zMoondream2VisualQueryInput;
+    readonly output: typeof zMoondream2VisualQueryOutput;
+  };
+  readonly "fal-ai/moondream3-preview/caption": {
+    readonly input: typeof zMoondream3PreviewCaptionInput;
+    readonly output: typeof zMoondream3PreviewCaptionOutput;
+  };
+  readonly "fal-ai/moondream3-preview/detect": {
+    readonly input: typeof zMoondream3PreviewDetectInput;
+    readonly output: typeof zMoondream3PreviewDetectOutput;
+  };
+  readonly "fal-ai/moondream3-preview/point": {
+    readonly input: typeof zMoondream3PreviewPointInput;
+    readonly output: typeof zMoondream3PreviewPointOutput;
+  };
+  readonly "fal-ai/moondream3-preview/query": {
+    readonly input: typeof zMoondream3PreviewQueryInput;
+    readonly output: typeof zMoondream3PreviewQueryOutput;
+  };
+  readonly "fal-ai/sa2va/4b/image": {
+    readonly input: typeof zSa2Va4bImageInput;
+    readonly output: typeof zSa2Va4bImageOutput;
+  };
+  readonly "fal-ai/sa2va/4b/video": {
+    readonly input: typeof zSa2Va4bVideoInput;
+    readonly output: typeof zSa2Va4bVideoOutput;
+  };
+  readonly "fal-ai/sa2va/8b/image": {
+    readonly input: typeof zSa2Va8bImageInput;
+    readonly output: typeof zSa2Va8bImageOutput;
+  };
+  readonly "fal-ai/sa2va/8b/video": {
+    readonly input: typeof zSa2Va8bVideoInput;
+    readonly output: typeof zSa2Va8bVideoOutput;
+  };
+  readonly "fal-ai/sam-3/image/embed": {
+    readonly input: typeof zSam3ImageEmbedInput;
+    readonly output: typeof zSam3ImageEmbedOutput;
+  };
+  readonly "fal-ai/video-understanding": {
+    readonly input: typeof zVideoUnderstandingInput;
+    readonly output: typeof zVideoUnderstandingOutput;
+  };
+  readonly "fal-ai/x-ailab/nsfw": {
+    readonly input: typeof zXAilabNsfwInput;
+    readonly output: typeof zXAilabNsfwOutput;
+  };
+  readonly "openrouter/router/vision": {
+    readonly input: typeof zRouterVisionInput;
+    readonly output: typeof zRouterVisionOutput;
+  };
+  readonly "perceptron/isaac-01": {
+    readonly input: typeof zIsaac01Input;
+    readonly output: typeof zIsaac01Output;
+  };
+  readonly "perceptron/isaac-01/openai/v1/chat/completions": {
+    readonly input: typeof zIsaac01OpenaiV1ChatCompletionsInput;
+    readonly output: typeof zIsaac01OpenaiV1ChatCompletionsOutput;
+  };
+} = {
+  "fal-ai/arbiter/image": {
     input: zArbiterImageInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/arbiter/image/image"),
+    output: zArbiterImageOutput,
+  },
+  "fal-ai/arbiter/image/image": {
     input: zArbiterImageImageInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/arbiter/image/text"),
+    output: zArbiterImageImageOutput,
+  },
+  "fal-ai/arbiter/image/text": {
     input: zArbiterImageTextInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/florence-2-large/caption"),
+    output: zArbiterImageTextOutput,
+  },
+  "fal-ai/florence-2-large/caption": {
     input: zFlorence2LargeCaptionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/florence-2-large/detailed-caption"),
+    output: zFlorence2LargeCaptionOutput,
+  },
+  "fal-ai/florence-2-large/detailed-caption": {
     input: zFlorence2LargeDetailedCaptionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/florence-2-large/more-detailed-caption"),
+    output: zFlorence2LargeDetailedCaptionOutput,
+  },
+  "fal-ai/florence-2-large/more-detailed-caption": {
     input: zFlorence2LargeMoreDetailedCaptionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/florence-2-large/ocr"),
+    output: zFlorence2LargeMoreDetailedCaptionOutput,
+  },
+  "fal-ai/florence-2-large/ocr": {
     input: zFlorence2LargeOcrInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/florence-2-large/region-to-category"),
+    output: zFlorence2LargeOcrOutput,
+  },
+  "fal-ai/florence-2-large/region-to-category": {
     input: zFlorence2LargeRegionToCategoryInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/florence-2-large/region-to-description"),
+    output: zFlorence2LargeRegionToCategoryOutput,
+  },
+  "fal-ai/florence-2-large/region-to-description": {
     input: zFlorence2LargeRegionToDescriptionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/got-ocr/v2"),
-    input: zGotOcrV2Input,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/imageutils/nsfw"),
+    output: zFlorence2LargeRegionToDescriptionOutput,
+  },
+  "fal-ai/got-ocr/v2": { input: zGotOcrV2Input, output: zGotOcrV2Output },
+  "fal-ai/imageutils/nsfw": {
     input: zImageutilsNsfwInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/llava-next"),
-    input: zLlavaNextInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream-next"),
+    output: zImageutilsNsfwOutput,
+  },
+  "fal-ai/llava-next": { input: zLlavaNextInput, output: zLlavaNextOutput },
+  "fal-ai/moondream-next": {
     input: zMoondreamNextInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream-next/batch"),
+    output: zMoondreamNextOutput,
+  },
+  "fal-ai/moondream-next/batch": {
     input: zMoondreamNextBatchInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream/batched"),
+    output: zMoondreamNextBatchOutput,
+  },
+  "fal-ai/moondream/batched": {
     input: zMoondreamBatchedInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream2"),
-    input: zMoondream2Input,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream2/object-detection"),
+    output: zMoondreamBatchedOutput,
+  },
+  "fal-ai/moondream2": { input: zMoondream2Input, output: zMoondream2Output },
+  "fal-ai/moondream2/object-detection": {
     input: zMoondream2ObjectDetectionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream2/point-object-detection"),
+    output: zMoondream2ObjectDetectionOutput,
+  },
+  "fal-ai/moondream2/point-object-detection": {
     input: zMoondream2PointObjectDetectionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream2/visual-query"),
+    output: zMoondream2PointObjectDetectionOutput,
+  },
+  "fal-ai/moondream2/visual-query": {
     input: zMoondream2VisualQueryInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream3-preview/caption"),
+    output: zMoondream2VisualQueryOutput,
+  },
+  "fal-ai/moondream3-preview/caption": {
     input: zMoondream3PreviewCaptionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream3-preview/detect"),
+    output: zMoondream3PreviewCaptionOutput,
+  },
+  "fal-ai/moondream3-preview/detect": {
     input: zMoondream3PreviewDetectInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream3-preview/point"),
+    output: zMoondream3PreviewDetectOutput,
+  },
+  "fal-ai/moondream3-preview/point": {
     input: zMoondream3PreviewPointInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/moondream3-preview/query"),
+    output: zMoondream3PreviewPointOutput,
+  },
+  "fal-ai/moondream3-preview/query": {
     input: zMoondream3PreviewQueryInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/sa2va/4b/image"),
+    output: zMoondream3PreviewQueryOutput,
+  },
+  "fal-ai/sa2va/4b/image": {
     input: zSa2Va4bImageInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/sa2va/4b/video"),
+    output: zSa2Va4bImageOutput,
+  },
+  "fal-ai/sa2va/4b/video": {
     input: zSa2Va4bVideoInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/sa2va/8b/image"),
+    output: zSa2Va4bVideoOutput,
+  },
+  "fal-ai/sa2va/8b/image": {
     input: zSa2Va8bImageInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/sa2va/8b/video"),
+    output: zSa2Va8bImageOutput,
+  },
+  "fal-ai/sa2va/8b/video": {
     input: zSa2Va8bVideoInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/sam-3/image/embed"),
+    output: zSa2Va8bVideoOutput,
+  },
+  "fal-ai/sam-3/image/embed": {
     input: zSam3ImageEmbedInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/video-understanding"),
+    output: zSam3ImageEmbedOutput,
+  },
+  "fal-ai/video-understanding": {
     input: zVideoUnderstandingInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("fal-ai/x-ailab/nsfw"),
-    input: zXAilabNsfwInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("openrouter/router/vision"),
+    output: zVideoUnderstandingOutput,
+  },
+  "fal-ai/x-ailab/nsfw": { input: zXAilabNsfwInput, output: zXAilabNsfwOutput },
+  "openrouter/router/vision": {
     input: zRouterVisionInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("perceptron/isaac-01"),
-    input: zIsaac01Input,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("perceptron/isaac-01/openai/v1/chat/completions"),
+    output: zRouterVisionOutput,
+  },
+  "perceptron/isaac-01": { input: zIsaac01Input, output: zIsaac01Output },
+  "perceptron/isaac-01/openai/v1/chat/completions": {
     input: zIsaac01OpenaiV1ChatCompletionsInput,
-    output: zQueueStatus,
-  }),
-]);
+    output: zIsaac01OpenaiV1ChatCompletionsOutput,
+  },
+};
 
-/** Inferred type from VisionEndpointSchema */
-export type VisionEndpoint = z.infer<typeof VisionEndpointSchema>;
+/** Union of valid vision endpoint ids. */
+export type VisionEndpointId = keyof typeof visionEndpoints;

@@ -1,27 +1,33 @@
 // AUTO-GENERATED - Do not edit manually
 // Generated via scripts/generate-endpoint-maps.ts
 
-import { z } from "zod";
-
 import {
-  zQueueStatus,
   zRouterAudioInput,
+  zRouterAudioOutput,
   zWorkflowUtilitiesInterleaveVideoInput,
-} from "./zod.gen";
+  zWorkflowUtilitiesInterleaveVideoOutput,
+} from "./zod.gen.js";
 
-/** Zod schema for unknown endpoints using discriminatedUnion */
-export const UnknownEndpointSchema = z.discriminatedUnion("endpoint", [
-  z.object({
-    endpoint: z.literal("fal-ai/workflow-utilities/interleave-video"),
+/** Map of unknown endpoint id -> Zod input/output schemas. */
+export const unknownEndpoints: {
+  readonly "fal-ai/workflow-utilities/interleave-video": {
+    readonly input: typeof zWorkflowUtilitiesInterleaveVideoInput;
+    readonly output: typeof zWorkflowUtilitiesInterleaveVideoOutput;
+  };
+  readonly "openrouter/router/audio": {
+    readonly input: typeof zRouterAudioInput;
+    readonly output: typeof zRouterAudioOutput;
+  };
+} = {
+  "fal-ai/workflow-utilities/interleave-video": {
     input: zWorkflowUtilitiesInterleaveVideoInput,
-    output: zQueueStatus,
-  }),
-  z.object({
-    endpoint: z.literal("openrouter/router/audio"),
+    output: zWorkflowUtilitiesInterleaveVideoOutput,
+  },
+  "openrouter/router/audio": {
     input: zRouterAudioInput,
-    output: zQueueStatus,
-  }),
-]);
+    output: zRouterAudioOutput,
+  },
+};
 
-/** Inferred type from UnknownEndpointSchema */
-export type UnknownEndpoint = z.infer<typeof UnknownEndpointSchema>;
+/** Union of valid unknown endpoint ids. */
+export type UnknownEndpointId = keyof typeof unknownEndpoints;
