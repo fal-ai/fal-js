@@ -21,7 +21,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of json endpoint id -> Zod input/output schemas. */
-export const jsonEndpoints: {
+export const jsonEndpointZodMap: {
   readonly "bria/fibo-edit/edit/structured_instruction": {
     readonly input: typeof zFiboEditEditStructuredInstructionInput;
     readonly output: typeof zFiboEditEditStructuredInstructionOutput;
@@ -87,4 +87,4 @@ export const jsonEndpoints: {
 };
 
 /** Union of valid json endpoint ids. */
-export type JsonEndpointId = keyof typeof jsonEndpoints;
+export type JsonEndpointId = keyof typeof jsonEndpointZodMap;

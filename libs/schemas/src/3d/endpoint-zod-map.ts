@@ -85,7 +85,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of 3d endpoint id -> Zod input/output schemas. */
-export const gen3dEndpoints: {
+export const gen3dEndpointZodMap: {
   readonly "fal-ai/hunyuan_world/image-to-world": {
     readonly input: typeof zHunyuanWorldImageToWorldInput;
     readonly output: typeof zHunyuanWorldImageToWorldOutput;
@@ -392,4 +392,4 @@ export const gen3dEndpoints: {
 };
 
 /** Union of valid 3d endpoint ids. */
-export type Gen3dEndpointId = keyof typeof gen3dEndpoints;
+export type Gen3dEndpointId = keyof typeof gen3dEndpointZodMap;

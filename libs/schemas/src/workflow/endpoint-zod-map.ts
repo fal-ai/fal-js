@@ -7,7 +7,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of workflow endpoint id -> Zod input/output schemas. */
-export const workflowEndpoints: {
+export const workflowEndpointZodMap: {
   readonly "fal-ai/workflow-utilities/pick-image-by-index": {
     readonly input: typeof zWorkflowUtilitiesPickImageByIndexInput;
     readonly output: typeof zWorkflowUtilitiesPickImageByIndexOutput;
@@ -20,4 +20,4 @@ export const workflowEndpoints: {
 };
 
 /** Union of valid workflow endpoint ids. */
-export type WorkflowEndpointId = keyof typeof workflowEndpoints;
+export type WorkflowEndpointId = keyof typeof workflowEndpointZodMap;

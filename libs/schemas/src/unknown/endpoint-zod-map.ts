@@ -9,7 +9,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of unknown endpoint id -> Zod input/output schemas. */
-export const unknownEndpoints: {
+export const unknownEndpointZodMap: {
   readonly "fal-ai/workflow-utilities/interleave-video": {
     readonly input: typeof zWorkflowUtilitiesInterleaveVideoInput;
     readonly output: typeof zWorkflowUtilitiesInterleaveVideoOutput;
@@ -30,4 +30,4 @@ export const unknownEndpoints: {
 };
 
 /** Union of valid unknown endpoint ids. */
-export type UnknownEndpointId = keyof typeof unknownEndpoints;
+export type UnknownEndpointId = keyof typeof unknownEndpointZodMap;

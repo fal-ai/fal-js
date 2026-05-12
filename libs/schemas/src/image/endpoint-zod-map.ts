@@ -1101,7 +1101,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of image endpoint id -> Zod input/output schemas. */
-export const imageEndpoints: {
+export const imageEndpointZodMap: {
   readonly "bria/embed-product": {
     readonly input: typeof zEmbedProductInput;
     readonly output: typeof zEmbedProductOutput;
@@ -5205,4 +5205,4 @@ export const imageEndpoints: {
 };
 
 /** Union of valid image endpoint ids. */
-export type ImageEndpointId = keyof typeof imageEndpoints;
+export type ImageEndpointId = keyof typeof imageEndpointZodMap;

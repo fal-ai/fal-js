@@ -71,7 +71,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of speech endpoint id -> Zod input/output schemas. */
-export const speechEndpoints: {
+export const speechEndpointZodMap: {
   readonly "fal-ai/chatterbox/speech-to-speech": {
     readonly input: typeof zChatterboxSpeechToSpeechInput;
     readonly output: typeof zChatterboxSpeechToSpeechOutput;
@@ -313,4 +313,4 @@ export const speechEndpoints: {
 };
 
 /** Union of valid speech endpoint ids. */
-export type SpeechEndpointId = keyof typeof speechEndpoints;
+export type SpeechEndpointId = keyof typeof speechEndpointZodMap;

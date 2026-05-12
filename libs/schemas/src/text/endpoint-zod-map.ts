@@ -35,7 +35,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of text endpoint id -> Zod input/output schemas. */
-export const textEndpoints: {
+export const textEndpointZodMap: {
   readonly "fal-ai/cohere-transcribe": {
     readonly input: typeof zCohereTranscribeInput;
     readonly output: typeof zCohereTranscribeOutput;
@@ -151,4 +151,4 @@ export const textEndpoints: {
 };
 
 /** Union of valid text endpoint ids. */
-export type TextEndpointId = keyof typeof textEndpoints;
+export type TextEndpointId = keyof typeof textEndpointZodMap;

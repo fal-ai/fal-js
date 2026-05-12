@@ -71,7 +71,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of vision endpoint id -> Zod input/output schemas. */
-export const visionEndpoints: {
+export const visionEndpointZodMap: {
   readonly "fal-ai/arbiter/image": {
     readonly input: typeof zArbiterImageInput;
     readonly output: typeof zArbiterImageOutput;
@@ -325,4 +325,4 @@ export const visionEndpoints: {
 };
 
 /** Union of valid vision endpoint ids. */
-export type VisionEndpointId = keyof typeof visionEndpoints;
+export type VisionEndpointId = keyof typeof visionEndpointZodMap;

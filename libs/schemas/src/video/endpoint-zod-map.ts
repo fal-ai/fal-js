@@ -1003,7 +1003,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of video endpoint id -> Zod input/output schemas. */
-export const videoEndpoints: {
+export const videoEndpointZodMap: {
   readonly "alibaba/happy-horse/image-to-video": {
     readonly input: typeof zHappyHorseImageToVideoInput;
     readonly output: typeof zHappyHorseImageToVideoOutput;
@@ -4850,4 +4850,4 @@ export const videoEndpoints: {
 };
 
 /** Union of valid video endpoint ids. */
-export type VideoEndpointId = keyof typeof videoEndpoints;
+export type VideoEndpointId = keyof typeof videoEndpointZodMap;

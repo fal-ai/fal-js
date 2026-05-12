@@ -127,7 +127,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of audio endpoint id -> Zod input/output schemas. */
-export const audioEndpoints: {
+export const audioEndpointZodMap: {
   readonly "cassetteai/music-generator": {
     readonly input: typeof zMusicGeneratorInput;
     readonly output: typeof zMusicGeneratorOutput;
@@ -587,4 +587,4 @@ export const audioEndpoints: {
 };
 
 /** Union of valid audio endpoint ids. */
-export type AudioEndpointId = keyof typeof audioEndpoints;
+export type AudioEndpointId = keyof typeof audioEndpointZodMap;

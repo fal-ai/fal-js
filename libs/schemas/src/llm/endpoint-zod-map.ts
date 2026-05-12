@@ -21,7 +21,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of llm endpoint id -> Zod input/output schemas. */
-export const llmEndpoints: {
+export const llmEndpointZodMap: {
   readonly "fal-ai/bytedance/seed/v2/mini": {
     readonly input: typeof zBytedanceSeedV2MiniInput;
     readonly output: typeof zBytedanceSeedV2MiniOutput;
@@ -84,4 +84,4 @@ export const llmEndpoints: {
 };
 
 /** Union of valid llm endpoint ids. */
-export type LlmEndpointId = keyof typeof llmEndpoints;
+export type LlmEndpointId = keyof typeof llmEndpointZodMap;

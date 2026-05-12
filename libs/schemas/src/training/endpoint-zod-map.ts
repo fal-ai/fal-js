@@ -89,7 +89,7 @@ import {
 } from "./zod.gen.js";
 
 /** Map of training endpoint id -> Zod input/output schemas. */
-export const trainingEndpoints: {
+export const trainingEndpointZodMap: {
   readonly "fal-ai/ernie-image-trainer": {
     readonly input: typeof zErnieImageTrainerInput;
     readonly output: typeof zErnieImageTrainerOutput;
@@ -427,4 +427,4 @@ export const trainingEndpoints: {
 };
 
 /** Union of valid training endpoint ids. */
-export type TrainingEndpointId = keyof typeof trainingEndpoints;
+export type TrainingEndpointId = keyof typeof trainingEndpointZodMap;
