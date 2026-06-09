@@ -2,9 +2,9 @@
   "name": "@fal-ai/fal-js",
   "version": "0.0.0",
   "license": "MIT",
-  "packageManager": "npm@11.10.0",
+  "packageManager": "npm@11.15.0",
   "engines": {
-    "npm": ">=11.10.0"
+    "npm": ">=11.15.0"
   },
   "scripts": {
     "start": "nx serve",
