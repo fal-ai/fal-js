@@ -1,3 +1,4 @@
+import { EndpointType, InputType, OutputType } from "@fal-ai/types";
 import { RequiredConfig } from "./config";
 import {
   buildTimeoutHeaders,
@@ -9,7 +10,6 @@ import { resultResponseHandler } from "./response";
 import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
 import { buildObjectLifecycleHeaders, StorageClient } from "./storage";
 import { FalStream, StreamingConnectionMode } from "./streaming";
-import { EndpointType, InputType, OutputType } from "./types/client";
 import {
   CompletedQueueStatus,
   InQueueQueueStatus,

@@ -1,10 +1,10 @@
+import { EndpointType, InputType, OutputType } from "@fal-ai/types";
 import { createParser } from "eventsource-parser";
 import { type TokenProvider, getTemporaryAuthToken } from "./auth";
 import { RequiredConfig } from "./config";
 import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
-import { EndpointType, InputType, OutputType } from "./types/client";
 import { ensureEndpointIdFormat, resolveEndpointPath } from "./utils";
 
 export type StreamingConnectionMode = "client" | "server";

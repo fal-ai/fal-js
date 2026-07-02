@@ -1,3 +1,4 @@
+import { EndpointType, InputType, OutputType } from "@fal-ai/types";
 import { Config, createConfig } from "./config";
 import { buildTimeoutHeaders } from "./headers";
 import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
@@ -10,7 +11,6 @@ import {
   StorageClient,
 } from "./storage";
 import { createStreamingClient, StreamingClient } from "./streaming";
-import { EndpointType, InputType, OutputType } from "./types/client";
 import { Result, RunOptions } from "./types/common";
 
 /**

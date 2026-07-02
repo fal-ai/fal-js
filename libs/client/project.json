@@ -40,5 +40,6 @@
       "executor": "@theunderscorer/nx-semantic-release:semantic-release"
     }
   },
+  "implicitDependencies": ["types"],
   "tags": []
 }

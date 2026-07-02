@@ -1,0 +1,46 @@
+{
+  "name": "@fal-ai/types",
+  "description": "TypeScript types and Zod schemas for fal.ai API endpoints",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fal-ai/fal-js.git",
+    "directory": "libs/types"
+  },
+  "keywords": [
+    "fal",
+    "types",
+    "ai",
+    "ml",
+    "typescript"
+  ],
+  "exports": {
+    ".": "./src/index.js",
+    "./endpoints": "./src/endpoints.js",
+    "./schemas": "./src/schemas.js"
+  },
+  "typesVersions": {
+    "*": {
+      "endpoints": [
+        "src/endpoints.d.ts"
+      ],
+      "schemas": [
+        "src/schemas.d.ts"
+      ]
+    }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "peerDependencies": {
+    "zod": "^4"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

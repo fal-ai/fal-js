@@ -1,9 +1,17 @@
+import { EndpointType, InputType } from "@fal-ai/types";
 import { createFalClient, type FalClient } from "./client";
 import { Config } from "./config";
 import { StreamOptions } from "./streaming";
-import { EndpointType, InputType } from "./types/client";
 import { RunOptions } from "./types/common";
 
+export type {
+  EndpointType,
+  EndpointTypeStrict,
+  InputType,
+  InputTypeStrict,
+  OutputType,
+  OutputTypeStrict,
+} from "@fal-ai/types";
 export type { TokenProvider } from "./auth";
 export { createFalClient, type FalClient } from "./client";
 export type { ProxyUrlConfig } from "./config";
@@ -27,7 +35,6 @@ export type {
   StorageSettings,
 } from "./storage";
 export type { FalStream, StreamingClient } from "./streaming";
-export type { OutputType } from "./types/client";
 export * from "./types/common";
 export type {
   QueueStatus,

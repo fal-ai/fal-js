@@ -16,22 +16,23 @@
     "typescript"
   ],
   "exports": {
-    ".": "./src/index.js",
-    "./endpoints": "./src/types/endpoints.js"
-  },
-  "typesVersions": {
-    "*": {
-      "endpoints": [
-        "src/types/endpoints.d.ts"
-      ]
-    }
+    ".": "./src/index.js"
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@fal-ai/types": ">=0.1.0 <1.0.0",
     "@msgpack/msgpack": "^3.0.0-beta2",
     "eventsource-parser": "^1.1.2",
     "robot3": "^0.4.1"
+  },
+  "peerDependencies": {
+    "zod": "^4"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=18.0.0"
