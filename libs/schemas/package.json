@@ -1,0 +1,65 @@
+{
+  "name": "@fal-ai/schemas",
+  "description": "Zod schemas and JSON Schemas for fal.ai API endpoints",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fal-ai/fal-js.git",
+    "directory": "libs/schemas"
+  },
+  "keywords": [
+    "fal",
+    "schemas",
+    "json-schema",
+    "zod",
+    "ai",
+    "ml",
+    "typescript"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js",
+    "./schemas": "./src/schemas.js",
+    "./schemas/3d": "./src/3d/schemas-index.js",
+    "./schemas/audio": "./src/audio/schemas-index.js",
+    "./schemas/image": "./src/image/schemas-index.js",
+    "./schemas/json": "./src/json/schemas-index.js",
+    "./schemas/llm": "./src/llm/schemas-index.js",
+    "./schemas/speech": "./src/speech/schemas-index.js",
+    "./schemas/text": "./src/text/schemas-index.js",
+    "./schemas/training": "./src/training/schemas-index.js",
+    "./schemas/unknown": "./src/unknown/schemas-index.js",
+    "./schemas/video": "./src/video/schemas-index.js",
+    "./schemas/vision": "./src/vision/schemas-index.js",
+    "./schemas/workflow": "./src/workflow/schemas-index.js",
+    "./zod": "./src/zod.js",
+    "./zod/3d": "./src/3d/index.js",
+    "./zod/audio": "./src/audio/index.js",
+    "./zod/image": "./src/image/index.js",
+    "./zod/json": "./src/json/index.js",
+    "./zod/llm": "./src/llm/index.js",
+    "./zod/speech": "./src/speech/index.js",
+    "./zod/text": "./src/text/index.js",
+    "./zod/training": "./src/training/index.js",
+    "./zod/unknown": "./src/unknown/index.js",
+    "./zod/video": "./src/video/index.js",
+    "./zod/vision": "./src/vision/index.js",
+    "./zod/workflow": "./src/workflow/index.js",
+    "./openai-strict": "./src/openai-strict.js"
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "peerDependencies": {
+    "zod": "^4"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
