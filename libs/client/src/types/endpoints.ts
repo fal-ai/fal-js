@@ -42074,7 +42074,7 @@ export type MoondreamDetectOutput = {
   /**
    * List of detected objects with their bounding boxes
    */
-  objects: Array<Object>;
+  objects: Array<Object_>;
   /**
    * Usage information for the request
    */
@@ -42215,7 +42215,7 @@ export type MoondreamSegementationOutput = {
   /**
    * Bounding box of the segmented object. If not detected, will be null.
    */
-  bbox?: Object;
+  bbox?: Object_;
   /**
    * Reason for finishing the output generation
    */
@@ -43619,7 +43619,7 @@ export type O3ProTextToVideoInput = {
    */
   shot_type?: "customize" | "intelligent";
 };
-export type Object = {
+export type Object_ = {
   /**
    * Right boundary of detection box in normalized format (0 to 1)
    */
