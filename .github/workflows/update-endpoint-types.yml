@@ -39,16 +39,18 @@ jobs:
             exit 1
           fi
 
-          curl \
+          if ! curl \
             --fail \
             --silent \
-            --show-error \
             --location \
             --retry 3 \
             --retry-delay 5 \
             --header "Authorization: Bearer ${TYPES_TOKEN}" \
             --output "${TARGET_FILE}" \
-            "${TYPES_URL}"
+            "${TYPES_URL}" 2>/dev/null; then
+            echo "::error::Could not fetch endpoint types."
+            exit 1
+          fi
 
           if [ ! -s "${TARGET_FILE}" ]; then
             echo "::error::Fetched file is empty."
