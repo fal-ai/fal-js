@@ -111,6 +111,9 @@ export function parseAbsoluteUrl(value: string): URL | undefined {
  * Parses a URL that may carry fal credentials: it has to use the expected
  * secure protocol and resolve to a fal hostname.
  *
+ * The component reads happen inside the `try` because not every runtime ships
+ * a spec-complete `URL` — React Native's, for one, is regex-backed.
+ *
  * @param value the URL to parse.
  * @param protocol the required protocol, `https:` by default.
  * @returns the parsed URL, or `undefined` if it isn't an allowed fal URL.
@@ -119,11 +122,15 @@ export function parseFalUrl(
   value: string,
   protocol = "https:",
 ): URL | undefined {
-  const url = parseAbsoluteUrl(value);
-  if (!url || url.protocol !== protocol || !isFalHostname(url.hostname)) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== protocol || !isFalHostname(url.hostname)) {
+      return undefined;
+    }
+    return url;
+  } catch (_) {
     return undefined;
   }
-  return url;
 }
 
 /**
@@ -133,13 +140,19 @@ export function isValidUrl(url: string): boolean {
   return parseFalUrl(url) !== undefined;
 }
 
+const URL_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
+
 /**
  * Checks whether a string was meant to be a URL rather than an endpoint id, so
  * a disallowed URL fails loudly instead of being reinterpreted as an id.
+ *
+ * This looks for a scheme or an authority rather than asking `new URL` to
+ * throw: React Native's `URL` accepts a relative string happily, which would
+ * turn every endpoint id into a rejected URL there.
  */
 export function isUrlLike(value: string): boolean {
   const trimmed = value.trimStart();
-  return trimmed.startsWith("//") || parseAbsoluteUrl(trimmed) !== undefined;
+  return trimmed.startsWith("//") || URL_SCHEME.test(trimmed);
 }
 
 /**

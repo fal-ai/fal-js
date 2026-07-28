@@ -5,8 +5,9 @@ const CREDENTIALS = "test-key-id:test-key-secret";
 const EXPECTED_AUTHORIZATION = `Key ${CREDENTIALS}`;
 
 /**
- * Hosts that end with `fal.ai`/`fal.run` without being fal. These are the
- * suffix squats from SEC-447 — an unanchored suffix test accepts all of them.
+ * Hosts that an unanchored suffix test on `fal.ai`/`fal.run` accepts: the
+ * suffix squats from SEC-447, plus a superdomain and a userinfo trick that
+ * only a parsed-hostname check catches.
  */
 const SUFFIX_SQUAT_URLS = [
   "https://evilfal.ai/api/fal/proxy",
@@ -443,5 +444,152 @@ describe("legitimate fal requests still carry credentials", () => {
       EXPECTED_AUTHORIZATION,
       null,
     ]);
+  });
+});
+
+/**
+ * React Native ships a regex-backed `URL` whose constructor accepts a relative
+ * string instead of throwing. Anything that infers "this is a URL" from the
+ * constructor throwing would reject every endpoint id there.
+ */
+class ReactNativeUrl {
+  private readonly value: string;
+
+  constructor(url: string, base?: string) {
+    this.value = base ? `${base}${url}` : url;
+  }
+
+  get protocol(): string {
+    const match = this.value.match(/^([a-zA-Z][a-zA-Z\d+\-.]*):/);
+    return match ? `${match[1]}:` : "";
+  }
+
+  get hostname(): string {
+    const match = this.value.match(/^https?:\/\/(?:[^@]+@)?([^:/?#]+)/);
+    return match ? match[1] : "";
+  }
+
+  get origin(): string {
+    const match = this.value.match(/^(https?:\/\/[^/]+)/);
+    return match ? match[1] : "";
+  }
+
+  get href(): string {
+    return this.value;
+  }
+
+  toString(): string {
+    return this.value;
+  }
+}
+
+describe("on a runtime whose URL accepts relative strings", () => {
+  const NativeUrl = global.URL;
+
+  beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).URL = ReactNativeUrl;
+  });
+
+  afterEach(() => {
+    global.URL = NativeUrl;
+  });
+
+  it("still resolves an endpoint id against fal.run", async () => {
+    const fetchMock = mockFetch();
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+    });
+
+    await client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("https://fal.run/fal-ai/fast-sdxl");
+    expect(authorizationsSent(fetchMock)).toEqual([EXPECTED_AUTHORIZATION]);
+  });
+
+  it("still refuses a suffix-squat host", async () => {
+    const fetchMock = mockFetch();
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+    });
+
+    await expect(
+      client.run("https://notfal.run/fal-ai/fast-sdxl", {
+        input: { prompt: "hello" },
+      }),
+    ).rejects.toThrow(/Refusing to send a fal request/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("transports the guard allows", () => {
+  it("lets a middleware rewrite to the app's own origin", async () => {
+    const fetchMock = mockFetch();
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+      requestMiddleware: async (request) => ({
+        ...request,
+        url: "/api/fal/proxy",
+        headers: {
+          ...(request.headers ?? {}),
+          [TARGET_URL_HEADER]: request.url,
+        },
+      }),
+    });
+
+    await client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/fal/proxy");
+    expect(headerSent(fetchMock, TARGET_URL_HEADER)).toBe(
+      "https://fal.run/fal-ai/fast-sdxl",
+    );
+  });
+
+  it("lets the configured proxy vary its path and query", async () => {
+    const fetchMock = mockFetch();
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      proxyUrl: {
+        url: "https://api.example.com/api/fal/proxy",
+        when: "always",
+      },
+      fetch: asConfigFetch(fetchMock),
+      requestMiddleware: async (request) => ({
+        ...request,
+        url: "https://api.example.com/api/fal/proxy/v2?trace=1",
+        headers: {
+          ...(request.headers ?? {}),
+          [TARGET_URL_HEADER]: request.url,
+        },
+      }),
+    });
+
+    await client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.example.com/api/fal/proxy/v2?trace=1",
+    );
+    expect(authorizationsSent(fetchMock)).toEqual([EXPECTED_AUTHORIZATION]);
+  });
+
+  it("still checks a differently-cased target URL header", async () => {
+    const fetchMock = mockFetch();
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+      requestMiddleware: async (request) => ({
+        ...request,
+        url: "/api/fal/proxy",
+        headers: { "X-Fal-Target-URL": "https://evilfal.ai/collect" },
+      }),
+    });
+
+    await expect(
+      client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } }),
+    ).rejects.toThrow(/Refusing to send a fal request/);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

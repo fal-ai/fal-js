@@ -125,8 +125,11 @@ export class FalStream<Input, Output> {
         path: resolveEndpointPath(endpointId, undefined, "/stream"),
         query: options.queryParams,
       });
-    // `connectionMode: "client"` sends a scoped token straight to this URL,
-    // bypassing dispatchRequest, so it gets validated here for both modes.
+    // `connectionMode: "client"` fetches this URL directly with a scoped token,
+    // bypassing dispatchRequest and its credential boundary. Both modes are
+    // checked here, in the constructor: a throw from `start()` is swallowed by
+    // `handleError`, which turns it into an emitted 500 nobody is listening for
+    // yet.
     if (!isValidUrl(this.url)) {
       throw untrustedUrlError(
         this.url,

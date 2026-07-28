@@ -73,10 +73,7 @@ function stripUrlNoise(url: string): string {
  * first because the URL parser reads them as slashes.
  */
 function isSameOriginUrl(url: string): boolean {
-  const normalized = stripUrlNoise(url).replace(/\\/g, "/");
-  return (
-    !normalized.startsWith("//") && parseAbsoluteUrl(normalized) === undefined
-  );
+  return !isUrlLike(stripUrlNoise(url).replace(/\\/g, "/"));
 }
 
 /**
@@ -100,6 +97,7 @@ function isConfiguredProxy(
   return (
     target !== undefined &&
     proxy !== undefined &&
+    !!proxy.origin &&
     proxy.origin !== "null" &&
     target.origin === proxy.origin
   );
@@ -137,7 +135,8 @@ function assertTrustedRequestTarget(
   }
   throw untrustedUrlError(
     url,
-    "Set `proxyUrl` if requests have to go through a server you control.",
+    "Set `proxyUrl` if requests have to go through a server you control, " +
+      "rather than rewriting the URL in a request middleware.",
   );
 }
 
