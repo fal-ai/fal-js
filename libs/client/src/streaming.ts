@@ -5,7 +5,12 @@ import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
 import { EndpointType, InputType, OutputType } from "./types/client";
-import { ensureEndpointIdFormat, resolveEndpointPath } from "./utils";
+import {
+  ensureEndpointIdFormat,
+  isValidUrl,
+  resolveEndpointPath,
+  untrustedUrlError,
+} from "./utils";
 
 export type StreamingConnectionMode = "client" | "server";
 
@@ -120,6 +125,14 @@ export class FalStream<Input, Output> {
         path: resolveEndpointPath(endpointId, undefined, "/stream"),
         query: options.queryParams,
       });
+    // `connectionMode: "client"` sends a scoped token straight to this URL,
+    // bypassing dispatchRequest, so it gets validated here for both modes.
+    if (!isValidUrl(this.url)) {
+      throw untrustedUrlError(
+        this.url,
+        "Streaming can only connect to fal endpoints.",
+      );
+    }
     this.options = options;
     this.donePromise = new Promise<Output>((resolve, reject) => {
       if (this.streamClosed) {

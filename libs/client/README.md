@@ -21,6 +21,27 @@ fal.config({
 
 **Note:** Ensure you've reviewed the [fal.ai getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
 
+## Where the client sends your credentials
+
+Credentials and scoped tokens are only ever attached to `https://fal.ai` and
+`https://fal.run` URLs and their subdomains. Endpoint ids resolve to those hosts,
+and a URL passed in place of an endpoint id is refused when it points anywhere
+else. Hosts are matched on dot boundaries, so a lookalike domain that merely
+ends with the same characters is not fal and never receives a key.
+
+If requests have to go through a server you control, configure it as a proxy
+rather than rewriting the URL in a request middleware:
+
+```ts
+fal.config({
+  // browser-only by default; pass { url, when: "always" } for other runtimes
+  proxyUrl: "/api/fal/proxy",
+});
+```
+
+The request then travels to your proxy, while the logical fal destination stays
+in the `x-fal-target-url` header and is still validated.
+
 ## Running functions with `fal.run`
 
 The `fal.run` method is the simplest way to execute a function. It returns a promise that resolves to the function's result:

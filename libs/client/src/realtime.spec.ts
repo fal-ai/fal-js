@@ -106,6 +106,24 @@ describe("createRealtimeClient", () => {
     );
   });
 
+  it("keeps the websocket pinned to fal.run whatever the app id looks like", async () => {
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("//evil.example.com/x", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ foo: "bar" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+    expect(new URL(sockets[0].url).hostname).toBe("fal.run");
+  });
+
   it("sends msgpack payloads by default", async () => {
     const client = createRealtimeClient({ config });
     const connection = client.connect("123-myapp", {

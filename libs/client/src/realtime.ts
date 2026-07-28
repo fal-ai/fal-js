@@ -23,8 +23,10 @@ import { isBrowser } from "./runtime";
 import {
   ensureEndpointIdFormat,
   isReact,
+  parseFalUrl,
   resolveEndpointPath,
   throttle,
+  untrustedUrlError,
 } from "./utils";
 
 // Define the context
@@ -319,7 +321,13 @@ function buildRealtimeUrl(
   }
   const appId = ensureEndpointIdFormat(app);
   const resolvedPath = resolveEndpointPath(app, path, "/realtime") ?? "";
-  return `wss://fal.run/${appId}${resolvedPath}?${queryParams.toString()}`;
+  const url = `wss://fal.run/${appId}${resolvedPath}?${queryParams.toString()}`;
+  // the host is hardcoded above; this keeps the scoped token pinned to it even
+  // if the app id or the template ever changes
+  if (!parseFalUrl(url, "wss:")) {
+    throw untrustedUrlError(url, "Realtime connections stay on fal.run.");
+  }
+  return url;
 }
 
 const DEFAULT_THROTTLE_INTERVAL = 128;

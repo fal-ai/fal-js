@@ -1,4 +1,5 @@
 import { RequiredConfig } from "./config";
+import { TARGET_URL_HEADER, type RequestConfig } from "./middleware";
 import { ResponseHandler } from "./response";
 import {
   calculateBackoffDelay,
@@ -7,7 +8,14 @@ import {
 } from "./retry";
 import { getUserAgent, isBrowser } from "./runtime";
 import { RunOptions, UrlOptions } from "./types/common";
-import { ensureEndpointIdFormat, isValidUrl, sleep } from "./utils";
+import {
+  ensureEndpointIdFormat,
+  isUrlLike,
+  isValidUrl,
+  parseAbsoluteUrl,
+  sleep,
+  untrustedUrlError,
+} from "./utils";
 
 const isCloudflareWorkers =
   typeof navigator !== "undefined" &&
@@ -30,6 +38,103 @@ type RequestParams<Input = any> = {
   options?: RequestOptions & RequestInit;
   headers?: Record<string, string>;
 };
+
+function headerValues(
+  headers: RequestConfig["headers"],
+  name: string,
+): string[] {
+  if (!headers) {
+    return [];
+  }
+  return Object.entries(headers)
+    .filter(([key]) => key.toLowerCase() === name)
+    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]));
+}
+
+/**
+ * Drops what the URL parser itself ignores: tabs and newlines anywhere, and
+ * leading C0 control characters or spaces.
+ */
+function stripUrlNoise(url: string): string {
+  const withoutBreaks = url.replace(/[\t\n\r]/g, "");
+  let start = 0;
+  while (
+    start < withoutBreaks.length &&
+    withoutBreaks.charCodeAt(start) <= 32
+  ) {
+    start++;
+  }
+  return withoutBreaks.slice(start);
+}
+
+/**
+ * A URL with no scheme and no authority resolves against the current origin, so
+ * it can never hand credentials to a third party. Backslashes are normalized
+ * first because the URL parser reads them as slashes.
+ */
+function isSameOriginUrl(url: string): boolean {
+  const normalized = stripUrlNoise(url).replace(/\\/g, "/");
+  return (
+    !normalized.startsWith("//") && parseAbsoluteUrl(normalized) === undefined
+  );
+}
+
+function isConfiguredProxy(
+  url: string,
+  proxyUrl: RequiredConfig["proxyUrl"],
+): boolean {
+  if (!proxyUrl) {
+    return false;
+  }
+  const configured = typeof proxyUrl === "string" ? proxyUrl : proxyUrl.url;
+  if (url === configured) {
+    return true;
+  }
+  const target = parseAbsoluteUrl(url);
+  const proxy = parseAbsoluteUrl(configured);
+  return (
+    target !== undefined &&
+    proxy !== undefined &&
+    proxy.origin !== "null" &&
+    target.origin === proxy.origin
+  );
+}
+
+/**
+ * Verifies that the request the middleware chain produced may carry fal
+ * credentials, before the `Authorization` header is built.
+ *
+ * The logical fal destination — the `x-fal-target-url` header when a proxy is
+ * in play, the request URL otherwise — always has to be a fal URL. The
+ * transport itself may additionally be the app's own origin or the proxy it
+ * configured, which is how the built-in proxy keeps working. Anything else,
+ * including a middleware that rewrites the URL to an unrelated host, fails
+ * closed.
+ */
+function assertTrustedRequestTarget(
+  { url, headers }: RequestConfig,
+  config: RequiredConfig,
+): void {
+  for (const target of headerValues(headers, TARGET_URL_HEADER)) {
+    if (!isValidUrl(target)) {
+      throw untrustedUrlError(
+        target,
+        `The \`${TARGET_URL_HEADER}\` header must point at a fal endpoint.`,
+      );
+    }
+  }
+  if (
+    isValidUrl(url) ||
+    isSameOriginUrl(url) ||
+    isConfiguredProxy(url, config.proxyUrl)
+  ) {
+    return;
+  }
+  throw untrustedUrlError(
+    url,
+    "Set `proxyUrl` if requests have to go through a server you control.",
+  );
+}
 
 export async function dispatchRequest<Input, Output>(
   params: RequestParams<Input>,
@@ -59,6 +164,7 @@ export async function dispatchRequest<Input, Output>(
       url: targetUrl,
       headers: params.headers,
     });
+    assertTrustedRequestTarget({ method, url, headers }, config);
     const authHeader = credentials
       ? { Authorization: `Key ${credentials}` }
       : {};
@@ -155,8 +261,21 @@ export function buildUrl<Input>(
     return `${url}${path}${queryParams}`;
   }
 
+  // a URL that isn't a fal endpoint is never an endpoint id in disguise
+  if (isUrlLike(id)) {
+    throw untrustedUrlError(
+      id,
+      "Pass an endpoint id such as `fal-ai/fast-sdxl` instead.",
+    );
+  }
+
   const appId = ensureEndpointIdFormat(id);
   const subdomain = options.subdomain ? `${options.subdomain}.` : "";
   const url = `https://${subdomain}fal.run/${appId}/${path}`;
-  return `${url.replace(/\/$/, "")}${queryParams}`;
+  const endpointUrl = `${url.replace(/\/$/, "")}${queryParams}`;
+  // neither the id nor the subdomain may move the request off fal
+  if (!isValidUrl(endpointUrl)) {
+    throw untrustedUrlError(endpointUrl, "Check the endpoint id.");
+  }
+  return endpointUrl;
 }
