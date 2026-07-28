@@ -41,22 +41,37 @@ export function isAllowedUrl(url: string, patterns?: string[]): boolean {
 }
 
 /**
- * Extracts the URL without the scheme for validation purposes.
+ * Parses a target URL that may receive the proxy's fal credentials. The
+ * allowlist below matches on host and path only, so the scheme has to be
+ * checked here — forwarding the key over cleartext would expose it on the wire.
+ *
  * @param targetUrl the full URL including scheme.
+ * @returns the parsed URL, or `undefined` when it isn't a usable https URL.
+ */
+function parseTargetUrl(targetUrl: string): URL | undefined {
+  try {
+    const url = new URL(targetUrl);
+    return url.protocol === "https:" ? url : undefined;
+  } catch (_) {
+    return undefined;
+  }
+}
+
+/**
+ * Extracts the URL without the scheme for validation purposes.
+ * @param url the parsed target URL.
  * @returns the URL without the scheme (host + path + query).
  */
-function getUrlWithoutScheme(targetUrl: string): string {
-  const url = new URL(targetUrl);
+function getUrlWithoutScheme(url: URL): string {
   return `${url.host}${url.pathname}${url.search}`;
 }
 
 /**
  * Checks if the URL is on the fal.ai domain or any of its subdomains.
- * @param targetUrl the full URL including scheme.
+ * @param url the parsed target URL.
  * @returns true if the URL is on *.fal.ai domain.
  */
-function isFalAiDomain(targetUrl: string): boolean {
-  const url = new URL(targetUrl);
+function isFalAiDomain(url: URL): boolean {
   return url.host === "fal.ai" || url.host.endsWith(".fal.ai");
 }
 
@@ -131,13 +146,21 @@ export async function handleRequest<ResponseType>(
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
 
-  const urlToValidate = getUrlWithoutScheme(targetUrl);
+  const parsedTargetUrl = parseTargetUrl(targetUrl);
+  if (!parsedTargetUrl) {
+    return behavior.respondWith(400, "Invalid request");
+  }
+
+  const urlToValidate = getUrlWithoutScheme(parsedTargetUrl);
   if (!isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)) {
     return behavior.respondWith(400, "Invalid request");
   }
 
   // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
-  if (behavior.method?.toUpperCase() === "POST" && !isFalAiDomain(targetUrl)) {
+  if (
+    behavior.method?.toUpperCase() === "POST" &&
+    !isFalAiDomain(parsedTargetUrl)
+  ) {
     const endpoint = getEndpoint(targetUrl);
     if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
       return behavior.respondWith(400, "Invalid request");

@@ -1,5 +1,12 @@
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
-import { getEndpoint, isAllowedEndpoint, isAllowedUrl } from "./index";
+import {
+  getEndpoint,
+  handleRequest,
+  isAllowedEndpoint,
+  isAllowedUrl,
+  TARGET_URL_HEADER,
+} from "./index";
+import type { ProxyBehavior } from "./types";
 
 const FAL_REST_API_URL = "rest.fal.ai";
 
@@ -338,5 +345,70 @@ describe("isAllowedEndpoint", () => {
         isAllowedEndpoint("fal-ai/flux-dev/requests/abc123/status", patterns),
       ).toBe(true);
     });
+  });
+});
+
+describe("handleRequest target URL", () => {
+  const fetchMock = jest.fn();
+
+  function behaviorFor(targetUrl: string) {
+    const headers: Record<string, string> = {
+      [TARGET_URL_HEADER]: targetUrl,
+      authorization: "Key test-key-id:test-key-secret",
+    };
+    return {
+      id: "test",
+      method: "POST",
+      respondWith: jest.fn((status: number, data: string) => ({
+        status,
+        data,
+      })),
+      sendResponse: jest.fn(async (response: Response) => ({
+        status: response.status,
+        data: "ok",
+      })),
+      getHeaders: () => headers,
+      getHeader: (name: string) => headers[name.toLowerCase()] ?? null,
+      sendHeader: jest.fn(),
+      getRequestBody: async () => "{}",
+    } satisfies ProxyBehavior<{ status: number; data: string }>;
+  }
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue(
+      new Response("{}", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  it("forwards an https fal target", async () => {
+    const behavior = behaviorFor("https://fal.run/fal-ai/fast-sdxl");
+
+    await handleRequest(behavior, { allowUnauthorizedRequests: true });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("https://fal.run/fal-ai/fast-sdxl");
+    expect(fetchMock.mock.calls[0][1].headers.authorization).toBe(
+      "Key test-key-id:test-key-secret",
+    );
+  });
+
+  // the allowlist matches host and path only, so without a scheme check the
+  // proxy would hand the key to cleartext http
+  it.each([
+    "http://fal.run/fal-ai/fast-sdxl",
+    "ftp://fal.run/fal-ai/fast-sdxl",
+    "not a url",
+  ])("rejects the target %s without calling fetch", async (targetUrl) => {
+    const behavior = behaviorFor(targetUrl);
+
+    await handleRequest(behavior, { allowUnauthorizedRequests: true });
+
+    expect(behavior.respondWith).toHaveBeenCalledWith(400, "Invalid request");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
