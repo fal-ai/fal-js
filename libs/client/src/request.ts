@@ -1,5 +1,5 @@
 import { RequiredConfig } from "./config";
-import { TARGET_URL_HEADER, type RequestConfig } from "./middleware";
+import { TARGET_URL_HEADER } from "./middleware";
 import { ResponseHandler } from "./response";
 import {
   calculateBackoffDelay,
@@ -39,16 +39,16 @@ type RequestParams<Input = any> = {
   headers?: Record<string, string>;
 };
 
-function headerValues(
-  headers: RequestConfig["headers"],
-  name: string,
-): string[] {
+type HeaderMap = Record<string, unknown>;
+
+function headerValues(headers: HeaderMap | undefined, name: string): string[] {
   if (!headers) {
     return [];
   }
   return Object.entries(headers)
     .filter(([key]) => key.toLowerCase() === name)
-    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]));
+    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]))
+    .map((value) => String(value));
 }
 
 /**
@@ -79,6 +79,11 @@ function isSameOriginUrl(url: string): boolean {
   );
 }
 
+/**
+ * Whether the request goes to the proxy the app configured. An absolute proxy
+ * is matched by origin so a proxy that varies the path or query still works —
+ * that origin is a server the app already trusts with its key.
+ */
 function isConfiguredProxy(
   url: string,
   proxyUrl: RequiredConfig["proxyUrl"],
@@ -112,7 +117,7 @@ function isConfiguredProxy(
  * closed.
  */
 function assertTrustedRequestTarget(
-  { url, headers }: RequestConfig,
+  { url, headers }: { url: string; headers?: HeaderMap },
   config: RequiredConfig,
 ): void {
   for (const target of headerValues(headers, TARGET_URL_HEADER)) {
@@ -159,35 +164,39 @@ export async function dispatchRequest<Input, Output>(
         ? credentialsValue()
         : credentialsValue;
 
-    const { method, url, headers } = await requestMiddleware({
+    const middlewareRequest = await requestMiddleware({
       method: (params.method ?? options.method ?? "post").toUpperCase(),
       url: targetUrl,
       headers: params.headers,
     });
-    assertTrustedRequestTarget({ method, url, headers }, config);
-    const authHeader = credentials
-      ? { Authorization: `Key ${credentials}` }
-      : {};
-    const requestHeaders = {
-      ...authHeader,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...userAgent,
-      ...(headers ?? {}),
-    } as HeadersInit;
 
     const {
       responseHandler: customResponseHandler,
       retry: _,
       ...requestInit
     } = options;
+    // Read the middleware's output exactly once and send those very values.
+    // Re-reading would let an accessor or an unstable `toString` show the
+    // guard one destination and `fetch` another.
+    const method = String(middlewareRequest.method);
+    const url = String(middlewareRequest.url);
+    const requestHeaders = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...userAgent,
+      ...(middlewareRequest.headers ?? {}),
+      ...(requestInit.headers ?? {}),
+    };
+
+    assertTrustedRequestTarget({ url, headers: requestHeaders }, config);
+
     const response = await fetch(url, {
       ...requestInit,
       method,
       headers: {
+        ...(credentials ? { Authorization: `Key ${credentials}` } : {}),
         ...requestHeaders,
-        ...(requestInit.headers ?? {}),
-      },
+      } as HeadersInit,
       ...(!isCloudflareWorkers && { mode: "cors" }),
       signal: options.signal,
       body:

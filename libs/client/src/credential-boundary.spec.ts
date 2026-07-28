@@ -154,22 +154,25 @@ describe("credentials are never sent to a non-fal host", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it.each(["//evil.example.com/collect", "/\\evil.example.com/collect"])(
-    "refuses a middleware that rewrites the request to %s",
-    async (url) => {
-      const fetchMock = mockFetch();
-      const client = createFalClient({
-        credentials: CREDENTIALS,
-        fetch: asConfigFetch(fetchMock),
-        requestMiddleware: async (request) => ({ ...request, url }),
-      });
+  // every one of these resolves cross-origin once the URL parser is done with it
+  it.each([
+    "//evil.example.com/collect",
+    "/\\evil.example.com/collect",
+    "/\t/evil.example.com/collect",
+    "  //evil.example.com/collect",
+  ])("refuses a middleware that rewrites the request to %j", async (url) => {
+    const fetchMock = mockFetch();
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+      requestMiddleware: async (request) => ({ ...request, url }),
+    });
 
-      await expect(
-        client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } }),
-      ).rejects.toThrow(/Refusing to send a fal request/);
-      expect(fetchMock).not.toHaveBeenCalled();
-    },
-  );
+    await expect(
+      client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } }),
+    ).rejects.toThrow(/Refusing to send a fal request/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 
   it("refuses a middleware whose logical proxy target is not a fal URL", async () => {
     const fetchMock = mockFetch();
@@ -192,20 +195,107 @@ describe("credentials are never sent to a non-fal host", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("refuses a target URL header smuggled in through queue.submit headers", async () => {
-    const fetchMock = mockFetch();
+  it("drops a suffix-squat target URL header smuggled through queue.submit", async () => {
+    const fetchMock = mockFetch(() => ({
+      status: "IN_QUEUE",
+      request_id: "req_123",
+    }));
     const client = createFalClient({
       credentials: CREDENTIALS,
       fetch: asConfigFetch(fetchMock),
     });
 
-    await expect(
-      client.queue.submit("fal-ai/fast-sdxl", {
-        input: { prompt: "hello" },
-        headers: { "X-Fal-Target-Url": "https://evilfal.ai/collect" },
+    await client.queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hello" },
+      headers: { "X-Fal-Target-Url": "https://evilfal.ai/collect" },
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://queue.fal.run/fal-ai/fast-sdxl",
+    );
+    expect(headerSent(fetchMock, TARGET_URL_HEADER)).toBeNull();
+  });
+
+  // A middleware that returns a value which reads differently each time could
+  // otherwise show the guard one destination and `fetch` another.
+  it("sends the very url the guard approved", async () => {
+    const fetchMock = mockFetch();
+    let reads = 0;
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+      requestMiddleware: async (request) => ({
+        ...request,
+        url: {
+          toString: () =>
+            ++reads === 1
+              ? "https://fal.run/fal-ai/fast-sdxl"
+              : "https://evil.example.com/collect",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
       }),
-    ).rejects.toThrow(/Refusing to send a fal request/);
-    expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    await client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("https://fal.run/fal-ai/fast-sdxl");
+  });
+
+  it("sends the very target URL header the guard approved", async () => {
+    const fetchMock = mockFetch();
+    let reads = 0;
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      fetch: asConfigFetch(fetchMock),
+      requestMiddleware: async (request) => ({
+        ...request,
+        headers: Object.defineProperty(
+          { ...(request.headers ?? {}) },
+          TARGET_URL_HEADER,
+          {
+            enumerable: true,
+            get: () =>
+              ++reads === 1
+                ? "https://fal.run/fal-ai/fast-sdxl"
+                : "https://evil.example.com/collect",
+          },
+        ),
+      }),
+    });
+
+    await client.run("fal-ai/fast-sdxl", { input: { prompt: "hello" } });
+
+    expect(headerSent(fetchMock, TARGET_URL_HEADER)).toBe(
+      "https://fal.run/fal-ai/fast-sdxl",
+    );
+  });
+
+  it("ignores a target URL header supplied through queue.submit", async () => {
+    const fetchMock = mockFetch(() => ({
+      status: "IN_QUEUE",
+      request_id: "req_123",
+    }));
+    const client = createFalClient({
+      credentials: CREDENTIALS,
+      proxyUrl: {
+        url: "https://api.example.com/api/fal/proxy",
+        when: "always",
+      },
+      fetch: asConfigFetch(fetchMock),
+    });
+
+    await client.queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hello" },
+      // a caller-set header must not steer the request around the proxy
+      headers: { "X-Fal-Target-Url": "https://queue.fal.run/someone/else" },
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.example.com/api/fal/proxy",
+    );
+    expect(headerSent(fetchMock, TARGET_URL_HEADER)).toBe(
+      "https://queue.fal.run/fal-ai/fast-sdxl",
+    );
   });
 
   it("never leaks an authorization header on any refused call", async () => {

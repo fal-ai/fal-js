@@ -4,6 +4,7 @@ import {
   QUEUE_PRIORITY_HEADER,
   RUNNER_HINT_HEADER,
 } from "./headers";
+import { TARGET_URL_HEADER } from "./middleware";
 import { buildUrl, dispatchRequest } from "./request";
 import { resultResponseHandler } from "./response";
 import { DEFAULT_RETRYABLE_STATUS_CODES, RetryOptions } from "./retry";
@@ -324,10 +325,11 @@ export const createQueueClient = ({
         ? await storage.transformInput(options.input)
         : undefined;
       const extraHeaders = Object.fromEntries(
-        Object.entries(headers ?? {}).map(([key, value]) => [
-          key.toLowerCase(),
-          value,
-        ]),
+        Object.entries(headers ?? {})
+          .map(([key, value]) => [key.toLowerCase(), value])
+          // the proxy middleware owns this header; a caller setting it would
+          // route the request around the app's own proxy
+          .filter(([key]) => key !== TARGET_URL_HEADER),
       );
       return dispatchRequest<Input, InQueueQueueStatus>({
         method: options.method,

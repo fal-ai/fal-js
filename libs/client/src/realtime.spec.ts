@@ -124,6 +124,24 @@ describe("createRealtimeClient", () => {
     expect(new URL(sockets[0].url).hostname).toBe("fal.run");
   });
 
+  it.each(["fal-ai/myapp?x=1", "fal-ai/myapp#x"])(
+    "refuses the app id %s instead of misplacing the token",
+    async (app) => {
+      const client = createRealtimeClient({ config });
+
+      expect(() =>
+        client.connect(app, {
+          connectionKey: `test-conn-${connectionId}`,
+          clientOnly: false,
+          throttleInterval: 0,
+          onResult: jest.fn(),
+          onError: jest.fn(),
+        }),
+      ).toThrow(/Invalid realtime app id/);
+      expect(WebSocketMock).not.toHaveBeenCalled();
+    },
+  );
+
   it("sends msgpack payloads by default", async () => {
     const client = createRealtimeClient({ config });
     const connection = client.connect("123-myapp", {

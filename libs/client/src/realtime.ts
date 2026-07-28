@@ -306,6 +306,17 @@ type RealtimeUrlParams = {
   path?: string;
 };
 
+/**
+ * The scoped token travels in the query string, so a `?` or `#` in the app id
+ * or path would push it into another parameter or into the fragment, where a
+ * connection error message can carry it off.
+ */
+function assertRealtimeEndpoint(app: string, path?: string): void {
+  if (/[?#\s]/.test(`${app}${path ?? ""}`)) {
+    throw new Error(`Invalid realtime app id: ${app}`);
+  }
+}
+
 function buildRealtimeUrl(
   app: string,
   { token, maxBuffering, path }: RealtimeUrlParams,
@@ -541,6 +552,7 @@ export function createRealtimeClient({
       if (clientOnly && !isBrowser()) {
         return NoOpConnection;
       }
+      assertRealtimeEndpoint(app, path);
 
       const encodeMessageFn =
         encodeMessageOverride ?? ((input: any) => encodeRealtimeMessage(input));
