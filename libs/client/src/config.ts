@@ -4,6 +4,7 @@ import {
   type ProxyRuntimeGate,
   type RequestMiddleware,
 } from "./middleware";
+import type { AnyRealtimeExtension } from "./realtime/extension";
 import type { ResponseHandler } from "./response";
 import { defaultResponseHandler } from "./response";
 import { DEFAULT_RETRY_OPTIONS, type RetryOptions } from "./retry";
@@ -112,6 +113,15 @@ export type Config = {
    * When not specified, a default retry configuration is used.
    */
   retry?: Partial<RetryOptions>;
+  /**
+   * Realtime protocol extensions available to `fal.realtime.open()`.
+   *
+   * Extensions are application-installed code. fal never downloads or
+   * executes extension JavaScript named by a remote endpoint.
+   */
+  realtime?: {
+    extensions?: readonly AnyRealtimeExtension[];
+  };
 };
 
 export type RequiredConfig = Required<Config>;

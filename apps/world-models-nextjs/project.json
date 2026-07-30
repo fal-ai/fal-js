@@ -1,0 +1,48 @@
+{
+  "name": "world-models-nextjs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/world-models-nextjs",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/world-models-nextjs"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/world-models-nextjs"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "world-models-nextjs:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "world-models-nextjs:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "world-models-nextjs:build:production",
+          "dev": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/world-models-nextjs/**/*.{ts,tsx,js,jsx}"]
+      }
+    }
+  },
+  "tags": []
+}

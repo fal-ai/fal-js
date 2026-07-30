@@ -17,12 +17,16 @@
   ],
   "exports": {
     ".": "./src/index.js",
-    "./endpoints": "./src/types/endpoints.js"
+    "./endpoints": "./src/types/endpoints.js",
+    "./realtime": "./src/realtime/index.js"
   },
   "typesVersions": {
     "*": {
       "endpoints": [
         "src/types/endpoints.d.ts"
+      ],
+      "realtime": [
+        "src/realtime/index.d.ts"
       ]
     }
   },

@@ -15,7 +15,20 @@ export type {
   RequestProxyConfig,
 } from "./middleware";
 export type { QueueClient } from "./queue";
-export type { RealtimeClient } from "./realtime";
+export type {
+  RealtimeClient,
+  RealtimeConnection,
+  RealtimeConnectionHandler,
+} from "./realtime";
+export {
+  defineRealtimeExtension,
+  type AnyRealtimeExtension,
+  type RealtimeExtension,
+  type RealtimeExtensionContext,
+  type RealtimeExtensionOptions,
+  type RealtimeExtensionSession,
+  type RealtimeSession,
+} from "./realtime/extension";
 export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";
 export { isRetryableError } from "./retry";
