@@ -1668,6 +1668,20 @@ export type AnswerOutput = {
    */
   type: string;
 };
+export type ArtifactsOutput = {
+  /**
+   * `ready`, `partial`, or `processing`.
+   */
+  compose_status?: string;
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+  /**
+   * Variants keyed original / withWatermark / withInstruction / withInstructionAndWatermark, each with url/status/resolution.
+   */
+  video?: Video;
+};
 export type AspectRatio = {
   /**
    * Aspect ratio for 4K resolution output Default value: `"1:1"`
@@ -3240,6 +3254,24 @@ export type AvatarVWatermark = {
    */
   scale?: number;
 };
+export type Background = {
+  /**
+   * Solid background color (R/G/B, 0–255). Applies when mode is 'Color'. Defaults to white.
+   */
+  color?: RGBColor;
+  /**
+   * How the background image fills the canvas: 'Cover' fills and crops, 'Contain' fits and letterboxes onto `color`, 'Stretch' distorts to fit. Default value: `"Cover"`
+   */
+  image_fit?: "Cover" | "Contain" | "Stretch";
+  /**
+   * Background image URL. Required when mode is 'Image'.
+   */
+  image_url?: string | Blob | File;
+  /**
+   * 'Color' fills with `color` (white by default); 'Transparent' leaves it transparent (always PNG); 'Image' composites onto `image_url`. Default value: `"Color"`
+   */
+  mode?: "Transparent" | "Color" | "Image";
+};
 export type BackgroundRemovalInput = {
   /**
    * Input image (JPEG or PNG)
@@ -4105,6 +4137,26 @@ export type BGReplaceInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type BindTravelInput = {
+  /**
+   * Travel to associate with the session; it is ended upstream when the session closes or expires.
+   */
+  encrypted_travel_id: string;
+  /**
+   * Session ID from POST /session.
+   */
+  session_id: string;
+};
+export type BindTravelOutput = {
+  /**
+   * False when the session id is not one of ours.
+   */
+  bound: boolean;
+  /**
+   * Refreshed session id embedding the bound travel; use it for all subsequent heartbeat/close calls.
+   */
+  session_id: string;
 };
 export type birefnetInput = {
   /**
@@ -6837,6 +6889,16 @@ export type ClipOutput = {
    */
   video?: File;
 };
+export type CloseHappyOysterSessionInput = {
+  /**
+   * Session identifier from POST /session.
+   */
+  session_id: string;
+  /**
+   * True only after the SDK reports the travel completed. Closes the server session without sending a duplicate upstream end request.
+   */
+  travel_completed?: boolean;
+};
 export type codeformerInput = {
   /**
    * Should faces etc should be aligned.
@@ -7969,6 +8031,76 @@ export type CreateVoiceOutput = {
    */
   voice_id: string;
 };
+export type CreateWorldInput = {
+  /**
+   * Event style for generated events.
+   */
+  event_style?: "normal" | "dramatic";
+  /**
+   * First-frame anchor image URL.
+   */
+  first_frame_image_url?: string | Blob | File;
+  /**
+   * Additional reference image URLs.
+   */
+  image_urls?: Array<string>;
+  /**
+   * Camera movement style (directing mode).
+   */
+  layout?: "Stable" | "Fast";
+  /**
+   * Experience mode: `adventure` (explore/play) or `directing` (story).
+   */
+  mode: "adventure" | "directing";
+  /**
+   * Narrative style (directing mode).
+   */
+  narrative?: "Calm" | "Dramatic" | "Normal";
+  /**
+   * Camera perspective. Required in adventure mode.
+   */
+  perspective?: "first_person" | "third_person";
+  /**
+   * Natural-language world description. Required for simple creation unless `upload_mode` is `scenario_role`.
+   */
+  prompt?: string;
+  /**
+   * Encrypted ID of a template world to derive this world from.
+   */
+  ref_world_id?: string;
+  /**
+   * Video resolution. Required in directing mode.
+   */
+  resolution?: "480p" | "720p";
+  /**
+   * Role reference image URL (scenario_role).
+   */
+  role_image_url?: string | Blob | File;
+  /**
+   * Role description (scenario_role).
+   */
+  role_prompt?: string;
+  /**
+   * Scene reference image URL (scenario_role).
+   */
+  scene_image_url?: string | Blob | File;
+  /**
+   * Scene description (scenario_role).
+   */
+  scene_prompt?: string;
+  /**
+   * Structured script (`subjects` + up to 45 `acts`); selects scriptlist creation. Directing mode only.
+   */
+  script_list?: unknown;
+  /**
+   * When true the upstream build is awaited (up to ~120s) before returning; otherwise poll `/worlds/build-status`.
+   */
+  sync?: boolean;
+  /**
+   * Adventure creation sub-mode; default `first_frame`.
+   */
+  upload_mode?: "first_frame" | "scenario_role";
+};
 export type CreatifyAuroraInput = {
   /**
    * Guidance scale to be used for audio adherence. Default value: `2`
@@ -8231,6 +8363,16 @@ export type DeepFilterNetTimings = {
    */
   preprocess: number;
 };
+export type DeleteWorldOutput = {
+  /**
+   *
+   */
+  deleted: boolean;
+  /**
+   *
+   */
+  encrypted_world_id: string;
+};
 export type demucsInput = {
   /**
    * URL of the audio file to separate into stems
@@ -8305,7 +8447,7 @@ export type DepthAnythingVideoInput = {
    */
   include_raw_depths?: boolean;
   /**
-   * Max frames to process (max 1800). None = up to 1800.
+   * Max frames to process (max 2400). None = up to 2400.
    */
   max_frames?: number;
   /**
@@ -9376,6 +9518,28 @@ export type Dreamomni2EditInput = {
    */
   prompt: string;
 };
+export type DropShadow = {
+  /**
+   * Shadow blur radius, as a percentage of the smaller canvas dimension. 0 is a hard-edged shadow; larger values are softer. Clamped to 5%. Default value: `1.2`
+   */
+  blur?: number;
+  /**
+   * Shadow color (R/G/B). Defaults to black.
+   */
+  color?: RGBColor;
+  /**
+   * Horizontal shadow offset, as a percentage of the canvas width. Positive moves the shadow right, negative moves it left. Clamped to ±10%. Default value: `5`
+   */
+  horizontal?: number;
+  /**
+   * Shadow opacity (0–1). Default value: `0.25`
+   */
+  opacity?: number;
+  /**
+   * Vertical shadow offset, as a percentage of the canvas height. Positive moves the shadow down, negative moves it up. Clamped to ±10%. Default value: `0.8`
+   */
+  vertical?: number;
+};
 export type DubbingAudioOutput = {
   /**
    * The dubbed audio file.
@@ -9896,6 +10060,10 @@ export type EffectInput = {
     | "Superstar Lobby"
     | "Final Battle Room"
     | "Top of the World"
+    | "Mini Me Unboxed"
+    | "WonderPOP Surprise"
+    | "White Chicks"
+    | "Kiss me"
     | "Pixel World"
     | "Mint in Box"
     | "Hands up, Hand"
@@ -10401,6 +10569,42 @@ export type Emu35Output = {
    * The seed for the inference.
    */
   seed: number;
+};
+export type EndTravelInput = {
+  /**
+   * Encrypted travel ID from the client's enter-travel.
+   */
+  encrypted_travel_id: string;
+  /**
+   * Pass TRAVEL_NO_STREAM_AUTO_END when ending because no stream arrived in time; the travel is then marked failed and produces no replay artifact.
+   */
+  fail_code?: string;
+};
+export type EndTravelOutput = {
+  /**
+   *
+   */
+  duration_sec?: number;
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+  /**
+   *
+   */
+  ended_at?: string;
+  /**
+   *
+   */
+  error_code?: string;
+  /**
+   *
+   */
+  error_message?: string;
+  /**
+   *
+   */
+  status: string;
 };
 export type EQBand = {
   /**
@@ -11588,6 +11792,20 @@ export type FastSvdTextToVideoInput = {
     | "landscape_4_3"
     | "landscape_16_9";
 };
+export type feynobgInput = {
+  /**
+   * URL of the image to remove the background from.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Seed used for reproducible inference.
+   */
+  seed?: number;
+  /**
+   * If true, the output is returned as a data URI and is not stored in request history.
+   */
+  sync_mode?: boolean;
+};
 export type FfmpegApiComposeInput = {
   /**
    * List of tracks to be combined into the final media
@@ -12000,6 +12218,28 @@ export type File = {
    * The URL where the file can be downloaded from.
    */
   url: string;
+};
+export type FillerWordRemovalOutput = {
+  /**
+   * Number of filler-word segments removed.
+   */
+  num_cuts: number;
+  /**
+   * Duration of the source video in seconds.
+   */
+  original_duration: number;
+  /**
+   * Duration of the cleaned video in seconds.
+   */
+  output_duration: number;
+  /**
+   * Percentage of the source duration removed.
+   */
+  reduction_pct: number;
+  /**
+   * The cleaned video file.
+   */
+  video: File;
 };
 export type filmInput = {
   /**
@@ -12912,7 +13152,7 @@ export type Flux2LoraEditInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The URsL of the images for editing. A maximum of 3 images are allowed, if more are provided, only the first 3 will be used.
+   * The URLs of the images for editing. A maximum of 4 images are allowed.
    */
   image_urls: Array<string>;
   /**
@@ -17415,6 +17655,16 @@ export type GenerateOutput = {
    */
   seed: number;
 };
+export type GenerativeShadow = {
+  /**
+   * Virtual light used to synthesize the shadow. When omitted, the light direction is estimated from the image.
+   */
+  light_source?: ShadowLightSource;
+  /**
+   * Final composited shadow opacity (0–1). Default value: `0.2`
+   */
+  opacity?: number;
+};
 export type GenFillInput = {
   /**
    * Input Image to erase from
@@ -17850,7 +18100,7 @@ export type GptImage2EditInput = {
     | "landscape_16_9"
     | "auto";
   /**
-   * The URLs of the images to use as a reference for the generation.
+   * The URLs of the images to use as a reference for the generation. A maximum of 16 images are allowed.
    */
   image_urls: Array<string>;
   /**
@@ -18117,6 +18367,76 @@ export type H31TextTo3dInput = {
    * Seed for texture generation reproducibility.
    */
   texture_seed?: number;
+};
+export type H3ImageToVideoInput = {
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Optional URL of the image to use as the last frame, for first-to-last keyframe generation.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * URL of the image to use as the first frame. The output aspect ratio follows this image.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Only 2K is currently supported. Default value: `"2K"`
+   */
+  resolution?: string;
+};
+export type H3ReferenceToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.
+   */
+  prompt: string;
+  /**
+   * URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Audio cannot be the only reference input; provide at least one reference image or video with it. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_audio_urls?: Array<string>;
+  /**
+   * URLs of subject/style reference images, referenced in the prompt as Image 1, Image 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_image_urls?: Array<string>;
+  /**
+   * URLs of motion/reference video clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Video 1, Video 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_video_urls?: Array<string>;
+  /**
+   * The resolution of the generated video. Only 2K is currently supported. Default value: `"2K"`
+   */
+  resolution?: string;
+};
+export type H3TextToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Only 2K is currently supported. Default value: `"2K"`
+   */
+  resolution?: string;
 };
 export type HappyHorse15ReferenceToVideoInput = {
   /**
@@ -18541,6 +18861,14 @@ export type HeygenAvatar5DigitalTwinInput = {
 };
 export type HeygenV2TranslateSpeedInput = {
   /**
+   * HeyGen brand glossary ID for custom term translations.
+   */
+  brand_glossary_id?: string;
+  /**
+   * Generate an SRT caption file alongside the translated video.
+   */
+  enable_caption?: boolean;
+  /**
    * Enable dynamic duration to enhance conversational fluidity between languages with different speaking rates Default value: `true`
    */
   enable_dynamic_duration?: boolean;
@@ -18730,6 +19058,14 @@ export type HeygenV2TranslateSpeedInput = {
    * Number of speakers in the video
    */
   speaker_num?: number;
+  /**
+   * Whether the custom SRT applies to the source or translated video.
+   */
+  srt_role?: "input" | "output";
+  /**
+   * Optional URL of a custom SRT subtitle file.
+   */
+  srt_url?: string | Blob | File;
   /**
    * Translate only the audio, ignore the faces and only translate the voice track
    */
@@ -21837,6 +22173,20 @@ export type IdeogramCharacterRemixInput = {
    */
   sync_mode?: boolean;
 };
+export type IdeogramObjectRemovalInput = {
+  /**
+   * The source image containing the object to remove (maximum file size 10MB).
+   */
+  image_url: string | Blob | File;
+  /**
+   * A black-and-white mask matching the source image dimensions. White pixels are removed and black pixels are preserved (maximum file size 10MB).
+   */
+  mask_url: string | Blob | File;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
 export type IdeogramV2aInput = {
   /**
    * The aspect ratio of the generated image Default value: `"1:1"`
@@ -24704,6 +25054,36 @@ export type InfinityStarTextToVideoInput = {
    */
   use_apg?: boolean;
 };
+export type InfoOutput = {
+  /**
+   *
+   */
+  adventure_commands: unknown;
+  /**
+   *
+   */
+  api_base_url: string | Blob | File;
+  /**
+   *
+   */
+  heartbeat_interval_sec: number;
+  /**
+   *
+   */
+  max_token_expire_seconds: number;
+  /**
+   *
+   */
+  modes: unknown;
+  /**
+   *
+   */
+  session_timeout_sec: number;
+  /**
+   *
+   */
+  ticket_expires_in: number;
+};
 export type InpaintAudioInput = {
   /**
    * URL of the source audio. Maximum 10 seconds — longer clips are rejected. The model regenerates only the region defined by `segment`; everything outside it is preserved.
@@ -25696,6 +26076,30 @@ export type InstantCharacterInput = {
    */
   sync_mode?: boolean;
 };
+export type InstructInput = {
+  /**
+   * Directing-mode text instruction (e.g. a story beat).
+   */
+  content: string;
+  /**
+   * Encrypted travel ID from the client's enter-travel.
+   */
+  encrypted_travel_id: string;
+};
+export type InstructOutput = {
+  /**
+   *
+   */
+  accepted: boolean;
+  /**
+   *
+   */
+  content: string;
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+};
 export type InterleaveVideoInput = {
   /**
    * Frame rate of the interleaved output video. When set, all interleaved frames are emitted at this rate, so lower values produce a longer output while higher values produce a shorter, faster one. Leave unset to preserve the legacy behavior, which derives the output rate from the input videos (this can yield non-standard rates such as 384.0098).
@@ -26053,6 +26457,12 @@ export type IpAdapterFaceIdInput = {
    */
   width?: number;
 };
+export type IssueTokenInput = {
+  /**
+   * Temporary token validity. Prefer the maximum so the token outlives the session; refresh via this endpoint on expiry. Default value: `1800`
+   */
+  expire_in_seconds?: number;
+};
 export type IV2VInput = {
   /**
    * Aspect ratio to use for training. Default value: `"1:1"`
@@ -26285,6 +26695,10 @@ export type Kandinsky5ProImageToVideoInput = {
    * Video resolution: 512p or 1024p. Default value: `"512P"`
    */
   resolution?: "512P" | "1024P";
+  /**
+   * The seed to use for generation. If not provided, a random seed will be used.
+   */
+  seed?: number;
 };
 export type Kandinsky5ProTextToVideoInput = {
   /**
@@ -26311,6 +26725,10 @@ export type Kandinsky5ProTextToVideoInput = {
    * Video resolution: 512p or 1024p. Default value: `"512P"`
    */
   resolution?: "512P" | "1024P";
+  /**
+   * The seed to use for generation. If not provided, a random seed will be used.
+   */
+  seed?: number;
 };
 export type Kandinsky5TextToVideoDistillInput = {
   /**
@@ -28843,11 +29261,47 @@ export type ListAvatarsOutput = {
    */
   avatars: Array<string>;
 };
+export type ListTravelsInput = {
+  /**
+   * World whose travels to list; must be owned by the caller.
+   */
+  encrypted_world_id: string;
+  /**
+   *  Default value: `1`
+   */
+  page?: number;
+  /**
+   *  Default value: `20`
+   */
+  page_size?: number;
+  /**
+   *
+   */
+  status?: "init" | "pending" | "running" | "failed" | "completed";
+};
 export type ListVoicesOutput = {
   /**
    * List of available voice names
    */
   voices: Array<string>;
+};
+export type ListWorldsInput = {
+  /**
+   *
+   */
+  mode?: "adventure" | "directing";
+  /**
+   *  Default value: `1`
+   */
+  page?: number;
+  /**
+   *  Default value: `20`
+   */
+  page_size?: number;
+  /**
+   *
+   */
+  status?: "generating" | "ready" | "failed";
 };
 export type LivePortraitImageInput = {
   /**
@@ -31719,6 +32173,28 @@ export type LTX23DistilledVideoToVideoInput = {
    * The write mode of the generated video. Default value: `"balanced"`
    */
   video_write_mode?: "fast" | "balanced" | "small";
+};
+export type Ltx23ExtendVideoInput = {
+  /**
+   * Number of seconds from the input video to use as context for the extension (minimum 1 second, maximum 20 seconds). If not provided, defaults to maximize available context within the 505 frame limit.
+   */
+  context?: number;
+  /**
+   * Duration in seconds to extend the video. Minimum 2 seconds, maximum 20 seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Where to extend the video: 'end' extends at the end, 'start' extends at the beginning. Default value: `"end"`
+   */
+  mode?: "start" | "end";
+  /**
+   * Description of what should happen in the extended portion of the video.
+   */
+  prompt?: string;
+  /**
+   * The URL of the video to extend
+   */
+  video_url: string | Blob | File;
 };
 export type LTX23ExtendVideoInput = {
   /**
@@ -36078,6 +36554,28 @@ export type Ltx23ReframeInput = {
    */
   video_url: string | Blob | File;
 };
+export type Ltx23RetakeVideoInput = {
+  /**
+   * The duration of the video to retake in seconds Default value: `5`
+   */
+  duration?: number;
+  /**
+   * The prompt to retake the video with
+   */
+  prompt: string;
+  /**
+   * The retake mode to use for the retake Default value: `"replace_audio_and_video"`
+   */
+  retake_mode?: "replace_audio" | "replace_video" | "replace_audio_and_video";
+  /**
+   * The start time of the video to retake in seconds
+   */
+  start_time?: number;
+  /**
+   * The URL of the video to retake
+   */
+  video_url: string | Blob | File;
+};
 export type LTX23RetakeVideoInput = {
   /**
    * The acceleration level to use. Default value: `"regular"`
@@ -36943,24 +37441,6 @@ export type Ltx23VideoTrainerInput = {
    */
   with_audio?: boolean;
 };
-export type Ltx2AudioToVideoInput = {
-  /**
-   * URL of the audio file to generate a video from. Duration must be between 2 and 20 seconds. Must be publicly accessible or base64 data URI.
-   */
-  audio_url: string | Blob | File;
-  /**
-   * Guidance scale for video generation. Higher values make the output more closely follow the prompt. Defaults to 5 for text-to-video, or 9 when providing an image.
-   */
-  guidance_scale?: number;
-  /**
-   * URL of an image to use as the first frame of the video. If not provided, prompt is required.
-   */
-  image_url?: string | Blob | File;
-  /**
-   * Text description of how the video should be generated. Required if image_url is not provided. When image_url is provided, this describes how the image should be animated.
-   */
-  prompt?: string;
-};
 export type LTX2AudioToVideoInput = {
   /**
    * The acceleration level to use. Default value: `"regular"`
@@ -37796,28 +38276,6 @@ export type LTX2DistilledVideoToVideoInput = {
    */
   video_write_mode?: "fast" | "balanced" | "small";
 };
-export type Ltx2ExtendVideoInput = {
-  /**
-   * Number of seconds from the input video to use as context for the extension (minimum 1 second, maximum 20 seconds). If not provided, defaults to maximize available context within the 505 frame limit.
-   */
-  context?: number;
-  /**
-   * Duration in seconds to extend the video. Minimum 2 seconds, maximum 20 seconds. Default value: `5`
-   */
-  duration?: number;
-  /**
-   * Where to extend the video: 'end' extends at the end, 'start' extends at the beginning. Default value: `"end"`
-   */
-  mode?: "start" | "end";
-  /**
-   * Description of what should happen in the extended portion of the video.
-   */
-  prompt?: string;
-  /**
-   * The URL of the video to extend
-   */
-  video_url: string | Blob | File;
-};
 export type LTX2ExtendVideoInput = {
   /**
    * The acceleration level to use. Default value: `"regular"`
@@ -37961,58 +38419,6 @@ export type LTX2ExtendVideoOutput = {
    * The generated video.
    */
   video: VideoFile;
-};
-export type Ltx2ImageToVideoFastInput = {
-  /**
-   * The duration of the generated video in seconds. The fast model supports 6-20 seconds. Note: Durations longer than 10 seconds (12, 14, 16, 18, 20) are only supported with 25 FPS and 1080p resolution. Default value: `"6"`
-   */
-  duration?: 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20;
-  /**
-   * The frames per second of the generated video Default value: `"25"`
-   */
-  fps?: 25 | 50;
-  /**
-   * Whether to generate audio for the generated video Default value: `true`
-   */
-  generate_audio?: boolean;
-  /**
-   * URL of the image to generate the video from. Must be publicly accessible or base64 data URI. Supports PNG, JPEG, WebP, AVIF, and HEIF formats.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to generate the video from
-   */
-  prompt: string;
-  /**
-   * The resolution of the generated video Default value: `"1080p"`
-   */
-  resolution?: "1080p" | "1440p" | "2160p";
-};
-export type Ltx2ImageToVideoInput = {
-  /**
-   * The duration of the generated video in seconds Default value: `"6"`
-   */
-  duration?: 6 | 8 | 10;
-  /**
-   * The frames per second of the generated video Default value: `"25"`
-   */
-  fps?: 25 | 50;
-  /**
-   * Whether to generate audio for the generated video Default value: `true`
-   */
-  generate_audio?: boolean;
-  /**
-   * URL of the image to generate the video from. Must be publicly accessible or base64 data URI. Supports PNG, JPEG, WebP, AVIF, and HEIF formats.
-   */
-  image_url: string | Blob | File;
-  /**
-   * The prompt to generate the video from
-   */
-  prompt: string;
-  /**
-   * The resolution of the generated video Default value: `"1080p"`
-   */
-  resolution?: "1080p" | "1440p" | "2160p";
 };
 export type LTX2ImageToVideoInput = {
   /**
@@ -39512,28 +39918,6 @@ export type LTX2LoRAVideoToVideoInput = {
    */
   video_write_mode?: "fast" | "balanced" | "small";
 };
-export type Ltx2RetakeVideoInput = {
-  /**
-   * The duration of the video to retake in seconds Default value: `5`
-   */
-  duration?: number;
-  /**
-   * The prompt to retake the video with
-   */
-  prompt: string;
-  /**
-   * The retake mode to use for the retake Default value: `"replace_audio_and_video"`
-   */
-  retake_mode?: "replace_audio" | "replace_video" | "replace_audio_and_video";
-  /**
-   * The start time of the video to retake in seconds
-   */
-  start_time?: number;
-  /**
-   * The URL of the video to retake
-   */
-  video_url: string | Blob | File;
-};
 export type LTX2RetakeVideoInput = {
   /**
    * The acceleration level to use. Default value: `"regular"`
@@ -39663,50 +40047,6 @@ export type LTX2RetakeVideoInput = {
    * The write mode of the generated video. Default value: `"balanced"`
    */
   video_write_mode?: "fast" | "balanced" | "small";
-};
-export type Ltx2TextToVideoFastInput = {
-  /**
-   * The duration of the generated video in seconds. The fast model supports 6-20 seconds. Note: Durations longer than 10 seconds (12, 14, 16, 18, 20) are only supported with 25 FPS and 1080p resolution. Default value: `"6"`
-   */
-  duration?: 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20;
-  /**
-   * The frames per second of the generated video Default value: `"25"`
-   */
-  fps?: 25 | 50;
-  /**
-   * Whether to generate audio for the generated video Default value: `true`
-   */
-  generate_audio?: boolean;
-  /**
-   * The prompt to generate the video from
-   */
-  prompt: string;
-  /**
-   * The resolution of the generated video Default value: `"1080p"`
-   */
-  resolution?: "1080p" | "1440p" | "2160p";
-};
-export type Ltx2TextToVideoInput = {
-  /**
-   * The duration of the generated video in seconds Default value: `"6"`
-   */
-  duration?: 6 | 8 | 10;
-  /**
-   * The frames per second of the generated video Default value: `"25"`
-   */
-  fps?: 25 | 50;
-  /**
-   * Whether to generate audio for the generated video Default value: `true`
-   */
-  generate_audio?: boolean;
-  /**
-   * The prompt to generate the video from
-   */
-  prompt: string;
-  /**
-   * The resolution of the generated video Default value: `"1080p"`
-   */
-  resolution?: "1080p" | "1440p" | "2160p";
 };
 export type LTX2TextToVideoInput = {
   /**
@@ -40574,10 +40914,6 @@ export type lyria3Input = {
    */
   image_url?: string | Blob | File;
   /**
-   * A description of what to exclude from the generated audio. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
    * The text prompt describing the music you want to generate. Include genre, mood, instrumentation, tempo, and vocal style for best results. Lyria 3 supports vocals, lyrics, and multi-language generation.
    */
   prompt: string;
@@ -40768,6 +41104,40 @@ export type MaiImage25Output = {
    */
   images: Array<ImageFile>;
 };
+export type MaiImage25ProEditInput = {
+  /**
+   * The aspect ratio of the generated image. Use "auto" to match the input or let the model decide. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "1:1"
+    | "4:3"
+    | "3:4"
+    | "16:9"
+    | "9:16"
+    | "3:2"
+    | "2:3";
+  /**
+   * The URL of the image to edit. Provide one http(s) or data: URL. Default value: `""`
+   */
+  image_url?: string | Blob | File;
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The format of the generated image. Default value: `"png"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * The instruction describing how to edit the input image(s).
+   */
+  prompt: string;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
 export type MakeupApplicationInput = {
   /**
    * Aspect ratio for 4K output (default: 3:4 for portraits)
@@ -40913,6 +41283,28 @@ export type MareyT2vInput = {
    * Seed for random number generation. Use -1 for random seed each run. Default value: `-1`
    */
   seed?: number;
+};
+export type Margin = {
+  /**
+   * Margin applied to all sides. '%' (0–49%) of the canvas dimension, or 'px' (>=0px). Default value: `"20%"`
+   */
+  all?: string;
+  /**
+   * Bottom-side override of `all`. '%' (0–49%) or 'px' (>=0px).
+   */
+  bottom?: string;
+  /**
+   * Left-side override of `all`. '%' (0–49%) or 'px' (>=0px).
+   */
+  left?: string;
+  /**
+   * Right-side override of `all`. '%' (0–49%) or 'px' (>=0px).
+   */
+  right?: string;
+  /**
+   * Top-side override of `all`. '%' (0–49%) or 'px' (>=0px).
+   */
+  top?: string;
 };
 export type MarigoldDepthMapInput = {
   /**
@@ -42733,7 +43125,7 @@ export type NanoBananaEditInput = {
    */
   image_urls: Array<string>;
   /**
-   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate.
+   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate. Default value: `true`
    */
   limit_generations?: boolean;
   /**
@@ -42777,7 +43169,7 @@ export type NanoBananaInput = {
     | "2:3"
     | "9:16";
   /**
-   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate.
+   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate. Default value: `true`
    */
   limit_generations?: boolean;
   /**
@@ -42948,7 +43340,7 @@ export type NanoBananaProEditInput = {
    */
   image_urls: Array<string>;
   /**
-   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate.
+   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate. Default value: `true`
    */
   limit_generations?: boolean;
   /**
@@ -43005,7 +43397,7 @@ export type NanoBananaProInput = {
    */
   enable_web_search?: boolean;
   /**
-   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate.
+   * Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate. Default value: `true`
    */
   limit_generations?: boolean;
   /**
@@ -43047,6 +43439,10 @@ export type Nemotron3NanoOmniAudioInput = {
    */
   audio_url: string | Blob | File;
   /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
    * Maximum number of tokens to generate. Default value: `1024`
    */
   max_tokens?: number;
@@ -43072,6 +43468,10 @@ export type Nemotron3NanoOmniAudioInput = {
   top_p?: number;
 };
 export type Nemotron3NanoOmniInput = {
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
   /**
    * Maximum number of tokens to generate. Default value: `1024`
    */
@@ -43113,6 +43513,10 @@ export type Nemotron3NanoOmniOutput = {
 };
 export type Nemotron3NanoOmniVideoInput = {
   /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
    * Maximum number of tokens to generate. Default value: `1024`
    */
   max_tokens?: number;
@@ -43142,6 +43546,10 @@ export type Nemotron3NanoOmniVideoInput = {
   video_url: string | Blob | File;
 };
 export type Nemotron3NanoOmniVisionInput = {
+  /**
+   * Whether to enable the safety checker. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
   /**
    * URL of the image to reason about. RGB JPEG or PNG.
    */
@@ -46168,6 +46576,10 @@ export type PixverseV55EffectsInput = {
     | "Superstar Lobby"
     | "Final Battle Room"
     | "Top of the World"
+    | "Mini Me Unboxed"
+    | "WonderPOP Surprise"
+    | "White Chicks"
+    | "Kiss me"
     | "Pixel World"
     | "Mint in Box"
     | "Hands up, Hand"
@@ -46746,7 +47158,7 @@ export type PointPrompt = {
    */
   label?: 0 | 1;
   /**
-   * Optional object identifier. Prompts sharing an object id refine the same object.
+   * Optional object identifier. Prompts sharing an object id refine the same object. When a text prompt is also given, the id selects which detected object the points refine.
    */
   object_id?: number;
   /**
@@ -46764,7 +47176,7 @@ export type PointPromptBase = {
    */
   label?: 0 | 1;
   /**
-   * Optional object identifier. Prompts sharing an object id refine the same object.
+   * Optional object identifier. Prompts sharing an object id refine the same object. When a text prompt is also given, the id selects which detected object the points refine.
    */
   object_id?: number;
   /**
@@ -47247,6 +47659,47 @@ export type ProductPhotographyInput = {
    */
   product_image_url: string | Blob | File;
 };
+export type ProductPhotoInput = {
+  /**
+   * Output background: solid color (default white), transparent, or an image.
+   */
+  background?: Background;
+  /**
+   * Output canvas size. A preset (square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9) or a custom {width, height}. Defaults to square_hd (1024x1024). Default value: `square_hd`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * URL of the product image to be processed.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Canvas margins around the product: `all` for every side plus optional per-side overrides. Defaults to 20% on all sides.
+   */
+  margin?: Margin;
+  /**
+   * The format of the resultant image (PNG or JPEG). When not set, matches the input format. A transparent background is always PNG.
+   */
+  output_format?: "png" | "jpeg";
+  /**
+   * Shadow: choose a type ('Generative'/'Drop'; unset = no shadow) and set its params.
+   */
+  shadow?: Shadow;
+  /**
+   * When true, return the result as a data URL instead of uploading to storage. Default value: `true`
+   */
+  sync_mode?: boolean;
+  /**
+   * Optional logo/watermark image overlaid on top of the output. Off by default; omit for no watermark.
+   */
+  watermark?: Watermark;
+};
 export type ProductShotInput = {
   /**
    * Whether to use the fast model Default value: `true`
@@ -47501,6 +47954,20 @@ export type PronunciationDictionaryLocator = {
    */
   version_id?: string;
 };
+export type ProofreadCreateOutput = {
+  /**
+   *
+   */
+  original_srt_file?: File;
+  /**
+   *
+   */
+  proofread_id: string;
+  /**
+   *
+   */
+  srt_file: File;
+};
 export type ProTextTo3DInput = {
   /**
    * Enable PBR material generation (metallic, roughness, normal textures). Ignored when generate_type is Geometry.
@@ -47602,7 +48069,7 @@ export type QueryInput = {
 };
 export type Qwen3CloneVoiceInput = {
   /**
-   * URL to the reference audio file used for voice cloning.
+   * URL to the reference audio file used for voice cloning. Must be at most 300 seconds (5 minutes) long; a short clip of clean speech is sufficient.
    */
   audio_url: string | Blob | File;
   /**
@@ -47758,6 +48225,76 @@ export type Qwen3TTSInput = {
     | "Aiden"
     | "Ono_Anna"
     | "Sohee";
+};
+export type QwenAudio3TtsInput = {
+  /**
+   * Language of the input text. `Auto` lets the model detect it; setting it explicitly improves pronunciation and intonation. Default value: `"Auto"`
+   */
+  language?:
+    | "Auto"
+    | "Chinese"
+    | "English"
+    | "Spanish"
+    | "Russian"
+    | "Italian"
+    | "French"
+    | "Korean"
+    | "Japanese"
+    | "German"
+    | "Portuguese";
+  /**
+   * The text to convert to speech.
+   */
+  text: string;
+  /**
+   * The voice used for speech synthesis. See the [Qwen-TTS voice list](https://www.alibabacloud.com/help/en/model-studio/qwen-tts-voice-list) for each voice's language and dialect coverage. Default value: `"Cherry"`
+   */
+  voice?:
+    | "Cherry"
+    | "Serena"
+    | "Ethan"
+    | "Chelsie"
+    | "Momo"
+    | "Vivian"
+    | "Moon"
+    | "Maia"
+    | "Kai"
+    | "Nofish"
+    | "Bella"
+    | "Jennifer"
+    | "Ryan"
+    | "Katerina"
+    | "Aiden"
+    | "Mia"
+    | "Mochi"
+    | "Bellona"
+    | "Vincent"
+    | "Bunny"
+    | "Neil"
+    | "Elias"
+    | "Arthur"
+    | "Nini"
+    | "Seren"
+    | "Pip"
+    | "Stella"
+    | "Bodega"
+    | "Sonrisa"
+    | "Alek"
+    | "Dolce"
+    | "Sohee"
+    | "Lenn"
+    | "Emilien"
+    | "Andre"
+    | "Jada"
+    | "Dylan"
+    | "Li"
+    | "Marcus"
+    | "Roy"
+    | "Peter"
+    | "Sunny"
+    | "Eric"
+    | "Rocky"
+    | "Kiki";
 };
 export type QwenImage2512TrainerInput = {
   /**
@@ -50220,6 +50757,30 @@ export type ReveRemixInput = {
    */
   sync_mode?: boolean;
 };
+export type RewindInput = {
+  /**
+   * Encrypted travel ID from the client's enter-travel.
+   */
+  encrypted_travel_id: string;
+  /**
+   * Target position in seconds; the server may round it down.
+   */
+  rewind_to_sec: number;
+};
+export type RewindOutput = {
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+  /**
+   *
+   */
+  resumed_at_sec?: number;
+  /**
+   *
+   */
+  status: string;
+};
 export type RewriteTextInput = {
   /**
    * The source image.
@@ -51599,6 +52160,16 @@ export type Sam3ImageOutput = {
    */
   scores?: Array<number>;
 };
+export type SAM3ObjectMask = {
+  /**
+   * Run-length encoding (Kaggle/COCO order) of the mask.
+   */
+  rle: string;
+  /**
+   * Stable object/track id (out_obj_ids) for this mask.
+   */
+  track_id: number;
+};
 export type SAM3RLEFileOutput = {
   /**
    * Zip file containing per-frame bounding box overlays.
@@ -51672,6 +52243,48 @@ export type Sam3VideoInput = {
    * The URL of the video to be segmented.
    */
   video_url: string | Blob | File;
+};
+export type SAM3VideoObjectFrame = {
+  /**
+   * 0-based frame index in the input video.
+   */
+  frame_index: number;
+  /**
+   * Per-object masks present in this frame (empty when none).
+   */
+  objects?: Array<SAM3ObjectMask>;
+};
+export type SAM3VideoObjectsInput = {
+  /**
+   * Detection confidence threshold (0.0-1.0). Lower = more detections but less precise. Default value: `0.5`
+   */
+  detection_threshold?: number;
+  /**
+   * Text prompt describing the concept to track (e.g. 'person'). Treated as a single concept; every instance SAM-3 detects is tracked with its own stable track id across frames. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * The URL of the video to segment into per-object tracked masks.
+   */
+  video_url: string | Blob | File;
+};
+export type SAM3VideoObjectsOutput = {
+  /**
+   * Per-frame, per-object RLE masks with stable track ids.
+   */
+  frames: Array<SAM3VideoObjectFrame>;
+  /**
+   * Mask/frame height in pixels (RLE decode dimension).
+   */
+  height: number;
+  /**
+   * Number of frames processed.
+   */
+  num_frames: number;
+  /**
+   * Mask/frame width in pixels (RLE decode dimension).
+   */
+  width: number;
 };
 export type Sam3VideoRleInput = {
   /**
@@ -52649,6 +53262,61 @@ export type Seedance2I2VMiniInput = {
    */
   resolution?: "480p" | "720p";
 };
+export type Seedance2R2V4KInput = {
+  /**
+   * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to let the model decide. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file.If audio is provided, at least one reference image or video is required.
+   */
+  audio_urls?: Array<string>;
+  /**
+   * Output bitrate mode. 'high' requests a higher-quality, larger-file encode from the model; 'standard' uses the default bitrate. Default value: `"standard"`
+   */
+  bitrate_mode?: "standard" | "high";
+  /**
+   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "10"
+    | "11"
+    | "12"
+    | "13"
+    | "14"
+    | "15";
+  /**
+   * The unique user ID of the end user.
+   */
+  end_user_id?: string;
+  /**
+   * Whether to generate synchronized audio for the video, including sound effects, ambient sounds, and lip-synced speech. The cost of video generation is the same regardless of whether audio is generated or not. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Reference images to guide video generation. Refer to them in the prompt as @Image1, @Image2, etc. Supported formats: JPEG, PNG, WebP. Max 30 MB per image. Up to 9 images. Total files across all modalities must not exceed 12.
+   */
+  image_urls?: Array<string>;
+  /**
+   * The text prompt used to generate the video.
+   */
+  prompt: string;
+  /**
+   * Video resolution - this endpoint only generates 4k video. Default value: `"4k"`
+   */
+  resolution?: string;
+  /**
+   * Reference videos to guide video generation. Refer to them in the prompt as @Video1, @Video2, etc. Supported formats: MP4, MOV. Up to 3 videos, combined duration must be between 2 and 15 seconds, total size under 50 MB. Each video must be between ~480p (640x640) and ~720p (834x1112) in resolution.
+   */
+  video_urls?: Array<string>;
+};
 export type Seedance2R2VFastInput = {
   /**
    * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to let the model decide. Default value: `"auto"`
@@ -53206,6 +53874,10 @@ export type SeedAudio10Input = {
    * A single reference image URL (jpeg/png/webp, up to 10MB). Cannot be combined with audio references.
    */
   image_url?: string | Blob | File;
+  /**
+   * Use the multilingual model variant, which handles non-English and mixed-language prompts better.
+   */
+  multilingual?: boolean;
   /**
    * Output audio format. Default value: `"mp3"`
    */
@@ -53935,6 +54607,20 @@ export type Sfx16VideoToVideoOutput = {
    */
   video: Array<Video>;
 };
+export type SfxSegment = {
+  /**
+   * Segment end time in seconds. Must equal the next segment's start (contiguous; no gaps/overlaps); the last segment's end must be <= the video duration.
+   */
+  end?: number;
+  /**
+   * SFX / foley description for this segment. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * Segment start time in seconds (from video start). The FIRST segment's start must be 0.
+   */
+  start?: number;
+};
 export type SfxV15VideoToAudioInput = {
   /**
    * The duration of the generated audio in seconds Default value: `10`
@@ -53972,6 +54658,76 @@ export type SfxV15VideoToVideoOutput = {
    * The processed video with sound effects
    */
   video: Array<VideoOutput>;
+};
+export type Sfxv1TextToAudioInput = {
+  /**
+   * Audio file format: aac (default), mp3, wav, or flac. Default value: `"aac"`
+   */
+  audio_format?: "wav" | "mp3" | "aac" | "flac";
+  /**
+   * How long the audio should be, in seconds. Default value: `8`
+   */
+  duration?: number;
+  /**
+   * Describe the sound you want to create.
+   */
+  prompt: string;
+};
+export type Sfxv1VideoInput = {
+  /**
+   * Format of the returned audio file: aac (default), mp3, wav, or flac. (The video with sound is always AAC.) Default value: `"aac"`
+   */
+  audio_format?: "wav" | "mp3" | "aac" | "flac";
+  /**
+   * Optional. Describe the kind of sound you want; it steers the generated audio for every scene. Leave empty to caption the video automatically.
+   */
+  prompt?: string;
+  /**
+   * Optional. Split the video into time ranges, each with its own sound description. Leave empty to split into scenes automatically.
+   */
+  segments?: Array<SfxSegment>;
+  /**
+   * The video to add sound to (public URL, or upload a file). The generated audio matches the video's length.
+   */
+  video_url: string | Blob | File;
+};
+export type Shadow = {
+  /**
+   * Drop-shadow params (used when type is 'Drop').
+   */
+  drop?: DropShadow;
+  /**
+   * Generative AI-shadow params (used when type is 'Generative').
+   */
+  generative?: GenerativeShadow;
+  /**
+   * Shadow style: 'Generative' (generative AI shadow) or 'Drop' (deterministic drop shadow). Leave unset for no shadow.
+   */
+  type?: "Generative" | "Drop";
+};
+export type ShadowLightSource = {
+  /**
+   *
+   */
+  position?: ShadowLightSourcePosition;
+  /**
+   * Apparent emitter size/softness. Higher = softer penumbra. Leave unset to auto-estimate the light from the image.
+   */
+  size?: number;
+};
+export type ShadowLightSourcePosition = {
+  /**
+   * Horizontal light position, normalized to image center (-1 to 1). Leave unset to auto-estimate the light from the image.
+   */
+  x?: number;
+  /**
+   * Vertical light position, normalized to image center (-1 to 1). Leave unset to auto-estimate the light from the image.
+   */
+  y?: number;
+  /**
+   * Height above subject (0 to 2). Leave unset to auto-estimate the light from the image.
+   */
+  z?: number;
 };
 export type SharpenInput = {
   /**
@@ -55162,7 +55918,7 @@ export type StreamingFlux2EditImageInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The URLs of the images for editing. A maximum of 4 images are allowed, if more are provided, only the first 4 will be used.
+   * The URLs of the images for editing. A maximum of 4 images are allowed.
    */
   image_urls: Array<string>;
   /**
@@ -55211,7 +55967,7 @@ export type StreamingFlux2EditImageLoRAInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * The URsL of the images for editing. A maximum of 3 images are allowed, if more are provided, only the first 3 will be used.
+   * The URLs of the images for editing. A maximum of 4 images are allowed.
    */
   image_urls: Array<string>;
   /**
@@ -58359,16 +59115,6 @@ export type TextToMusicInput = {
    */
   prompt: string;
 };
-export type TextToMusicOutput = {
-  /**
-   * The first generated music track, for quick preview/playback.
-   */
-  audio: Audio;
-  /**
-   * All generated music tracks (AAC/m4a), one per sample.
-   */
-  audios: Array<Audio>;
-};
 export type TextToSpeechOutput = {
   /**
    * The generated audio file
@@ -58432,6 +59178,20 @@ export type TextToSVGInput = {
    * Top-p (nucleus) sampling parameter. Default value: `0.95`
    */
   top_p?: number;
+};
+export type TextToTrioOutput = {
+  /**
+   * The generated sound as a separate audio file.
+   */
+  audio: Audio;
+  /**
+   * The video with the generated sound added (mp4). If no source video was given, this is an audio-only mp4.
+   */
+  video: Video;
+  /**
+   * All result videos (mp4), one per sample.
+   */
+  videos: Array<Video>;
 };
 export type TextToVideoInput = {
   /**
@@ -58872,6 +59632,20 @@ export type TimestepsInput = {
    */
   method?: "default" | "array";
 };
+export type TokenOutput = {
+  /**
+   * Open Platform base URL for the client SDK (`apiBaseUrl`).
+   */
+  api_base_url: string | Blob | File;
+  /**
+   * Requested validity in seconds.
+   */
+  expires_in: number;
+  /**
+   * Short-lived Open Platform API-key token.
+   */
+  token: string;
+};
 export type TopazUpscaleImageInput = {
   /**
    * Enable automatic prompt generation for generative upscaling. Applies to Redefine model only.
@@ -58918,20 +59692,20 @@ export type TopazUpscaleImageInput = {
    */
   image_url: string | Blob | File;
   /**
-   * Model to use for image enhancement. Default value: `"Standard V2"`
+   * Model to use for image enhancement, grouped by family. Precision — Standard V2 fits most photos, High Fidelity V2 preserves detail in professional shots, Low Resolution V2 recovers compressed sources, CGI targets art and rendered graphics, Text Refine keeps text and shapes crisp. Generative — Wonder 3 is Topaz's most advanced generative model, Redefine adds prompt-guided creative detail, Standard MAX maximizes quality, Recovery/Recovery V2 rebuild extreme low-resolution images. Default value: `"Standard V2"`
    */
   model?:
-    | "Low Resolution V2"
     | "Standard V2"
-    | "CGI"
     | "High Fidelity V2"
+    | "Low Resolution V2"
+    | "CGI"
     | "Text Refine"
-    | "Recovery"
+    | "Wonder 3"
+    | "Wonder"
+    | "Standard MAX"
     | "Redefine"
     | "Recovery V2"
-    | "Standard MAX"
-    | "Wonder"
-    | "Wonder 3";
+    | "Recovery";
   /**
    * Output format of the upscaled image. Default value: `"jpeg"`
    */
@@ -58979,28 +59753,28 @@ export type TopazUpscaleVideoInput = {
    */
   halo?: number;
   /**
-   * Video enhancement model. Proteus is best for most videos, Artemis for denoise+sharpen, Nyx for dedicated denoising, Gaia HQ/CG for rendered content, Gaia 2 for animation and motion graphics at 2x, and Starlight for generative diffusion-based upscaling and enhancement. Default value: `"Proteus"`
+   * Video enhancement model, grouped by family. Precision — Proteus fits most footage, Artemis denoises and sharpens degraded sources, Gaia HQ/CG refine rendered content, Gaia 2 handles animation and motion graphics at 2x. Denoise — Nyx models are dedicated noise reduction. Generative — Starlight models use diffusion for restoration and upscaling. Starlight Precise 1, Starlight Precise 2 and Starlight Fast 1 are deprecated by Topaz; prefer Starlight Precise 2.5 or Starlight Fast 2. Default value: `"Proteus"`
    */
   model?:
     | "Proteus"
     | "Artemis HQ"
     | "Artemis MQ"
     | "Artemis LQ"
+    | "Gaia HQ"
+    | "Gaia CG"
+    | "Gaia 2"
     | "Nyx"
     | "Nyx Fast"
     | "Nyx XL"
     | "Nyx HF"
-    | "Gaia HQ"
-    | "Gaia CG"
-    | "Gaia 2"
-    | "Starlight Precise 1"
-    | "Starlight Precise 2"
     | "Starlight Precise 2.5"
     | "Starlight HQ"
     | "Starlight Mini"
     | "Starlight Sharp"
-    | "Starlight Fast 1"
-    | "Starlight Fast 2";
+    | "Starlight Fast 2"
+    | "Starlight Precise 1"
+    | "Starlight Precise 2"
+    | "Starlight Fast 1";
   /**
    * Noise reduction level (0.0-1.0). Default varies by model.
    */
@@ -59165,6 +59939,74 @@ export type TranscriptionWord = {
    * Type of element (word, spacing, or audio_event)
    */
   type: string;
+};
+export type TravelControlOutput = {
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+  /**
+   *
+   */
+  status: string;
+};
+export type TravelListOutput = {
+  /**
+   *
+   */
+  items: Array<unknown>;
+  /**
+   *
+   */
+  pagination: unknown;
+};
+export type TravelStatusInput = {
+  /**
+   * Optional client RTC playback status heartbeat (DISCONNECTED / CONNECTING / CONNECTED / PLAYING / BUFFERING / PAUSED / RECONNECTING).
+   */
+  client_stream_status?: string;
+  /**
+   * Client status change timestamp (ms epoch).
+   */
+  client_stream_status_time_ms?: number;
+  /**
+   * Encrypted travel ID from the client's enter-travel.
+   */
+  encrypted_travel_id: string;
+};
+export type TravelStatusOutput = {
+  /**
+   *
+   */
+  chapters?: Array<unknown>;
+  /**
+   *
+   */
+  character_actions?: Array<string>;
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+  /**
+   *
+   */
+  environment_actions?: Array<string>;
+  /**
+   *
+   */
+  rtc_status?: string;
+  /**
+   * `init`, `pending`, `running`, `failed`, or `completed`.
+   */
+  status: string;
+  /**
+   *
+   */
+  update_time?: string;
+  /**
+   *
+   */
+  user_instructions?: Array<unknown>;
 };
 export type Trellis2Input = {
   /**
@@ -59740,6 +60582,16 @@ export type TrimVideoOutput = {
    */
   video: File;
 };
+export type TrioAudioOutput = {
+  /**
+   * The generated sound, in your chosen audio format.
+   */
+  audio: Audio;
+  /**
+   * All generated sounds, one per sample.
+   */
+  audios: Array<Audio>;
+};
 export type Tripo3DSegmentationOutput = {
   /**
    * Segmented 3D model file. May be GLB or FBX depending on Tripo output.
@@ -60172,6 +61024,30 @@ export type UpdatePathConfigInput = {
    * New RPS limit.
    */
   rps_limit?: number;
+};
+export type UpdateScriptInput = {
+  /**
+   * Encrypted travel ID from the client's enter-travel.
+   */
+  encrypted_travel_id: string;
+  /**
+   * Full replacement script; `acts` must contain exactly 45 turns.
+   */
+  script_list: unknown;
+};
+export type UpdateScriptOutput = {
+  /**
+   *
+   */
+  accepted: boolean;
+  /**
+   *
+   */
+  encrypted_travel_id: string;
+  /**
+   *
+   */
+  turn_count?: number;
 };
 export type UpscaleCreativeInput = {
   /**
@@ -63034,6 +63910,10 @@ export type VideoAgentConfig = {
 };
 export type VideoBackgroundRemovalV3Input = {
   /**
+   * If true, crop the output to the smallest rectangle the subject stays inside for the whole video.
+   */
+  auto_zoom?: boolean;
+  /**
    * Background color. Options: Transparent, Black, White, Gray, Red, Green, Blue, Yellow, Cyan, Magenta, Orange. Default value: `"Black"`
    */
   background_color?:
@@ -63419,21 +64299,16 @@ export type VideoPromptGeneratorInput = {
    */
   input_concept: string;
   /**
-   * Model to use Default value: `"google/gemini-2.0-flash-001"`
+   * Model to use Default value: `"google/gemini-2.5-flash-lite"`
    */
   model?:
-    | "anthropic/claude-3.5-sonnet"
-    | "anthropic/claude-3-5-haiku"
     | "anthropic/claude-3-haiku"
+    | "google/gemini-2.5-flash"
     | "google/gemini-2.5-flash-lite"
-    | "google/gemini-2.0-flash-001"
-    | "meta-llama/llama-3.2-1b-instruct"
-    | "meta-llama/llama-3.2-3b-instruct"
     | "meta-llama/llama-3.1-8b-instruct"
     | "meta-llama/llama-3.1-70b-instruct"
     | "openai/gpt-4o-mini"
-    | "openai/gpt-4o"
-    | "deepseek/deepseek-r1";
+    | "openai/gpt-4o";
   /**
    * Pacing rhythm Default value: `"None"`
    */
@@ -65092,6 +65967,10 @@ export type WanFlf2vInput = {
    * Classifier-free guidance scale. Higher values give better adherence to the prompt but may decrease quality. Default value: `5`
    */
   guide_scale?: number;
+  /**
+   * LoRA weights to be used in the inference.
+   */
+  loras?: Array<LoraWeight>;
   /**
    * Negative prompt for video generation. Default value: `"bright colors, overexposed, static, blurred details, subtitles, style, artwork, painting, picture, still, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, malformed limbs, fused fingers, still picture, cluttered background, three legs, many people in the background, walking backwards"`
    */
@@ -67482,6 +68361,37 @@ export type WanVaceAppsVideoEditOutput = {
    */
   video: VideoFile;
 };
+export type Watermark = {
+  /**
+   * Logo/watermark image URL. If empty, no watermark is added.
+   */
+  image_url?: string | Blob | File;
+  /**
+   * Inset from the edge. '%' (0–49%) of the canvas, or 'px'. Default value: `"3%"`
+   */
+  margin?: string;
+  /**
+   * Watermark opacity (0–1). Default value: `1`
+   */
+  opacity?: number;
+  /**
+   * Where to place the watermark. Default value: `"bottom_right"`
+   */
+  position?:
+    | "top_left"
+    | "top_right"
+    | "bottom_left"
+    | "bottom_right"
+    | "center";
+  /**
+   * Remove the watermark image's own background (via background removal) before overlaying it.
+   */
+  remove_background?: boolean;
+  /**
+   * Watermark width as a fraction of the canvas width. Default value: `0.1`
+   */
+  scale?: number;
+};
 export type WaveformInput = {
   /**
    * URL of the audio file to analyze
@@ -67789,6 +68699,130 @@ export type wizperOutput = {
    */
   text: string;
 };
+export type WorldDetailOutput = {
+  /**
+   *
+   */
+  created_at?: string;
+  /**
+   *
+   */
+  creation_model?: string;
+  /**
+   *
+   */
+  encrypted_world_id: string;
+  /**
+   * First-frame image URL once available.
+   */
+  first_frame?: string;
+  /**
+   *
+   */
+  mode?: "adventure" | "directing";
+  /**
+   * World title once built.
+   */
+  name?: string;
+  /**
+   *
+   */
+  prompt?: string;
+  /**
+   *
+   */
+  script_list?: unknown;
+  /**
+   * `generating`, `ready`, or `failed`.
+   */
+  status: string;
+  /**
+   *
+   */
+  updated_at?: string;
+};
+export type WorldListOutput = {
+  /**
+   * The caller's worlds, newest first.
+   */
+  items: Array<WorldRecord>;
+  /**
+   *
+   */
+  page: number;
+  /**
+   *
+   */
+  page_size: number;
+};
+export type WorldRecord = {
+  /**
+   *
+   */
+  created_at?: string;
+  /**
+   * Creation prompt / description.
+   */
+  description?: string;
+  /**
+   *
+   */
+  encrypted_world_id: string;
+  /**
+   *
+   */
+  is_favorited?: boolean;
+  /**
+   * Creation extras (perspective, resolution, ...).
+   */
+  metadata?: unknown;
+  /**
+   *
+   */
+  mode?: "adventure" | "directing";
+  /**
+   *
+   */
+  name?: string;
+  /**
+   * `generating`, `ready`, or `failed`.
+   */
+  status: string;
+  /**
+   * First-frame image URL once available.
+   */
+  thumbnail_url?: string | Blob | File;
+  /**
+   *
+   */
+  updated_at?: string;
+  /**
+   *
+   */
+  user_id: string;
+};
+export type WorldStatusOutput = {
+  /**
+   *
+   */
+  encrypted_world_id: string;
+  /**
+   * First-frame image URL once available.
+   */
+  first_frame?: string;
+  /**
+   *
+   */
+  mode?: "adventure" | "directing";
+  /**
+   * World title once built.
+   */
+  name?: string;
+  /**
+   * `generating`, `ready`, or `failed`.
+   */
+  status: string;
+};
 export type XAIImageEditInput = {
   /**
    * Aspect ratio of the edited image. When set to `auto` (the default), the output preserves the aspect ratio of the first input image. Default value: `"auto"`
@@ -67964,6 +68998,32 @@ export type XAIReferenceToVideoInput = {
    */
   resolution?: "480p" | "720p";
 };
+export type XAIReferenceToVideoV15Input = {
+  /**
+   * Aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16";
+  /**
+   * Video duration in seconds. Default value: `8`
+   */
+  duration?: number;
+  /**
+   * Text prompt describing the video. Tag references as <IMAGE_0>, <IMAGE_1>, etc. and the optional audio as <AUDIO_0>.
+   */
+  prompt: string;
+  /**
+   * Optional reference audio URL. At most one audio is supported.
+   */
+  reference_audio_urls?: Array<string>;
+  /**
+   * One or more reference image URLs to guide the video generation as style and content references. Reference in prompt as <IMAGE_0>, <IMAGE_1>, etc. Maximum 7 images.
+   */
+  reference_image_urls: Array<string>;
+  /**
+   * Resolution of the output video. Default value: `"480p"`
+   */
+  resolution?: "480p" | "720p";
+};
 export type XAITextToVideoInput = {
   /**
    * Aspect ratio of the generated video. Default value: `"16:9"`
@@ -67981,6 +69041,24 @@ export type XAITextToVideoInput = {
    * Resolution of the output video. Default value: `"720p"`
    */
   resolution?: "480p" | "720p";
+};
+export type XAITextToVideoV15Input = {
+  /**
+   * Aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16";
+  /**
+   * Video duration in seconds. Default value: `6`
+   */
+  duration?: number;
+  /**
+   * Text description of the desired video.
+   */
+  prompt: string;
+  /**
+   * Resolution of the output video. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p" | "1080p";
 };
 export type XAIVideoEditInput = {
   /**
@@ -69277,8 +70355,6 @@ export type BroccoliHaircutOutput = pulidOutput;
 export type BrPortugeseOutput = DiaOutput;
 export type BytedanceDreamactorV2Input = DreamActor2Input;
 export type BytedanceDreamactorV2Output = I2VOutput;
-export type BytedanceDreaminaV31TextToImageInput = DreaminaInput;
-export type BytedanceDreaminaV31TextToImageOutput = pulidOutput;
 export type BytedanceOmnihumanInput = OmniHumanInput;
 export type BytedanceOmnihumanOutput = AIAvatarOutput;
 export type BytedanceOmnihumanV15Input = OmniHumanv15Input;
@@ -69499,6 +70575,7 @@ export type FastSvdLcmOutput = ModifyOutput;
 export type FastSvdLcmTextToVideoInput = FastSVDTextInput;
 export type FastSvdLcmTextToVideoOutput = ModifyOutput;
 export type FastSvdTextToVideoOutput = ModifyOutput;
+export type feynobgOutput = ccsrOutput;
 export type FfmpegApiComposeOutput = ComposeOutput;
 export type FfmpegApiExtractFrameInput = FrameInput;
 export type FfmpegApiExtractFrameOutput = BlurOutput;
@@ -69887,6 +70964,9 @@ export type GroupPhotoOutput = pulidOutput;
 export type H31ImageTo3dOutput = P1TextTo3dOutput;
 export type H31MultiviewTo3dOutput = P1TextTo3dOutput;
 export type H31TextTo3dOutput = P1TextTo3dOutput;
+export type H3ImageToVideoOutput = I2VOutput;
+export type H3ReferenceToVideoOutput = I2VOutput;
+export type H3TextToVideoOutput = I2VOutput;
 export type HairChangeInput = TimeOfDayInput;
 export type HairChangeOutput = pulidOutput;
 export type HappyHorse15ImageToVideoInput = HappyHorseImageToVideoInput;
@@ -69908,8 +70988,8 @@ export type HeygenAvatar4DigitalTwinOutput = I2VOutput;
 export type HeygenAvatar4ImageToVideoOutput = I2VOutput;
 export type HeygenAvatar5DigitalTwinOutput = AvatarVOutput;
 export type HeygenV2TranslatePrecisionInput = HeygenV2TranslateSpeedInput;
-export type HeygenV2TranslatePrecisionOutput = I2VOutput;
-export type HeygenV2TranslateSpeedOutput = I2VOutput;
+export type HeygenV2TranslatePrecisionOutput = AvatarVOutput;
+export type HeygenV2TranslateSpeedOutput = AvatarVOutput;
 export type HeygenV2VideoAgentOutput = I2VOutput;
 export type HeygenV3LipsyncPrecisionInput = HeygenV3LipsyncSpeedInput;
 export type HeygenV3LipsyncPrecisionOutput = AvatarVOutput;
@@ -69997,6 +71077,7 @@ export type IdeogramCustomModelsGenerateInput = GenerateInput;
 export type IdeogramCustomModelsGenerateOutput = GenerateOutput;
 export type IdeogramCustomModelsInput = TrainModelInput;
 export type IdeogramCustomModelsOutput = TrainModelOutput;
+export type IdeogramObjectRemovalOutput = EvfSamOutput;
 export type IdeogramRemoveBackgroundInput = BGRemoveInput;
 export type IdeogramRemoveBackgroundOutput = EvfSamOutput;
 export type IdeogramUpscaleInput = UpscaleImageInput;
@@ -70134,6 +71215,8 @@ export type ImageProcessingInput = PostProcessingInput;
 export type ImagesToVideoOutput = I2VOutput;
 export type ImageToVideoHailuo02FastOutput = I2VOutput;
 export type ImageToVideoHailuo02Output = I2VOutput;
+export type ImageToVideoHailuo03Input = H3ImageToVideoInput;
+export type ImageToVideoHailuo03Output = I2VOutput;
 export type ImageToVideoOutput = TextToVideoOutput;
 export type ImageToVideoTurboInput = ImageToVideov21Input;
 export type ImageToVideoV21MasterOutput = I2VOutput;
@@ -70200,8 +71283,8 @@ export type JuggernautFluxProImageToImageInput = DevImageToImageInput;
 export type JuggernautFluxProImageToImageOutput = unoOutput;
 export type JuggernautFluxProInput = bitdanceInput;
 export type JuggernautFluxProOutput = unoOutput;
-export type Kandinsky5ProImageToVideoOutput = Kandinsky5TextToVideoOutput;
-export type Kandinsky5ProTextToVideoOutput = Kandinsky5TextToVideoOutput;
+export type Kandinsky5ProImageToVideoOutput = oviOutput;
+export type Kandinsky5ProTextToVideoOutput = oviOutput;
 export type Kandinsky5TextToVideoDistillOutput = Kandinsky5TextToVideoOutput;
 export type Klein4BBaseEditInput = EditImageInput;
 export type Klein4BBaseEditOutput = v4Output;
@@ -70539,7 +71622,6 @@ export type Ltx2322bVideoToVideoLoraOutput = LTX2ExtendVideoOutput;
 export type Ltx2322bVideoToVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx23AudioToVideoOutput = React1Output;
 export type LTX23AudioToVideoOutput = LTX2ExtendVideoOutput;
-export type Ltx23ExtendVideoInput = Ltx2ExtendVideoInput;
 export type Ltx23ExtendVideoOutput = React1Output;
 export type LTX23ExtendVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx23ImageToVideoFastOutput = React1Output;
@@ -70548,6 +71630,8 @@ export type LTX23ImageToVideoOutput = LTX2ExtendVideoOutput;
 export type LTX23QualityAudioToVideoInput = Ltx23QualityAudioToVideoInput;
 export type Ltx23QualityAudioToVideoLoraOutput = ExtendVideoOutput;
 export type Ltx23QualityAudioToVideoOutput = ExtendVideoOutput;
+export type Ltx23QualityCleanPlateInput = Ltx23QualityDeblurInput;
+export type Ltx23QualityCleanPlateOutput = ExtendVideoOutput;
 export type Ltx23QualityColorizationInput = Ltx23QualityDeblurInput;
 export type Ltx23QualityColorizationOutput = ExtendVideoOutput;
 export type Ltx23QualityCrossEyedInput = Ltx23QualityDeblurInput;
@@ -70606,7 +71690,6 @@ export type Ltx23QualityWaterSimulationInput = Ltx23QualityDeblurInput;
 export type Ltx23QualityWaterSimulationOutput = ExtendVideoOutput;
 export type LTX23ReferenceVideoToVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx23ReframeOutput = React1Output;
-export type Ltx23RetakeVideoInput = Ltx2RetakeVideoInput;
 export type Ltx23RetakeVideoOutput = React1Output;
 export type Ltx23TextToVideoFastOutput = React1Output;
 export type Ltx23TextToVideoOutput = React1Output;
@@ -70657,15 +71740,8 @@ export type Ltx23TrainerV2V2vMaskedOutput = Ltx23TrainerV2A2aOutput;
 export type Ltx23TrainerV2V2vOutput = Ltx23TrainerV2A2aOutput;
 export type LTX23VideoToVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx23VideoTrainerOutput = Ltx23V2vTrainerOutput;
-export type Ltx2AudioToVideoOutput = React1Output;
 export type LTX2AudioToVideoOutput = LTX2ExtendVideoOutput;
-export type Ltx2ExtendVideoOutput = React1Output;
-export type Ltx2ImageToVideoFastOutput = React1Output;
-export type Ltx2ImageToVideoOutput = React1Output;
 export type LTX2ImageToVideoOutput = LTX2ExtendVideoOutput;
-export type Ltx2RetakeVideoOutput = React1Output;
-export type Ltx2TextToVideoFastOutput = React1Output;
-export type Ltx2TextToVideoOutput = React1Output;
 export type LTX2TextToVideoOutput = LTX2ExtendVideoOutput;
 export type LTX2VideoToVideoOutput = LTX2ExtendVideoOutput;
 export type Ltxv13b098DistilledExtendInput = DistilledExtendVideoInput;
@@ -70732,6 +71808,13 @@ export type MagiDistilledOutput = ModifyOutput;
 export type MaiImage25EditOutput = MaiImage25Output;
 export type MaiImage25ImageToImageInput = MaiImage25EditInput;
 export type MaiImage25ImageToImageOutput = MaiImage25Output;
+export type MaiImage25ProEditOutput = MaiImage25Output;
+export type MaiImage25ProImageToImageInput = MaiImage25ProEditInput;
+export type MaiImage25ProImageToImageOutput = MaiImage25Output;
+export type MaiImage25ProInput = MaiImage25Input;
+export type MaiImage25ProOutput = MaiImage25Output;
+export type MaiImage25ProTextToImageInput = MaiImage25Input;
+export type MaiImage25ProTextToImageOutput = MaiImage25Output;
 export type MaiImage25TextToImageInput = MaiImage25Input;
 export type MaiImage25TextToImageOutput = MaiImage25Output;
 export type MakeupApplicationOutput = BlurOutput;
@@ -71118,6 +72201,7 @@ export type PostProcessingVignetteOutput = BlurOutput;
 export type ProcessedOutput = BlurOutput;
 export type ProductHoldingOutput = BlurOutput;
 export type ProductPhotographyOutput = BlurOutput;
+export type ProductPhotoOutput = SamOutput;
 export type ProductShotOutput = BlurOutput;
 export type ProFastImageToVideoHailuo23Input = ProImageToVideoHailuo23Input;
 export type ProFastImageToVideoHailuo23Output = I2VOutput;
@@ -71154,6 +72238,7 @@ export type Qwen3TtsTextToSpeech17bInput = Qwen3TTSInput;
 export type Qwen3TtsTextToSpeech17bOutput = MiniOutput;
 export type Qwen3TtsVoiceDesign17bInput = Qwen3DesignVoiceInput;
 export type Qwen3TtsVoiceDesign17bOutput = MiniOutput;
+export type QwenAudio3TtsOutput = MiniOutput;
 export type QwenImage2512Input = OvisImageInput;
 export type QwenImage2512LoraInput = LoraInput;
 export type QwenImage2512LoraOutput = unoOutput;
@@ -71289,6 +72374,8 @@ export type RecraftVectorizeInput = ZoeInput;
 export type RecraftVectorizeOutput = EvfSamOutput;
 export type ReferenceFace = PikaImage;
 export type ReferenceToImageOutput = HEDOutput;
+export type ReferenceToVideoHailuo03Input = H3ReferenceToVideoInput;
+export type ReferenceToVideoHailuo03Output = I2VOutput;
 export type ReferenceToVideoOutput = TextToVideoOutput;
 export type ReframeOutput = I2VOutput;
 export type ReimagineOutput = pulidOutput;
@@ -71333,6 +72420,12 @@ export type RouterAudioOutput = AudioOutput;
 export type RouterEnterpriseInput = ChatInput;
 export type RouterEnterpriseOutput = routerOutput;
 export type routerInput = ChatInput;
+export type RouterOpenaiV1ChatCompletionsInput = StackInfoInput;
+export type RouterOpenaiV1ChatCompletionsOutput = StackInfoInput;
+export type RouterOpenaiV1EmbeddingsInput = StackInfoInput;
+export type RouterOpenaiV1EmbeddingsOutput = StackInfoInput;
+export type RouterOpenaiV1ResponsesInput = StackInfoInput;
+export type RouterOpenaiV1ResponsesOutput = StackInfoInput;
 export type RouterVideoEnterpriseInput = VideoInput;
 export type RouterVideoEnterpriseOutput = AudioOutput;
 export type RouterVideoInput = VideoInput;
@@ -71654,11 +72747,14 @@ export type TextToImageLoraInput = V4LoraInput;
 export type TextToImagePlaygroundv25Input = PlaygroundV25Input;
 export type TextToImageTurboInput = cogview4Input;
 export type TextToLottieInput = omnilottieInput;
+export type TextToMusicOutput = TrioAudioOutput;
 export type TextToSpeechHD26Output = TextToSpeechOutput;
 export type TextToSpeechHD28Output = TextToSpeechOutput;
 export type TextToSpeechTurbo26Output = TextToSpeechOutput;
 export type TextToSpeechTurbo28Output = TextToSpeechOutput;
 export type TextToVideoHailuo02Output = I2VOutput;
+export type TextToVideoHailuo03Input = H3TextToVideoInput;
+export type TextToVideoHailuo03Output = I2VOutput;
 export type TextToVideoTurboInput = TextToVideov21Input;
 export type TextToVideoV21MasterOutput = I2VOutput;
 export type TextToVideoV21Output = I2VOutput;
@@ -71690,11 +72786,17 @@ export type UpscaleCreativeOutput = HEDOutput;
 export type UpscaleOutput = EvfSamOutput;
 export type usoOutput = unoOutput;
 export type V11TextToMusicInput = TextToMusicInput;
-export type V11TextToMusicOutput = TextToMusicOutput;
+export type V11TextToMusicOutput = TrioAudioOutput;
+export type V11TextToSoundEffectsInput = Sfxv1TextToAudioInput;
+export type V11TextToSoundEffectsOutput = TrioAudioOutput;
 export type V11VideoToMusicInput = VideoToMusicInput;
-export type V11VideoToMusicOutput = TextToMusicOutput;
-export type V11VideoToVideoInput = VideoToVideoInput;
-export type V11VideoToVideoOutput = VideoToVideoOutput;
+export type V11VideoToMusicOutput = TrioAudioOutput;
+export type V11VideoToSoundEffectsInput = Sfxv1VideoInput;
+export type V11VideoToSoundEffectsOutput = TrioAudioOutput;
+export type V11VideoToVideoMusicInput = VideoToVideoInput;
+export type V11VideoToVideoMusicOutput = VideoToVideoOutput;
+export type V11VideoToVideoSoundEffectsInput = Sfxv1VideoInput;
+export type V11VideoToVideoSoundEffectsOutput = TextToTrioOutput;
 export type V26ImageToImageInput = ImageEditInput;
 export type V26ImageToImageOutput = GenerateOutput;
 export type V26ImageToVideoFlashInput = ImageToVideoFlashInput;
@@ -71707,8 +72809,6 @@ export type V26ReferenceToVideoInput = ReferenceToVideoInput;
 export type V26ReferenceToVideoOutput = TextToVideoOutput;
 export type V26TextToImageInput = TextToImageWanInput;
 export type V26TextToImageOutput = TextToImageWanOutput;
-export type V26TextToVideoInput = TextToVideoInput;
-export type V26TextToVideoOutput = TextToVideoOutput;
 export type V2LargeTextToImageInput = Krea2LargeInput;
 export type V2LargeTextToImageOutput = pulidOutput;
 export type V2MediumTextToImageInput = Krea2LargeInput;
@@ -71781,8 +72881,8 @@ export type VideoIncreaseResolutionOutput = VideoEraseMaskOutput;
 export type VideoOutput = AudioOutput;
 export type VideoSoundEffectsGeneratorOutput = I2VOutput;
 export type VideoToGifOutput = EvfSamOutput;
-export type VideoToMusicOutput = TextToMusicOutput;
-export type VideoTranslateOutput = I2VOutput;
+export type VideoToMusicOutput = TrioAudioOutput;
+export type VideoTranslateOutput = AvatarVOutput;
 export type VideoUnderstandingOutput = MoondreamOutput;
 export type VideoUpscaleOutput = I2VOutput;
 export type VideoUpscalerOutput = I2VOutput;
@@ -71989,6 +73089,10 @@ export type EndpointTypeMap = {
   "alibaba/happy-horse/video-edit": {
     input: HappyHorseVideoEditInput;
     output: HappyHorseVideoEditOutput;
+  };
+  "alibaba/qwen-audio-3-tts": {
+    input: QwenAudio3TtsInput;
+    output: QwenAudio3TtsOutput;
   };
   "argil/avatars/audio-to-video": {
     input: AvatarsAudioToVideoInput;
@@ -72402,10 +73506,6 @@ export type EndpointTypeMap = {
     input: BytedanceDreamactorV2Input;
     output: BytedanceDreamactorV2Output;
   };
-  "fal-ai/bytedance/dreamina/v3.1/text-to-image": {
-    input: BytedanceDreaminaV31TextToImageInput;
-    output: BytedanceDreaminaV31TextToImageOutput;
-  };
   "fal-ai/bytedance/omnihuman": {
     input: BytedanceOmnihumanInput;
     output: BytedanceOmnihumanOutput;
@@ -72801,6 +73901,10 @@ export type EndpointTypeMap = {
   "fal-ai/fast-svd/text-to-video": {
     input: FastSvdTextToVideoInput;
     output: FastSvdTextToVideoOutput;
+  };
+  "fal-ai/feynobg": {
+    input: feynobgInput;
+    output: feynobgOutput;
   };
   "fal-ai/ffmpeg-api/compose": {
     input: FfmpegApiComposeInput;
@@ -73733,6 +74837,10 @@ export type EndpointTypeMap = {
   "fal-ai/ideogram/custom-models/generate": {
     input: IdeogramCustomModelsGenerateInput;
     output: IdeogramCustomModelsGenerateOutput;
+  };
+  "fal-ai/ideogram/object-removal": {
+    input: IdeogramObjectRemovalInput;
+    output: IdeogramObjectRemovalOutput;
   };
   "fal-ai/ideogram/remove-background": {
     input: IdeogramRemoveBackgroundInput;
@@ -74742,6 +75850,10 @@ export type EndpointTypeMap = {
     input: Ltx23QualityAudioToVideoLoraInput;
     output: Ltx23QualityAudioToVideoLoraOutput;
   };
+  "fal-ai/ltx-2.3-quality/clean-plate": {
+    input: Ltx23QualityCleanPlateInput;
+    output: Ltx23QualityCleanPlateOutput;
+  };
   "fal-ai/ltx-2.3-quality/colorization": {
     input: Ltx23QualityColorizationInput;
     output: Ltx23QualityColorizationOutput;
@@ -74873,34 +75985,6 @@ export type EndpointTypeMap = {
   "fal-ai/ltx-2.3/text-to-video/fast": {
     input: Ltx23TextToVideoFastInput;
     output: Ltx23TextToVideoFastOutput;
-  };
-  "fal-ai/ltx-2/audio-to-video": {
-    input: Ltx2AudioToVideoInput;
-    output: Ltx2AudioToVideoOutput;
-  };
-  "fal-ai/ltx-2/extend-video": {
-    input: Ltx2ExtendVideoInput;
-    output: Ltx2ExtendVideoOutput;
-  };
-  "fal-ai/ltx-2/image-to-video": {
-    input: Ltx2ImageToVideoInput;
-    output: Ltx2ImageToVideoOutput;
-  };
-  "fal-ai/ltx-2/image-to-video/fast": {
-    input: Ltx2ImageToVideoFastInput;
-    output: Ltx2ImageToVideoFastOutput;
-  };
-  "fal-ai/ltx-2/retake-video": {
-    input: Ltx2RetakeVideoInput;
-    output: Ltx2RetakeVideoOutput;
-  };
-  "fal-ai/ltx-2/text-to-video": {
-    input: Ltx2TextToVideoInput;
-    output: Ltx2TextToVideoOutput;
-  };
-  "fal-ai/ltx-2/text-to-video/fast": {
-    input: Ltx2TextToVideoFastInput;
-    output: Ltx2TextToVideoFastOutput;
   };
   "fal-ai/ltx-video": {
     input: LtxVideoInput;
@@ -77154,9 +78238,29 @@ export type EndpointTypeMap = {
     input: MaiImage25Input;
     output: MaiImage25Output;
   };
+  "microsoft/mai-image-2.5-pro": {
+    input: MaiImage25ProInput;
+    output: MaiImage25ProOutput;
+  };
+  "microsoft/mai-image-2.5-pro/edit": {
+    input: MaiImage25ProEditInput;
+    output: MaiImage25ProEditOutput;
+  };
   "microsoft/mai-image-2.5/edit": {
     input: MaiImage25EditInput;
     output: MaiImage25EditOutput;
+  };
+  "minimax/h3/image-to-video": {
+    input: H3ImageToVideoInput;
+    output: H3ImageToVideoOutput;
+  };
+  "minimax/h3/reference-to-video": {
+    input: H3ReferenceToVideoInput;
+    output: H3ReferenceToVideoOutput;
+  };
+  "minimax/h3/text-to-video": {
+    input: H3TextToVideoInput;
+    output: H3TextToVideoOutput;
   };
   "mirelo-ai/sfx-v1.5/video-to-audio": {
     input: SfxV15VideoToAudioInput;
@@ -77254,6 +78358,18 @@ export type EndpointTypeMap = {
     input: RouterEnterpriseInput;
     output: RouterEnterpriseOutput;
   };
+  "openrouter/router/openai/v1/chat/completions": {
+    input: RouterOpenaiV1ChatCompletionsInput;
+    output: RouterOpenaiV1ChatCompletionsOutput;
+  };
+  "openrouter/router/openai/v1/embeddings": {
+    input: RouterOpenaiV1EmbeddingsInput;
+    output: RouterOpenaiV1EmbeddingsOutput;
+  };
+  "openrouter/router/openai/v1/responses": {
+    input: RouterOpenaiV1ResponsesInput;
+    output: RouterOpenaiV1ResponsesOutput;
+  };
   "openrouter/router/video": {
     input: RouterVideoInput;
     output: RouterVideoOutput;
@@ -77273,6 +78389,10 @@ export type EndpointTypeMap = {
   "pixelcut/background-removal": {
     input: BackgroundRemovalInput;
     output: BackgroundRemovalOutput;
+  };
+  "pixelcut/product-photo": {
+    input: ProductPhotoInput;
+    output: ProductPhotoOutput;
   };
   "pixelcut/video-background-removal": {
     input: VideoBackgroundRemovalInput;
@@ -77338,13 +78458,25 @@ export type EndpointTypeMap = {
     input: V11TextToMusicInput;
     output: V11TextToMusicOutput;
   };
+  "sonilo/v1.1/text-to-sound-effects": {
+    input: V11TextToSoundEffectsInput;
+    output: V11TextToSoundEffectsOutput;
+  };
   "sonilo/v1.1/video-to-music": {
     input: V11VideoToMusicInput;
     output: V11VideoToMusicOutput;
   };
-  "sonilo/v1.1/video-to-video": {
-    input: V11VideoToVideoInput;
-    output: V11VideoToVideoOutput;
+  "sonilo/v1.1/video-to-sound-effects": {
+    input: V11VideoToSoundEffectsInput;
+    output: V11VideoToSoundEffectsOutput;
+  };
+  "sonilo/v1.1/video-to-video-music": {
+    input: V11VideoToVideoMusicInput;
+    output: V11VideoToVideoMusicOutput;
+  };
+  "sonilo/v1.1/video-to-video-sound-effects": {
+    input: V11VideoToVideoSoundEffectsInput;
+    output: V11VideoToVideoSoundEffectsOutput;
   };
   "tripo3d/h3.1/image-to-3d": {
     input: H31ImageTo3dInput;
@@ -77445,10 +78577,6 @@ export type EndpointTypeMap = {
   "wan/v2.6/text-to-image": {
     input: V26TextToImageInput;
     output: V26TextToImageOutput;
-  };
-  "wan/v2.6/text-to-video": {
-    input: V26TextToVideoInput;
-    output: V26TextToVideoOutput;
   };
   "xai/grok-imagine-image": {
     input: GrokImagineImageInput;
