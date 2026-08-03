@@ -84,7 +84,7 @@ export interface RealtimeExtension<
   open(context: RealtimeExtensionContext, options: Options): Promise<Session>;
 }
 
-export type AnyRealtimeExtension = RealtimeExtension<any, RealtimeSession>;
+export type AnyRealtimeExtension = RealtimeExtension<unknown, RealtimeSession>;
 
 export type RealtimeExtensionOptions<Extension> =
   Extension extends RealtimeExtension<infer Options, RealtimeSession>
@@ -92,7 +92,7 @@ export type RealtimeExtensionOptions<Extension> =
     : never;
 
 export type RealtimeExtensionSession<Extension> =
-  Extension extends RealtimeExtension<any, infer Session> ? Session : never;
+  Extension extends RealtimeExtension<unknown, infer Session> ? Session : never;
 
 /**
  * Identity helper that preserves an extension's options and session types.
