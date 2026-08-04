@@ -109,6 +109,68 @@ extensions: [...] } })` and selected by endpoint. If multiple installed
 extensions claim the same endpoint, the client fails explicitly instead of
 choosing one by import order.
 
+### Session lifecycle and reporting
+
+Every session reports the same coarse lifecycle regardless of protocol, so an application offering more
+than one model renders one status indicator rather than one per extension:
+
+```ts
+const session = await fal.realtime.open(lucyRealtime(), {
+  input: { prompt: "a storm over a ruined castle" },
+  onState: (state) => setStatus(state), // "opening" | "live" | "failed" | "closed"
+  onDiagnostic: (event) => {
+    if (event.kind === "failure") setError(event.message);
+  },
+});
+
+session.state; // the same value, readable at any time
+```
+
+Four states, deliberately. Anything finer is protocol detail: `negotiating` means something specific in
+one model and nothing in a world that spends thirty seconds building. Detail belongs in diagnostics:
+
+```ts
+type RealtimeDiagnostic =
+  | { kind: "progress"; phase: string; detail?: Record<string, number | string> }
+  | { kind: "warning"; message: string; detail?: Record<string, number | string> }
+  | { kind: "failure"; message: string; observed?: Record<string, number | string> };
+```
+
+`phase` and the free-form `detail` bag are deliberately not shaped around any one protocol — useful
+progress is `"world building"` for one model and `"3 of 4 TURN servers answered"` for another.
+
+**A `failure` reports what was observed, never what was inferred.** This is a convention rather than a
+type, and it is the difference between a diagnostic that helps and one that misleads: a message reading
+*"either peer is behind symmetric NAT or blocked UDP"* sent us after a router for three rounds, when the
+cause was a TURN credential thirty seconds too young. Report the candidate counts and the per-server
+error codes; let the reader draw the conclusion.
+
+### What an extension is given
+
+`open(context, options)` receives these primitives:
+
+| Member | For |
+| --- | --- |
+| `context.run()` | a fal **endpoint**, with the parent client's auth, proxy and retries |
+| `context.connect()` | the fal realtime WebSocket |
+| `context.fetch()` | fal infrastructure that is **not** an endpoint — a shared bridge, a control plane addressed by body rather than path. Same credentials and proxy as `run()`, but returns the raw `Response` |
+| `context.gatherIce()` | ICE gathering for browser WebRTC: sufficient set, then a quiet period, under a hard bound |
+| `context.diagnostic()` | progress and failure reports; safe to call with no `onDiagnostic` supplied |
+| `context.fail()` | end the session **because it failed**, as opposed to closing it |
+| `context.addCleanup()` | every resource acquired, released in reverse order |
+| `context.signal` | cancellation |
+| `context.close()` | end the managed session from inside |
+
+`gatherIce` lives here rather than in an extension because both obvious strategies are wrong: waiting
+for `iceGatheringState === "complete"` pays a dead STUN server's full timeout, while a fixed short cap
+silently ships an offer with no relay candidate that can never form a relayed path — and fails with no
+error at all. A TURN configuration is not "sufficient" until a relay candidate exists, because that is
+the reason TURN was configured.
+
+`fail` exists because `close()` cannot express the difference between a transport that died and a user
+who disconnected. Both would arrive as `"closed"`, and those are the two cases a status UI most needs to
+tell apart.
+
 ## More features
 
 The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
