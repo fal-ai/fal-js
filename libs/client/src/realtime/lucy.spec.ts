@@ -1,4 +1,5 @@
 import type { RealtimeConnectionHandler } from "../realtime";
+import { fakeExtensionContext } from "./testing";
 import type { RealtimeExtensionContext } from "./extension";
 import { lucyRealtime } from "./lucy";
 
@@ -23,20 +24,22 @@ describe("lucyRealtime", () => {
       onicecandidate: null,
       onconnectionstatechange: null,
     } as unknown as RTCPeerConnection;
-    const context = {
+    const context = fakeExtensionContext({
       endpointId: "decart/lucy-2-5/realtime",
       signal: new AbortController().signal,
       run: jest.fn(),
-      connect: (_endpointId: string, nextHandler: typeof handler) => {
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
         handler = nextHandler;
         return { send, close };
-      },
+        // Cast narrowed to this member: the mock cannot express connect's generics, and casting the
+        // whole context is what let four missing methods through in the first place.
+      }) as RealtimeExtensionContext["connect"],
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
       close: jest.fn(),
       diagnostic: (event: unknown) => diagnostics.push(event),
       fail: jest.fn(),
-    } as unknown as RealtimeExtensionContext;
+    });
 
     const opening = lucyRealtime().open(context, {
       endpointId: context.endpointId,
@@ -79,20 +82,20 @@ describe("lucyRealtime", () => {
     let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
     const cleanups: Array<() => void | Promise<void>> = [];
     const diagnostics: unknown[] = [];
-    const context = {
+    const context = fakeExtensionContext({
       endpointId: "decart/lucy-2-5/realtime",
       signal: controller.signal,
       run: jest.fn(),
-      connect: (_endpointId: string, nextHandler: typeof handler) => {
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
         handler = nextHandler;
         return { send: jest.fn(), close: jest.fn() };
-      },
+      }) as RealtimeExtensionContext["connect"],
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
       close: jest.fn(),
       diagnostic: (event: unknown) => diagnostics.push(event),
       fail: jest.fn(),
-    } as unknown as RealtimeExtensionContext;
+    });
 
     const opening = lucyRealtime().open(context, {
       input: { prompt: "make it cinematic" },

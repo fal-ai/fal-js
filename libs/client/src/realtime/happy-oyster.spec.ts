@@ -1,3 +1,4 @@
+import { fakeExtensionContext } from "./testing";
 import type { RealtimeExtensionContext } from "./extension";
 import { happyOysterRealtime, type HappyOysterTravel } from "./happy-oyster";
 
@@ -35,9 +36,11 @@ describe("happyOysterRealtime", () => {
       updateToken: jest.fn(),
       createTravel: jest.fn(() => travel),
     };
-    const context = {
+    const context = fakeExtensionContext({
       endpointId: "alibaba/happy-oyster",
       signal: new AbortController().signal,
+      // Cast narrowed to this member: these fixtures model response PAYLOADS and omit the
+      // Result envelope's requestId, which the real signature requires.
       run: jest.fn(async (endpointId: string) => {
         const path = endpointId.replace("alibaba/happy-oyster", "");
         calls.push(path);
@@ -74,7 +77,7 @@ describe("happyOysterRealtime", () => {
           };
         }
         return { data: { bound: true, closed: true } };
-      }),
+      }) as unknown as RealtimeExtensionContext["run"],
       connect: jest.fn(),
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
@@ -83,7 +86,7 @@ describe("happyOysterRealtime", () => {
       // which the `as unknown as` cast on this object hides from the compiler.
       diagnostic: jest.fn(),
       fail: jest.fn(),
-    } as unknown as RealtimeExtensionContext;
+    });
     const extension = happyOysterRealtime({
       loadEngine: async () => engine,
       commandResendMs: 300,
