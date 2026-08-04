@@ -229,6 +229,63 @@ describe("wmaRaw", () => {
     });
   });
 
+  it("publishes inbound media and data through the KERNEL, not its own options", async () => {
+    // The regression this guards: two extensions each named these themselves (onTrack here,
+    // onRemoteStream in Lucy, and no inbound data callback at all in Lucy), so an application
+    // offering both protocols branched per protocol to attach a video element.
+    const { peer, channel } = install();
+    const seenMedia: MediaStream[] = [];
+    const seenData: string[] = [];
+    const context = fakeExtensionContext({
+      endpointId: "me/world",
+      run: (async () => ({ data: { ice_servers: [{ urls: "stun:x" }] }, requestId: "r" })) as never,
+      fetch: async () =>
+        new Response(JSON.stringify({ session_id: "s", sdp: "a", type: "answer" })),
+      media: (stream: MediaStream) => void seenMedia.push(stream),
+      data: (raw: string) => void seenData.push(raw),
+    });
+
+    await wmaRaw().open(context, { endpointId: "me/world" });
+
+    const stream = { id: "remote" } as unknown as MediaStream;
+    (peer.ontrack as (event: unknown) => void)({ streams: [stream], track: {} });
+    expect(seenMedia).toEqual([stream]);
+
+    channel.onmessage?.({ data: '{"type":"session_info"}' });
+    channel.onmessage?.({ data: '{"type":"pong","ts":1}' });
+    expect(seenData).toEqual(['{"type":"session_info"}', '{"type":"pong","ts":1}']);
+  });
+
+  it("synthesises a stream when the track arrives without one", async () => {
+    // Some implementations deliver `track` with an empty `streams`. Dropping the media entirely in
+    // that case would be a silent black video.
+    //
+    // MediaStream is stubbed because jsdom has none — every browser does, so this is a gap in the
+    // test environment rather than in the code. Worth stating: the construction happens INSIDE
+    // pc.ontrack, before the kernel's error guard can wrap it, so an environment that provides
+    // RTCPeerConnection without MediaStream would throw where no caller can catch it.
+    const tracks: unknown[] = [];
+    (global as unknown as { MediaStream: unknown }).MediaStream = class {
+      constructor(input: unknown[]) {
+        tracks.push(...input);
+      }
+    };
+    const { peer } = install();
+    const seen: MediaStream[] = [];
+    const context = fakeExtensionContext({
+      endpointId: "me/world",
+      run: (async () => ({ data: { ice_servers: [{ urls: "stun:x" }] }, requestId: "r" })) as never,
+      fetch: async () =>
+        new Response(JSON.stringify({ session_id: "s", sdp: "a", type: "answer" })),
+      media: (stream: MediaStream) => void seen.push(stream),
+    });
+    await wmaRaw().open(context, { endpointId: "me/world" });
+    const track = { kind: "video" };
+    (peer.ontrack as (event: unknown) => void)({ streams: [], track });
+    expect(seen).toHaveLength(1);
+    expect(tracks).toEqual([track]);
+  });
+
   it("accepts any endpoint when none are declared", async () => {
     // Deliberate: an endpoint's NAME cannot reveal whether it speaks the raw path, so only the
     // application passing the extension can. Returning false here rejected every open.

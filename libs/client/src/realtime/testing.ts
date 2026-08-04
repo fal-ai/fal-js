@@ -36,6 +36,8 @@ export function fakeExtensionContext(
     fetch: async () => new Response("{}"),
     gatherIce: async () => ice,
     diagnostic: (_event: RealtimeDiagnostic) => undefined,
+    media: (_stream: MediaStream) => undefined,
+    data: (_raw: string) => undefined,
     fail: async () => undefined,
     ...overrides,
   };

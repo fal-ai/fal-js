@@ -76,6 +76,44 @@ describe("lucyRealtime", () => {
     });
   });
 
+  it("publishes its remote stream through context.media", async () => {
+    // Lucy called this onRemoteStream and the raw path called it onTrack. Same signature, same
+    // meaning, two names, so any app offering both branched per protocol to attach a video element.
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const seen: MediaStream[] = [];
+    const peer = {
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
+      setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      run: jest.fn(),
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+      media: (stream: MediaStream) => void seen.push(stream),
+    });
+
+    const opening = lucyRealtime().open(context, {
+      endpointId: context.endpointId,
+      input: { prompt: "anything" },
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({ type: "iceServers", iceServers: [], request_id: "ready" });
+    await opening;
+
+    const stream = { id: "lucy-remote" } as unknown as MediaStream;
+    (peer.ontrack as unknown as (event: unknown) => void)({ streams: [stream] });
+    expect(seen).toEqual([stream]);
+  });
+
   it("rejects immediately when signaling is aborted", async () => {
     const controller = new AbortController();
     const reason = new Error("user left");

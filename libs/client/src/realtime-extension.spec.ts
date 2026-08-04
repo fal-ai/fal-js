@@ -162,6 +162,103 @@ describe("realtime extension context additions", () => {
     expect(seen[0].init.signal).toBeDefined();
   });
 
+  it("routes context.media and context.data to the caller's handlers", async () => {
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "k" }),
+    });
+    const stream = { id: "s" } as unknown as MediaStream;
+    const probe = defineRealtimeExtension<
+      // Record<never, never>, NOT Record<string, never>. The latter says "every string key maps to
+      // never", which makes `Options & RealtimeOpenOptions` contradictory and rejects onMedia/onState/
+      // onDiagnostic at the call site — an extension with no product inputs of its own would otherwise
+      // be unable to receive any kernel option.
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/channels",
+      defaultEndpoint: "test/channels",
+      supports: () => true,
+      async open(context) {
+        context.media(stream);
+        context.data("{\"a\":1}");
+        return { close: jest.fn() };
+      },
+    });
+
+    const media: MediaStream[] = [];
+    const data: string[] = [];
+    await client.open(probe, {
+      onMedia: (value) => media.push(value),
+      onData: (value) => data.push(value),
+    });
+    expect(media).toEqual([stream]);
+    expect(data).toEqual(['{"a":1}']);
+  });
+
+  it("a throwing media or data handler cannot fail the session", async () => {
+    // These fire from inside pc.ontrack and channel.onmessage, where a throw lands in a browser event
+    // handler no caller can catch. An application whose render throws must not take the session down,
+    // and one unparseable payload must not end a stream that is still delivering frames.
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "k" }),
+    });
+    const probe = defineRealtimeExtension<
+      // Record<never, never>, NOT Record<string, never>. The latter says "every string key maps to
+      // never", which makes `Options & RealtimeOpenOptions` contradictory and rejects onMedia/onState/
+      // onDiagnostic at the call site — an extension with no product inputs of its own would otherwise
+      // be unable to receive any kernel option.
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/throwing",
+      defaultEndpoint: "test/throwing",
+      supports: () => true,
+      async open(context) {
+        context.media({ id: "s" } as unknown as MediaStream);
+        context.data("oops");
+        return { close: jest.fn(), reached: true } as never;
+      },
+    });
+
+    const session = await client.open(probe, {
+      onMedia: () => {
+        throw new Error("render exploded");
+      },
+      onData: () => {
+        throw new Error("parse exploded");
+      },
+    });
+    // open() resolved at all, which is the assertion: both throws were swallowed at the boundary.
+    expect((session as unknown as { reached: boolean }).reached).toBe(true);
+    expect(session.state).toBe("live");
+  });
+
+  it("omitting the handlers is not an error an extension has to guard", async () => {
+    // So an extension can publish unconditionally instead of checking whether anyone is listening —
+    // brainrot returns no media at all, and the transform app returns no data.
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "k" }),
+    });
+    const probe = defineRealtimeExtension<
+      // Record<never, never>, NOT Record<string, never>. The latter says "every string key maps to
+      // never", which makes `Options & RealtimeOpenOptions` contradictory and rejects onMedia/onState/
+      // onDiagnostic at the call site — an extension with no product inputs of its own would otherwise
+      // be unable to receive any kernel option.
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/silent",
+      defaultEndpoint: "test/silent",
+      supports: () => true,
+      async open(context) {
+        context.media({ id: "s" } as unknown as MediaStream);
+        context.data("ignored");
+        return { close: jest.fn() };
+      },
+    });
+    await expect(client.open(probe, {})).resolves.toBeDefined();
+  });
+
   it("context.fetch does not call the configured fetch as a method", async () => {
     // A RECEIVER-SENSITIVE fetch, because native fetch is one: invoking it as config.fetch(...) sets
     // `this` to the config object and throws "Illegal invocation". The first version of context.fetch

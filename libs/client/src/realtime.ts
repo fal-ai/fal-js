@@ -877,6 +877,26 @@ export function createRealtimeClient({
         // A caller's reporting callback must never be able to fail a session.
       }
     };
+    // Same swallow-and-continue rule as diagnostics, and for a sharper reason: these fire from inside
+    // `pc.ontrack` and `channel.onmessage`, where a throw lands in a browser event handler that no
+    // caller can catch. An application whose render throws must not take the session with it.
+    const onMedia = (options as { onMedia?: (stream: MediaStream) => void })
+      ?.onMedia;
+    const media = (stream: MediaStream) => {
+      try {
+        onMedia?.(stream);
+      } catch {
+        // A caller's media handler must never be able to fail a session.
+      }
+    };
+    const onData = (options as { onData?: (raw: string) => void })?.onData;
+    const data = (raw: string) => {
+      try {
+        onData?.(raw);
+      } catch {
+        // Nor a caller's message handler — one unparseable payload is not a dead session.
+      }
+    };
     if (externalSignal?.aborted) {
       controller.abort(externalSignal.reason);
       throw (
@@ -951,6 +971,8 @@ export function createRealtimeClient({
                 }),
             }),
           diagnostic,
+          media,
+          data,
           fail: async (
             message: string,
             observed?: Record<string, number | string>,

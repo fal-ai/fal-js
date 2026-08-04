@@ -41,6 +41,13 @@ export type RealtimeState = "opening" | "live" | "failed" | "closed";
  * the extension's alone, so passing `onDiagnostic` to Lucy was a compile error even though the
  * kernel was the thing that would have handled it.
  */
+/**
+ * A note for extensions with NO options of their own: declare `Record<never, never>`, not
+ * `Record<string, never>`. The latter asserts that every string key maps to `never`, which makes
+ * `Options & RealtimeOpenOptions` contradictory and rejects `onMedia`, `onState` and `onDiagnostic`
+ * at the call site — so an extension taking no product inputs would be unable to receive any kernel
+ * option at all. No shipped extension hits this, because all three declare real option types.
+ */
 export interface RealtimeOpenOptions {
   /** Cancels opening, and closes the session if it is already open. */
   abortSignal?: AbortSignal;
@@ -48,6 +55,32 @@ export interface RealtimeOpenOptions {
   onState?: (state: RealtimeState) => void;
   /** Progress and failure reports. See {@link RealtimeDiagnostic}. */
   onDiagnostic?: (event: RealtimeDiagnostic) => void;
+  /**
+   * Inbound media, once per stream, for any extension that returns some.
+   *
+   * Named HERE rather than per extension because it was not, and two extensions promptly invented two
+   * names for one concept: Lucy's `onRemoteStream` and the raw path's `onTrack`, identical in
+   * signature and meaning. An application offering both then needed a branch to attach a video
+   * element — the same tax `onState` removed for lifecycle. Outbound media never diverged, because
+   * `localStream` was already taken from Lucy when the raw path grew it; inbound diverged precisely
+   * because nothing forced the choice.
+   *
+   * Not every extension calls it. An app can send a camera up and get its answer back as data with no
+   * inbound media at all, which is why this is optional on both sides rather than part of opening.
+   */
+  onMedia?: (stream: MediaStream) => void;
+  /**
+   * Inbound application data, once per message.
+   *
+   * Deliberately a string rather than a parsed object: the kernel cannot know a model's schema, and
+   * pretending otherwise would put one protocol's vocabulary in the transport. The extension delivers;
+   * the application parses and validates.
+   *
+   * This exists because the asymmetry was worse than a naming one — Lucy had no inbound data callback
+   * at all, so "media up, data down" could not be expressed through its surface even though nothing
+   * about the protocol forbids it.
+   */
+  onData?: (raw: string) => void;
 }
 
 /**
@@ -200,6 +233,15 @@ export interface RealtimeExtensionContext {
    * an extension never needs to check.
    */
   diagnostic(event: RealtimeDiagnostic): void;
+  /**
+   * Publish an inbound stream to `onMedia`.
+   *
+   * A kernel channel like {@link RealtimeExtensionContext.diagnostic}, not an option the extension
+   * reads, so the name is fixed in one place and a fourth extension cannot invent a fifth spelling.
+   */
+  media(stream: MediaStream): void;
+  /** Publish one inbound message to `onData`. Raw; parsing belongs to the application. */
+  data(raw: string): void;
 }
 
 /**

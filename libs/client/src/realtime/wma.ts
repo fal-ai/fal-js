@@ -84,8 +84,6 @@ export interface WmaOptions {
    * Pass this to override (your own TURN provider, or to force STUN for testing).
    */
   iceServers?: RTCIceServer[];
-  onTrack?: (stream: MediaStream) => void;
-  onMessage?: (raw: string) => void;
 }
 
 export interface WmaRealtimeSession extends RealtimeSession {
@@ -252,9 +250,12 @@ export function wmaRaw(endpoints: string[] = []) {
       });
 
       const channel = pc.createDataChannel("control");
-      channel.onmessage = (event) => options.onMessage?.(String(event.data));
+      // context.data, not an option of this extension's own. `onMessage` here and
+      // `onRemoteStream`/`onTrack` for media were two names for concepts the kernel should have named
+      // once — see RealtimeOpenOptions.onMedia.
+      channel.onmessage = (event) => context.data(String(event.data));
       pc.ontrack = (event) =>
-        options.onTrack?.(event.streams[0] ?? new MediaStream([event.track]));
+        context.media(event.streams[0] ?? new MediaStream([event.track]));
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "failed") {
           const turnOffered = countTurnServers(iceServers);
@@ -422,10 +423,10 @@ export function wmaRaw(endpoints: string[] = []) {
  *
  *   const stream = await fal.realtime.open(wmaRaw(), {
  *     endpointId: "fal-ai/wma-outstream",
- *     onTrack: (s) => { videoEl.srcObject = s },
+ *     onMedia: (s) => { videoEl.srcObject = s },
  *     onState: (s) => { if (s === "failed") console.warn("died") },
  *   });
  *
  * No `send`, no message schema, no key handling. An interactive world model is the same
- * call plus `onMessage` and `send({ type: "keys", pressed, activated })`.
+ * call plus `onData` and `send({ type: "keys", pressed, activated })`.
  */

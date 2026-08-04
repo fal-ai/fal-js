@@ -28,7 +28,6 @@ export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
   tokenProvider?: TokenProvider;
   tokenExpirationSeconds?: number;
   abortSignal?: AbortSignal;
-  onRemoteStream?: (stream: MediaStream) => void;
   /** Injectable for tests and non-window browser runtimes. */
   peerConnectionFactory?: (
     configuration: RTCConfiguration,
@@ -169,7 +168,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         peer.ontrack = (event) => {
           if (event.streams[0]) {
             remoteStream = event.streams[0];
-            options.onRemoteStream?.(remoteStream);
+            context.media(remoteStream);
           }
         };
         peer.onicecandidate = (event) => {
