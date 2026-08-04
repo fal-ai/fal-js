@@ -273,6 +273,48 @@ describe("realtime extension context additions", () => {
     expect(states).toEqual(["failed", "closed"]);
   });
 
+  it("context.fail reports failed, not closed, and tears down", async () => {
+    // The distinction close() cannot express: a transport that died versus a user who disconnected.
+    // Both used to arrive as "closed", which is the pair a status UI most needs to tell apart.
+    const states: string[] = [];
+    const events: unknown[] = [];
+    const cleanup = jest.fn();
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "k" }),
+    });
+    let failFromInside: ((message: string) => Promise<void>) | undefined;
+    const probe = defineRealtimeExtension<
+      Record<string, never>,
+      RealtimeSession
+    >({
+      id: "test/fail",
+      supports: () => true,
+      async open(context) {
+        context.addCleanup(cleanup);
+        failFromInside = (message) => context.fail(message, { relay: 0 });
+        return { close: jest.fn() };
+      },
+    });
+    const session = await client.open(probe, {
+      endpointId: "test/fail",
+      onState: (next: string) => states.push(next),
+      onDiagnostic: (event: unknown) => events.push(event),
+    } as never);
+
+    await failFromInside!("peer connection died");
+    expect(states).toEqual(["live", "failed", "closed"]);
+    expect(events).toEqual([
+      {
+        kind: "failure",
+        message: "peer connection died",
+        observed: { relay: 0 },
+      },
+    ]);
+    // Teardown really ran; failing is not a way to leak resources.
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(session.state).toBe("closed");
+  });
+
   it("passes diagnostics through, and swallows a throwing callback", async () => {
     const events: unknown[] = [];
     const client = createRealtimeClient({

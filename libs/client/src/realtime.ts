@@ -951,6 +951,16 @@ export function createRealtimeClient({
                 }),
             }),
           diagnostic,
+          fail: async (
+            message: string,
+            observed?: Record<string, number | string>,
+          ) => {
+            diagnostic({ kind: "failure", message, observed });
+            // Before cleanup: cleanup sets "closed", and a caller watching transitions needs to see
+            // that this session died rather than ended.
+            setState("failed");
+            await cleanup();
+          },
           addCleanup: (release) => {
             if (closed) {
               void release();

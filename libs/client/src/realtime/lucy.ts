@@ -28,9 +28,7 @@ export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
   tokenProvider?: TokenProvider;
   tokenExpirationSeconds?: number;
   abortSignal?: AbortSignal;
-  onConnectionStateChange?: (state: LucyConnectionState) => void;
   onRemoteStream?: (stream: MediaStream) => void;
-  onError?: (error: Error) => void;
   /** Injectable for tests and non-window browser runtimes. */
   peerConnectionFactory?: (
     configuration: RTCConfiguration,
@@ -39,7 +37,6 @@ export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
 
 export interface LucyRealtimeSession<Input = Record<string, unknown>>
   extends RealtimeSession {
-  readonly connectionState: LucyConnectionState;
   readonly remoteStream: MediaStream | null;
   send(input: Partial<Input> & Record<string, unknown>): void;
 }
@@ -92,9 +89,17 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       let iceGraceTimer: ReturnType<typeof setTimeout> | undefined;
       const pendingCandidates: RTCIceCandidateInit[] = [];
 
+      // Reported as PROGRESS DETAIL, not as lifecycle. Lucy's own vocabulary — "negotiating", then
+      // the peer connection's states — is meaningful to someone debugging Lucy and meaningless as a
+      // cross-protocol signal, so the kernel owns "opening/live/failed/closed" and this carries the
+      // specifics underneath it.
       const reportState = (next: LucyConnectionState) => {
         state = next;
-        options.onConnectionStateChange?.(next);
+        context.diagnostic({
+          kind: "progress",
+          phase: "connection-state",
+          detail: { state: next },
+        });
       };
       reportState("negotiating");
 
@@ -117,11 +122,15 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       const fail = (error: unknown) => {
         const resolved =
           error instanceof Error ? error : new Error(String(error));
-        options.onError?.(resolved);
         if (!settled) {
+          // Before the session exists, the failure travels by rejecting open() — the caller is still
+          // awaiting it, so a diagnostic would be a second copy of something they already get.
           rejectNegotiation(resolved);
         } else {
-          void context.close();
+          // After it exists, open() has already resolved and nothing is listening for a throw. This
+          // is the case a bespoke onError used to cover, and context.fail covers it uniformly: a
+          // failure diagnostic, state "failed", then teardown.
+          void context.fail(resolved.message);
         }
       };
       const abortNegotiation = () => {
@@ -177,10 +186,15 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         peer.onconnectionstatechange = () => {
           if (!peer) return;
           reportState(peer.connectionState);
-          if (
-            peer.connectionState === "failed" ||
-            peer.connectionState === "closed"
-          ) {
+          // A dead peer is a FAILURE, a closed one is a teardown. Both used to end up as
+          // context.close(), so a caller could not tell a transport that died from a user who
+          // disconnected — the distinction a status UI most needs.
+          if (peer.connectionState === "failed") {
+            void context.fail(
+              "Lucy peer connection failed — no candidate pair survived",
+              { iceConnectionState: peer.iceConnectionState },
+            );
+          } else if (peer.connectionState === "closed") {
             void context.close();
           }
         };
@@ -268,9 +282,6 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       }
 
       return {
-        get connectionState() {
-          return state;
-        },
         get remoteStream() {
           return remoteStream;
         },

@@ -79,6 +79,10 @@ describe("happyOysterRealtime", () => {
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
       close: jest.fn(),
+      // The extension reports through these now, so a fake context without them throws at runtime —
+      // which the `as unknown as` cast on this object hides from the compiler.
+      diagnostic: jest.fn(),
+      fail: jest.fn(),
     } as unknown as RealtimeExtensionContext;
     const extension = happyOysterRealtime({
       loadEngine: async () => engine,

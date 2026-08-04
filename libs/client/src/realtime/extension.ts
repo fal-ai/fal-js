@@ -18,9 +18,10 @@ export interface RealtimeSession {
    *
    * Model-specific OPERATIONS should stay model-specific — `steer()`, `roar()` and `setCommand()` are
    * correctly not universal. "Is this opening, live, or dead" is not model-specific, and leaving it
-   * to each adapter means every multi-model application writes an adapter over the adapters: Lucy
-   * reports `onConnectionStateChange`, another extension `onConnectionState`, a third a "world
-   * status", so rendering one status indicator needs a branch per protocol.
+   * to each adapter meant every multi-model application wrote an adapter over the adapters: Lucy
+   * reported `onConnectionStateChange`, the WMA extension `onConnectionState`, Happy Oyster a "world
+   * status", so rendering one status indicator needed a branch per protocol. All three now report
+   * through this, and their bespoke callbacks are gone.
    *
    * Deliberately four values. Anything finer is protocol detail — `negotiating` means something in
    * Lucy and nothing in a world that spends thirty seconds building — and detail belongs in
@@ -176,6 +177,21 @@ export interface RealtimeExtensionContext {
     pc: RTCPeerConnection,
     options?: IceGatheringOptions,
   ): Promise<IceGatheringResult>;
+
+  /**
+   * End the session because it FAILED, as opposed to being closed.
+   *
+   * `close()` alone cannot express this. A dead peer connection or an expired lease is not a clean
+   * teardown, but the kernel only sees a close request and reports "closed" — so a caller cannot
+   * distinguish "the user pressed disconnect" from "the transport died", which are the two cases a
+   * status UI most needs to tell apart.
+   *
+   * Emits a failure diagnostic, moves the state to "failed", then tears down.
+   */
+  fail(
+    message: string,
+    observed?: Record<string, number | string>,
+  ): Promise<void>;
 
   /**
    * Report progress or failure to the caller, if it asked to hear about it.

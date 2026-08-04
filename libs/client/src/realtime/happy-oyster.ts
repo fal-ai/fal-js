@@ -103,11 +103,7 @@ export interface HappyOysterRealtimeOptions {
   world: HappyOysterWorldSelection;
   videoElement: HTMLVideoElement;
   abortSignal?: AbortSignal;
-  onPhaseChange?: (phase: HappyOysterPhase) => void;
-  onWorldStatus?: (world: HappyOysterWorld) => void;
-  onTravelStatus?: (status: HappyOysterTravelStatus) => void;
   onFirstFrame?: (frame: string) => void;
-  onError?: (error: unknown) => void;
 }
 
 export interface HappyOysterArtifacts {
@@ -228,16 +224,28 @@ export function happyOysterRealtime(config: HappyOysterExtensionConfig) {
         if (!allowAfterAbort) throwIfAborted();
         return result.data;
       };
+      // Three separate status callbacks collapse into one channel. They were three names for the
+      // same thing — "here is where the session has got to" — and an application offering more than
+      // one model had to learn a different vocabulary per model to render one progress line. The
+      // phase distinguishes them, which is what the phase is for.
       const reportPhase = (phase: HappyOysterPhase) => {
-        options.onPhaseChange?.(phase);
+        context.diagnostic({ kind: "progress", phase, detail: { phase } });
       };
       const reportWorld = (next: HappyOysterWorld) => {
         world = next;
-        options.onWorldStatus?.(next);
+        context.diagnostic({
+          kind: "progress",
+          phase: "world",
+          detail: { world: next.encrypted_world_id, status: next.status },
+        });
       };
       const reportTravel = (next: HappyOysterTravelStatus) => {
         travelStatus = next;
-        options.onTravelStatus?.(next);
+        context.diagnostic({
+          kind: "progress",
+          phase: "travel",
+          detail: { status: String(next) },
+        });
       };
 
       context.addCleanup(async () => {
@@ -345,7 +353,14 @@ export function happyOysterRealtime(config: HappyOysterExtensionConfig) {
             engine.updateToken(fresh.token);
             scheduleTokenRefresh(mintedAt + fresh.expires_in * 1_000);
           } catch (error) {
-            options.onError?.(error);
+            // A WARNING, not a failure: the refresh retries and the session survives until the token
+            // actually expires. Reporting it as a failure would close a session that is still live.
+            context.diagnostic({
+              kind: "warning",
+              message: `Happy Oyster token refresh failed: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            });
             if (Date.now() < expiresAt) {
               scheduleTokenRefresh(expiresAt, 2_000);
             }
@@ -374,7 +389,11 @@ export function happyOysterRealtime(config: HappyOysterExtensionConfig) {
           options.onFirstFrame?.(frame);
         }),
         createdTravel.on("error", (error) => {
-          options.onError?.(error);
+          void context.fail(
+            `Happy Oyster travel error: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
         }),
       );
       const startedTravel = await createdTravel.start();

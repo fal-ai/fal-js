@@ -12,6 +12,7 @@ describe("lucyRealtime", () => {
     const send = jest.fn();
     const close = jest.fn();
     const cleanups: Array<() => void | Promise<void>> = [];
+    const diagnostics: unknown[] = [];
     const peer = {
       addTransceiver: jest.fn(),
       createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
@@ -33,6 +34,8 @@ describe("lucyRealtime", () => {
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
       close: jest.fn(),
+      diagnostic: (event: unknown) => diagnostics.push(event),
+      fail: jest.fn(),
     } as unknown as RealtimeExtensionContext;
 
     const opening = lucyRealtime().open(context, {
@@ -61,7 +64,13 @@ describe("lucyRealtime", () => {
     await Promise.all(cleanups.map((cleanup) => cleanup()));
     expect(close).toHaveBeenCalledTimes(1);
     expect(peer.close).toHaveBeenCalledTimes(1);
-    expect(session.connectionState).toBe("closed");
+    // Lucy's own vocabulary is progress DETAIL now; the uniform lifecycle belongs to the kernel, and
+    // this spec drives open() directly so there is no kernel here to ask.
+    expect(diagnostics).toContainEqual({
+      kind: "progress",
+      phase: "connection-state",
+      detail: { state: "closed" },
+    });
   });
 
   it("rejects immediately when signaling is aborted", async () => {
@@ -69,6 +78,7 @@ describe("lucyRealtime", () => {
     const reason = new Error("user left");
     let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
     const cleanups: Array<() => void | Promise<void>> = [];
+    const diagnostics: unknown[] = [];
     const context = {
       endpointId: "decart/lucy-2-5/realtime",
       signal: controller.signal,
@@ -80,6 +90,8 @@ describe("lucyRealtime", () => {
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
       close: jest.fn(),
+      diagnostic: (event: unknown) => diagnostics.push(event),
+      fail: jest.fn(),
     } as unknown as RealtimeExtensionContext;
 
     const opening = lucyRealtime().open(context, {
