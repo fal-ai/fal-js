@@ -910,7 +910,11 @@ export function createRealtimeClient({
           // application stays proxied and the extension never sees a key. Raw `Response` rather than
           // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
           fetch: async (url: string, init: RequestInit = {}) => {
-            const credentialsValue = config.credentials;
+            // DESTRUCTURED, not called as config.fetch(...). Native fetch checks its receiver, so
+            // invoking it as a method of the config object throws "Illegal invocation" — which is
+            // what happened on the first real connect through this path. dispatchRequest destructures
+            // for the same reason; this now matches it.
+            const { fetch: doFetch, credentials: credentialsValue } = config;
             const credentials =
               typeof credentialsValue === "function"
                 ? credentialsValue()
@@ -924,7 +928,7 @@ export function createRealtimeClient({
               url,
               headers: (init.headers as Record<string, string>) ?? undefined,
             });
-            return config.fetch(targetUrl, {
+            return doFetch(targetUrl, {
               ...init,
               method,
               signal: init.signal ?? controller.signal,

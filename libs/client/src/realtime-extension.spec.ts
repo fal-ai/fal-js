@@ -162,6 +162,36 @@ describe("realtime extension context additions", () => {
     expect(seen[0].init.signal).toBeDefined();
   });
 
+  it("context.fetch does not call the configured fetch as a method", async () => {
+    // A RECEIVER-SENSITIVE fetch, because native fetch is one: invoking it as config.fetch(...) sets
+    // `this` to the config object and throws "Illegal invocation". The first version of context.fetch
+    // did exactly that and every real connect failed, while this suite passed — the other tests inject
+    // a plain jest.fn(), which has no opinion about its receiver, so they cannot see the bug.
+    const picky = function (this: unknown, _url: string) {
+      if (this !== undefined && this !== globalThis) {
+        throw new TypeError("Failed to execute 'fetch': Illegal invocation");
+      }
+      return Promise.resolve(new Response("{}"));
+    };
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "k", fetch: picky as any }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<string, never>,
+      RealtimeSession
+    >({
+      id: "test/receiver",
+      supports: () => true,
+      async open(context) {
+        await context.fetch("https://wma.fal.run/session");
+        return { close: jest.fn() };
+      },
+    });
+    await expect(
+      client.open(probe, { endpointId: "test/receiver" } as never),
+    ).resolves.toBeDefined();
+  });
+
   it("context.fetch honours the request middleware, so a proxied app stays proxied", async () => {
     let target = "";
     const client = createRealtimeClient({
