@@ -61,6 +61,18 @@ export interface WmaOptions {
    */
   direction?: RTCRtpTransceiverDirection;
   /**
+   * Media to send UP, on the same peer connection the output comes back on.
+   *
+   * Supplying this is what makes a transform app possible — camera in, transformed video out — and it
+   * is deliberately the same connection rather than a second one: WebRTC negotiates both directions
+   * in one SDP exchange, and a second connection would double the ICE work to carry half the session.
+   *
+   * The tracks are NOT stopped on close. They belong to the caller, who may be showing the camera in
+   * a local preview or sharing it with another session; stopping them would turn off a device this
+   * extension does not own.
+   */
+  localStream?: MediaStream | null;
+  /**
    * ICE servers. OPTIONAL — when omitted the extension asks the app's own `/ice` endpoint for
    * short-lived TURN credentials, so a restrictive network works with no caller setup.
    *
@@ -88,13 +100,14 @@ export interface IceCandidateCounts {
   srflx: number;
   relay: number;
 }
-export type IceGatheringState = "gathering" | "complete" | "sufficient" | "timeout";
+export type IceGatheringState =
+  | "gathering"
+  | "complete"
+  | "sufficient"
+  | "timeout";
 export interface IceGatheringProgress extends IceCandidateCounts {
   state: IceGatheringState;
 }
-
-
-
 
 /**
  * Ask the app for ephemeral TURN credentials.
@@ -115,7 +128,9 @@ async function fetchIceServers(
   context: RealtimeExtensionContext,
 ): Promise<RTCIceServer[]> {
   try {
-    const result = await context.run(`${context.endpointId}/ice`, { input: {} });
+    const result = await context.run(`${context.endpointId}/ice`, {
+      input: {},
+    });
     const payload = result.data as {
       ice_servers?: RTCIceServer[];
       status?: string;
@@ -134,10 +149,20 @@ async function fetchIceServers(
       });
       return payload.ice_servers;
     }
-    context.diagnostic({ kind: "progress", phase: "ice-servers", detail: { source: "empty-ice-response" } });
+    context.diagnostic({
+      kind: "progress",
+      phase: "ice-servers",
+      detail: { source: "empty-ice-response" },
+    });
   } catch (exc) {
     console.warn("[wma] /ice unavailable, falling back to STUN:", exc);
-    context.diagnostic({ kind: "progress", phase: "ice-servers", detail: { source: `ice-endpoint-failed: ${exc instanceof Error ? exc.message : String(exc)}` } });
+    context.diagnostic({
+      kind: "progress",
+      phase: "ice-servers",
+      detail: {
+        source: `ice-endpoint-failed: ${exc instanceof Error ? exc.message : String(exc)}`,
+      },
+    });
   }
   return [{ urls: DEFAULT_STUN_URL }];
 }
@@ -152,7 +177,10 @@ async function readErrorMessage(response: Response): Promise<string> {
       for (const field of ["error", "message", "detail"]) {
         const value = record[field];
         if (typeof value === "string" && value) return value;
-        if (Array.isArray(value) && typeof (value[0] as any)?.msg === "string") {
+        if (
+          Array.isArray(value) &&
+          typeof (value[0] as any)?.msg === "string"
+        ) {
           return (value[0] as any).msg;
         }
       }
@@ -176,191 +204,216 @@ async function readErrorMessage(response: Response): Promise<string> {
  */
 export function wmaRaw(endpoints: string[] = []) {
   return defineRealtimeExtension<WmaOptions, WmaRealtimeSession>({
-  id: "fal/wma-raw",
-  defaultEndpoint: endpoints[0],
-  supports: (endpointId) => endpoints.length === 0 || endpoints.includes(endpointId),
-  async open(context, options) {
-    const iceServers = options.iceServers ?? (await fetchIceServers(context));
-    const pc = new RTCPeerConnection({ iceServers });
+    id: "fal/wma-raw",
+    defaultEndpoint: endpoints[0],
+    supports: (endpointId) =>
+      endpoints.length === 0 || endpoints.includes(endpointId),
+    async open(context, options) {
+      const iceServers = options.iceServers ?? (await fetchIceServers(context));
+      const pc = new RTCPeerConnection({ iceServers });
 
-    // The default that matters: recvonly. A generated stream never needs an inbound track,
-    // and asking for one would make the runner negotiate media it will not send.
-    pc.addTransceiver("video", { direction: options.direction ?? "recvonly" });
-
-    /**
-     * What ICE actually did, for the failure message.
-     *
-     * The old message GUESSED: it said "if relay is 0 and either peer is behind symmetric NAT or
-     * blocked UDP…", which sent us chasing a NAT problem for three rounds while the real situation
-     * was narrower and visible the whole time — UDP refused on one port, flaky DNS on another, and
-     * two transports allocating fine. A diagnostic that speculates is worse than one that says
-     * nothing, because it is believed.
-     *
-     * `icecandidateerror` is where the truth lives: it carries the server URL, an error code and a
-     * text, per failing server. Deduplicated, because a retrying server repeats the same line.
-     */
-    const observed = { host: 0, srflx: 0, relay: 0, errors: new Set<string>() };
-    pc.addEventListener("icecandidateerror", (event) => {
-      const error = event as RTCPeerConnectionIceErrorEvent;
-      observed.errors.add(
-        `${error.url ?? "unknown server"} → ${error.errorCode} ${error.errorText ?? ""}`.trim(),
-      );
-    });
-
-    const channel = pc.createDataChannel("control");
-    channel.onmessage = (event) => options.onMessage?.(String(event.data));
-    pc.ontrack = (event) =>
-      options.onTrack?.(event.streams[0] ?? new MediaStream([event.track]));
-    pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "failed") {
-        const turnOffered = countTurnServers(iceServers);
-        const parts = [
-          `ICE could not establish a path (iceConnectionState=${pc.iceConnectionState}).`,
-          `Gathered host ${observed.host}, srflx ${observed.srflx}, relay ${observed.relay}` +
-            ` from ${turnOffered} TURN server${turnOffered === 1 ? "" : "s"} offered.`,
-        ];
-        // Named servers with their codes. 701 is a DNS/host-lookup failure and 401/400 on an
-        // allocate is the credential being refused — different fixes, and the code is the only
-        // thing that distinguishes them.
-        parts.push(
-          observed.errors.size > 0
-            ? `Servers that errored: ${[...observed.errors].join("; ")}.`
-            : "No ICE server reported an error.",
-        );
-        // Stated only when it is true of THIS session, and as an observation rather than a cause.
-        if (turnOffered > 0 && observed.relay === 0) {
-          parts.push(
-            "TURN was configured and no relay candidate was allocated, so a relayed path was " +
-              "never available to try.",
-          );
-        }
-        context.diagnostic({ kind: "failure", message: parts.join(" "), observed: { ...observed, turnOffered, errors: [...observed.errors].join("; ") } });
+      // The default that matters: recvonly. A generated stream never needs an inbound track,
+      // and asking for one would make the runner negotiate media it will not send.
+      // addTrack OR addTransceiver, never both. addTrack creates its own transceiver, so doing both
+      // negotiates two video m-lines and the runner answers a stream nobody reads.
+      const localTracks = options.localStream?.getTracks() ?? [];
+      if (localTracks.length > 0) {
+        for (const track of localTracks)
+          pc.addTrack(track, options.localStream!);
+      } else {
+        pc.addTransceiver("video", {
+          direction: options.direction ?? "recvonly",
+        });
       }
-      // Detail, not lifecycle. The kernel reports opening/live/failed/closed; the peer connection's
-      // own vocabulary is useful for debugging WMA and meaningless as a cross-protocol signal.
-      context.diagnostic({
-        kind: "progress",
-        phase: "connection-state",
-        detail: { state: pc.connectionState },
-      });
-    };
 
-    let heartbeat: ReturnType<typeof setInterval> | null = null;
-    let heartbeatInFlight = false;
-    let closed = false;
-    const teardown = () => {
-      if (closed) return;
-      closed = true;
-      if (heartbeat !== null) clearInterval(heartbeat);
-      channel.close();
-      pc.close();
-    };
-    // Registered rather than only called by hand: the client runs cleanups once, in reverse
-    // order, when opening fails, the signal aborts, OR the session closes. That covers the
-    // abort path, which a local close() alone would leak.
-    context.addCleanup(teardown);
-
-    // Trap 2, resolved properly by the managed lifecycle: SCTP state is independent of
-    // `pc.connectionState`, so the channel can die while ICE still claims "connected" and
-    // every control message is silently dropped. Report it AND end the session through
-    // `context.close()` — leaving it "open but deaf" is the failure mode worth killing.
-    const channelDied = () => {
-      if (closed) return;
-      context.diagnostic({
-        kind: "failure",
-        message:
-          "control data channel closed or errored — SCTP died while ICE may still say connected",
-      });
-      void context.close();
-    };
-    channel.onclose = channelDied;
-    channel.onerror = channelDied;
-
-    // Trap 3.
-    const pending: string[] = [];
-    channel.onopen = () => {
-      for (const payload of pending.splice(0)) channel.send(payload);
-    };
-
-    try {
-      const offer = await pc.createOffer();
-      // Attach listeners BEFORE setLocalDescription starts gathering — fast host/srflx
-      // candidates otherwise fire before the waiter exists and are never counted.
-      // The kernel's implementation. This file carried its own ~60 lines of sufficient-set /
-      // quiet-period / hard-bound strategy, which was never WMA-specific — it is what any extension
-      // facing a non-trickle signalling channel needs, so it now lives in the client and the counts
-      // arrive as diagnostics.
-      const gathering = context.gatherIce(pc, { iceServers });
-      await pc.setLocalDescription(offer);
-      const gathered_ice = await gathering;
-      observed.host = gathered_ice.host;
-      observed.srflx = gathered_ice.srflx;
-      observed.relay = gathered_ice.relay;
-
-      const gathered = pc.localDescription;
-      if (!gathered) throw new Error("failed to create WebRTC offer");
-
-      // Auth comes from the client's configured credentials rather than a pasted key.
-      // context.signal is honoured per the extension contract: it aborts when the caller
-      // cancels opening or closes the session.
-      const response = await context.fetch(`${WMA_URL}/session`, {
-        method: "POST",
-        signal: context.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          app_id: context.endpointId,
-          sdp: gathered.sdp,
-          type: gathered.type,
-        }),
-      });
-      if (!response.ok) throw new Error(await readErrorMessage(response));
-
-      if (context.signal.aborted) throw new Error("cancelled before answer applied");
-      const answer = (await response.json()) as {
-        session_id: string;
-        sdp: string;
-        type: RTCSdpType;
+      /**
+       * What ICE actually did, for the failure message.
+       *
+       * The old message GUESSED: it said "if relay is 0 and either peer is behind symmetric NAT or
+       * blocked UDP…", which sent us chasing a NAT problem for three rounds while the real situation
+       * was narrower and visible the whole time — UDP refused on one port, flaky DNS on another, and
+       * two transports allocating fine. A diagnostic that speculates is worse than one that says
+       * nothing, because it is believed.
+       *
+       * `icecandidateerror` is where the truth lives: it carries the server URL, an error code and a
+       * text, per failing server. Deduplicated, because a retrying server repeats the same line.
+       */
+      const observed = {
+        host: 0,
+        srflx: 0,
+        relay: 0,
+        errors: new Set<string>(),
       };
-      await pc.setRemoteDescription({ sdp: answer.sdp, type: answer.type });
+      pc.addEventListener("icecandidateerror", (event) => {
+        const error = event as RTCPeerConnectionIceErrorEvent;
+        observed.errors.add(
+          `${error.url ?? "unknown server"} → ${error.errorCode} ${error.errorText ?? ""}`.trim(),
+        );
+      });
 
-      // Trap 4.
-      heartbeat = setInterval(() => {
-        if (heartbeatInFlight) return;
-        heartbeatInFlight = true;
-        context
-          .fetch(`${WMA_URL}/session/heartbeat`, {
-            method: "POST",
-            signal: context.signal,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: answer.session_id }),
-          })
-          .catch(() => {
-            // Gaps are tolerated by the bridge; a genuinely dead session surfaces
-            // through connectionState, so failing loudly here would be noise.
-          })
-          .finally(() => {
-            heartbeatInFlight = false;
-          });
-      }, HEARTBEAT_INTERVAL_MS);
-
-      return {
-        sessionId: answer.session_id,
-        send(message: WmaControlMessage) {
-          const payload = JSON.stringify(message);
-          if (channel.readyState === "open") {
-            channel.send(payload);
-          } else if (channel.readyState === "connecting") {
-            if (pending.length >= MAX_QUEUED_MESSAGES) pending.shift();
-            pending.push(payload);
+      const channel = pc.createDataChannel("control");
+      channel.onmessage = (event) => options.onMessage?.(String(event.data));
+      pc.ontrack = (event) =>
+        options.onTrack?.(event.streams[0] ?? new MediaStream([event.track]));
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed") {
+          const turnOffered = countTurnServers(iceServers);
+          const parts = [
+            `ICE could not establish a path (iceConnectionState=${pc.iceConnectionState}).`,
+            `Gathered host ${observed.host}, srflx ${observed.srflx}, relay ${observed.relay}` +
+              ` from ${turnOffered} TURN server${turnOffered === 1 ? "" : "s"} offered.`,
+          ];
+          // Named servers with their codes. 701 is a DNS/host-lookup failure and 401/400 on an
+          // allocate is the credential being refused — different fixes, and the code is the only
+          // thing that distinguishes them.
+          parts.push(
+            observed.errors.size > 0
+              ? `Servers that errored: ${[...observed.errors].join("; ")}.`
+              : "No ICE server reported an error.",
+          );
+          // Stated only when it is true of THIS session, and as an observation rather than a cause.
+          if (turnOffered > 0 && observed.relay === 0) {
+            parts.push(
+              "TURN was configured and no relay candidate was allocated, so a relayed path was " +
+                "never available to try.",
+            );
           }
-        },
-        close: teardown,
+          context.diagnostic({
+            kind: "failure",
+            message: parts.join(" "),
+            observed: {
+              ...observed,
+              turnOffered,
+              errors: [...observed.errors].join("; "),
+            },
+          });
+        }
+        // Detail, not lifecycle. The kernel reports opening/live/failed/closed; the peer connection's
+        // own vocabulary is useful for debugging WMA and meaningless as a cross-protocol signal.
+        context.diagnostic({
+          kind: "progress",
+          phase: "connection-state",
+          detail: { state: pc.connectionState },
+        });
       };
-    } catch (exc) {
-      teardown();
-      throw exc;
-    }
-  },
+
+      let heartbeat: ReturnType<typeof setInterval> | null = null;
+      let heartbeatInFlight = false;
+      let closed = false;
+      const teardown = () => {
+        if (closed) return;
+        closed = true;
+        if (heartbeat !== null) clearInterval(heartbeat);
+        channel.close();
+        pc.close();
+      };
+      // Registered rather than only called by hand: the client runs cleanups once, in reverse
+      // order, when opening fails, the signal aborts, OR the session closes. That covers the
+      // abort path, which a local close() alone would leak.
+      context.addCleanup(teardown);
+
+      // Trap 2, resolved properly by the managed lifecycle: SCTP state is independent of
+      // `pc.connectionState`, so the channel can die while ICE still claims "connected" and
+      // every control message is silently dropped. Report it AND end the session through
+      // `context.close()` — leaving it "open but deaf" is the failure mode worth killing.
+      const channelDied = () => {
+        if (closed) return;
+        context.diagnostic({
+          kind: "failure",
+          message:
+            "control data channel closed or errored — SCTP died while ICE may still say connected",
+        });
+        void context.close();
+      };
+      channel.onclose = channelDied;
+      channel.onerror = channelDied;
+
+      // Trap 3.
+      const pending: string[] = [];
+      channel.onopen = () => {
+        for (const payload of pending.splice(0)) channel.send(payload);
+      };
+
+      try {
+        const offer = await pc.createOffer();
+        // Attach listeners BEFORE setLocalDescription starts gathering — fast host/srflx
+        // candidates otherwise fire before the waiter exists and are never counted.
+        // The kernel's implementation. This file carried its own ~60 lines of sufficient-set /
+        // quiet-period / hard-bound strategy, which was never WMA-specific — it is what any extension
+        // facing a non-trickle signalling channel needs, so it now lives in the client and the counts
+        // arrive as diagnostics.
+        const gathering = context.gatherIce(pc, { iceServers });
+        await pc.setLocalDescription(offer);
+        const gathered_ice = await gathering;
+        observed.host = gathered_ice.host;
+        observed.srflx = gathered_ice.srflx;
+        observed.relay = gathered_ice.relay;
+
+        const gathered = pc.localDescription;
+        if (!gathered) throw new Error("failed to create WebRTC offer");
+
+        // Auth comes from the client's configured credentials rather than a pasted key.
+        // context.signal is honoured per the extension contract: it aborts when the caller
+        // cancels opening or closes the session.
+        const response = await context.fetch(`${WMA_URL}/session`, {
+          method: "POST",
+          signal: context.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            app_id: context.endpointId,
+            sdp: gathered.sdp,
+            type: gathered.type,
+          }),
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response));
+
+        if (context.signal.aborted)
+          throw new Error("cancelled before answer applied");
+        const answer = (await response.json()) as {
+          session_id: string;
+          sdp: string;
+          type: RTCSdpType;
+        };
+        await pc.setRemoteDescription({ sdp: answer.sdp, type: answer.type });
+
+        // Trap 4.
+        heartbeat = setInterval(() => {
+          if (heartbeatInFlight) return;
+          heartbeatInFlight = true;
+          context
+            .fetch(`${WMA_URL}/session/heartbeat`, {
+              method: "POST",
+              signal: context.signal,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ session_id: answer.session_id }),
+            })
+            .catch(() => {
+              // Gaps are tolerated by the bridge; a genuinely dead session surfaces
+              // through connectionState, so failing loudly here would be noise.
+            })
+            .finally(() => {
+              heartbeatInFlight = false;
+            });
+        }, HEARTBEAT_INTERVAL_MS);
+
+        return {
+          sessionId: answer.session_id,
+          send(message: WmaControlMessage) {
+            const payload = JSON.stringify(message);
+            if (channel.readyState === "open") {
+              channel.send(payload);
+            } else if (channel.readyState === "connecting") {
+              if (pending.length >= MAX_QUEUED_MESSAGES) pending.shift();
+              pending.push(payload);
+            }
+          },
+          close: teardown,
+        };
+      } catch (exc) {
+        teardown();
+        throw exc;
+      }
+    },
   });
 }
 

@@ -23,6 +23,7 @@ function fakePeer() {
       localDescription: { sdp: "local-offer", type: "offer" as RTCSdpType },
       addTransceiver: jest.fn(),
       createDataChannel: jest.fn(() => channel),
+      addTrack: jest.fn(),
       createOffer: jest.fn(async () => ({ sdp: "local-offer", type: "offer" })),
       setLocalDescription: jest.fn(async () => undefined),
       setRemoteDescription: jest.fn(async () => undefined),
@@ -88,26 +89,36 @@ describe("wmaRaw", () => {
     expect(channel.send).not.toHaveBeenCalled();
     channel.readyState = "open";
     channel.onopen?.();
-    expect(channel.send).toHaveBeenCalledWith('{"type":"keys","pressed":["W"]}');
+    expect(channel.send).toHaveBeenCalledWith(
+      '{"type":"keys","pressed":["W"]}',
+    );
   });
 
   it("asks the kernel to gather ICE rather than reimplementing it", async () => {
     install();
-    const gatherIce = jest.fn(async (_pc: RTCPeerConnection, _options?: unknown) => ({
-      host: 1,
-      srflx: 1,
-      relay: 2,
-      state: "sufficient" as const,
-    }));
+    const gatherIce = jest.fn(
+      async (_pc: RTCPeerConnection, _options?: unknown) => ({
+        host: 1,
+        srflx: 1,
+        relay: 2,
+        state: "sufficient" as const,
+      }),
+    );
     const context = fakeExtensionContext({
       endpointId: "me/my-world",
       gatherIce,
       run: (async () => ({
-        data: { ice_servers: [{ urls: "turn:example", username: "u", credential: "p" }] },
+        data: {
+          ice_servers: [
+            { urls: "turn:example", username: "u", credential: "p" },
+          ],
+        },
         requestId: "r",
       })) as never,
       fetch: async () =>
-        new Response(JSON.stringify({ session_id: "s", sdp: "a", type: "answer" })),
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
     });
 
     await wmaRaw().open(context, { endpointId: "me/my-world" });
@@ -128,7 +139,9 @@ describe("wmaRaw", () => {
       }) as never,
       diagnostic: (event) => events.push(event),
       fetch: async () =>
-        new Response(JSON.stringify({ session_id: "s", sdp: "a", type: "answer" })),
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
     });
     jest.spyOn(console, "warn").mockImplementation(() => undefined);
 
@@ -152,13 +165,68 @@ describe("wmaRaw", () => {
     install();
     const context = fakeExtensionContext({
       endpointId: "me/my-world",
-      run: (async () => ({ data: { ice_servers: [{ urls: "stun:x" }] }, requestId: "r" })) as never,
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
       fetch: async () =>
-        new Response(JSON.stringify({ detail: "app is not deployed" }), { status: 422 }),
+        new Response(JSON.stringify({ detail: "app is not deployed" }), {
+          status: 422,
+        }),
     });
     await expect(
       wmaRaw().open(context, { endpointId: "me/my-world" }),
     ).rejects.toThrow("app is not deployed");
+  });
+
+  it("adds local tracks instead of a recvonly transceiver, and never both", async () => {
+    // Both would negotiate two video m-lines, and the runner would answer a stream nobody reads.
+    const { peer } = install();
+    const track = { kind: "video", stop: jest.fn() };
+    const stream = { getTracks: () => [track] } as unknown as MediaStream;
+    const context = fakeExtensionContext({
+      endpointId: "me/transform",
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
+      fetch: async () =>
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    });
+
+    const session = await wmaRaw().open(context, {
+      endpointId: "me/transform",
+      localStream: stream,
+    });
+
+    expect(peer.addTransceiver).not.toHaveBeenCalled();
+    expect(
+      (peer as never as { addTrack: jest.Mock }).addTrack,
+    ).toHaveBeenCalledWith(track, stream);
+    // The caller owns the camera. Closing the session must not turn their device off.
+    await session.close();
+    expect(track.stop).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a recvonly transceiver with no local stream", async () => {
+    const { peer } = install();
+    const context = fakeExtensionContext({
+      endpointId: "me/out",
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
+      fetch: async () =>
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    });
+    await wmaRaw().open(context, { endpointId: "me/out" });
+    expect(peer.addTransceiver).toHaveBeenCalledWith("video", {
+      direction: "recvonly",
+    });
   });
 
   it("accepts any endpoint when none are declared", async () => {
