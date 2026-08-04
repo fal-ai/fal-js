@@ -20,10 +20,13 @@ import {
 import { RequiredConfig } from "./config";
 import type {
   AnyRealtimeExtension,
+  RealtimeDiagnostic,
   RealtimeExtensionOptions,
   RealtimeExtensionSession,
   RealtimeSession,
+  RealtimeState,
 } from "./realtime/extension";
+import { gatherIceCandidates } from "./realtime/ice";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
 import type { EndpointType, InputType, OutputType } from "./types/client";
@@ -823,10 +826,26 @@ export function createRealtimeClient({
     const cleanups: Array<() => void | Promise<void>> = [];
     let closed = false;
     let session: RealtimeSession | undefined;
+    // Owned by the kernel, not the extension. The kernel is the only thing that knows about abort,
+    // failed opens and idempotent close, so it is the only thing that can report those honestly —
+    // and an extension's own state field cannot then contradict it.
+    let state: RealtimeState = "opening";
+    const onState = (options as { onState?: (next: RealtimeState) => void })
+      ?.onState;
+    const setState = (next: RealtimeState) => {
+      if (state === next || state === "closed") return;
+      state = next;
+      try {
+        onState?.(next);
+      } catch {
+        // A caller's callback must never be able to fail a session.
+      }
+    };
 
     const cleanup = async () => {
       if (closed) return;
       closed = true;
+      setState("closed");
       controller.abort();
       externalSignal?.removeEventListener("abort", abort);
       try {
@@ -844,6 +863,18 @@ export function createRealtimeClient({
     };
     const abort = () => {
       void cleanup();
+    };
+    // Dropped when the caller did not ask, so an extension can report unconditionally rather than
+    // guarding every call site.
+    const onDiagnostic = (
+      options as { onDiagnostic?: (event: RealtimeDiagnostic) => void }
+    )?.onDiagnostic;
+    const diagnostic = (event: RealtimeDiagnostic) => {
+      try {
+        onDiagnostic?.(event);
+      } catch {
+        // A caller's reporting callback must never be able to fail a session.
+      }
     };
     if (externalSignal?.aborted) {
       controller.abort(externalSignal.reason);
@@ -875,6 +906,46 @@ export function createRealtimeClient({
             ) as Promise<Result<Output>>;
           },
           connect: realtimeClient.connect,
+          // Credentials, request middleware and proxy come from the parent client, so a proxied
+          // application stays proxied and the extension never sees a key. Raw `Response` rather than
+          // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
+          fetch: async (url: string, init: RequestInit = {}) => {
+            const credentialsValue = config.credentials;
+            const credentials =
+              typeof credentialsValue === "function"
+                ? credentialsValue()
+                : credentialsValue;
+            const {
+              method,
+              url: targetUrl,
+              headers,
+            } = await config.requestMiddleware({
+              method: (init.method ?? "POST").toUpperCase(),
+              url,
+              headers: (init.headers as Record<string, string>) ?? undefined,
+            });
+            return config.fetch(targetUrl, {
+              ...init,
+              method,
+              signal: init.signal ?? controller.signal,
+              headers: {
+                ...(credentials ? { Authorization: `Key ${credentials}` } : {}),
+                "Content-Type": "application/json",
+                ...(headers ?? {}),
+              },
+            });
+          },
+          gatherIce: (pc, iceOptions) =>
+            gatherIceCandidates(pc, {
+              ...iceOptions,
+              onProgress: (result) =>
+                diagnostic({
+                  kind: "progress",
+                  phase: "ice-gathering",
+                  detail: { ...result },
+                }),
+            }),
+          diagnostic,
           addCleanup: (release) => {
             if (closed) {
               void release();
@@ -890,14 +961,19 @@ export function createRealtimeClient({
         await cleanup();
         throw controller.signal.reason ?? new Error("Realtime open aborted");
       }
+      setState("live");
       return new Proxy(session, {
         get(target, property, receiver) {
           if (property === "close") return cleanup;
+          if (property === "state") return state;
           const value = Reflect.get(target, property, receiver);
           return typeof value === "function" ? value.bind(target) : value;
         },
       });
     } catch (error) {
+      // Before cleanup, so a caller watching state sees "failed" rather than only "closed" — the two
+      // mean different things and a status UI should be able to tell them apart.
+      setState("failed");
       await cleanup();
       throw error;
     }
