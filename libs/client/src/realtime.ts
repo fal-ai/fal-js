@@ -23,6 +23,7 @@ import type {
   RealtimeDiagnostic,
   RealtimeExtensionOptions,
   RealtimeExtensionSession,
+  RealtimeOpenOptions,
   RealtimeSession,
   RealtimeState,
 } from "./realtime/extension";
@@ -314,7 +315,7 @@ export interface RealtimeClient {
    */
   open<Extension extends AnyRealtimeExtension>(
     extension: Extension,
-    options: RealtimeExtensionOptions<Extension>,
+    options: RealtimeExtensionOptions<Extension> & RealtimeOpenOptions,
   ): Promise<RealtimeExtensionSession<Extension>>;
 
   /**
@@ -323,7 +324,7 @@ export interface RealtimeClient {
    */
   open<Options = unknown, Session extends RealtimeSession = RealtimeSession>(
     app: string,
-    options: Options,
+    options: Options & RealtimeOpenOptions,
   ): Promise<Session>;
 }
 

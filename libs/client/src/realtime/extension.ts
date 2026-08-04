@@ -32,6 +32,24 @@ export interface RealtimeSession {
 export type RealtimeState = "opening" | "live" | "failed" | "closed";
 
 /**
+ * Options the KERNEL reads, accepted alongside whatever an extension declares.
+ *
+ * Separate from an extension's own `Options` because they belong to different owners: the extension
+ * defines its product inputs, the kernel defines cancellation and reporting. Without this they were
+ * unreachable through the typed `open(extension, options)` overload — the options bag was typed as
+ * the extension's alone, so passing `onDiagnostic` to Lucy was a compile error even though the
+ * kernel was the thing that would have handled it.
+ */
+export interface RealtimeOpenOptions {
+  /** Cancels opening, and closes the session if it is already open. */
+  abortSignal?: AbortSignal;
+  /** Coarse lifecycle transitions, uniform across every extension. */
+  onState?: (state: RealtimeState) => void;
+  /** Progress and failure reports. See {@link RealtimeDiagnostic}. */
+  onDiagnostic?: (event: RealtimeDiagnostic) => void;
+}
+
+/**
  * A structured progress or failure report from an extension.
  *
  * NOT protocol-shaped, on purpose. Useful progress for one model is "world building, 40%" and for

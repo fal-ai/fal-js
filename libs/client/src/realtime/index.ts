@@ -8,6 +8,7 @@ export {
   type RealtimeExtensionContext,
   type RealtimeExtensionOptions,
   type RealtimeExtensionSession,
+  type RealtimeOpenOptions,
   type RealtimeSession,
   type RealtimeState,
 } from "./extension";
