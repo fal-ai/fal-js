@@ -24,4 +24,5 @@ export {
 } from "./ice";
 
 export * from "./happy-oyster";
+export * from "./wma";
 export * from "./lucy";
