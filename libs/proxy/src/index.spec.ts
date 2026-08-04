@@ -1,5 +1,10 @@
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
-import { getEndpoint, isAllowedEndpoint, isAllowedUrl } from "./index";
+import {
+  getEndpoint,
+  handleRequest,
+  isAllowedEndpoint,
+  isAllowedUrl,
+} from "./index";
 
 const FAL_REST_API_URL = "rest.fal.ai";
 
@@ -337,6 +342,133 @@ describe("isAllowedEndpoint", () => {
       expect(
         isAllowedEndpoint("fal-ai/flux-dev/requests/abc123/status", patterns),
       ).toBe(true);
+    });
+  });
+});
+
+describe("handleRequest rejection reasons", () => {
+  /**
+   * A minimal ProxyBehavior that records what handleRequest responded with.
+   *
+   * The 400 paths all return before any network call, so nothing needs stubbing for them. For the
+   * paths that get PAST validation, auth is left unsatisfied on purpose: a 401 then proves the request
+   * cleared the endpoint gate, which is exactly what the exemption tests need to show.
+   */
+  function behaviorFor(targetUrl: string | undefined, method = "POST") {
+    const responses: Array<{ status: number; data: unknown }> = [];
+    return {
+      responses,
+      behavior: {
+        id: "test",
+        method,
+        getRequestBody: async () => "{}",
+        getHeaders: () => ({}),
+        getHeader: (name: string) =>
+          name === "x-fal-target-url" ? targetUrl : undefined,
+        sendHeader: () => undefined,
+        respondWith: (status: number, data: unknown) => {
+          responses.push({ status, data });
+          return undefined as never;
+        },
+        sendResponse: async () => undefined as never,
+      },
+    };
+  }
+
+  const run = async (
+    targetUrl: string | undefined,
+    config: Record<string, unknown> = {},
+    method = "POST",
+  ) => {
+    const { behavior, responses } = behaviorFor(targetUrl, method);
+    await handleRequest(behavior as never, {
+      // No credentials available, so anything reaching the auth step stops with 401 rather than
+      // attempting a real request.
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => false,
+      ...config,
+    } as never);
+    return responses[0];
+  };
+
+  it("names the missing header", async () => {
+    expect(await run(undefined)).toEqual({
+      status: 400,
+      data: "Invalid request: missing x-fal-target-url header",
+    });
+  });
+
+  it("names allowedUrlPatterns when the host is not permitted", async () => {
+    expect(await run("https://evil.example/steal")).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
+    });
+  });
+
+  it("names allowedEndpoints when the path is not permitted", async () => {
+    // The case that cost a debugging round: the URL IS allowlisted and the path is not, which is a
+    // different option and a different fix, yet all three used to say "Invalid request".
+    expect(
+      await run("https://fal.run/someone/other-app", {
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
+  it("STILL enforces allowedEndpoints for app-serving fal.run hosts", async () => {
+    // The security property. Exempting fal's service hosts from the endpoint check must not exempt
+    // the hosts that serve customer apps, or allowedEndpoints stops restricting anything on its main
+    // path. A suffix rule on `.fal.run` would break exactly this.
+    for (const host of ["fal.run", "queue.fal.run"]) {
+      expect(
+        await run(`https://${host}/someone/other-app`, {
+          allowedEndpoints: ["me/my-app/**"],
+        }),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: target path is not permitted by allowedEndpoints",
+      });
+    }
+  });
+
+  it("exempts the WMA signalling bridge from the endpoint check", async () => {
+    // Reaches auth (401) rather than being rejected as a bad endpoint (400). `session` is not an app
+    // id and can never match one, so applying an app allowlist to it only ever rejects valid traffic.
+    expect(
+      await run("https://wma.fal.run/session", {
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("allows the bridge by default, without any allowlisting", async () => {
+    expect(await run("https://wma.fal.run/session/heartbeat")).toEqual({
+      status: 401,
+      data: "Unauthorized",
+    });
+  });
+
+  it("allows the bridge even when allowedUrlPatterns is narrowed", async () => {
+    // The case a default entry cannot cover: supplying allowedUrlPatterns REPLACES the defaults, so a
+    // caller who scopes the proxy to their own apps — the careful configuration — would otherwise lose
+    // signalling with no way to know why.
+    expect(
+      await run("https://wma.fal.run/session", {
+        allowedUrlPatterns: ["fal.run/me/my-app/**"],
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("does NOT implicitly allow fal.ai, which is not allowed by default today", async () => {
+    // The exemption is the enumerated service set, not every fal-owned domain. Widening it to `.fal.ai`
+    // would silently start permitting hosts this proxy has always refused.
+    expect(await run("https://fal.ai/anything")).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
     });
   });
 });
