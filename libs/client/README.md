@@ -63,7 +63,7 @@ const lucy = await fal.realtime.open(lucyRealtime(), {
   },
   localStream: cameraStream,
   tokenProvider: getRealtimeToken,
-  onRemoteStream(stream) {
+  onMedia(stream) {
     outputVideo.srcObject = stream;
   },
 });
@@ -127,13 +127,17 @@ session.state; // the same value, readable at any time
 ```
 
 Four states, deliberately. Anything finer is protocol detail: `negotiating` means something specific in
-one model and nothing in a world that spends thirty seconds building. Detail belongs in diagnostics:
+one model and nothing in a world that spends thirty seconds building.
+
+`failed` and `closed` are both terminal, and **`failed` wins**. A session that dies reports `"failed"`
+and stays there while its resources are released — it does not decay into `"closed"`, because teardown
+happens either way and reporting it would erase the only thing separating a dead transport from a user
+who pressed disconnect.
+
+Detail belongs in diagnostics:
 
 ```ts
-type RealtimeDiagnostic =
-  | { kind: "progress"; phase: string; detail?: Record<string, number | string> }
-  | { kind: "warning"; message: string; detail?: Record<string, number | string> }
-  | { kind: "failure"; message: string; observed?: Record<string, number | string> };
+type RealtimeDiagnostic = { kind: "progress"; phase: string; detail?: Record<string, number | string> } | { kind: "warning"; message: string; detail?: Record<string, number | string> } | { kind: "failure"; message: string; observed?: Record<string, number | string> };
 ```
 
 `phase` and the free-form `detail` bag are deliberately not shaped around any one protocol — useful
@@ -141,25 +145,57 @@ progress is `"world building"` for one model and `"3 of 4 TURN servers answered"
 
 **A `failure` reports what was observed, never what was inferred.** This is a convention rather than a
 type, and it is the difference between a diagnostic that helps and one that misleads: a message reading
-*"either peer is behind symmetric NAT or blocked UDP"* sent us after a router for three rounds, when the
+_"either peer is behind symmetric NAT or blocked UDP"_ sent us after a router for three rounds, when the
 cause was a TURN credential thirty seconds too young. Report the candidate counts and the per-server
 error codes; let the reader draw the conclusion.
+
+### Inbound media and data
+
+Whatever comes back arrives through two callbacks named once, by the client, rather than once per
+extension:
+
+```ts
+const session = await fal.realtime.open(wmaRaw(), {
+  endpointId: "fal-ai/wma-outstream",
+  onMedia: (stream) => {
+    videoEl.srcObject = stream;
+  },
+  onData: (raw) => setScore(JSON.parse(raw)),
+});
+```
+
+`onMedia` fires once per inbound stream; `onData` once per message on the extension's data channel.
+Naming them here is the same argument as `onState`: an application offering two models would otherwise
+branch per protocol just to attach a video element, because two extensions independently called this
+`onRemoteStream` and `onTrack`.
+
+`onData` hands you a raw string on purpose. The client cannot know a model's schema, and parsing on its
+behalf would put one protocol's vocabulary in the transport — so the extension delivers and you parse.
+
+Both are optional on both sides. An extension need not call them, and plenty do not: an app can send a
+camera up and get its answer back as data with no inbound media at all, and an extension that hands a
+video element to a provider SDK never sees a `MediaStream` to publish. Neither callback can break a
+session — a throw from your handler is swallowed, because these fire inside browser event handlers
+where nothing upstream could catch it, and a render bug should not kill the connection.
 
 ### What an extension is given
 
 `open(context, options)` receives these primitives:
 
-| Member | For |
-| --- | --- |
-| `context.run()` | a fal **endpoint**, with the parent client's auth, proxy and retries |
-| `context.connect()` | the fal realtime WebSocket |
-| `context.fetch()` | fal infrastructure that is **not** an endpoint — a shared bridge, a control plane addressed by body rather than path. Same credentials and proxy as `run()`, but returns the raw `Response` |
-| `context.gatherIce()` | ICE gathering for browser WebRTC: sufficient set, then a quiet period, under a hard bound |
-| `context.diagnostic()` | progress and failure reports; safe to call with no `onDiagnostic` supplied |
-| `context.fail()` | end the session **because it failed**, as opposed to closing it |
-| `context.addCleanup()` | every resource acquired, released in reverse order |
-| `context.signal` | cancellation |
-| `context.close()` | end the managed session from inside |
+| Member                 | For                                                                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `context.run()`        | a fal **endpoint**, with the parent client's auth, proxy and retries                                                                                                                        |
+| `context.connect()`    | the fal realtime WebSocket                                                                                                                                                                  |
+| `context.fetch()`      | fal infrastructure that is **not** an endpoint — a shared bridge, a control plane addressed by body rather than path. Same credentials and proxy as `run()`, but returns the raw `Response` |
+| `context.gatherIce()`  | ICE gathering for browser WebRTC: sufficient set, then a quiet period, under a hard bound                                                                                                   |
+| `context.diagnostic()` | progress and failure reports; safe to call with no `onDiagnostic` supplied                                                                                                                  |
+| `context.media()`      | publish an inbound stream to `onMedia`                                                                                                                                                      |
+| `context.data()`       | publish one inbound message to `onData`                                                                                                                                                     |
+| `context.fail()`       | end the session **because it failed**, as opposed to closing it                                                                                                                             |
+| `context.addCleanup()` | every resource acquired, released in reverse order                                                                                                                                          |
+| `context.signal`       | cancellation                                                                                                                                                                                |
+| `context.endpointId`   | the endpoint this session was opened against                                                                                                                                                |
+| `context.close()`      | end the managed session from inside                                                                                                                                                         |
 
 `gatherIce` lives here rather than in an extension because both obvious strategies are wrong: waiting
 for `iceGatheringState === "complete"` pays a dead STUN server's full timeout, while a fixed short cap

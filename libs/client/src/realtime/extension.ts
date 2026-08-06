@@ -26,11 +26,43 @@ export interface RealtimeSession {
    * Deliberately four values. Anything finer is protocol detail — `negotiating` means something in
    * Lucy and nothing in a world that spends thirty seconds building — and detail belongs in
    * {@link RealtimeDiagnostic}.
+   *
+   * OPTIONAL here because no extension has to implement it — the kernel supplies it on the session
+   * it hands back, so what `open()` returns always has one. See {@link ManagedRealtimeSession}.
    */
   readonly state?: RealtimeState;
 }
 
+/**
+ * `opening` → `live` → (`failed` | `closed`).
+ *
+ * Both endings are TERMINAL and neither is reachable from the other: a session that failed reports
+ * `"failed"` forever, and does not decay into `"closed"` as its resources are released. Teardown
+ * happens either way, so reporting it would overwrite the only thing that separates "the transport
+ * died" from "the user pressed disconnect".
+ */
 export type RealtimeState = "opening" | "live" | "failed" | "closed";
+
+/**
+ * What `fal.realtime.open()` returns: the extension's own session, wrapped by the kernel.
+ *
+ * The wrapper is why `state` is required here and optional on {@link RealtimeSession} — an
+ * extension returns whatever it likes and the kernel adds the members it alone can guarantee: a
+ * `close()` that is idempotent and runs the registered cleanups, and a `state` readable at any time.
+ */
+export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
+  Session,
+  "state" | "close"
+> & {
+  readonly state: RealtimeState;
+  /**
+   * Always a promise, whatever the extension declared. The kernel substitutes its own idempotent
+   * teardown for the extension's `close`, and that teardown awaits every registered cleanup — so a
+   * caller that awaits this knows the resources are actually released, which is not something an
+   * extension returning `void` could promise.
+   */
+  close(): Promise<void>;
+};
 
 /**
  * Options the KERNEL reads, accepted alongside whatever an extension declares.

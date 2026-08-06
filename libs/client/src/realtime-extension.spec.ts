@@ -180,7 +180,7 @@ describe("realtime extension context additions", () => {
       supports: () => true,
       async open(context) {
         context.media(stream);
-        context.data("{\"a\":1}");
+        context.data('{"a":1}');
         return { close: jest.fn() };
       },
     });
@@ -366,8 +366,10 @@ describe("realtime extension context additions", () => {
         onState: (next: string) => states.push(next),
       } as never),
     ).rejects.toThrow("negotiation failed");
-    // "failed" before "closed": a status UI needs to tell a crash from a clean teardown.
-    expect(states).toEqual(["failed", "closed"]);
+    // "failed" and nothing after it. Teardown still runs, but reporting it would overwrite the only
+    // thing separating a crash from a clean teardown — and "closed" is what a caller would have seen
+    // anyway if this reported nothing at all.
+    expect(states).toEqual(["failed"]);
   });
 
   it("context.fail reports failed, not closed, and tears down", async () => {
@@ -399,7 +401,11 @@ describe("realtime extension context additions", () => {
     } as never);
 
     await failFromInside!("peer connection died");
-    expect(states).toEqual(["live", "failed", "closed"]);
+    // "failed" LATCHES over the teardown it triggers. It used to be followed immediately by
+    // "closed", which made fail() self-defeating: the distinction survived only in the instant
+    // between two synchronous calls, so anything rendering from the latest value — a status pill,
+    // `session.state` — showed a died session as a clean disconnect.
+    expect(states).toEqual(["live", "failed"]);
     expect(events).toEqual([
       {
         kind: "failure",
@@ -409,7 +415,12 @@ describe("realtime extension context additions", () => {
     ]);
     // Teardown really ran; failing is not a way to leak resources.
     expect(cleanup).toHaveBeenCalledTimes(1);
-    expect(session.state).toBe("closed");
+    expect(session.state).toBe("failed");
+
+    // And a close() afterwards cannot launder it into a clean ending.
+    await session.close();
+    expect(session.state).toBe("failed");
+    expect(states).toEqual(["live", "failed"]);
   });
 
   it("passes diagnostics through, and swallows a throwing callback", async () => {

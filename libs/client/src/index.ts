@@ -23,11 +23,20 @@ export type {
 export {
   defineRealtimeExtension,
   type AnyRealtimeExtension,
+  type IceGatheringOptions,
+  type IceGatheringResult,
+  type ManagedRealtimeSession,
+  type RealtimeDiagnostic,
   type RealtimeExtension,
   type RealtimeExtensionContext,
   type RealtimeExtensionOptions,
   type RealtimeExtensionSession,
+  // Exported from the root because `open()`'s own signature references it: without this, a caller
+  // importing only from "@fal-ai/client" could pass `onState`/`onDiagnostic`/`onMedia` but could not
+  // name the type of the handler they were writing.
+  type RealtimeOpenOptions,
   type RealtimeSession,
+  type RealtimeState,
 } from "./realtime/extension";
 export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";

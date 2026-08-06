@@ -3,6 +3,7 @@ export {
   type AnyRealtimeExtension,
   type IceGatheringOptions,
   type IceGatheringResult,
+  type ManagedRealtimeSession,
   type RealtimeDiagnostic,
   type RealtimeExtension,
   type RealtimeExtensionContext,
@@ -24,5 +25,5 @@ export {
 } from "./ice";
 
 export * from "./happy-oyster";
-export * from "./wma";
 export * from "./lucy";
+export * from "./wma";

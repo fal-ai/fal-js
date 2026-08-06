@@ -20,6 +20,7 @@ import {
 import { RequiredConfig } from "./config";
 import type {
   AnyRealtimeExtension,
+  ManagedRealtimeSession,
   RealtimeDiagnostic,
   RealtimeExtensionOptions,
   RealtimeExtensionSession,
@@ -316,7 +317,7 @@ export interface RealtimeClient {
   open<Extension extends AnyRealtimeExtension>(
     extension: Extension,
     options: RealtimeExtensionOptions<Extension> & RealtimeOpenOptions,
-  ): Promise<RealtimeExtensionSession<Extension>>;
+  ): Promise<ManagedRealtimeSession<RealtimeExtensionSession<Extension>>>;
 
   /**
    * Open a realtime session using the first installed extension that supports
@@ -325,7 +326,7 @@ export interface RealtimeClient {
   open<Options = unknown, Session extends RealtimeSession = RealtimeSession>(
     app: string,
     options: Options & RealtimeOpenOptions,
-  ): Promise<Session>;
+  ): Promise<ManagedRealtimeSession<Session>>;
 }
 
 type RealtimeUrlParams = {
@@ -833,8 +834,13 @@ export function createRealtimeClient({
     let state: RealtimeState = "opening";
     const onState = (options as { onState?: (next: RealtimeState) => void })
       ?.onState;
+    // "failed" and "closed" are both TERMINAL, and failure latches over the teardown that follows it.
+    // Without that, `fail()` was self-defeating: it set "failed" and then immediately called
+    // cleanup(), which set "closed" — so the distinction it exists to draw survived only in the
+    // instant between two synchronous calls, and anything rendering from the latest value (a status
+    // pill, `session.state`) showed a died session as a clean disconnect.
     const setState = (next: RealtimeState) => {
-      if (state === next || state === "closed") return;
+      if (state === next || state === "closed" || state === "failed") return;
       state = next;
       try {
         onState?.(next);
