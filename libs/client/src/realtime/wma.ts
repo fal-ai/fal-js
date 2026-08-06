@@ -73,12 +73,13 @@ export interface WmaOptions {
    */
   localStream?: MediaStream | null;
   /**
-   * ICE servers. OPTIONAL — when omitted the extension asks the app's own `/ice` endpoint for
-   * short-lived TURN credentials, so a restrictive network works with no caller setup.
+   * ICE servers. OPTIONAL — when omitted the extension first asks the authenticated WMA bridge
+   * for short-lived TURN credentials, then falls back to the app's own `/ice` endpoint for
+   * compatibility with deployments that have not adopted bridge vending yet.
    *
    * That self-provisioning is the answer to "who fetches ICE servers?", and it is possible
-   * because `/ice` IS a fal endpoint, so `context.run` can reach it with the parent client's
-   * credentials — unlike the WMA bridge. The browser therefore never sees the Metered secret,
+   * because the bridge is reached through credentialed `context.fetch`, while the legacy app route
+   * is a fal endpoint reached through `context.run`. The browser never sees the Metered secret,
    * only a credential minted for it.
    *
    * Pass this to override (your own TURN provider, or to force STUN for testing).
@@ -108,7 +109,10 @@ export interface IceGatheringProgress extends IceCandidateCounts {
 }
 
 /**
- * Ask the app for ephemeral TURN credentials.
+ * Ask the bridge for ephemeral TURN credentials, retaining the app route as a compatibility
+ * fallback. This must complete before `createOffer()`: that is when the browser starts gathering
+ * candidates, and adding TURN credentials afterwards cannot produce a relay candidate for the
+ * one-shot SDP the bridge accepts.
  *
  * Degrades to STUN rather than failing the connect: an app without Metered configured, or a
  * provider outage, should still work for everyone on a permissive network. The failure is
@@ -126,6 +130,43 @@ async function fetchIceServers(
   context: RealtimeExtensionContext,
 ): Promise<RTCIceServer[]> {
   try {
+    const response = await context.fetch(`${WMA_URL}/ice`, {
+      method: "POST",
+      signal: context.signal,
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(`bridge /ice request failed (HTTP ${response.status})`);
+    }
+    const payload = (await response.json()) as {
+      ice_servers?: RTCIceServer[];
+      status?: string;
+      credential_age_seconds?: number;
+    };
+    if (Array.isArray(payload.ice_servers) && payload.ice_servers.length > 0) {
+      context.diagnostic({
+        kind: "progress",
+        phase: "ice-servers",
+        detail: {
+          source: "bridge",
+          status: payload.status ?? "unknown",
+          credentialAgeSeconds: payload.credential_age_seconds ?? 0,
+        },
+      });
+      return payload.ice_servers;
+    }
+    throw new Error("bridge /ice response contained no ICE servers");
+  } catch {
+    // A bridge rollout must not strand existing apps which vend their own credentials.
+    // Do not include the error in diagnostics: fetch implementations may include credentials in
+    // their message, while the source is enough to make the fallback visible to the caller.
+    context.diagnostic({
+      kind: "progress",
+      phase: "ice-servers",
+      detail: { source: "bridge-unavailable; trying app fallback" },
+    });
+  }
+  try {
     const result = await context.run(`${context.endpointId}/ice`, {
       input: {},
     });
@@ -141,7 +182,8 @@ async function fetchIceServers(
         kind: "progress",
         phase: "ice-servers",
         detail: {
-          source: payload.status ?? "unknown",
+          source: "app-fallback",
+          status: payload.status ?? "unknown",
           credentialAgeSeconds: payload.credential_age_seconds ?? 0,
         },
       });

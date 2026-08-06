@@ -52,7 +52,7 @@ describe("wmaRaw", () => {
     return { peer, channel };
   }
 
-  it("reaches the bridge through context.fetch, never a caller-supplied one", async () => {
+  it("gets bridge ICE before creating the offer, then reaches the bridge through context.fetch", async () => {
     // The reason this extension can live in the client at all: it needs a credentialed request to a
     // host that is not a fal endpoint, and it no longer asks the application for one.
     const { channel } = install();
@@ -65,6 +65,17 @@ describe("wmaRaw", () => {
       })) as never,
       fetch: async (url: string, init?: RequestInit) => {
         calls.push({ url, body: init?.body });
+        if (url.endsWith("/ice")) {
+          return new Response(
+            JSON.stringify({
+              ice_servers: [
+                { urls: "turn:bridge", username: "u", credential: "p" },
+              ],
+              status: "turn",
+              credential_age_seconds: 31,
+            }),
+          );
+        }
         return new Response(
           JSON.stringify({ session_id: "s-1", sdp: "answer", type: "answer" }),
         );
@@ -75,9 +86,10 @@ describe("wmaRaw", () => {
       endpointId: "me/my-world",
     });
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe("https://wma.fal.run/session");
-    expect(JSON.parse(String(calls[0].body))).toEqual({
+    expect(calls).toHaveLength(2);
+    expect(calls[0].url).toBe("https://wma.fal.run/ice");
+    expect(calls[1].url).toBe("https://wma.fal.run/session");
+    expect(JSON.parse(String(calls[1].body))).toEqual({
       app_id: "me/my-world",
       sdp: "local-offer",
       type: "offer",
@@ -91,6 +103,48 @@ describe("wmaRaw", () => {
     channel.onopen?.();
     expect(channel.send).toHaveBeenCalledWith(
       '{"type":"keys","pressed":["W"]}',
+    );
+  });
+
+  it("falls back to an app-local /ice route when bridge ICE is unavailable", async () => {
+    const { peer } = install();
+    const events: unknown[] = [];
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      run: (async () => ({
+        data: {
+          ice_servers: [{ urls: "turn:app", username: "u", credential: "p" }],
+          status: "turn",
+        },
+        requestId: "r",
+      })) as never,
+      diagnostic: (event) => events.push(event),
+      fetch: async (url: string) => {
+        if (url.endsWith("/ice")) return new Response("down", { status: 503 });
+        return new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        );
+      },
+    });
+
+    await wmaRaw().open(context, { endpointId: "me/my-world" });
+    expect(peer.addTransceiver).toHaveBeenCalled();
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          phase: "ice-servers",
+          detail: expect.objectContaining({
+            source: "bridge-unavailable; trying app fallback",
+          }),
+        }),
+        expect.objectContaining({
+          phase: "ice-servers",
+          detail: expect.objectContaining({
+            source: "app-fallback",
+            status: "turn",
+          }),
+        }),
+      ]),
     );
   });
 
@@ -238,9 +292,14 @@ describe("wmaRaw", () => {
     const seenData: string[] = [];
     const context = fakeExtensionContext({
       endpointId: "me/world",
-      run: (async () => ({ data: { ice_servers: [{ urls: "stun:x" }] }, requestId: "r" })) as never,
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
       fetch: async () =>
-        new Response(JSON.stringify({ session_id: "s", sdp: "a", type: "answer" })),
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
       media: (stream: MediaStream) => void seenMedia.push(stream),
       data: (raw: string) => void seenData.push(raw),
     });
@@ -248,12 +307,18 @@ describe("wmaRaw", () => {
     await wmaRaw().open(context, { endpointId: "me/world" });
 
     const stream = { id: "remote" } as unknown as MediaStream;
-    (peer.ontrack as (event: unknown) => void)({ streams: [stream], track: {} });
+    (peer.ontrack as (event: unknown) => void)({
+      streams: [stream],
+      track: {},
+    });
     expect(seenMedia).toEqual([stream]);
 
     channel.onmessage?.({ data: '{"type":"session_info"}' });
     channel.onmessage?.({ data: '{"type":"pong","ts":1}' });
-    expect(seenData).toEqual(['{"type":"session_info"}', '{"type":"pong","ts":1}']);
+    expect(seenData).toEqual([
+      '{"type":"session_info"}',
+      '{"type":"pong","ts":1}',
+    ]);
   });
 
   it("synthesises a stream when the track arrives without one", async () => {
@@ -274,9 +339,14 @@ describe("wmaRaw", () => {
     const seen: MediaStream[] = [];
     const context = fakeExtensionContext({
       endpointId: "me/world",
-      run: (async () => ({ data: { ice_servers: [{ urls: "stun:x" }] }, requestId: "r" })) as never,
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
       fetch: async () =>
-        new Response(JSON.stringify({ session_id: "s", sdp: "a", type: "answer" })),
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
       media: (stream: MediaStream) => void seen.push(stream),
     });
     await wmaRaw().open(context, { endpointId: "me/world" });
