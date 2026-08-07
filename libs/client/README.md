@@ -165,9 +165,9 @@ const session = await fal.realtime.open(wmaRaw(), {
 ```
 
 `onMedia` fires once per inbound stream; `onData` once per message on the extension's data channel.
-Naming them here is the same argument as `onState`: an application offering two models would otherwise
-branch per protocol just to attach a video element, because two extensions independently called this
-`onRemoteStream` and `onTrack`.
+Naming them here is the same argument as `onState`: "a remote stream arrived" means the same thing in
+every protocol, so if each extension named it, an application offering two models would branch per
+protocol just to attach a video element.
 
 `onData` hands you a raw string on purpose. The client cannot know a model's schema, and parsing on its
 behalf would put one protocol's vocabulary in the transport — so the extension delivers and you parse.

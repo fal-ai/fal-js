@@ -284,9 +284,9 @@ describe("wmaRaw", () => {
   });
 
   it("publishes inbound media and data through the KERNEL, not its own options", async () => {
-    // The regression this guards: two extensions each named these themselves (onTrack here,
-    // onRemoteStream in Lucy, and no inbound data callback at all in Lucy), so an application
-    // offering both protocols branched per protocol to attach a video element.
+    // Guards the seam rather than the behaviour. An extension that published these through options of
+    // its own would compile and work, and would force an application offering two protocols to branch
+    // per protocol to do one thing: attach a video element.
     const { peer, channel } = install();
     const seenMedia: MediaStream[] = [];
     const seenData: string[] = [];

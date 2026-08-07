@@ -16,16 +16,14 @@ export interface RealtimeSession {
   /**
    * Coarse lifecycle, uniform across every extension.
    *
-   * Model-specific OPERATIONS should stay model-specific — `steer()`, `roar()` and `setCommand()` are
-   * correctly not universal. "Is this opening, live, or dead" is not model-specific, and leaving it
-   * to each adapter meant every multi-model application wrote an adapter over the adapters: Lucy
-   * reported `onConnectionStateChange`, the WMA extension `onConnectionState`, Happy Oyster a "world
-   * status", so rendering one status indicator needed a branch per protocol. All three now report
-   * through this, and their bespoke callbacks are gone.
+   * An extension's own OPERATIONS stay its own: they carry meaning only inside their protocol, and
+   * nothing is gained by forcing them into a shared shape. "Is this opening, live, or dead" is the
+   * opposite — every protocol has it, each names it in its own vocabulary, and leaving it to the
+   * extensions makes an application that renders a single status indicator branch per protocol.
    *
-   * Deliberately four values. Anything finer is protocol detail — `negotiating` means something in
-   * Lucy and nothing in a world that spends thirty seconds building — and detail belongs in
-   * {@link RealtimeDiagnostic}.
+   * Deliberately four values. Anything finer is protocol detail: a state that is meaningful while one
+   * protocol negotiates may not exist in another that spends thirty seconds building before it can
+   * stream at all. Detail belongs in {@link RealtimeDiagnostic}.
    *
    * OPTIONAL here because no extension has to implement it — the kernel supplies it on the session
    * it hands back, so what `open()` returns always has one. See {@link ManagedRealtimeSession}.
@@ -68,17 +66,15 @@ export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
  * Options the KERNEL reads, accepted alongside whatever an extension declares.
  *
  * Separate from an extension's own `Options` because they belong to different owners: the extension
- * defines its product inputs, the kernel defines cancellation and reporting. Without this they were
- * unreachable through the typed `open(extension, options)` overload — the options bag was typed as
- * the extension's alone, so passing `onDiagnostic` to Lucy was a compile error even though the
- * kernel was the thing that would have handled it.
- */
-/**
- * A note for extensions with NO options of their own: declare `Record<never, never>`, not
+ * defines its product inputs, the kernel defines cancellation and reporting. Declaring them here is
+ * what makes them reachable through the typed `open(extension, options)` overload, which otherwise
+ * types the options bag as the extension's alone and rejects every kernel option at the call site.
+ *
+ * An extension with NO options of its own must declare `Record<never, never>`, not
  * `Record<string, never>`. The latter asserts that every string key maps to `never`, which makes
  * `Options & RealtimeOpenOptions` contradictory and rejects `onMedia`, `onState` and `onDiagnostic`
- * at the call site — so an extension taking no product inputs would be unable to receive any kernel
- * option at all. No shipped extension hits this, because all three declare real option types.
+ * at the call site — leaving an extension that takes no product inputs unable to receive any kernel
+ * option at all.
  */
 export interface RealtimeOpenOptions {
   /** Cancels opening, and closes the session if it is already open. */
@@ -90,12 +86,10 @@ export interface RealtimeOpenOptions {
   /**
    * Inbound media, once per stream, for any extension that returns some.
    *
-   * Named HERE rather than per extension because it was not, and two extensions promptly invented two
-   * names for one concept: Lucy's `onRemoteStream` and the raw path's `onTrack`, identical in
-   * signature and meaning. An application offering both then needed a branch to attach a video
-   * element — the same tax `onState` removed for lifecycle. Outbound media never diverged, because
-   * `localStream` was already taken from Lucy when the raw path grew it; inbound diverged precisely
-   * because nothing forced the choice.
+   * Named HERE rather than per extension because "a remote stream arrived" is one concept, and left
+   * to the extensions it acquires one name per protocol — every one of them defensible, none of them
+   * shared. An application offering two extensions then needs a branch to do the single thing it
+   * actually wants, which is attach a video element. Same tax `onState` removes for lifecycle.
    *
    * Not every extension calls it. An app can send a camera up and get its answer back as data with no
    * inbound media at all, which is why this is optional on both sides rather than part of opening.
@@ -108,9 +102,9 @@ export interface RealtimeOpenOptions {
    * pretending otherwise would put one protocol's vocabulary in the transport. The extension delivers;
    * the application parses and validates.
    *
-   * This exists because the asymmetry was worse than a naming one — Lucy had no inbound data callback
-   * at all, so "media up, data down" could not be expressed through its surface even though nothing
-   * about the protocol forbids it.
+   * Declared for every extension rather than only the ones that obviously need it, because "media up,
+   * data down" is a shape any of them can take, and an extension whose surface omits this cannot
+   * express it even when its protocol allows it.
    */
   onData?: (raw: string) => void;
 }
@@ -123,9 +117,10 @@ export interface RealtimeOpenOptions {
  * where an ICE-shaped schema would carry only one.
  *
  * The rule that matters here is cultural rather than typed: **a `failure` reports what was OBSERVED,
- * never what was inferred.** A speculative diagnostic is worse than none, because it gets believed —
- * a message reading "either peer is behind symmetric NAT or blocked UDP" once cost three rounds of
- * debugging on a problem that was a credential thirty seconds too young.
+ * never what was inferred.** A speculative diagnostic is worse than none, because it gets believed: a
+ * message naming symmetric NAT or blocked UDP sends whoever reads it into the network, and the cause
+ * of a connection that gathered no relay candidate is at least as often a credential or a
+ * misconfigured server. Report the counts and the errors; let the reader conclude.
  */
 export type RealtimeDiagnostic =
   | {
@@ -179,7 +174,8 @@ export interface RealtimeExtensionContext {
 
   /**
    * Call any fal endpoint with the same credentials, middleware, storage
-   * handling, and retry policy as the parent client.
+   * handling, and retry policy as the parent client. This is just for getting ICE servers
+   * from the app's own /ice endpoint in case the bridge is not available.
    */
   run<Input = unknown, Output = unknown>(
     endpointId: string,
@@ -203,7 +199,7 @@ export interface RealtimeExtensionContext {
 
   /**
    * End the managed session from inside the extension, for example when a
-   * provider reports that a remote travel completed.
+   * provider reports that the remote session finished on its own.
    */
   close(): Promise<void>;
 
@@ -211,14 +207,11 @@ export interface RealtimeExtensionContext {
    * A credentialed request to fal infrastructure that is NOT an endpoint.
    *
    * `run()` covers fal endpoints and `connect()` covers the fal WebSocket, which leaves a real gap:
-   * a shared bridge, a regional relay or a control plane addressed by body rather than path can be
-   * reached by neither. The WMA raw path is the first protocol to need it —
-   *
-   *     POST https://wma.fal.run/session   { app_id, sdp, type }
-   *
-   * — a different host with the app id as a body parameter. Without this, the only way to ship is for
-   * the APPLICATION to inject a credentialed fetch, which hands auth for one leg of the connection
-   * back to the caller and is exactly what this API exists to prevent.
+   * a shared signalling bridge, a regional relay or a control plane addressed by body rather than
+   * path — say `POST https://<service>.fal.run/session` carrying the app id as a body parameter — is
+   * reachable through neither. Without this, the only way to reach one is for the APPLICATION to
+   * inject a credentialed fetch, which hands auth for one leg of the connection back to the caller
+   * and is exactly what this API exists to prevent.
    *
    * Applies the parent client's credentials, request middleware and proxy, so a proxied application
    * stays proxied. Returns the raw `Response`: unlike `run()`, this makes no assumption that the
@@ -234,9 +227,10 @@ export interface RealtimeExtensionContext {
    * server's full timeout, while a fixed short cap silently ships a host+srflx-only offer that can
    * never form a relayed path and fails with no error at all.
    *
-   * What works is sufficient-set, then a quiet period, under a hard bound. Lucy trickles and does not
-   * need this, which is precisely why it belongs here rather than in whichever adapter met the
-   * problem first — otherwise the next one writes it again, slightly differently.
+   * What works is sufficient-set, then a quiet period, under a hard bound. An extension that trickles
+   * its candidates has no use for it, which is precisely why it belongs here rather than inside
+   * whichever extension meets the problem first — otherwise the next one writes it again, slightly
+   * differently.
    */
   gatherIce(
     pc: RTCPeerConnection,

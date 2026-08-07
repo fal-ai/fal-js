@@ -1,7 +1,7 @@
 import type { RealtimeConnectionHandler } from "../realtime";
-import { fakeExtensionContext } from "./testing";
 import type { RealtimeExtensionContext } from "./extension";
 import { lucyRealtime } from "./lucy";
+import { fakeExtensionContext } from "./testing";
 
 describe("lucyRealtime", () => {
   beforeEach(() => {
@@ -77,8 +77,8 @@ describe("lucyRealtime", () => {
   });
 
   it("publishes its remote stream through context.media", async () => {
-    // Lucy called this onRemoteStream and the raw path called it onTrack. Same signature, same
-    // meaning, two names, so any app offering both branched per protocol to attach a video element.
+    // Inbound media goes through the kernel's channel, never an option of this extension's own, so
+    // that an app offering more than one protocol has one name for it rather than one per protocol.
     let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
     const seen: MediaStream[] = [];
     const peer = {
@@ -106,11 +106,17 @@ describe("lucyRealtime", () => {
       input: { prompt: "anything" },
       peerConnectionFactory: () => peer,
     });
-    handler?.onResult({ type: "iceServers", iceServers: [], request_id: "ready" });
+    handler?.onResult({
+      type: "iceServers",
+      iceServers: [],
+      request_id: "ready",
+    });
     await opening;
 
     const stream = { id: "lucy-remote" } as unknown as MediaStream;
-    (peer.ontrack as unknown as (event: unknown) => void)({ streams: [stream] });
+    (peer.ontrack as unknown as (event: unknown) => void)({
+      streams: [stream],
+    });
     expect(seen).toEqual([stream]);
   });
 
