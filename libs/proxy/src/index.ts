@@ -89,9 +89,7 @@ function isFalInfrastructure(targetUrl: string): boolean {
   // Exempting the whole domain would leave that option restricting nothing on its main path, so the
   // widening has to name the service hosts rather than the domain they happen to share.
   return (
-    host === "fal.ai" ||
-    host.endsWith(".fal.ai") ||
-    FAL_SERVICE_HOSTS.has(host)
+    host === "fal.ai" || host.endsWith(".fal.ai") || FAL_SERVICE_HOSTS.has(host)
   );
 }
 
@@ -172,11 +170,12 @@ export async function handleRequest<ResponseType>(
     : applyProxyConfig(config);
 
   const urlToValidate = getUrlWithoutScheme(targetUrl);
-  // fal's own SERVICE hosts skip the URL allowlist entirely, rather than merely appearing in its
-  // defaults. Supplying `allowedUrlPatterns` REPLACES the defaults, so a default entry only helps
-  // callers who never narrow the list — and narrowing it is the careful thing to do. Anyone scoping
-  // the proxy to their two apps would lose signalling and have no way to know why, which is the
-  // failure this whole change exists to remove.
+  // fal's own SERVICE hosts skip the URL allowlist entirely, and are deliberately absent from
+  // DEFAULT_ALLOWED_URL_PATTERNS: this short-circuit runs first, so a default entry could never be
+  // the thing that admits them. Supplying `allowedUrlPatterns` REPLACES the defaults, so an entry
+  // there would only help callers who never narrow the list — and narrowing it is the careful thing
+  // to do. Anyone scoping the proxy to their two apps would lose signalling and have no way to know
+  // why, which is the failure this exists to remove.
   //
   // Deliberately the enumerated service set and NOT `.fal.ai`: fal.ai is not allowed by default today
   // and this must not quietly start permitting it. Service hosts carry no customer-app authority —
@@ -194,7 +193,10 @@ export async function handleRequest<ResponseType>(
   }
 
   // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
-  if (behavior.method?.toUpperCase() === "POST" && !isFalInfrastructure(targetUrl)) {
+  if (
+    behavior.method?.toUpperCase() === "POST" &&
+    !isFalInfrastructure(targetUrl)
+  ) {
     const endpoint = getEndpoint(targetUrl);
     if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
       // The one that cost a debugging round while all three said the same thing: the URL was

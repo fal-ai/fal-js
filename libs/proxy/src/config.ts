@@ -16,13 +16,6 @@ export const FAL_REST_API_URL = "rest.fal.ai";
 export const DEFAULT_ALLOWED_URL_PATTERNS = [
   "fal.run/**",
   "queue.fal.run/**",
-  // The WMA signalling bridge. fal's own infrastructure, in the same category as the storage
-  // endpoints below: a browser opening a realtime world-model session has to reach it, and a customer
-  // should no more have to know it exists than they allowlist storage uploads today.
-  //
-  // Note `fal.run/**` does NOT cover it — a subdomain is not a path, so that glob cannot match
-  // `wma.fal.run/session`.
-  "wma.fal.run/**",
   // Storage upload endpoints (exact matches, ? is escaped for literal match)
   `${FAL_REST_API_URL}/storage/upload/initiate\\?storage_type=fal-cdn-v3`,
   `${FAL_REST_API_URL}/storage/upload/complete-multipart\\?storage_type=fal-cdn-v3`,

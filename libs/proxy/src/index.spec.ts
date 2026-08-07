@@ -105,6 +105,16 @@ describe("isAllowedUrl with default patterns", () => {
     });
   });
 
+  describe("wma.fal.run (admitted by the service-host rule, not this allowlist)", () => {
+    // Pins where the decision lives. `handleRequest` short-circuits on fal's service hosts BEFORE
+    // consulting the allowlist, so an entry here could never be what admits the bridge — it would
+    // read as load-bearing while being dead, and it would not survive a caller narrowing
+    // `allowedUrlPatterns` anyway. See "allows the bridge even when allowedUrlPatterns is narrowed".
+    it("should NOT be allowed by the default URL patterns", () => {
+      expect(isAllowedUrl("wma.fal.run/session")).toBe(false);
+    });
+  });
+
   describe("storage upload URLs", () => {
     it("should allow storage upload initiate URL", () => {
       const url = `${FAL_REST_API_URL}/storage/upload/initiate?storage_type=fal-cdn-v3`;
@@ -381,13 +391,16 @@ describe("handleRequest rejection reasons", () => {
     method = "POST",
   ) => {
     const { behavior, responses } = behaviorFor(targetUrl, method);
-    await handleRequest(behavior as never, {
-      // No credentials available, so anything reaching the auth step stops with 401 rather than
-      // attempting a real request.
-      allowUnauthorizedRequests: false,
-      isAuthenticated: async () => false,
-      ...config,
-    } as never);
+    await handleRequest(
+      behavior as never,
+      {
+        // No credentials available, so anything reaching the auth step stops with 401 rather than
+        // attempting a real request.
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => false,
+        ...config,
+      } as never,
+    );
     return responses[0];
   };
 
