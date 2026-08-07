@@ -1,8 +1,13 @@
 import { createParser } from "eventsource-parser";
 import { type TokenProvider, getTemporaryAuthToken } from "./auth";
 import { RequiredConfig } from "./config";
+import { REQUEST_ID_HEADER } from "./headers";
 import { buildUrl, dispatchRequest } from "./request";
-import { ApiError, defaultResponseHandler } from "./response";
+import {
+  ApiError,
+  defaultResponseHandler,
+  parseBillableUnits,
+} from "./response";
 import { type StorageClient } from "./storage";
 import { EndpointType, InputType, OutputType } from "./types/client";
 import { ensureEndpointIdFormat, resolveEndpointPath } from "./utils";
@@ -103,6 +108,7 @@ export class FalStream<Input, Output> {
   private lastEventTimestamp = 0;
   private streamClosed = false;
   private _requestId: string | null = null;
+  private _billableUnits: number | undefined = undefined;
   private donePromise: Promise<Output>;
 
   private abortController = new AbortController();
@@ -194,7 +200,8 @@ export class FalStream<Input, Output> {
           body: input && method !== "get" ? JSON.stringify(input) : undefined,
           signal: this.abortController.signal,
         });
-        this._requestId = response.headers.get("x-fal-request-id");
+        this._requestId = response.headers.get(REQUEST_ID_HEADER);
+        this._billableUnits = parseBillableUnits(response.headers);
         return await this.handleResponse(response);
       }
       return await dispatchRequest({
@@ -207,7 +214,8 @@ export class FalStream<Input, Output> {
             accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
           },
           responseHandler: async (response) => {
-            this._requestId = response.headers.get("x-fal-request-id");
+            this._requestId = response.headers.get(REQUEST_ID_HEADER);
+            this._billableUnits = parseBillableUnits(response.headers);
             return await this.handleResponse(response);
           },
           signal: this.abortController.signal,
@@ -413,6 +421,16 @@ export class FalStream<Input, Output> {
    */
   public get requestId() {
     return this._requestId;
+  }
+
+  /**
+   * Gets the billable units charged for the streaming request, when present
+   * on the response headers.
+   *
+   * @returns the billable units, or `undefined` when the header was not set.
+   */
+  public get billableUnits() {
+    return this._billableUnits;
   }
 }
 

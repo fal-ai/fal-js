@@ -7,6 +7,15 @@ import type { StorageSettings } from "../storage";
 export type Result<T> = {
   data: T;
   requestId: string;
+  /**
+   * Billing units charged for this request, from the `x-fal-billable-units`
+   * response header. Multiply by the endpoint's unit price to get cost.
+   * Absent when the platform did not return the header.
+   *
+   * @see https://docs.fal.ai/documentation/model-apis/common-parameters
+   * @see https://docs.fal.ai/documentation/model-apis/pricing
+   */
+  billableUnits?: number;
 };
 
 /**
