@@ -18,8 +18,21 @@ import {
   getTemporaryAuthToken,
 } from "./auth";
 import { RequiredConfig } from "./config";
+import type {
+  AnyRealtimeExtension,
+  ManagedRealtimeSession,
+  RealtimeDiagnostic,
+  RealtimeExtensionOptions,
+  RealtimeExtensionSession,
+  RealtimeOpenOptions,
+  RealtimeSession,
+  RealtimeState,
+} from "./realtime/extension";
+import { gatherIceCandidates } from "./realtime/ice";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
+import type { EndpointType, InputType, OutputType } from "./types/client";
+import type { Result, RunOptions } from "./types/common";
 import {
   ensureEndpointIdFormat,
   isReact,
@@ -296,6 +309,24 @@ export interface RealtimeClient {
     app: string,
     handler: RealtimeConnectionHandler<Output>,
   ): RealtimeConnection<Input>;
+
+  /**
+   * Open a model-specific realtime session with an explicitly supplied
+   * extension. This form preserves the extension's options and session types.
+   */
+  open<Extension extends AnyRealtimeExtension>(
+    extension: Extension,
+    options: RealtimeExtensionOptions<Extension> & RealtimeOpenOptions,
+  ): Promise<ManagedRealtimeSession<RealtimeExtensionSession<Extension>>>;
+
+  /**
+   * Open a realtime session using the first installed extension that supports
+   * the endpoint.
+   */
+  open<Options = unknown, Session extends RealtimeSession = RealtimeSession>(
+    app: string,
+    options: Options & RealtimeOpenOptions,
+  ): Promise<ManagedRealtimeSession<Session>>;
 }
 
 type RealtimeUrlParams = {
@@ -409,6 +440,12 @@ function isFalErrorResult(data: any): data is FalErrorResult {
 
 type RealtimeClientDependencies = {
   config: RequiredConfig;
+  getClient?: () => {
+    run<Id extends EndpointType>(
+      endpointId: Id,
+      options: RunOptions<InputType<Id>>,
+    ): Promise<Result<OutputType<Id>>>;
+  };
 };
 
 async function decodeRealtimeMessage(data: any): Promise<any> {
@@ -512,8 +549,9 @@ function handleRealtimeMessage({
 
 export function createRealtimeClient({
   config,
+  getClient,
 }: RealtimeClientDependencies): RealtimeClient {
-  return {
+  const realtimeClient: RealtimeClient = {
     connect<Input, Output>(
       app: string,
       handler: RealtimeConnectionHandler<Output>,
@@ -640,6 +678,19 @@ export function createRealtimeClient({
                 scheduleTokenRefresh();
               })
               .catch((error) => {
+                const { onError = noop } = getCallbacks();
+                onError(
+                  error instanceof ApiError
+                    ? error
+                    : new ApiError({
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : String(error),
+                        status: 401,
+                        body: error,
+                      }),
+                );
                 queueMicrotask(() => {
                   send({ type: "unauthorized", error });
                 });
@@ -678,7 +729,7 @@ export function createRealtimeClient({
               }
               send({ type: "connectionClosed", code: event.code });
             };
-            ws.onerror = (event) => {
+            ws.onerror = () => {
               // TODO specify error protocol for identified errors
               const { onError = noop } = getCallbacks();
               onError(new ApiError({ message: "Unknown error", status: 500 }));
@@ -724,5 +775,253 @@ export function createRealtimeClient({
         close,
       };
     },
+    open: undefined as unknown as RealtimeClient["open"],
   };
+
+  async function open(
+    extensionOrApp: AnyRealtimeExtension | string,
+    options: unknown,
+  ): Promise<RealtimeSession> {
+    const installedMatches =
+      typeof extensionOrApp === "string"
+        ? (config.realtime?.extensions ?? []).filter((candidate) =>
+            candidate.supports(extensionOrApp),
+          )
+        : [];
+    if (installedMatches.length > 1) {
+      throw new Error(
+        `Multiple realtime extensions support "${extensionOrApp}": ${installedMatches
+          .map((candidate) => candidate.id)
+          .join(", ")}. Pass the intended extension directly to open().`,
+      );
+    }
+    const extension =
+      typeof extensionOrApp === "string" ? installedMatches[0] : extensionOrApp;
+    const optionEndpointId =
+      typeof options === "object" && options !== null && "endpointId" in options
+        ? String((options as { endpointId: unknown }).endpointId)
+        : undefined;
+    const endpointId =
+      typeof extensionOrApp === "string"
+        ? extensionOrApp
+        : (optionEndpointId ?? extension.defaultEndpoint ?? "");
+
+    if (!extension) {
+      throw new Error(
+        `No realtime extension is installed for "${String(extensionOrApp)}".`,
+      );
+    }
+    if (!endpointId) {
+      throw new Error(
+        `Realtime extension "${extension.id}" requires an endpointId option when opened explicitly.`,
+      );
+    }
+    if (!extension.supports(endpointId)) {
+      throw new Error(
+        `Realtime extension "${extension.id}" does not support "${endpointId}".`,
+      );
+    }
+
+    const externalSignal = (options as { abortSignal?: AbortSignal })
+      ?.abortSignal;
+    const controller = new AbortController();
+    const cleanups: Array<() => void | Promise<void>> = [];
+    let closed = false;
+    let session: RealtimeSession | undefined;
+    // Owned by the kernel, not the extension. The kernel is the only thing that knows about abort,
+    // failed opens and idempotent close, so it is the only thing that can report those honestly —
+    // and an extension's own state field cannot then contradict it.
+    let state: RealtimeState = "opening";
+    const onState = (options as { onState?: (next: RealtimeState) => void })
+      ?.onState;
+    // "failed" and "closed" are both TERMINAL, and failure latches over the teardown that follows it.
+    // Without that, `fail()` was self-defeating: it set "failed" and then immediately called
+    // cleanup(), which set "closed" — so the distinction it exists to draw survived only in the
+    // instant between two synchronous calls, and anything rendering from the latest value (a status
+    // pill, `session.state`) showed a died session as a clean disconnect.
+    const setState = (next: RealtimeState) => {
+      if (state === next || state === "closed" || state === "failed") return;
+      state = next;
+      try {
+        onState?.(next);
+      } catch {
+        // A caller's callback must never be able to fail a session.
+      }
+    };
+
+    const cleanup = async () => {
+      if (closed) return;
+      closed = true;
+      setState("closed");
+      controller.abort();
+      externalSignal?.removeEventListener("abort", abort);
+      try {
+        await session?.close();
+      } finally {
+        for (const release of cleanups.reverse()) {
+          try {
+            await release();
+          } catch {
+            // Teardown is best-effort; one failed release must not prevent the
+            // remaining resources from being closed.
+          }
+        }
+      }
+    };
+    const abort = () => {
+      void cleanup();
+    };
+    // Dropped when the caller did not ask, so an extension can report unconditionally rather than
+    // guarding every call site.
+    const onDiagnostic = (
+      options as { onDiagnostic?: (event: RealtimeDiagnostic) => void }
+    )?.onDiagnostic;
+    const diagnostic = (event: RealtimeDiagnostic) => {
+      try {
+        onDiagnostic?.(event);
+      } catch {
+        // A caller's reporting callback must never be able to fail a session.
+      }
+    };
+    // Same swallow-and-continue rule as diagnostics, and for a sharper reason: these fire from inside
+    // `pc.ontrack` and `channel.onmessage`, where a throw lands in a browser event handler that no
+    // caller can catch. An application whose render throws must not take the session with it.
+    const onMedia = (options as { onMedia?: (stream: MediaStream) => void })
+      ?.onMedia;
+    const media = (stream: MediaStream) => {
+      try {
+        onMedia?.(stream);
+      } catch {
+        // A caller's media handler must never be able to fail a session.
+      }
+    };
+    const onData = (options as { onData?: (raw: string) => void })?.onData;
+    const data = (raw: string) => {
+      try {
+        onData?.(raw);
+      } catch {
+        // Nor a caller's message handler — one unparseable payload is not a dead session.
+      }
+    };
+    if (externalSignal?.aborted) {
+      controller.abort(externalSignal.reason);
+      throw (
+        externalSignal.reason ??
+        new DOMException("Realtime open aborted", "AbortError")
+      );
+    } else {
+      externalSignal?.addEventListener("abort", abort, { once: true });
+    }
+
+    try {
+      session = await extension.open(
+        {
+          endpointId,
+          signal: controller.signal,
+          run: <Input, Output>(
+            id: string,
+            runOptions: RunOptions<Input>,
+          ): Promise<Result<Output>> => {
+            if (!getClient) {
+              throw new Error(
+                "This realtime client was created without fal request access.",
+              );
+            }
+            return getClient().run(
+              id,
+              runOptions as RunOptions<Record<string, any>>,
+            ) as Promise<Result<Output>>;
+          },
+          connect: realtimeClient.connect,
+          // Credentials, request middleware and proxy come from the parent client, so a proxied
+          // application stays proxied and the extension never sees a key. Raw `Response` rather than
+          // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
+          fetch: async (url: string, init: RequestInit = {}) => {
+            // DESTRUCTURED, not called as config.fetch(...). Native fetch checks its receiver, so
+            // invoking it as a method of the config object throws "Illegal invocation" — which is
+            // what happened on the first real connect through this path. dispatchRequest destructures
+            // for the same reason; this now matches it.
+            const { fetch: doFetch, credentials: credentialsValue } = config;
+            const credentials =
+              typeof credentialsValue === "function"
+                ? credentialsValue()
+                : credentialsValue;
+            const {
+              method,
+              url: targetUrl,
+              headers,
+            } = await config.requestMiddleware({
+              method: (init.method ?? "POST").toUpperCase(),
+              url,
+              headers: (init.headers as Record<string, string>) ?? undefined,
+            });
+            return doFetch(targetUrl, {
+              ...init,
+              method,
+              signal: init.signal ?? controller.signal,
+              headers: {
+                ...(credentials ? { Authorization: `Key ${credentials}` } : {}),
+                "Content-Type": "application/json",
+                ...(headers ?? {}),
+              },
+            });
+          },
+          gatherIce: (pc, iceOptions) =>
+            gatherIceCandidates(pc, {
+              ...iceOptions,
+              onProgress: (result) =>
+                diagnostic({
+                  kind: "progress",
+                  phase: "ice-gathering",
+                  detail: { ...result },
+                }),
+            }),
+          diagnostic,
+          media,
+          data,
+          fail: async (
+            message: string,
+            observed?: Record<string, number | string>,
+          ) => {
+            diagnostic({ kind: "failure", message, observed });
+            // Before cleanup: cleanup sets "closed", and a caller watching transitions needs to see
+            // that this session died rather than ended.
+            setState("failed");
+            await cleanup();
+          },
+          addCleanup: (release) => {
+            if (closed) {
+              void release();
+            } else {
+              cleanups.push(release);
+            }
+          },
+          close: cleanup,
+        },
+        options,
+      );
+      if (controller.signal.aborted) {
+        await cleanup();
+        throw controller.signal.reason ?? new Error("Realtime open aborted");
+      }
+      setState("live");
+      return new Proxy(session, {
+        get(target, property, receiver) {
+          if (property === "close") return cleanup;
+          if (property === "state") return state;
+          const value = Reflect.get(target, property, receiver);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+    } catch (error) {
+      // Before cleanup, so a caller watching state sees "failed" rather than only "closed" — the two
+      // mean different things and a status UI should be able to tell them apart.
+      setState("failed");
+      await cleanup();
+      throw error;
+    }
+  }
+
+  realtimeClient.open = open as RealtimeClient["open"];
+  return realtimeClient;
 }

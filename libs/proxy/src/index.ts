@@ -51,13 +51,46 @@ function getUrlWithoutScheme(targetUrl: string): string {
 }
 
 /**
- * Checks if the URL is on the fal.ai domain or any of its subdomains.
- * @param targetUrl the full URL including scheme.
- * @returns true if the URL is on *.fal.ai domain.
+ * fal service hosts that serve no customer app, and therefore have no app id to match.
+ *
+ * Kept as an explicit set so adding one is a deliberate act. A host belongs here only if every path
+ * on it is fal's own — `wma.fal.run` is signalling, with paths like `session` and `session/heartbeat`.
  */
-function isFalAiDomain(targetUrl: string): boolean {
-  const url = new URL(targetUrl);
-  return url.host === "fal.ai" || url.host.endsWith(".fal.ai");
+const FAL_SERVICE_HOSTS = new Set(["wma.fal.run"]);
+
+/** Is this fal's own service infrastructure, carrying no customer app? */
+function isFalServiceHost(targetUrl: string): boolean {
+  return FAL_SERVICE_HOSTS.has(new URL(targetUrl).host);
+}
+
+/**
+ * Hosts that are fal's own infrastructure rather than a customer's app.
+ *
+ * `allowedEndpoints` restricts WHICH OF YOUR APPS may be called, so applying it to fal's own service
+ * hosts is a category error: those paths are not app identifiers and can never match an app pattern.
+ *
+ * This used to test `*.fal.ai` only, which produced an accident rather than a policy. The storage
+ * upload endpoints escaped the endpoint check for free because they sit on `rest.fal.ai`, while the
+ * WMA signalling bridge did not, because it sits on `wma.fal.run` — same category of thing, opposite
+ * treatment, decided entirely by which domain it happened to be on.
+ *
+ * The consequence was that filling in `allowedEndpoints` broke an unrelated request. A customer
+ * listing their two app ids — the more restrictive, more careful configuration — found bridge calls
+ * rejected, because `getEndpoint()` reduces `https://wma.fal.run/session` to `"session"`, which
+ * matches no app id. Leaving `allowedEndpoints` empty worked, so being specific was punished.
+ *
+ * @param targetUrl the full URL including scheme.
+ * @returns true when the host is fal's own service infrastructure.
+ */
+function isFalInfrastructure(targetUrl: string): boolean {
+  const { host } = new URL(targetUrl);
+  // Enumerated, NOT a suffix rule on `.fal.run`. `fal.run` and `queue.fal.run` serve customer apps,
+  // and `getEndpoint()` on those yields an app id — which is exactly what `allowedEndpoints` is for.
+  // Exempting the whole domain would leave that option restricting nothing on its main path, so the
+  // widening has to name the service hosts rather than the domain they happen to share.
+  return (
+    host === "fal.ai" || host.endsWith(".fal.ai") || FAL_SERVICE_HOSTS.has(host)
+  );
 }
 
 /**
@@ -118,7 +151,12 @@ export async function handleRequest<ResponseType>(
 ) {
   const targetUrl = singleHeaderValue(behavior.getHeader(TARGET_URL_HEADER));
   if (!targetUrl) {
-    return behavior.respondWith(400, "Invalid request");
+    // Names the missing header. This one is purely about request SHAPE — no configuration is being
+    // disclosed by saying so, and a caller who forgot a header should be told which.
+    return behavior.respondWith(
+      400,
+      `Invalid request: missing ${TARGET_URL_HEADER} header`,
+    );
   }
 
   // Check if config is already resolved (has all required fields with non-undefined values)
@@ -132,15 +170,41 @@ export async function handleRequest<ResponseType>(
     : applyProxyConfig(config);
 
   const urlToValidate = getUrlWithoutScheme(targetUrl);
-  if (!isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)) {
-    return behavior.respondWith(400, "Invalid request");
+  // fal's own SERVICE hosts skip the URL allowlist entirely, and are deliberately absent from
+  // DEFAULT_ALLOWED_URL_PATTERNS: this short-circuit runs first, so a default entry could never be
+  // the thing that admits them. Supplying `allowedUrlPatterns` REPLACES the defaults, so an entry
+  // there would only help callers who never narrow the list — and narrowing it is the careful thing
+  // to do. Anyone scoping the proxy to their two apps would lose signalling and have no way to know
+  // why, which is the failure this exists to remove.
+  //
+  // Deliberately the enumerated service set and NOT `.fal.ai`: fal.ai is not allowed by default today
+  // and this must not quietly start permitting it. Service hosts carry no customer-app authority —
+  // `wma.fal.run` only signals — so allowing them is equivalent to allowing realtime sessions at all.
+  if (
+    !isFalServiceHost(targetUrl) &&
+    !isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)
+  ) {
+    // Names the OPTION, never its contents. Which check rejected you is something a blocked caller
+    // can already infer; the configured patterns would hand them a map of what this proxy may reach.
+    return behavior.respondWith(
+      400,
+      "Invalid request: target URL is not permitted by allowedUrlPatterns",
+    );
   }
 
   // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
-  if (behavior.method?.toUpperCase() === "POST" && !isFalAiDomain(targetUrl)) {
+  if (
+    behavior.method?.toUpperCase() === "POST" &&
+    !isFalInfrastructure(targetUrl)
+  ) {
     const endpoint = getEndpoint(targetUrl);
     if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
-      return behavior.respondWith(400, "Invalid request");
+      // The one that cost a debugging round while all three said the same thing: the URL was
+      // allowlisted and the PATH was not, which is a different option and a different fix.
+      return behavior.respondWith(
+        400,
+        "Invalid request: target path is not permitted by allowedEndpoints",
+      );
     }
   }
 

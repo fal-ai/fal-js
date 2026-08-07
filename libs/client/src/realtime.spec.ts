@@ -383,6 +383,12 @@ describe("createRealtimeClient", () => {
 
     expect(customTokenProvider).toHaveBeenCalledTimes(1);
     expect(WebSocketMock).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Token fetch failed",
+        status: 401,
+      }),
+    );
   });
 
   it("uses default getTemporaryAuthToken when tokenProvider is not provided", async () => {
