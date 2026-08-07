@@ -24,6 +24,5 @@ export {
   parseIceCandidateType,
 } from "./ice";
 
-export * from "./happy-oyster";
 export * from "./lucy";
 export * from "./wma";

@@ -1,15 +1,13 @@
 /**
  * WMA raw-path extension for `fal.realtime.open()`.
  *
- * The third protocol, beside `lucy` (fal WebSocket signalling) and `happyOyster` (a vendor RTC SDK).
  * "Raw" names the path: the browser POSTs a complete SDP offer straight to the WMA signalling bridge
- * and media flows peer-to-peer from the fal runner. That is what every app which GENERATES its own
- * video uses, including a pure output stream, so it is the case the other two do not cover.
+ * and media flows peer-to-peer from the fal runner. That covers every app which GENERATES its own
+ * video, a pure output stream included, which is the case signalling over the fal WebSocket does not.
  *
- * Ported from an application that ran against a vendored build of this package, which is why it moved
- * here: an extension in one repository and the kernel in another can drift, and they did — the
- * extension began calling `context.diagnostic` before the vendored kernel provided it, producing
- * `e.diagnostic is not a function` at runtime. Living in the same package makes that a compile error.
+ * Shipped in the same package as the kernel on purpose. An extension maintained separately from the
+ * contract it codes against drifts out of step with it, and the drift lands as a missing `context`
+ * method at runtime rather than as a compile error.
  *
  * FOUR TRAPS worth knowing about, all of them scar tissue rather than invention:
  *
@@ -49,8 +47,8 @@ export type WmaControlMessage = object;
 export interface WmaOptions {
   /**
    * Endpoint to open. Read by the client as `optionEndpointId ?? extension.defaultEndpoint`,
-   * so it belongs in the options type even though `open()`'s signature does not mention it —
-   * `lucy` and `happyOyster` both declare it the same way.
+   * so it belongs in the options type even though `open()`'s signature does not mention it, which
+   * is how every extension declares it.
    */
   endpointId?: string;
   /**
@@ -166,6 +164,7 @@ async function fetchIceServers(
       detail: { source: "bridge-unavailable; trying app fallback" },
     });
   }
+  // Fallback to the app's own /ice endpoint.
   try {
     const result = await context.run(`${context.endpointId}/ice`, {
       input: {},
@@ -232,15 +231,14 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 /**
- * A factory, matching how `lucy` and `happyOyster` are built: it closes over the endpoints it
- * claims so `supports()` can answer honestly.
+ * A factory, like every extension here: it closes over the endpoints it claims so `supports()` can
+ * answer honestly.
  *
- * Passing no endpoints accepts any, which is right for this protocol and wrong for the others:
- * `fal-ai/wma-outstream` is indistinguishable by NAME from a non-realtime endpoint, so whether
- * an app speaks the raw path cannot be inferred — only declared by whoever passes the
- * extension explicitly. My first draft returned `false` here on that reasoning, which was a
- * bug: the client validates `supports(endpointId)` even in the explicit form and would have
- * rejected every open.
+ * Passing no endpoints accepts any, which is right for this protocol and wrong for one that owns a
+ * known endpoint. `fal-ai/wma-outstream` is indistinguishable by NAME from a non-realtime endpoint,
+ * so whether an app speaks the raw path cannot be inferred — only declared by whoever passes the
+ * extension explicitly. Returning `false` on that reasoning would be wrong, though: the client
+ * validates `supports(endpointId)` even in the explicit form, so it would reject every open.
  */
 export function wmaRaw(endpoints: string[] = []) {
   return defineRealtimeExtension<WmaOptions, WmaRealtimeSession>({
@@ -292,9 +290,9 @@ export function wmaRaw(endpoints: string[] = []) {
       });
 
       const channel = pc.createDataChannel("control");
-      // context.data, not an option of this extension's own. `onMessage` here and
-      // `onRemoteStream`/`onTrack` for media were two names for concepts the kernel should have named
-      // once — see RealtimeOpenOptions.onMedia.
+      // Published through context.data rather than an option of this extension's own: "a message
+      // arrived" means the same thing in every protocol, so the kernel names it once and an
+      // application offering two extensions learns one name. See RealtimeOpenOptions.onMedia.
       channel.onmessage = (event) => context.data(String(event.data));
       pc.ontrack = (event) =>
         context.media(event.streams[0] ?? new MediaStream([event.track]));
