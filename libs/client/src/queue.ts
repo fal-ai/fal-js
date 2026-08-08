@@ -344,6 +344,7 @@ export const createQueueClient = ({
           ...buildTimeoutHeaders(startTimeout),
         },
         input: input as Input,
+        extraBody: options.extraBody,
         config,
         options: {
           signal: options.abortSignal,

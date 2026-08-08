@@ -1,5 +1,7 @@
 import type { StorageSettings } from "../storage";
 
+export type JsonObject = Record<string, unknown>;
+
 /**
  * Represents an API result, containing the data,
  *  the request ID and any other relevant information.
@@ -19,6 +21,12 @@ export type RunOptions<Input> = {
    * or the body payload, depending on the `method`.
    */
   readonly input?: Input;
+
+  /**
+   * Additional JSON-safe fields to append under an `extraBody` key in the
+   * request body for non-GET requests.
+   */
+  readonly extraBody?: JsonObject;
 
   /**
    * The HTTP method, defaults to `post`;

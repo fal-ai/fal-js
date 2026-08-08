@@ -1,10 +1,11 @@
 import { createParser } from "eventsource-parser";
 import { type TokenProvider, getTemporaryAuthToken } from "./auth";
 import { RequiredConfig } from "./config";
-import { buildUrl, dispatchRequest } from "./request";
+import { buildUrl, dispatchRequest, resolveJsonBody } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
 import { EndpointType, InputType, OutputType } from "./types/client";
+import { JsonObject } from "./types/common";
 import { ensureEndpointIdFormat, resolveEndpointPath } from "./utils";
 
 export type StreamingConnectionMode = "client" | "server";
@@ -26,6 +27,12 @@ export type StreamOptions<Input> = {
    * The API input payload.
    */
   readonly input?: Input;
+
+  /**
+   * Additional JSON-safe fields to append under an `extraBody` key in the
+   * request body for non-GET requests.
+   */
+  readonly extraBody?: JsonObject;
 
   /**
    * The query parameters to be sent with the request.
@@ -159,6 +166,7 @@ export class FalStream<Input, Output> {
     const { endpointId, options } = this;
     const {
       input,
+      extraBody,
       method = "post",
       connectionMode = "server",
       tokenProvider,
@@ -191,7 +199,7 @@ export class FalStream<Input, Output> {
             accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
             "content-type": "application/json",
           },
-          body: input && method !== "get" ? JSON.stringify(input) : undefined,
+          body: resolveJsonBody(method, input, extraBody),
           signal: this.abortController.signal,
         });
         this._requestId = response.headers.get("x-fal-request-id");
@@ -201,6 +209,7 @@ export class FalStream<Input, Output> {
         method: method.toUpperCase(),
         targetUrl: this.url,
         input,
+        extraBody,
         config: this.config,
         options: {
           headers: {
