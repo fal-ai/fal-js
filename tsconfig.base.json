@@ -17,6 +17,11 @@
     "paths": {
       "@fal-ai/client": ["libs/client/src/index.ts"],
       "@fal-ai/client/endpoints": ["libs/client/src/types/endpoints.ts"],
+      "@fal-ai/schemas": ["libs/schemas/src/index.ts"],
+      "@fal-ai/schemas/schemas": ["libs/schemas/src/schemas.ts"],
+      "@fal-ai/schemas/schemas/*": ["libs/schemas/src/*/schemas.gen.ts"],
+      "@fal-ai/schemas/zod": ["libs/schemas/src/zod.ts"],
+      "@fal-ai/schemas/zod/*": ["libs/schemas/src/*/index.ts"],
       "@fal-ai/create-app": ["libs/create-app/src/index.ts"],
       "@fal-ai/server-proxy": ["libs/proxy/src/index.ts"],
       "@fal-ai/server-proxy/express": ["libs/proxy/src/express.ts"],
