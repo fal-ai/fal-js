@@ -16,6 +16,12 @@ import type {
  *
  * Because this returns a real `RealtimeExtensionContext` with no cast, adding a member to the
  * interface now breaks these specs at COMPILE time — which is the entire reason the interface exists.
+ *
+ * SHIPPED, under `@fal-ai/client/realtime/testing`, rather than excluded from the build as it was.
+ * An extension is only useful outside this package if it can be tested outside this package, and the
+ * alternative is every author rebuilding this object from the interface — which is precisely the
+ * hand-rolled partial fake this was written to delete. It stays out of the `./realtime` barrel so no
+ * runtime bundle pays for it.
  */
 export function fakeExtensionContext(
   overrides: Partial<RealtimeExtensionContext> = {},
