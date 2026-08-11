@@ -86,7 +86,6 @@ interface DragonSession extends RealtimeSession {
 const dragonWorld = defineRealtimeExtension<{ prompt: string }, DragonSession>({
   id: "acme/dragon-world",
   defaultEndpoint: "acme/dragon-world",
-  supports: (endpointId) => endpointId === "acme/dragon-world",
   async open(context, options) {
     const connection = context.connect<Record<string, unknown>, Record<string, unknown>>(context.endpointId, { onResult: console.log });
     context.addCleanup(() => connection.close());
@@ -104,10 +103,17 @@ const world = await fal.realtime.open(dragonWorld, {
 });
 ```
 
-Extensions can also be installed in `createFalClient({ realtime: {
-extensions: [...] } })` and selected by endpoint. If multiple installed
-extensions claim the same endpoint, the client fails explicitly instead of
-choosing one by import order.
+Which extension opens a session is always named at the call site. There is no
+registry and no selection by endpoint name, because an endpoint id does not say
+which protocol it speaks — `fal-ai/wma-outstream` looks exactly like an endpoint
+with no realtime path at all. A surface that discovers models at runtime should
+route on the model's published `x-fal-realtime` contract, which states its
+transport, rather than on a guess from the name.
+
+An extension that _does_ own a closed set of endpoints can add an optional
+`supports(endpointId)` to reject a stale or mistyped id before negotiation
+starts. It is a guard, not a router; most protocols have no such set and should
+omit it.
 
 ### Session lifecycle and reporting
 
@@ -155,8 +161,7 @@ Whatever comes back arrives through two callbacks named once, by the client, rat
 extension:
 
 ```ts
-const session = await fal.realtime.open(wmaRaw(), {
-  endpointId: "fal-ai/wma-outstream",
+const session = await fal.realtime.open(wma("fal-ai/wma-outstream"), {
   onMedia: (stream) => {
     videoEl.srcObject = stream;
   },

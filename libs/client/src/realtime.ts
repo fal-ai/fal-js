@@ -318,15 +318,6 @@ export interface RealtimeClient {
     extension: Extension,
     options: RealtimeExtensionOptions<Extension> & RealtimeOpenOptions,
   ): Promise<ManagedRealtimeSession<RealtimeExtensionSession<Extension>>>;
-
-  /**
-   * Open a realtime session using the first installed extension that supports
-   * the endpoint.
-   */
-  open<Options = unknown, Session extends RealtimeSession = RealtimeSession>(
-    app: string,
-    options: Options & RealtimeOpenOptions,
-  ): Promise<ManagedRealtimeSession<Session>>;
 }
 
 type RealtimeUrlParams = {
@@ -779,44 +770,22 @@ export function createRealtimeClient({
   };
 
   async function open(
-    extensionOrApp: AnyRealtimeExtension | string,
+    extension: AnyRealtimeExtension,
     options: unknown,
   ): Promise<RealtimeSession> {
-    const installedMatches =
-      typeof extensionOrApp === "string"
-        ? (config.realtime?.extensions ?? []).filter((candidate) =>
-            candidate.supports(extensionOrApp),
-          )
-        : [];
-    if (installedMatches.length > 1) {
-      throw new Error(
-        `Multiple realtime extensions support "${extensionOrApp}": ${installedMatches
-          .map((candidate) => candidate.id)
-          .join(", ")}. Pass the intended extension directly to open().`,
-      );
-    }
-    const extension =
-      typeof extensionOrApp === "string" ? installedMatches[0] : extensionOrApp;
     const optionEndpointId =
       typeof options === "object" && options !== null && "endpointId" in options
         ? String((options as { endpointId: unknown }).endpointId)
         : undefined;
-    const endpointId =
-      typeof extensionOrApp === "string"
-        ? extensionOrApp
-        : (optionEndpointId ?? extension.defaultEndpoint ?? "");
+    const endpointId = optionEndpointId ?? extension.defaultEndpoint ?? "";
 
-    if (!extension) {
-      throw new Error(
-        `No realtime extension is installed for "${String(extensionOrApp)}".`,
-      );
-    }
     if (!endpointId) {
       throw new Error(
         `Realtime extension "${extension.id}" requires an endpointId option when opened explicitly.`,
       );
     }
-    if (!extension.supports(endpointId)) {
+    // Extensions that own no closed set of endpoints omit this entirely; see RealtimeExtension.
+    if (extension.supports?.(endpointId) === false) {
       throw new Error(
         `Realtime extension "${extension.id}" does not support "${endpointId}".`,
       );

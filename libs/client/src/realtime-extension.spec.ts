@@ -41,21 +41,42 @@ describe("realtime extensions", () => {
     expect(session.label).toBe("hello");
   });
 
-  it("selects an installed extension by endpoint", async () => {
-    const world = extension();
+  it("rejects an endpoint the extension declares it cannot open", async () => {
+    // The whole job of `supports` now that nothing routes on it: catch a stale or mistyped id at the
+    // call site rather than partway through a negotiation that was never going to succeed.
     const client = createRealtimeClient({
-      config: createConfig({
-        credentials: "test-key",
-        realtime: { extensions: [world] },
-      }),
+      config: createConfig({ credentials: "test-key" }),
     });
 
-    const session = await client.open<
-      { label: string },
-      RealtimeSession & { label: string }
-    >("test/world", { label: "installed" });
+    await expect(
+      client.open(extension(), {
+        endpointId: "someone-else/world",
+        label: "wrong",
+      }),
+    ).rejects.toThrow(
+      'Realtime extension "test/world" does not support "someone-else/world".',
+    );
+  });
 
-    expect(session.label).toBe("installed");
+  it("opens an extension that declares no endpoint constraint", async () => {
+    // Most protocols cannot recognize their own endpoints by name, so they omit `supports` entirely.
+    // Omitting it must not be read as refusing everything.
+    const anyEndpoint = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/unconstrained",
+      async open() {
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    await expect(
+      client.open(anyEndpoint, { endpointId: "anything/at-all" }),
+    ).resolves.toBeDefined();
   });
 
   it("runs cleanup exactly once when close is called repeatedly", async () => {
@@ -94,28 +115,22 @@ describe("realtime extensions", () => {
     expect(open).not.toHaveBeenCalled();
   });
 
-  it("reports a missing installed extension clearly", async () => {
+  it("reports an extension that cannot name an endpoint to open", async () => {
+    const noDefault = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/no-default",
+      async open() {
+        return { close: jest.fn() };
+      },
+    });
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
 
-    await expect(client.open("unknown/world", {})).rejects.toThrow(
-      'No realtime extension is installed for "unknown/world".',
-    );
-  });
-
-  it("rejects ambiguous installed extensions", async () => {
-    const first = extension();
-    const second = { ...extension(), id: "test/world-duplicate" };
-    const client = createRealtimeClient({
-      config: createConfig({
-        credentials: "test-key",
-        realtime: { extensions: [first, second] },
-      }),
-    });
-
-    await expect(client.open("test/world", {})).rejects.toThrow(
-      'Multiple realtime extensions support "test/world"',
+    await expect(client.open(noDefault, {})).rejects.toThrow(
+      'Realtime extension "test/no-default" requires an endpointId option',
     );
   });
 });
@@ -141,7 +156,6 @@ describe("realtime extension context additions", () => {
     >({
       id: "test/fetch",
       defaultEndpoint: "test/fetch",
-      supports: () => true,
       async open(context) {
         const response = await context.fetch("https://wma.fal.run/session", {
           body: JSON.stringify({ app_id: "x" }),
@@ -177,7 +191,6 @@ describe("realtime extension context additions", () => {
     >({
       id: "test/channels",
       defaultEndpoint: "test/channels",
-      supports: () => true,
       async open(context) {
         context.media(stream);
         context.data('{"a":1}');
@@ -212,7 +225,6 @@ describe("realtime extension context additions", () => {
     >({
       id: "test/throwing",
       defaultEndpoint: "test/throwing",
-      supports: () => true,
       async open(context) {
         context.media({ id: "s" } as unknown as MediaStream);
         context.data("oops");
@@ -249,7 +261,6 @@ describe("realtime extension context additions", () => {
     >({
       id: "test/silent",
       defaultEndpoint: "test/silent",
-      supports: () => true,
       async open(context) {
         context.media({ id: "s" } as unknown as MediaStream);
         context.data("ignored");
@@ -278,7 +289,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/receiver",
-      supports: () => true,
       async open(context) {
         await context.fetch("https://wma.fal.run/session");
         return { close: jest.fn() };
@@ -309,7 +319,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/proxy",
-      supports: () => true,
       async open(context) {
         await context.fetch("https://wma.fal.run/session");
         return { close: jest.fn() };
@@ -329,7 +338,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/state",
-      supports: () => true,
       // Claims to be live while the kernel is still opening; the kernel's value wins.
       async open() {
         return { close: jest.fn(), state: "live" as const };
@@ -355,7 +363,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/broken",
-      supports: () => true,
       async open() {
         throw new Error("negotiation failed");
       },
@@ -387,7 +394,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/fail",
-      supports: () => true,
       async open(context) {
         context.addCleanup(cleanup);
         failFromInside = (message) => context.fail(message, { relay: 0 });
@@ -433,7 +439,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/diag",
-      supports: () => true,
       async open(context) {
         context.diagnostic({ kind: "progress", phase: "negotiating" });
         context.diagnostic({
@@ -467,7 +472,6 @@ describe("realtime extension context additions", () => {
       RealtimeSession
     >({
       id: "test/quiet",
-      supports: () => true,
       async open(context) {
         // Must not throw: extensions report unconditionally rather than guarding every call.
         context.diagnostic({ kind: "warning", message: "degraded" });

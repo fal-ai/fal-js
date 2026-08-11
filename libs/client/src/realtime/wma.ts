@@ -231,21 +231,19 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 /**
- * A factory, like every extension here: it closes over the endpoints it claims so `supports()` can
- * answer honestly.
+ * The WMA transport: a complete SDP offer POSTed to the signalling bridge, media peer-to-peer from
+ * the fal runner. This is what every app that generates its own video speaks.
  *
- * Passing no endpoints accepts any, which is right for this protocol and wrong for one that owns a
- * known endpoint. `fal-ai/wma-outstream` is indistinguishable by NAME from a non-realtime endpoint,
- * so whether an app speaks the raw path cannot be inferred — only declared by whoever passes the
- * extension explicitly. Returning `false` on that reasoning would be wrong, though: the client
- * validates `supports(endpointId)` even in the explicit form, so it would reject every open.
+ * Takes the endpoint it opens rather than a set it claims, because it cannot recognize one. Any
+ * customer can build an app on this transport, so `fal-ai/wma-outstream` is indistinguishable by
+ * name from an endpoint with no realtime path at all. That is also why there is no `supports()`
+ * here: whether a model speaks WMA is declared — by the caller naming this extension, or by the
+ * model's own `x-fal-realtime` contract — and never inferred from a string.
  */
-export function wmaRaw(endpoints: string[] = []) {
+export function wma(endpointId?: string) {
   return defineRealtimeExtension<WmaOptions, WmaRealtimeSession>({
-    id: "fal/wma-raw",
-    defaultEndpoint: endpoints[0],
-    supports: (endpointId) =>
-      endpoints.length === 0 || endpoints.includes(endpointId),
+    id: "fal/wma",
+    defaultEndpoint: endpointId,
     async open(context, options) {
       const iceServers = options.iceServers ?? (await fetchIceServers(context));
       const pc = new RTCPeerConnection({ iceServers });
@@ -461,8 +459,7 @@ export function wmaRaw(endpoints: string[] = []) {
 /*
  * Usage — a pure output stream is the degenerate case, which is the point:
  *
- *   const stream = await fal.realtime.open(wmaRaw(), {
- *     endpointId: "fal-ai/wma-outstream",
+ *   const stream = await fal.realtime.open(wma("fal-ai/wma-outstream"), {
  *     onMedia: (s) => { videoEl.srcObject = s },
  *     onState: (s) => { if (s === "failed") console.warn("died") },
  *   });

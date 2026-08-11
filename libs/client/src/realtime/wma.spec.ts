@@ -1,5 +1,5 @@
 import { fakeExtensionContext } from "./testing";
-import { wmaRaw } from "./wma";
+import { wma } from "./wma";
 
 /** A peer connection just real enough to drive the raw-path handshake. */
 function fakePeer() {
@@ -38,7 +38,7 @@ function fakePeer() {
   };
 }
 
-describe("wmaRaw", () => {
+describe("wma", () => {
   const originalPeerConnection = global.RTCPeerConnection;
 
   afterEach(() => {
@@ -82,7 +82,7 @@ describe("wmaRaw", () => {
       },
     });
 
-    const session = await wmaRaw(["me/my-world"]).open(context, {
+    const session = await wma("me/my-world").open(context, {
       endpointId: "me/my-world",
     });
 
@@ -127,7 +127,7 @@ describe("wmaRaw", () => {
       },
     });
 
-    await wmaRaw().open(context, { endpointId: "me/my-world" });
+    await wma().open(context, { endpointId: "me/my-world" });
     expect(peer.addTransceiver).toHaveBeenCalled();
     expect(events).toEqual(
       expect.arrayContaining([
@@ -175,7 +175,7 @@ describe("wmaRaw", () => {
         ),
     });
 
-    await wmaRaw().open(context, { endpointId: "me/my-world" });
+    await wma().open(context, { endpointId: "me/my-world" });
     expect(gatherIce).toHaveBeenCalledTimes(1);
     // The servers must reach it, or "sufficient" cannot know a relay is required.
     expect(gatherIce.mock.calls[0][1]).toEqual({
@@ -199,7 +199,7 @@ describe("wmaRaw", () => {
     });
     jest.spyOn(console, "warn").mockImplementation(() => undefined);
 
-    await wmaRaw().open(context, { endpointId: "me/my-world" });
+    await wma().open(context, { endpointId: "me/my-world" });
     // Reported, not swallowed: "no relay" is the difference between working and not for anyone behind
     // blocked UDP, so a silent fallback to STUN is the one thing this must never do.
     expect(events).toEqual(
@@ -229,7 +229,7 @@ describe("wmaRaw", () => {
         }),
     });
     await expect(
-      wmaRaw().open(context, { endpointId: "me/my-world" }),
+      wma().open(context, { endpointId: "me/my-world" }),
     ).rejects.toThrow("app is not deployed");
   });
 
@@ -250,7 +250,7 @@ describe("wmaRaw", () => {
         ),
     });
 
-    const session = await wmaRaw().open(context, {
+    const session = await wma().open(context, {
       endpointId: "me/transform",
       localStream: stream,
     });
@@ -277,7 +277,7 @@ describe("wmaRaw", () => {
           JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
         ),
     });
-    await wmaRaw().open(context, { endpointId: "me/out" });
+    await wma().open(context, { endpointId: "me/out" });
     expect(peer.addTransceiver).toHaveBeenCalledWith("video", {
       direction: "recvonly",
     });
@@ -304,7 +304,7 @@ describe("wmaRaw", () => {
       data: (raw: string) => void seenData.push(raw),
     });
 
-    await wmaRaw().open(context, { endpointId: "me/world" });
+    await wma().open(context, { endpointId: "me/world" });
 
     const stream = { id: "remote" } as unknown as MediaStream;
     (peer.ontrack as (event: unknown) => void)({
@@ -349,18 +349,18 @@ describe("wmaRaw", () => {
         ),
       media: (stream: MediaStream) => void seen.push(stream),
     });
-    await wmaRaw().open(context, { endpointId: "me/world" });
+    await wma().open(context, { endpointId: "me/world" });
     const track = { kind: "video" };
     (peer.ontrack as (event: unknown) => void)({ streams: [], track });
     expect(seen).toHaveLength(1);
     expect(tracks).toEqual([track]);
   });
 
-  it("accepts any endpoint when none are declared", async () => {
-    // Deliberate: an endpoint's NAME cannot reveal whether it speaks the raw path, so only the
-    // application passing the extension can. Returning false here rejected every open.
-    expect(wmaRaw().supports("anything/at-all")).toBe(true);
-    expect(wmaRaw(["only/this"]).supports("only/this")).toBe(true);
-    expect(wmaRaw(["only/this"]).supports("something/else")).toBe(false);
+  it("claims no endpoints, and opens the one it was given", async () => {
+    // An endpoint's NAME cannot reveal whether it speaks this transport, so this extension states no
+    // constraint at all rather than asserting one it cannot back up.
+    expect(wma().supports).toBeUndefined();
+    expect(wma("me/my-world").defaultEndpoint).toBe("me/my-world");
+    expect(wma().defaultEndpoint).toBeUndefined();
   });
 });

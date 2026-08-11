@@ -273,9 +273,8 @@ export interface RealtimeExtensionContext {
 /**
  * A customer-installable realtime protocol implementation.
  *
- * The endpoint match is deliberately separate from `open`: fal owns endpoint
- * selection and lifecycle, while the extension owns negotiation and the
- * model-specific session API.
+ * Which extension opens a session is the caller's decision, made at the call site by naming one. The
+ * kernel owns lifecycle; the extension owns negotiation and the model-specific session API.
  */
 export interface RealtimeExtension<
   Options = unknown,
@@ -285,13 +284,22 @@ export interface RealtimeExtension<
   readonly id: string;
 
   /**
-   * Endpoint used when the extension is passed directly to `open()` and the
-   * options do not override it.
+   * Endpoint opened when the options do not name one.
    */
   readonly defaultEndpoint?: string;
 
-  /** Return true when this extension knows how to open the endpoint. */
-  supports(endpointId: string): boolean;
+  /**
+   * Reject an endpoint this extension knows it cannot open.
+   *
+   * A guard, not a router. It exists for the extension that owns a closed set of endpoints — Lucy
+   * ships two — so a mistyped or stale id fails at the call site instead of partway through a
+   * negotiation that was never going to succeed.
+   *
+   * Optional because most protocols have no such set. Any customer can build an app on the WMA
+   * transport, so no list of ids describes it, and an extension in that position should say nothing
+   * rather than assert something it cannot know.
+   */
+  supports?(endpointId: string): boolean;
 
   /** Negotiate the model session and return its model-specific facade. */
   open(context: RealtimeExtensionContext, options: Options): Promise<Session>;
