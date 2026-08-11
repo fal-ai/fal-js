@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { decode, encode } from "@msgpack/msgpack";
+import { encode } from "@msgpack/msgpack";
 import {
   ContextFunction,
   InterpretOnChangeFunction,
@@ -14,8 +14,8 @@ import {
 } from "robot3";
 import {
   TOKEN_EXPIRATION_SECONDS,
-  type TokenProvider,
   getTemporaryAuthToken,
+  type TokenProvider,
 } from "./auth";
 import { RequiredConfig } from "./config";
 import type {
@@ -29,16 +29,23 @@ import type {
   RealtimeState,
 } from "./realtime/extension";
 import { gatherIceCandidates } from "./realtime/ice";
+import {
+  DEFAULT_THROTTLE_INTERVAL,
+  WebSocketErrorCodes,
+  buildRealtimeUrl,
+  decodeRealtimeMessage,
+  encodeRealtimeMessage,
+  isFalErrorResult,
+  isSuccessfulResult,
+  isUnauthorizedError,
+  realtimeTokenScope,
+  type WithRequestId,
+} from "./realtime/protocol";
 import { ApiError } from "./response";
 import { isBrowser } from "./runtime";
 import type { EndpointType, InputType, OutputType } from "./types/client";
 import type { Result, RunOptions } from "./types/common";
-import {
-  ensureEndpointIdFormat,
-  isReact,
-  resolveEndpointPath,
-  throttle,
-} from "./utils";
+import { isReact, throttle } from "./utils";
 
 // Define the context
 interface Context {
@@ -189,10 +196,6 @@ const connectionStateMachine = createMachine(
   initialState,
 );
 
-type WithRequestId = {
-  request_id: string;
-};
-
 /**
  * A connection object that allows you to `send` request payloads to a
  * realtime endpoint.
@@ -320,45 +323,6 @@ export interface RealtimeClient {
   ): Promise<ManagedRealtimeSession<RealtimeExtensionSession<Extension>>>;
 }
 
-type RealtimeUrlParams = {
-  token: string;
-  maxBuffering?: number;
-  path?: string;
-};
-
-function buildRealtimeUrl(
-  app: string,
-  { token, maxBuffering, path }: RealtimeUrlParams,
-): string {
-  if (maxBuffering !== undefined && (maxBuffering < 1 || maxBuffering > 60)) {
-    throw new Error("The `maxBuffering` must be between 1 and 60 (inclusive)");
-  }
-  const queryParams = new URLSearchParams({
-    fal_jwt_token: token,
-  });
-  if (maxBuffering !== undefined) {
-    queryParams.set("max_buffering", maxBuffering.toFixed(0));
-  }
-  const appId = ensureEndpointIdFormat(app);
-  const resolvedPath = resolveEndpointPath(app, path, "/realtime") ?? "";
-  return `wss://fal.run/${appId}${resolvedPath}?${queryParams.toString()}`;
-}
-
-const DEFAULT_THROTTLE_INTERVAL = 128;
-
-function isUnauthorizedError(message: any): boolean {
-  // TODO we need better protocol definition with error codes
-  return message["status"] === "error" && message["error"] === "Unauthorized";
-}
-
-/**
- * See https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
- */
-const WebSocketErrorCodes = {
-  NORMAL_CLOSURE: 1000,
-  GOING_AWAY: 1001,
-};
-
 type ConnectionStateMachine = {
   service: Service<typeof connectionStateMachine>;
   throttledSend: (
@@ -411,24 +375,6 @@ const NoOpConnection: RealtimeConnection<any> = {
   close: noop,
 };
 
-function isSuccessfulResult(data: any): boolean {
-  return (
-    data.status !== "error" &&
-    data.type !== "x-fal-message" &&
-    !isFalErrorResult(data)
-  );
-}
-
-type FalErrorResult = {
-  type: "x-fal-error";
-  error: string;
-  reason: string;
-};
-
-function isFalErrorResult(data: any): data is FalErrorResult {
-  return data.type === "x-fal-error";
-}
-
 type RealtimeClientDependencies = {
   config: RequiredConfig;
   getClient?: () => {
@@ -438,43 +384,6 @@ type RealtimeClientDependencies = {
     ): Promise<Result<OutputType<Id>>>;
   };
 };
-
-async function decodeRealtimeMessage(data: any): Promise<any> {
-  if (typeof data === "string") {
-    return JSON.parse(data);
-  }
-
-  const toUint8Array = async (
-    value: ArrayBuffer | Uint8Array | Blob,
-  ): Promise<Uint8Array> => {
-    if (value instanceof Uint8Array) {
-      return value;
-    }
-    if (value instanceof Blob) {
-      return new Uint8Array(await value.arrayBuffer());
-    }
-    return new Uint8Array(value);
-  };
-
-  if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
-    return decode(await toUint8Array(data));
-  }
-  if (data instanceof Blob) {
-    return decode(await toUint8Array(data));
-  }
-
-  return data;
-}
-
-function encodeRealtimeMessage(input: any): Uint8Array | string {
-  if (input instanceof Uint8Array) {
-    return input;
-  }
-  if (typeof input === "string") {
-    return encode(input);
-  }
-  return encode(input);
-}
 
 type HandleRealtimeMessageParams = {
   data: any;
@@ -607,11 +516,9 @@ export function createRealtimeClient({
             tokenRefreshGeneration++;
             const generation = tokenRefreshGeneration;
             // Use custom tokenProvider if provided, otherwise use default
-            const appId = ensureEndpointIdFormat(app);
-            const resolvedPath =
-              resolveEndpointPath(app, path, "/realtime") ?? "";
+            const scope = realtimeTokenScope(app, path);
             const fetchToken = tokenProvider
-              ? () => tokenProvider(`${appId}${resolvedPath}`)
+              ? () => tokenProvider(scope)
               : () => {
                   console.warn(
                     "[fal.realtime] Using the default token provider is deprecated. " +

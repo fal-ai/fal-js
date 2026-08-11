@@ -48,9 +48,11 @@ const result = await fal.subscribe("my-function-id", {
 
 ## Protocol-aware realtime sessions
 
-`fal.realtime.connect()` remains the low-level WebSocket API. Models that need
-WebRTC signaling, provider SDKs, heartbeats, or another negotiation protocol
-can expose that behavior as an application-installed extension:
+`fal.realtime.open()` opens a session with a named protocol extension. Models
+that need WebRTC signaling, provider SDKs, heartbeats, or another negotiation
+protocol expose that behavior as an application-installed extension, and fal's
+own WebSocket protocol is available through the same door as
+[`websocket()`](#fals-own-websocket-protocol-behind-open):
 
 ```ts
 import { fal } from "@fal-ai/client";
@@ -114,6 +116,61 @@ An extension that _does_ own a closed set of endpoints can add an optional
 `supports(endpointId)` to reject a stale or mistyped id before negotiation
 starts. It is a guard, not a router; most protocols have no such set and should
 omit it.
+
+### fal's own WebSocket protocol, behind `open()`
+
+`websocket()` speaks the same wire protocol as `fal.realtime.connect()` —
+msgpack over a fal WebSocket, through the same functions — and differs only in
+_when_ the socket opens:
+
+```ts
+import { websocket } from "@fal-ai/client/realtime";
+
+const session = await fal.realtime.open(websocket("fal-ai/fast-lightning-sdxl"), {
+  tokenProvider: getRealtimeToken,
+  onResult: (result) => setImage(result.images[0].url),
+  onState: (state) => setStatus(state),
+});
+
+session.send({ prompt: "a moonlit harbour" });
+await session.close();
+```
+
+`connect()` is lazy: it returns synchronously, opens on the first `send()`, and
+buffers anything sent before the socket is up. That laziness is where its
+five-state machine, its single-slot message buffer, and its connection cache all
+come from. Awaiting negotiation leaves none of them anything to do — you cannot
+hold a `send` before there is a socket to send on, a failed handshake is a
+rejected promise at the call site instead of a callback that may never fire, and
+`state` reads `"live"` only when the transport agrees.
+
+Two behaviors are deliberately not carried over:
+
+- **Implicit reconnect.** `connect()` reconnects on the next `send()` after any
+  failure, which falls out of its transitions rather than having been designed.
+  Here a dead socket surfaces as `state: "failed"`, and you reopen — because an
+  application that can see the failure can say something true about it, instead
+  of appearing to work while dropping every send.
+- **Token refresh.** `connect()` refreshes at 90% of expiry, but nothing sends a
+  token over an already-open socket and every exit from its active state
+  discards the fetched value, so the refreshed token reaches nothing. Whether
+  that is dead code or a missing feature turns on whether the server enforces
+  expiry mid-connection, which is not answerable from the client. Copying a
+  mechanism with no demonstrated effect would only make it harder to add the
+  real one later.
+
+`tokenProvider` is required here, where `connect()` makes it optional and falls
+back to minting from your long-lived credentials. That fallback already warns
+that it is deprecated and points at `tokenProvider`; a new surface should not be
+the thing keeping it alive.
+
+Results arrive through `onResult` rather than the shared `onData`, because this
+is the one transport that knows its own framing: messages are msgpack and are
+decoded before anything else looks at them, so handing back a re-serialized
+string would throw that away.
+
+`connect()` keeps its signature and its behavior. This is an additional door
+onto one protocol, not a replacement.
 
 ### Session lifecycle and reporting
 

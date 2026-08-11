@@ -25,4 +25,5 @@ export {
 } from "./ice";
 
 export * from "./lucy";
+export * from "./websocket";
 export * from "./wma";

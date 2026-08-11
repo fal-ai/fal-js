@@ -1,3 +1,5 @@
+msgpack
 outstream
 quickstart
 runtimes
+sdxl
