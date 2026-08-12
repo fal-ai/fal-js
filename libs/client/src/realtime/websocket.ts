@@ -25,8 +25,8 @@ export interface WebsocketOptions<Output = any> {
    *
    * Required, where `connect()` makes it optional and falls back to minting from the client's
    * long-lived credentials. That fallback already warns that it is deprecated and points here, and it
-   * needs the parent config, which an extension is deliberately not given — a new surface should not
-   * be the thing that keeps a deprecated path alive.
+   * needs the parent config, which an extension is deliberately not given. The eager API therefore
+   * requires the supported short-lived-token path explicitly.
    */
   tokenProvider: TokenProvider;
 
@@ -97,8 +97,8 @@ export interface WebsocketRealtimeSession<Input = any> extends RealtimeSession {
  *   the server enforces expiry mid-connection, which is not answerable from the client;
  *   reimplementing the timer here would copy a mechanism with no demonstrated effect.
  *
- * `connect()` keeps its signature and its behaviour. This is an additional door onto one protocol,
- * not a replacement.
+ * Both APIs intentionally coexist: `connect()` is synchronous and lazy; `open(websocket())` is
+ * asynchronous and eager.
  */
 export function websocket<Input = any, Output = any>(endpointId?: string) {
   return defineRealtimeExtension<

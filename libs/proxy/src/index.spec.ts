@@ -419,8 +419,8 @@ describe("handleRequest rejection reasons", () => {
   });
 
   it("names allowedEndpoints when the path is not permitted", async () => {
-    // The case that cost a debugging round: the URL IS allowlisted and the path is not, which is a
-    // different option and a different fix, yet all three used to say "Invalid request".
+    // The URL is allowlisted but the path is not. Naming the failed policy tells the caller whether
+    // to update host permissions, endpoint permissions, or request construction.
     expect(
       await run("https://fal.run/someone/other-app", {
         allowedEndpoints: ["me/my-app/**"],

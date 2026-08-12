@@ -161,8 +161,8 @@ Two behaviors are deliberately not carried over:
 
 `tokenProvider` is required here, where `connect()` makes it optional and falls
 back to minting from your long-lived credentials. That fallback already warns
-that it is deprecated and points at `tokenProvider`; a new surface should not be
-the thing keeping it alive.
+that it is deprecated and points at `tokenProvider`; the eager API requires the
+supported short-lived-token path explicitly.
 
 Results arrive through `onResult` rather than the shared `onData`, because this
 is the one transport that knows its own framing: messages are msgpack and are
@@ -207,10 +207,9 @@ type RealtimeDiagnostic = { kind: "progress"; phase: string; detail?: Record<str
 progress is `"world building"` for one model and `"3 of 4 TURN servers answered"` for another.
 
 **A `failure` reports what was observed, never what was inferred.** This is a convention rather than a
-type, and it is the difference between a diagnostic that helps and one that misleads: a message reading
-_"either peer is behind symmetric NAT or blocked UDP"_ sent us after a router for three rounds, when the
-cause was a TURN credential thirty seconds too young. Report the candidate counts and the per-server
-error codes; let the reader draw the conclusion.
+type, and it is the difference between a diagnostic that helps and one that misleads. No relay
+candidate can result from NAT behavior, blocked UDP, invalid credentials, or a failed TURN server;
+the client reports candidate counts and per-server errors rather than guessing which cause applies.
 
 ### Inbound media and data
 

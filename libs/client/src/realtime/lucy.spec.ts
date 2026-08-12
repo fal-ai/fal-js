@@ -31,8 +31,8 @@ describe("lucyRealtime", () => {
       connect: ((_endpointId: string, nextHandler: typeof handler) => {
         handler = nextHandler;
         return { send, close };
-        // Cast narrowed to this member: the mock cannot express connect's generics, and casting the
-        // whole context is what let four missing methods through in the first place.
+        // Cast narrowed to this member: the mock cannot express connect's generics. The surrounding
+        // compiler-checked context ensures required members cannot disappear from the fake.
       }) as RealtimeExtensionContext["connect"],
       addCleanup: (cleanup: () => void | Promise<void>) =>
         cleanups.push(cleanup),
@@ -67,7 +67,7 @@ describe("lucyRealtime", () => {
     await Promise.all(cleanups.map((cleanup) => cleanup()));
     expect(close).toHaveBeenCalledTimes(1);
     expect(peer.close).toHaveBeenCalledTimes(1);
-    // Lucy's own vocabulary is progress DETAIL now; the uniform lifecycle belongs to the kernel, and
+    // Lucy's own vocabulary is progress detail; the uniform lifecycle belongs to the kernel, and
     // this spec drives open() directly so there is no kernel here to ask.
     expect(diagnostics).toContainEqual({
       kind: "progress",

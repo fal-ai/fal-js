@@ -42,8 +42,8 @@ describe("realtime extensions", () => {
   });
 
   it("rejects an endpoint the extension declares it cannot open", async () => {
-    // The whole job of `supports` now that nothing routes on it: catch a stale or mistyped id at the
-    // call site rather than partway through a negotiation that was never going to succeed.
+    // `supports` is an optional guard, not a routing registry: catch a stale or mistyped id at the
+    // call site rather than partway through a negotiation that cannot succeed.
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
@@ -271,10 +271,9 @@ describe("realtime extension context additions", () => {
   });
 
   it("context.fetch does not call the configured fetch as a method", async () => {
-    // A RECEIVER-SENSITIVE fetch, because native fetch is one: invoking it as config.fetch(...) sets
-    // `this` to the config object and throws "Illegal invocation". The first version of context.fetch
-    // did exactly that and every real connect failed, while this suite passed — the other tests inject
-    // a plain jest.fn(), which has no opinion about its receiver, so they cannot see the bug.
+    // A receiver-sensitive fetch, because native fetch is one: invoking it as config.fetch(...) sets
+    // `this` to the config object and throws "Illegal invocation". A plain jest.fn() has no opinion
+    // about its receiver and therefore cannot verify this constraint.
     const picky = function (this: unknown, _url: string) {
       if (this !== undefined && this !== globalThis) {
         throw new TypeError("Failed to execute 'fetch': Illegal invocation");
@@ -381,7 +380,7 @@ describe("realtime extension context additions", () => {
 
   it("context.fail reports failed, not closed, and tears down", async () => {
     // The distinction close() cannot express: a transport that died versus a user who disconnected.
-    // Both used to arrive as "closed", which is the pair a status UI most needs to tell apart.
+    // A status UI must be able to render those outcomes differently.
     const states: string[] = [];
     const events: unknown[] = [];
     const cleanup = jest.fn();
@@ -407,10 +406,9 @@ describe("realtime extension context additions", () => {
     } as never);
 
     await failFromInside!("peer connection died");
-    // "failed" LATCHES over the teardown it triggers. It used to be followed immediately by
-    // "closed", which made fail() self-defeating: the distinction survived only in the instant
-    // between two synchronous calls, so anything rendering from the latest value — a status pill,
-    // `session.state` — showed a died session as a clean disconnect.
+    // "failed" latches over the teardown it triggers. Publishing "closed" afterward would erase the
+    // terminal cause, so anything rendering the latest value — a status pill or `session.state` —
+    // would misrepresent a dead transport as a clean disconnect.
     expect(states).toEqual(["live", "failed"]);
     expect(events).toEqual([
       {

@@ -69,15 +69,9 @@ function isFalServiceHost(targetUrl: string): boolean {
  * `allowedEndpoints` restricts WHICH OF YOUR APPS may be called, so applying it to fal's own service
  * hosts is a category error: those paths are not app identifiers and can never match an app pattern.
  *
- * This used to test `*.fal.ai` only, which produced an accident rather than a policy. The storage
- * upload endpoints escaped the endpoint check for free because they sit on `rest.fal.ai`, while the
- * WMA signalling bridge did not, because it sits on `wma.fal.run` — same category of thing, opposite
- * treatment, decided entirely by which domain it happened to be on.
- *
- * The consequence was that filling in `allowedEndpoints` broke an unrelated request. A customer
- * listing their two app ids — the more restrictive, more careful configuration — found bridge calls
- * rejected, because `getEndpoint()` reduces `https://wma.fal.run/session` to `"session"`, which
- * matches no app id. Leaving `allowedEndpoints` empty worked, so being specific was punished.
+ * `fal.ai` subdomains and the explicitly enumerated service hosts share this treatment regardless of
+ * their DNS suffix. `wma.fal.run/session`, for example, is signalling infrastructure; reducing its
+ * path to `"session"` and comparing it with customer app ids would reject every valid bridge call.
  *
  * @param targetUrl the full URL including scheme.
  * @returns true when the host is fal's own service infrastructure.
@@ -192,15 +186,14 @@ export async function handleRequest<ResponseType>(
     );
   }
 
-  // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
+  // App-serving POSTs are subject to endpoint allowlisting; fal infrastructure routes are not app ids.
   if (
     behavior.method?.toUpperCase() === "POST" &&
     !isFalInfrastructure(targetUrl)
   ) {
     const endpoint = getEndpoint(targetUrl);
     if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
-      // The one that cost a debugging round while all three said the same thing: the URL was
-      // allowlisted and the PATH was not, which is a different option and a different fix.
+      // The URL is allowlisted and the path is not, which is a different option and a different fix.
       return behavior.respondWith(
         400,
         "Invalid request: target path is not permitted by allowedEndpoints",

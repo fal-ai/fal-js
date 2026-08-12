@@ -2,8 +2,8 @@
 /**
  * The fal realtime wire protocol: URL, framing, and result classification.
  *
- * Extracted from `realtime.ts` so `connect()` and the `websocket()` extension speak it through the
- * same functions rather than through two implementations that agree today. The two differ only in
+ * `connect()` and the `websocket()` extension use these shared functions rather than parallel
+ * implementations that can drift. The two differ only in
  * WHEN they open a socket and who owns its lifecycle; if they also differed in what they put on it,
  * offering both would be offering two protocols under one name.
  */

@@ -1,15 +1,14 @@
 /**
- * WMA raw-path extension for `fal.realtime.open()`.
+ * WMA extension for `fal.realtime.open()`.
  *
- * "Raw" names the path: the browser POSTs a complete SDP offer straight to the WMA signalling bridge
- * and media flows peer-to-peer from the fal runner. That covers every app which GENERATES its own
- * video, a pure output stream included, which is the case signalling over the fal WebSocket does not.
+ * The browser POSTs a complete SDP offer to the WMA signalling bridge, while media flows directly
+ * between the browser and fal runner (or through TURN). This supports receive-only generation and
+ * bidirectional transforms without putting media through the bridge.
  *
- * Shipped in the same package as the kernel on purpose. An extension maintained separately from the
- * contract it codes against drifts out of step with it, and the drift lands as a missing `context`
- * method at runtime rather than as a compile error.
+ * This fal-operated protocol ships with the client and uses the same extension contract available to
+ * separately versioned vendor adapters.
  *
- * FOUR TRAPS worth knowing about, all of them scar tissue rather than invention:
+ * Four protocol invariants shape the implementation:
  *
  *  1. NO TRICKLE ICE. The bridge takes one complete SDP, so the offer can only be sent once gathering
  *     has produced a usable candidate set — `context.gatherIce` is that strategy, and it is in the
@@ -27,20 +26,12 @@ import {
   type RealtimeExtensionContext,
   type RealtimeSession,
 } from "./extension";
+import { countTurnServers } from "./ice";
 
 const WMA_URL = "https://wma.fal.run";
 const HEARTBEAT_INTERVAL_MS = 5_000;
-export const ICE_GATHERING_TIMEOUT_MS = 12_000;
-export const ICE_CANDIDATE_QUIET_PERIOD_MS = 1_250;
 const MAX_QUEUED_MESSAGES = 64;
 const DEFAULT_STUN_URL = "stun:stun.l.google.com:19302";
-
-function countTurnServers(iceServers: RTCIceServer[]): number {
-  return iceServers.filter((server) => {
-    const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
-    return urls.some((url) => /^turns?:/i.test(url));
-  }).length;
-}
 
 export type WmaControlMessage = object;
 
@@ -52,10 +43,9 @@ export interface WmaOptions {
    */
   endpointId?: string;
   /**
-   * Media direction. `"recvonly"` is the default because it covers every raw-path app
-   * built so far — the runner generates, the browser receives. An app that also sends a
-   * camera up would pass `"sendrecv"`; that is the only difference between a pure output
-   * stream and an interactive one at this layer, which is worth knowing.
+   * Media direction. `"recvonly"` is the default for runner-generated output. An app that also
+   * sends camera media passes `"sendrecv"`; this is the transport-level distinction between a pure
+   * output stream and an interactive transform.
    */
   direction?: RTCRtpTransceiverDirection;
   /**
@@ -73,10 +63,10 @@ export interface WmaOptions {
   /**
    * ICE servers. OPTIONAL — when omitted the extension first asks the authenticated WMA bridge
    * for short-lived TURN credentials, then falls back to the app's own `/ice` endpoint for
-   * compatibility with deployments that have not adopted bridge vending yet.
+   * compatibility with deployments that expose app-owned credential vending.
    *
    * That self-provisioning is the answer to "who fetches ICE servers?", and it is possible
-   * because the bridge is reached through credentialed `context.fetch`, while the legacy app route
+   * because the bridge is reached through credentialed `context.fetch`, while the app fallback route
    * is a fal endpoint reached through `context.run`. The browser never sees the Metered secret,
    * only a credential minted for it.
    *
@@ -118,11 +108,9 @@ export interface IceGatheringProgress extends IceCandidateCounts {
  * and not for anyone behind blocked UDP.
  */
 /*
- * No client-side propagation wait any more. It used to read the credential's age from /ice and sleep
- * the remainder, which worked and put the policy in the wrong place — and could not be right, because
- * the runner's credential cache is per-instance: a browser could wait out the age one runner reported
- * and then negotiate against servers minted by another. The runner holds /ice instead, so by the time
- * these servers arrive they are usable. See the endpoint for the full reasoning.
+ * Credential propagation is enforced by the vending endpoint, not by a client-side delay. The
+ * server is the only side that knows which replica minted a credential and therefore the only side
+ * that can guarantee the returned credential is already usable.
  */
 async function fetchIceServers(
   context: RealtimeExtensionContext,
@@ -263,16 +251,9 @@ export function wma(endpointId?: string) {
       }
 
       /**
-       * What ICE actually did, for the failure message.
-       *
-       * The old message GUESSED: it said "if relay is 0 and either peer is behind symmetric NAT or
-       * blocked UDP…", which sent us chasing a NAT problem for three rounds while the real situation
-       * was narrower and visible the whole time — UDP refused on one port, flaky DNS on another, and
-       * two transports allocating fine. A diagnostic that speculates is worse than one that says
-       * nothing, because it is believed.
-       *
-       * `icecandidateerror` is where the truth lives: it carries the server URL, an error code and a
-       * text, per failing server. Deduplicated, because a retrying server repeats the same line.
+       * Observed ICE evidence for failure diagnostics. Candidate counts and `icecandidateerror`
+       * identify what was available and which server calls failed without guessing at an unseen NAT
+       * or firewall cause. Errors are deduplicated because a retrying server repeats the same line.
        */
       const observed = {
         host: 0,
@@ -290,7 +271,7 @@ export function wma(endpointId?: string) {
       const channel = pc.createDataChannel("control");
       // Published through context.data rather than an option of this extension's own: "a message
       // arrived" means the same thing in every protocol, so the kernel names it once and an
-      // application offering two extensions learns one name. See RealtimeOpenOptions.onMedia.
+      // application offering two extensions learns one name. See RealtimeOpenOptions.onData.
       channel.onmessage = (event) => context.data(String(event.data));
       pc.ontrack = (event) =>
         context.media(event.streams[0] ?? new MediaStream([event.track]));
@@ -377,10 +358,8 @@ export function wma(endpointId?: string) {
         const offer = await pc.createOffer();
         // Attach listeners BEFORE setLocalDescription starts gathering — fast host/srflx
         // candidates otherwise fire before the waiter exists and are never counted.
-        // The kernel's implementation. This file carried its own ~60 lines of sufficient-set /
-        // quiet-period / hard-bound strategy, which was never WMA-specific — it is what any extension
-        // facing a non-trickle signalling channel needs, so it now lives in the client and the counts
-        // arrive as diagnostics.
+        // Non-trickle signalling needs the kernel's sufficient-set / quiet-period / hard-bound
+        // strategy so the one SDP offer contains a usable, settled candidate set.
         const gathering = context.gatherIce(pc, { iceServers });
         await pc.setLocalDescription(offer);
         const gathered_ice = await gathering;

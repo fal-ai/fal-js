@@ -14,11 +14,11 @@ export {
   type RealtimeState,
 } from "./extension";
 
-// Exported so an extension living outside this package can reuse the strategy rather than
-// reimplement it, which is the whole reason it moved into the kernel.
+// Public building blocks for extensions, including ones maintained outside this package.
 export {
   DEFAULT_ICE_QUIET_PERIOD_MS,
   DEFAULT_ICE_TIMEOUT_MS,
+  countTurnServers,
   gatherIceCandidates,
   hasTurnServer,
   parseIceCandidateType,

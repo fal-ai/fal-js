@@ -232,7 +232,7 @@ export interface RealtimeConnectionHandler<Output> {
   clientOnly?: boolean;
 
   /**
-   * The throtle duration in milliseconds. This is used to throtle the
+   * The throttle duration in milliseconds. This is used to throttle the
    * calls to the `send` function. Realtime apps usually react to user
    * input, which can be very frequent (e.g. fast typing or mouse/drag movements).
    *
@@ -813,10 +813,8 @@ export function createRealtimeClient({
           // application stays proxied and the extension never sees a key. Raw `Response` rather than
           // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
           fetch: async (url: string, init: RequestInit = {}) => {
-            // DESTRUCTURED, not called as config.fetch(...). Native fetch checks its receiver, so
-            // invoking it as a method of the config object throws "Illegal invocation" — which is
-            // what happened on the first real connect through this path. dispatchRequest destructures
-            // for the same reason; this now matches it.
+            // Destructure before invocation: native fetch validates its receiver, so calling it as a
+            // method of the config object can throw "Illegal invocation".
             const { fetch: doFetch, credentials: credentialsValue } = config;
             const credentials =
               typeof credentialsValue === "function"

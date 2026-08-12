@@ -3,12 +3,17 @@ import type { IceGatheringOptions, IceGatheringResult } from "./extension";
 export const DEFAULT_ICE_TIMEOUT_MS = 12_000;
 export const DEFAULT_ICE_QUIET_PERIOD_MS = 1_250;
 
-/** Does this configuration include a TURN server? Then a relay candidate is required. */
-export function hasTurnServer(iceServers: RTCIceServer[]): boolean {
-  return iceServers.some((server) => {
+/** Number of configured TURN servers, counting each server object at most once. */
+export function countTurnServers(iceServers: RTCIceServer[]): number {
+  return iceServers.filter((server) => {
     const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
     return urls.some((url) => /^turns?:/i.test(url));
-  });
+  }).length;
+}
+
+/** Does this configuration include a TURN server? Then a relay candidate is required. */
+export function hasTurnServer(iceServers: RTCIceServer[]): boolean {
+  return countTurnServers(iceServers) > 0;
 }
 
 /** `typ host`, `typ srflx` or `typ relay` out of a candidate line. */

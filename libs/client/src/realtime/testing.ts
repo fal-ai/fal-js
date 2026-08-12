@@ -5,23 +5,14 @@ import type {
 } from "./extension";
 
 /**
- * A complete `RealtimeExtensionContext` for tests, with every member present.
+ * A complete, compiler-checked `RealtimeExtensionContext` for extension tests.
  *
- * EXISTS TO KILL A CAST. The extension specs used to build a partial object and write
- * `as unknown as RealtimeExtensionContext`, and a double cast switches off checking altogether — so
- * when the context grew `fetch`, `gatherIce`, `diagnostic` and `fail`, every spec kept compiling with
- * a fake that had none of them. The failure surfaced at runtime instead, as
- * "context.diagnostic is not a function", which is strictly later and harder to read than a build
- * error would have been.
+ * Returning the interface directly means a new required context member produces a compile error in
+ * extension tests instead of a later "method is not a function" failure. Overrides keep individual
+ * tests small without weakening the rest of the contract.
  *
- * Because this returns a real `RealtimeExtensionContext` with no cast, adding a member to the
- * interface now breaks these specs at COMPILE time — which is the entire reason the interface exists.
- *
- * SHIPPED, under `@fal-ai/client/realtime/testing`, rather than excluded from the build as it was.
- * An extension is only useful outside this package if it can be tested outside this package, and the
- * alternative is every author rebuilding this object from the interface — which is precisely the
- * hand-rolled partial fake this was written to delete. It stays out of the `./realtime` barrel so no
- * runtime bundle pays for it.
+ * Exported from `@fal-ai/client/realtime/testing` so external extensions can use the same checked
+ * fixture. It stays out of the `./realtime` barrel so production bundles do not include it.
  */
 export function fakeExtensionContext(
   overrides: Partial<RealtimeExtensionContext> = {},

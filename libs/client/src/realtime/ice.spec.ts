@@ -1,4 +1,5 @@
 import {
+  countTurnServers,
   gatherIceCandidates,
   hasTurnServer,
   parseIceCandidateType,
@@ -46,6 +47,18 @@ describe("hasTurnServer", () => {
     expect(hasTurnServer([{ urls: "turn:example:3478" }])).toBe(true);
     expect(hasTurnServer([{ urls: ["stun:a", "turns:b"] }])).toBe(true);
     expect(hasTurnServer([{ urls: "stun:example:19302" }])).toBe(false);
+  });
+});
+
+describe("countTurnServers", () => {
+  it("counts configured TURN server objects rather than URLs", () => {
+    expect(
+      countTurnServers([
+        { urls: ["turn:a:3478", "turns:a:443", "stun:a:19302"] },
+        { urls: "stun:b:19302" },
+        { urls: "turn:b:3478" },
+      ]),
+    ).toBe(2);
   });
 });
 

@@ -1,15 +1,16 @@
 # Where realtime extensions should live
 
-A follow-up to [fal-js#224](https://github.com/fal-ai/fal-js/pull/224), which added
-`defineRealtimeExtension` and three extensions built on it: `wma()`, `lucyRealtime()` and
+This document records where the realtime extension contract and its implementations should live.
+The current surface includes `defineRealtimeExtension`, `wma()`, `lucyRealtime()` and
 `websocket()`.
 
 The question this answers: should those extensions move into a package of their own —
 `@fal-ai/wma`, or similar — or stay in `@fal-ai/client`?
 
 **Recommendation: keep them in `@fal-ai/client`, and fix the packaging instead.** Then split along
-_ownership_, not along "is it an extension", and only when there is a second per-model protocol to
-justify it. The rest of this document is why, with the measurements that changed my mind.
+_ownership_, not along "is it an extension". A vendor-owned adapter with its own SDK or release
+cadence belongs outside the core client. The rest of this document explains the boundary and the
+measurements behind it.
 
 ---
 
@@ -48,7 +49,7 @@ bundle is 47.7 KB _whichever single extension you ask for_, and it contains all 
 directly, `wma.js` is 6.2 KB and `lucy.js` is 4.6 KB. A new package would recover those 7.8 KB —
 but so does a `package.json` change, without creating a second thing to version.
 
-Worth noting what is _not_ the cause, since it was my first guess: the package being CommonJS-only.
+The package being CommonJS-only is not the cause.
 A deep import of the built CJS `wma.js` already bundles at 6.2 KB with no trace of Lucy, because
 each module requires only what it uses. It is the re-export barrel that defeats this, and only the
 barrel. An ESM build is therefore not needed to fix it — see §7.
@@ -59,7 +60,7 @@ but that is almost entirely `@msgpack/msgpack`, which the core client already pu
 `websocket()` is close to free. Moving it out of the package would not remove msgpack from anyone's
 bundle; it would only duplicate it for anyone who uses both.
 
-I went in expecting the size argument to carry this. It does not. 7.8 KB is not a package.
+The size argument does not justify another package. 7.8 KB is not a package boundary.
 
 ---
 
@@ -72,7 +73,7 @@ protocol, and how long it lives**.
 | --------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | **Contract**                | The extension mechanism itself        | `defineRealtimeExtension`, `RealtimeExtension`, `RealtimeSession`, diagnostics, `gatherIceCandidates`, the fal wire format in `protocol.ts` | The SDK's        |
 | **Transports fal operates** | Infrastructure fal runs and publishes | `websocket()` (fal's inference protocol), `wma()` (the bridge at `wma.fal.run`)                                                             | The platform's   |
-| **Per-model protocols**     | One model's bespoke handshake         | `lucyRealtime()` (Decart), formerly `happyOyster()`                                                                                         | **That model's** |
+| **Per-model protocols**     | One model's bespoke handshake         | `lucyRealtime()` (Decart), Happy Oyster-style vendor adapters                                                                               | **That model's** |
 
 The first two tiers version with fal. The third does not, and that is the actual problem:
 
@@ -108,11 +109,10 @@ because fal operates the bridge and this is the reference implementation of a st
 publishes — but it is the thing to reconsider first if WMA's spec starts moving faster than the
 SDK.
 
-**A per-model package, when there are two of them** — named for what it is, not for "custom".
-`@fal-ai/realtime-lucy`, or better, published by whoever owns the model. It depends on
-`@fal-ai/client` as a peer, and exports one extension.
-
-**Nothing today.** One per-model protocol does not need a package. Two does.
+**A per-model package when ownership or dependencies differ** — named for what it is, not for
+"custom". `@fal-ai/realtime-lucy`, or preferably a package published by whoever owns the model,
+depends on `@fal-ai/client` as a peer and exports one extension. A vendor SDK is sufficient reason
+to split: it should not become a dependency of every `@fal-ai/client` consumer.
 
 ---
 
@@ -140,16 +140,16 @@ So: a WMA package holding _protocol types generated from the contract_ is defens
 WMA package holding _the extensions we happen to have written_ is the junk drawer. They are not the
 same proposal, and only the first one is about WMA.
 
-## 5. What is already true, and is easy to miss
+## 5. The existing extension boundary
 
-`@fal-ai/client/realtime` **already exports the full extension contract** —
+`@fal-ai/client/realtime` exports the full extension contract —
 `defineRealtimeExtension`, every type, and `gatherIceCandidates`, with a comment in
-`realtime/index.ts` saying it exists "so an extension living outside this package can reuse the
-strategy rather than reimplement it".
+`realtime/index.ts` describing them as public building blocks for extensions maintained inside or
+outside the package.
 
 And the coupling runs one way only: `realtime.ts`, `index.ts`, `config.ts` and `client.ts` contain
-**zero** references to `wma`, `lucy` or `websocket`. Removing the implicit `supports()` routing is
-what did that — the kernel no longer discovers extensions, it is handed one.
+**zero** references to `wma`, `lucy` or `websocket`. The kernel does not discover extensions; the
+caller hands it one explicitly.
 
 Which means **a third party can publish a fal realtime extension today**, with no change to this
 package. The architecture is already where a split would take it. That is the strongest reason not
@@ -160,27 +160,19 @@ rather than in anticipation of one.
 
 ## 6. What splitting actually costs
 
-The part that is easy to underestimate. Today the extension contract is an internal convention —
-`RealtimeExtensionContext` can change shape in a patch release because every implementation lives in
-this repo and moves with it.
-
-The moment one extension ships from another package, that contract becomes a **semver-stable public
-API**. Every field on the context, every diagnostic shape, every lifecycle guarantee. It also drags
-in `realtime/testing.ts` (`fakeExtensionContext`), which is not exported today — an external
-extension cannot currently be unit-tested without hand-rolling a fake, which is exactly what the
-typed fake was added to stop.
+External extensions make the contract a **semver-stable public API**: every field on the context,
+every diagnostic shape, and every lifecycle guarantee must remain compatible across packages.
+`fakeExtensionContext` is exported from `@fal-ai/client/realtime/testing` so an external extension
+can test against the same compiler-checked fixture rather than hand-rolling a partial context.
 
 That is a permanent tax, and a reasonable one to pay for a real ownership boundary. It is not a
 reasonable one to pay for 7.8 KB.
 
 ---
 
-## 7. Proposed sequence
+## 7. Current packaging and future split
 
-**Steps 1 and 2 are done** — they are cheap, non-breaking, and worth doing whatever is decided about
-packages, so they are implemented in this branch rather than left as a recommendation.
-
-1. **Per-extension subpath exports + `sideEffects: false`.** ✅ `@fal-ai/client/realtime/wma`,
+1. **Per-extension subpath exports + `sideEffects: false`.** `@fal-ai/client/realtime/wma`,
    `/lucy`, `/websocket`, `/ice`, `/extension`, `/testing`, each with matching `typesVersions`. The
    barrel keeps working, so nothing breaks.
 
@@ -191,28 +183,28 @@ packages, so they are implemented in this branch rather than left as a recommend
    | App importing the client + `wma()`        | 88,230 B | **80,402 B** (−7.8 KB, no Lucy) |
    | External extension importing the contract | 47,748 B | **711 B** (−98.5%)              |
 
-2. **Ship `fakeExtensionContext`.** ✅ Under `@fal-ai/client/realtime/testing`, which meant dropping
-   `src/**/testing.ts` from `tsconfig.lib.json`'s exclude list. It imports only types, so it costs
+2. **Ship `fakeExtensionContext`.** It is available under `@fal-ai/client/realtime/testing` and is
+   included in the library build. It imports only types, so it costs
    nothing to ship, and it stays out of the `./realtime` barrel so no runtime bundle pays for it.
    An extension is only useful outside this package if it can be _tested_ outside this package.
 
-3. **No ESM build.** Deliberately dropped from this step after measuring. It would not buy anything
-   here — subpath exports already recover every byte — and `@nx/js:tsc` emits extensionless relative
+3. **No ESM build is required for this split.** Subpath exports already recover every byte, and
+   `@nx/js:tsc` emits extensionless relative
    imports, which are valid for bundlers but **not resolvable by Node's native ESM loader**. Pointing
    an `exports.import` condition at that output would break `import` in Node for a saving of zero.
    Dual-format is a real change with a real hazard; it should be its own decision, made for its own
    reasons.
 
-4. **When there is a second per-model protocol:** move them out, one package per owner, peer-
-   depending on `@fal-ai/client`. Not before.
+4. **Vendor-owned adapters with independent SDKs or release cadences live outside the core client:**
+   one package per owner, peer-depending on `@fal-ai/client`.
 
 5. **Revisit `wma()` separately** if the WMA spec's cadence diverges from the SDK's. That is a
    different question from Lucy's, and it should not be answered by the same package.
 
 ## What would change this
 
-- A partner wanting to own and ship their own extension — that forces step 3 early, and is a good
-  reason.
+- A partner wanting to own and ship their own extension — that is exactly the ownership boundary
+  the public contract and testing subpath support.
 - The client gaining a dependency that only one extension needs. msgpack is already shared with
   `connect()`, so nothing today has this shape, but a WebRTC extension pulling a polyfill would.
 - `@fal-ai/client` becoming import-heavy enough that 7.8 KB stops being noise. It is 74 KB before

@@ -53,8 +53,8 @@ describe("wma", () => {
   }
 
   it("gets bridge ICE before creating the offer, then reaches the bridge through context.fetch", async () => {
-    // The reason this extension can live in the client at all: it needs a credentialed request to a
-    // host that is not a fal endpoint, and it no longer asks the application for one.
+    // The extension needs a credentialed request to a host that is not a fal endpoint, so bridge
+    // access belongs to the shared context rather than application-supplied fetch plumbing.
     const { channel } = install();
     const calls: Array<{ url: string; body: unknown }> = [];
     const context = fakeExtensionContext({

@@ -126,9 +126,8 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
           // awaiting it, so a diagnostic would be a second copy of something they already get.
           rejectNegotiation(resolved);
         } else {
-          // After it exists, open() has already resolved and nothing is listening for a throw. This
-          // is the case a bespoke onError used to cover, and context.fail covers it uniformly: a
-          // failure diagnostic, state "failed", then teardown.
+          // After open() resolves, a throw has no awaiting caller. context.fail publishes the
+          // failure, latches state as "failed", and tears down the session.
           void context.fail(resolved.message);
         }
       };
@@ -185,9 +184,8 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         peer.onconnectionstatechange = () => {
           if (!peer) return;
           reportState(peer.connectionState);
-          // A dead peer is a FAILURE, a closed one is a teardown. Both used to end up as
-          // context.close(), so a caller could not tell a transport that died from a user who
-          // disconnected — the distinction a status UI most needs.
+          // A dead peer is a failure; a closed peer is an orderly teardown. Status UIs need that
+          // distinction even though both paths release the same resources.
           if (peer.connectionState === "failed") {
             void context.fail(
               "Lucy peer connection failed — no candidate pair survived",
