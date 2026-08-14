@@ -73,6 +73,14 @@ export interface WmaOptions {
    * Pass this to override (your own TURN provider, or to force STUN for testing).
    */
   iceServers?: RTCIceServer[];
+  /**
+   * Which ICE candidate types the browser may use.
+   *
+   * The browser default, `"all"`, prefers direct host or server-reflexive paths and uses TURN only
+   * when needed. Set this to `"relay"` to require a TURN path, primarily for connectivity tests.
+   * Opening fails if none of the configured TURN servers can allocate a relay candidate.
+   */
+  iceTransportPolicy?: RTCIceTransportPolicy;
 }
 
 export interface WmaRealtimeSession extends RealtimeSession {
@@ -234,7 +242,10 @@ export function wma(endpointId?: string) {
     defaultEndpoint: endpointId,
     async open(context, options) {
       const iceServers = options.iceServers ?? (await fetchIceServers(context));
-      const pc = new RTCPeerConnection({ iceServers });
+      const pc = new RTCPeerConnection({
+        iceServers,
+        iceTransportPolicy: options.iceTransportPolicy,
+      });
 
       // The default that matters: recvonly. A generated stream never needs an inbound track,
       // and asking for one would make the runner negotiate media it will not send.

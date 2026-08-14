@@ -183,6 +183,44 @@ describe("wma", () => {
     });
   });
 
+  it("can require a TURN relay path", async () => {
+    install();
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      fetch: async (url: string) =>
+        new Response(
+          url.endsWith("/ice")
+            ? JSON.stringify({
+                ice_servers: [
+                  {
+                    urls: "turn:example",
+                    username: "fixture-user",
+                    credential: "fixture-credential",
+                  },
+                ],
+                status: "turn",
+              })
+            : JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    });
+
+    await wma().open(context, {
+      endpointId: "me/my-world",
+      iceTransportPolicy: "relay",
+    });
+
+    expect(global.RTCPeerConnection).toHaveBeenCalledWith({
+      iceServers: [
+        {
+          urls: "turn:example",
+          username: "fixture-user",
+          credential: "fixture-credential",
+        },
+      ],
+      iceTransportPolicy: "relay",
+    });
+  });
+
   it("degrades to STUN and says so when /ice is unavailable", async () => {
     install();
     const events: unknown[] = [];
