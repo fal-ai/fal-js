@@ -61,9 +61,9 @@ export interface WmaOptions {
    */
   localStream?: MediaStream | null;
   /**
-   * ICE servers. OPTIONAL — when omitted the extension first asks the authenticated WMA bridge
-   * for short-lived TURN credentials, then falls back to the app's own `/ice` endpoint for
-   * compatibility with deployments that expose app-owned credential vending.
+   * ICE servers. OPTIONAL — when omitted the extension first sends the routed endpoint identity to
+   * the authenticated WMA bridge for short-lived TURN credentials, then falls back to the app's own
+   * `/ice` endpoint for deployments that manage their own credential vending.
    *
    * That self-provisioning is the answer to "who fetches ICE servers?", and it is possible
    * because the bridge is reached through credentialed `context.fetch`, while the app fallback route
@@ -128,6 +128,7 @@ async function fetchIceServers(
       method: "POST",
       signal: context.signal,
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ app_id: context.endpointId }),
     });
     if (!response.ok) {
       throw new Error(`bridge /ice request failed (HTTP ${response.status})`);
@@ -149,7 +150,15 @@ async function fetchIceServers(
       });
       return payload.ice_servers;
     }
-    throw new Error("bridge /ice response contained no ICE servers");
+    if (payload.status === "app_managed") {
+      context.diagnostic({
+        kind: "progress",
+        phase: "ice-servers",
+        detail: { source: "app-managed; trying app fallback" },
+      });
+    } else {
+      throw new Error("bridge /ice response contained no ICE servers");
+    }
   } catch {
     // A bridge rollout must not strand existing apps which vend their own credentials.
     // Do not include the error in diagnostics: fetch implementations may include credentials in

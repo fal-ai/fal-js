@@ -88,6 +88,9 @@ describe("wma", () => {
 
     expect(calls).toHaveLength(2);
     expect(calls[0].url).toBe("https://wma.fal.run/ice");
+    expect(JSON.parse(String(calls[0].body))).toEqual({
+      app_id: "me/my-world",
+    });
     expect(calls[1].url).toBe("https://wma.fal.run/session");
     expect(JSON.parse(String(calls[1].body))).toEqual({
       app_id: "me/my-world",
@@ -143,6 +146,45 @@ describe("wma", () => {
             source: "app-fallback",
             status: "turn",
           }),
+        }),
+      ]),
+    );
+  });
+
+  it("falls back to app-managed ICE when the bridge withholds managed TURN", async () => {
+    install();
+    const events: unknown[] = [];
+    const run = jest.fn(async () => ({
+      data: {
+        ice_servers: [{ urls: "turn:app", username: "u", credential: "p" }],
+        status: "turn",
+      },
+      requestId: "r",
+    }));
+    const context = fakeExtensionContext({
+      endpointId: "partner/my-world",
+      run: run as never,
+      diagnostic: (event) => events.push(event),
+      fetch: async (url: string) =>
+        new Response(
+          url.endsWith("/ice")
+            ? JSON.stringify({ ice_servers: [], status: "app_managed" })
+            : JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    });
+
+    await wma().open(context, { endpointId: "partner/my-world" });
+
+    expect(run).toHaveBeenCalledWith("partner/my-world/ice", { input: {} });
+    expect(global.RTCPeerConnection).toHaveBeenCalledWith({
+      iceServers: [{ urls: "turn:app", username: "u", credential: "p" }],
+      iceTransportPolicy: undefined,
+    });
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          phase: "ice-servers",
+          detail: { source: "app-managed; trying app fallback" },
         }),
       ]),
     );
