@@ -44,6 +44,7 @@ export async function gatherIceCandidates(
 ): Promise<IceGatheringResult> {
   const {
     iceServers = [],
+    iceTransportPolicy = "all",
     timeoutMs = DEFAULT_ICE_TIMEOUT_MS,
     quietPeriodMs = DEFAULT_ICE_QUIET_PERIOD_MS,
     onProgress,
@@ -68,7 +69,9 @@ export async function gatherIceCandidates(
     let quiet: ReturnType<typeof setTimeout> | null = null;
     const requireRelay = hasTurnServer(iceServers);
     const sufficient = () =>
-      counts.srflx > 0 && (!requireRelay || counts.relay > 0);
+      iceTransportPolicy === "relay"
+        ? counts.relay > 0
+        : counts.srflx > 0 && (!requireRelay || counts.relay > 0);
 
     const finish = (state: IceGatheringResult["state"]) => {
       if (settled) return;

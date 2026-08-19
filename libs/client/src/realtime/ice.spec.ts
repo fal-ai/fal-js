@@ -110,6 +110,23 @@ describe("gatherIceCandidates", () => {
     });
   });
 
+  it("settles on a relay without waiting for srflx in relay-only mode", async () => {
+    const pc = fakePc();
+    const done = gatherIceCandidates(pc as any, {
+      iceServers: [{ urls: "turn:example:3478" }],
+      iceTransportPolicy: "relay",
+      quietPeriodMs: 15,
+    });
+    pc.emitCandidate(line("relay"));
+    const result = await done;
+    expect(result).toEqual({
+      host: 0,
+      srflx: 0,
+      relay: 1,
+      state: "sufficient",
+    });
+  });
+
   it("a later candidate restarts the quiet period", async () => {
     const pc = fakePc();
     const done = gatherIceCandidates(pc as any, { quietPeriodMs: 40 });

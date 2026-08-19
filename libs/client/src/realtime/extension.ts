@@ -155,6 +155,11 @@ export interface IceGatheringOptions {
    * entire reason TURN was configured.
    */
   iceServers?: RTCIceServer[];
+  /**
+   * The candidate policy used by the peer connection. Relay-only gathering is sufficient as soon
+   * as a relay candidate settles; it intentionally cannot produce a server-reflexive candidate.
+   */
+  iceTransportPolicy?: RTCIceTransportPolicy;
   /** Hard bound. Reached only when gathering neither completes nor becomes sufficient. */
   timeoutMs?: number;
   /** How long the candidate set must stop changing before it is considered settled. */

@@ -380,7 +380,10 @@ export function wma(endpointId?: string) {
         // candidates otherwise fire before the waiter exists and are never counted.
         // Non-trickle signalling needs the kernel's sufficient-set / quiet-period / hard-bound
         // strategy so the one SDP offer contains a usable, settled candidate set.
-        const gathering = context.gatherIce(pc, { iceServers });
+        const gathering = context.gatherIce(pc, {
+          iceServers,
+          iceTransportPolicy: options.iceTransportPolicy,
+        });
         await pc.setLocalDescription(offer);
         const gathered_ice = await gathering;
         observed.host = gathered_ice.host;

@@ -217,11 +217,15 @@ describe("wma", () => {
         ),
     });
 
-    await wma().open(context, { endpointId: "me/my-world" });
+    await wma().open(context, {
+      endpointId: "me/my-world",
+      iceTransportPolicy: "relay",
+    });
     expect(gatherIce).toHaveBeenCalledTimes(1);
     // The servers must reach it, or "sufficient" cannot know a relay is required.
     expect(gatherIce.mock.calls[0][1]).toEqual({
       iceServers: [{ urls: "turn:example", username: "u", credential: "p" }],
+      iceTransportPolicy: "relay",
     });
   });
 
