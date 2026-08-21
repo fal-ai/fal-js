@@ -212,8 +212,10 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
       });
 
       ws.onmessage = (event) => {
-        void Promise.resolve(decodeMessage(event.data))
+        void Promise.resolve()
+          .then(() => decodeMessage(event.data))
           .then((decoded) => {
+            if (context.signal.aborted) return;
             if (isUnauthorizedError(decoded)) {
               void context.fail("realtime connection is unauthorized");
               return;
@@ -232,6 +234,7 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
             }
           })
           .catch((error: unknown) => {
+            if (context.signal.aborted) return;
             context.diagnostic({
               kind: "warning",
               message:

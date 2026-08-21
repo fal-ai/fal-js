@@ -141,6 +141,88 @@ describe("websocket", () => {
     expect(onResult).toHaveBeenCalledWith({ request_id: "r1", images: [] });
   });
 
+  it("drops an asynchronous decode that finishes after teardown", async () => {
+    const controller = new AbortController();
+    let finishDecode: (value: unknown) => void = () => undefined;
+    const decoded = new Promise<unknown>((resolve) => {
+      finishDecode = resolve;
+    });
+    const onResult = jest.fn();
+    const context = fakeExtensionContext({
+      endpointId: "fal-ai/fast-sdxl",
+      signal: controller.signal,
+    });
+    const session = websocket().open(context, {
+      tokenProvider,
+      decodeMessage: () => decoded,
+      onResult,
+    });
+    await flush();
+    const ws = FakeWebSocket.last;
+    expect(ws).toBeDefined();
+    ws?.open();
+    await session;
+
+    ws?.onmessage?.({ data: "pending" });
+    controller.abort(new Error("session closed"));
+    finishDecode({ request_id: "too-late", images: [] });
+    await flush();
+
+    expect(onResult).not.toHaveBeenCalled();
+  });
+
+  it("contains a synchronous decoder throw after teardown", async () => {
+    const controller = new AbortController();
+    const diagnostic = jest.fn();
+    const context = fakeExtensionContext({
+      endpointId: "fal-ai/fast-sdxl",
+      signal: controller.signal,
+      diagnostic,
+    });
+    const session = websocket().open(context, {
+      tokenProvider,
+      decodeMessage: () => {
+        throw new Error("bad frame");
+      },
+      onResult: jest.fn(),
+    });
+    await flush();
+    const ws = FakeWebSocket.last;
+    ws?.open();
+    await session;
+    const diagnosticsBeforeTeardown = diagnostic.mock.calls.length;
+    controller.abort(new Error("session closed"));
+
+    expect(() => ws?.onmessage?.({ data: "bad" })).not.toThrow();
+    await flush();
+
+    expect(diagnostic).toHaveBeenCalledTimes(diagnosticsBeforeTeardown);
+  });
+
+  it("reports a synchronous decoder throw while live", async () => {
+    const diagnostic = jest.fn();
+    const context = fakeExtensionContext({ diagnostic });
+    const session = websocket().open(context, {
+      tokenProvider,
+      decodeMessage: () => {
+        throw new Error("bad frame");
+      },
+      onResult: jest.fn(),
+    });
+    await flush();
+    const ws = FakeWebSocket.last;
+    ws?.open();
+    await session;
+
+    ws?.onmessage?.({ data: "bad" });
+    await flush();
+
+    expect(diagnostic).toHaveBeenCalledWith({
+      kind: "warning",
+      message: "bad frame",
+    });
+  });
+
   it("fails the session when the server rejects the token", async () => {
     const fail = jest.fn(async () => undefined);
     const context = fakeExtensionContext({
