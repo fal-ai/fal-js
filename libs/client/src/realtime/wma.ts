@@ -460,9 +460,18 @@ export function wma(endpointId?: string) {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ session_id: answer.session_id }),
             })
+            .then(async (response) => {
+              if (!response.ok) return;
+              const status = (await response.json()) as { alive?: boolean };
+              if (status.alive === false) {
+                await context.fail(
+                  "WMA bridge reports that the session is no longer alive",
+                );
+              }
+            })
             .catch(() => {
-              // Gaps are tolerated by the bridge; a genuinely dead session surfaces
-              // through connectionState, so failing loudly here would be noise.
+              // Transient gaps are tolerated by the bridge. Only its explicit
+              // alive=false response proves that this session is gone.
             })
             .finally(() => {
               heartbeatInFlight = false;

@@ -428,6 +428,50 @@ describe("wma", () => {
     );
   });
 
+  it("fails when the bridge heartbeat reports that the session is gone", async () => {
+    jest.useFakeTimers();
+    try {
+      const { channel } = install();
+      const fail = jest.fn(async () => undefined);
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fail,
+        fetch: async (url: string) => {
+          if (url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({ ice_servers: [{ urls: "stun:x" }] }),
+            );
+          }
+          if (url.endsWith("/heartbeat")) {
+            return {
+              ok: true,
+              json: async () => ({ alive: false }),
+            } as Response;
+          }
+          return new Response(
+            JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+          );
+        },
+      });
+      const session = await wma().open(context, {
+        endpointId: "me/my-world",
+      });
+
+      jest.advanceTimersByTime(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(fail).toHaveBeenCalledWith(
+        "WMA bridge reports that the session is no longer alive",
+      );
+      await session.close();
+      expect(channel.close).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("surfaces a bridge error message instead of a bare status code", async () => {
     install();
     const context = fakeExtensionContext({
