@@ -60,7 +60,8 @@ const FAL_SERVICE_HOSTS = new Set(["wma.fal.run"]);
 
 /** Is this fal's own service infrastructure, carrying no customer app? */
 function isFalServiceHost(targetUrl: string): boolean {
-  return FAL_SERVICE_HOSTS.has(new URL(targetUrl).host);
+  const url = new URL(targetUrl);
+  return url.protocol === "https:" && FAL_SERVICE_HOSTS.has(url.host);
 }
 
 /**
@@ -83,7 +84,7 @@ function isFalInfrastructure(targetUrl: string): boolean {
   // Exempting the whole domain would leave that option restricting nothing on its main path, so the
   // widening has to name the service hosts rather than the domain they happen to share.
   return (
-    host === "fal.ai" || host.endsWith(".fal.ai") || FAL_SERVICE_HOSTS.has(host)
+    host === "fal.ai" || host.endsWith(".fal.ai") || isFalServiceHost(targetUrl)
   );
 }
 

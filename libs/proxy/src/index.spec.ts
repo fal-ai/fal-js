@@ -476,6 +476,18 @@ describe("handleRequest rejection reasons", () => {
     ).toEqual({ status: 401, data: "Unauthorized" });
   });
 
+  it("does not exempt the bridge host over plaintext HTTP", async () => {
+    expect(
+      await run("http://wma.fal.run/session", {
+        allowedUrlPatterns: ["fal.run/me/my-app/**"],
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
+    });
+  });
+
   it("does NOT implicitly allow fal.ai, which is not allowed by default today", async () => {
     // The exemption is the enumerated service set, not every fal-owned domain. Widening it to `.fal.ai`
     // would silently start permitting hosts this proxy has always refused.

@@ -160,6 +160,12 @@ async function fetchIceServers(
       throw new Error("bridge /ice response contained no ICE servers");
     }
   } catch {
+    if (context.signal.aborted) {
+      throw (
+        context.signal.reason ??
+        new DOMException("WMA ICE discovery aborted", "AbortError")
+      );
+    }
     // A bridge rollout must not strand existing apps which vend their own credentials.
     // Do not include the error in diagnostics: fetch implementations may include credentials in
     // their message, while the source is enough to make the fallback visible to the caller.
@@ -173,6 +179,7 @@ async function fetchIceServers(
   try {
     const result = await context.run(`${context.endpointId}/ice`, {
       input: {},
+      abortSignal: context.signal,
     });
     const payload = result.data as {
       ice_servers?: RTCIceServer[];
@@ -199,6 +206,12 @@ async function fetchIceServers(
       detail: { source: "empty-ice-response" },
     });
   } catch (exc) {
+    if (context.signal.aborted) {
+      throw (
+        context.signal.reason ??
+        new DOMException("WMA ICE discovery aborted", "AbortError")
+      );
+    }
     console.warn("[wma] /ice unavailable, falling back to STUN:", exc);
     context.diagnostic({
       kind: "progress",
@@ -318,15 +331,12 @@ export function wma(endpointId?: string) {
                 "never available to try.",
             );
           }
-          context.diagnostic({
-            kind: "failure",
-            message: parts.join(" "),
-            observed: {
-              ...observed,
-              turnOffered,
-              errors: [...observed.errors].join("; "),
-            },
+          void context.fail(parts.join(" "), {
+            ...observed,
+            turnOffered,
+            errors: [...observed.errors].join("; "),
           });
+          return;
         }
         // Detail, not lifecycle. The kernel reports opening/live/failed/closed; the peer connection's
         // own vocabulary is useful for debugging WMA and meaningless as a cross-protocol signal.
@@ -354,16 +364,13 @@ export function wma(endpointId?: string) {
 
       // Trap 2, resolved properly by the managed lifecycle: SCTP state is independent of
       // `pc.connectionState`, so the channel can die while ICE still claims "connected" and
-      // every control message is silently dropped. Report it AND end the session through
-      // `context.close()` — leaving it "open but deaf" is the failure mode worth killing.
+      // every control message is silently dropped. Report it as a failed session rather than
+      // laundering transport death into a clean close.
       const channelDied = () => {
         if (closed) return;
-        context.diagnostic({
-          kind: "failure",
-          message:
-            "control data channel closed or errored — SCTP died while ICE may still say connected",
-        });
-        void context.close();
+        void context.fail(
+          "control data channel closed or errored — SCTP died while ICE may still say connected",
+        );
       };
       channel.onclose = channelDied;
       channel.onerror = channelDied;
@@ -389,6 +396,15 @@ export function wma(endpointId?: string) {
         observed.host = gathered_ice.host;
         observed.srflx = gathered_ice.srflx;
         observed.relay = gathered_ice.relay;
+
+        if (
+          options.iceTransportPolicy === "relay" &&
+          gathered_ice.relay === 0
+        ) {
+          throw new Error(
+            "WMA requires a TURN relay, but ICE gathering produced no relay candidate",
+          );
+        }
 
         const gathered = pc.localDescription;
         if (!gathered) throw new Error("failed to create WebRTC offer");

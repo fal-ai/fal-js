@@ -47,8 +47,13 @@ export async function gatherIceCandidates(
     iceTransportPolicy = "all",
     timeoutMs = DEFAULT_ICE_TIMEOUT_MS,
     quietPeriodMs = DEFAULT_ICE_QUIET_PERIOD_MS,
+    signal,
     onProgress,
   } = options;
+
+  const abortReason = () =>
+    signal?.reason ?? new DOMException("ICE gathering aborted", "AbortError");
+  if (signal?.aborted) throw abortReason();
 
   const counts = { host: 0, srflx: 0, relay: 0 };
   const snapshot = (
@@ -64,7 +69,7 @@ export async function gatherIceCandidates(
     return done;
   }
 
-  return new Promise<IceGatheringResult>((resolve) => {
+  return new Promise<IceGatheringResult>((resolve, reject) => {
     let settled = false;
     let quiet: ReturnType<typeof setTimeout> | null = null;
     const requireRelay = hasTurnServer(iceServers);
@@ -73,9 +78,7 @@ export async function gatherIceCandidates(
         ? counts.relay > 0
         : counts.srflx > 0 && (!requireRelay || counts.relay > 0);
 
-    const finish = (state: IceGatheringResult["state"]) => {
-      if (settled) return;
-      settled = true;
+    const removeWaiters = () => {
       clearTimeout(hardBound);
       if (quiet !== null) clearTimeout(quiet);
       pc.removeEventListener(
@@ -83,9 +86,21 @@ export async function gatherIceCandidates(
         onState as EventListener,
       );
       pc.removeEventListener("icecandidate", onCandidate as EventListener);
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const finish = (state: IceGatheringResult["state"]) => {
+      if (settled) return;
+      settled = true;
+      removeWaiters();
       const done = snapshot(state);
       onProgress?.(done);
       resolve(done);
+    };
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      removeWaiters();
+      reject(abortReason());
     };
     const onState = () => {
       if (pc.iceGatheringState === "complete") finish("complete");
@@ -102,5 +117,8 @@ export async function gatherIceCandidates(
     const hardBound = setTimeout(() => finish("timeout"), timeoutMs);
     pc.addEventListener("icegatheringstatechange", onState as EventListener);
     pc.addEventListener("icecandidate", onCandidate as EventListener);
+    signal?.addEventListener("abort", onAbort, { once: true });
+    // Close the race where the signal aborts between the initial check and listener registration.
+    if (signal?.aborted) onAbort();
   });
 }

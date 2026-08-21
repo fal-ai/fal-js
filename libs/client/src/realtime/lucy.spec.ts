@@ -120,6 +120,55 @@ describe("lucyRealtime", () => {
     expect(seen).toEqual([stream]);
   });
 
+  it("synthesizes a stream for a streamless remote track", async () => {
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const seen: MediaStream[] = [];
+    const containedTracks: unknown[] = [];
+    (global as unknown as { MediaStream: unknown }).MediaStream = class {
+      constructor(tracks: unknown[]) {
+        containedTracks.push(...tracks);
+      }
+    };
+    const peer = {
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
+      setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+      media: (stream: MediaStream) => void seen.push(stream),
+    });
+
+    const opening = lucyRealtime().open(context, {
+      endpointId: context.endpointId,
+      input: { prompt: "anything" },
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({
+      type: "iceServers",
+      iceServers: [],
+      request_id: "ready",
+    });
+    await opening;
+
+    const track = { kind: "video" };
+    (peer.ontrack as unknown as (event: unknown) => void)({
+      streams: [],
+      track,
+    });
+    expect(seen).toHaveLength(1);
+    expect(containedTracks).toEqual([track]);
+  });
+
   it("rejects immediately when signaling is aborted", async () => {
     const controller = new AbortController();
     const reason = new Error("user left");

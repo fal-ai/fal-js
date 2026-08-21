@@ -175,7 +175,10 @@ describe("wma", () => {
 
     await wma().open(context, { endpointId: "partner/my-world" });
 
-    expect(run).toHaveBeenCalledWith("partner/my-world/ice", { input: {} });
+    expect(run).toHaveBeenCalledWith("partner/my-world/ice", {
+      input: {},
+      abortSignal: context.signal,
+    });
     expect(global.RTCPeerConnection).toHaveBeenCalledWith({
       iceServers: [{ urls: "turn:app", username: "u", credential: "p" }],
       iceTransportPolicy: undefined,
@@ -233,6 +236,12 @@ describe("wma", () => {
     install();
     const context = fakeExtensionContext({
       endpointId: "me/my-world",
+      gatherIce: async () => ({
+        host: 0,
+        srflx: 0,
+        relay: 1,
+        state: "sufficient",
+      }),
       fetch: async (url: string) =>
         new Response(
           url.endsWith("/ice")
@@ -267,6 +276,49 @@ describe("wma", () => {
     });
   });
 
+  it("does not start a relay-only session without a gathered relay candidate", async () => {
+    install();
+    const fetch = jest.fn(
+      async (url: string) =>
+        new Response(
+          url.endsWith("/ice")
+            ? JSON.stringify({
+                ice_servers: [
+                  {
+                    urls: "turn:example",
+                    username: "fixture-user",
+                    credential: "fixture-credential",
+                  },
+                ],
+                status: "turn",
+              })
+            : JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    );
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      fetch,
+      gatherIce: async () => ({
+        host: 0,
+        srflx: 0,
+        relay: 0,
+        state: "timeout",
+      }),
+    });
+
+    await expect(
+      wma().open(context, {
+        endpointId: "me/my-world",
+        iceTransportPolicy: "relay",
+      }),
+    ).rejects.toThrow("ICE gathering produced no relay candidate");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      "https://wma.fal.run/ice",
+      expect.any(Object),
+    );
+  });
+
   it("degrades to STUN and says so when /ice is unavailable", async () => {
     install();
     const events: unknown[] = [];
@@ -296,6 +348,61 @@ describe("wma", () => {
           }),
         }),
       ]),
+    );
+  });
+
+  it("does not start app ICE fallback after bridge discovery is aborted", async () => {
+    install();
+    const controller = new AbortController();
+    const reason = new Error("user cancelled");
+    const run = jest.fn();
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      signal: controller.signal,
+      run: run as never,
+      fetch: async (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(init.signal?.reason),
+            { once: true },
+          );
+        }),
+    });
+
+    const opening = wma().open(context, { endpointId: "me/my-world" });
+    controller.abort(reason);
+
+    await expect(opening).rejects.toBe(reason);
+    expect(run).not.toHaveBeenCalled();
+    expect(global.RTCPeerConnection).not.toHaveBeenCalled();
+  });
+
+  it("reports peer and control-channel transport death through context.fail", async () => {
+    const { peer, channel } = install();
+    const fail = jest.fn(async () => undefined);
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      fail,
+      fetch: async (url: string) =>
+        new Response(
+          url.endsWith("/ice")
+            ? JSON.stringify({ ice_servers: [{ urls: "stun:x" }] })
+            : JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    });
+    await wma().open(context, { endpointId: "me/my-world" });
+
+    peer.connectionState = "failed";
+    peer.onconnectionstatechange?.();
+    expect(fail).toHaveBeenCalledWith(
+      expect.stringContaining("ICE could not establish a path"),
+      expect.objectContaining({ host: 0, srflx: 0, relay: 0 }),
+    );
+
+    channel.onclose?.();
+    expect(fail).toHaveBeenCalledWith(
+      expect.stringContaining("control data channel closed or errored"),
     );
   });
 

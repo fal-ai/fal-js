@@ -156,4 +156,21 @@ describe("gatherIceCandidates", () => {
     pc.complete();
     expect((await done).state).toBe("complete");
   });
+
+  it("rejects immediately and removes listeners when gathering is aborted", async () => {
+    const pc = fakePc();
+    const controller = new AbortController();
+    const reason = new Error("session closed");
+    const done = gatherIceCandidates(pc as any, {
+      signal: controller.signal,
+      timeoutMs: 10_000,
+    });
+
+    controller.abort(reason);
+
+    await expect(done).rejects.toBe(reason);
+    // Removed listeners make late browser events inert instead of reviving progress after abort.
+    pc.emitCandidate(line("relay"));
+    pc.complete();
+  });
 });

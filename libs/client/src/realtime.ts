@@ -47,6 +47,29 @@ import type { EndpointType, InputType, OutputType } from "./types/client";
 import type { Result, RunOptions } from "./types/common";
 import { isReact, throttle } from "./utils";
 
+const FAL_SERVICE_HOSTS = new Set(["wma.fal.run"]);
+
+function assertFalInfrastructureUrl(rawUrl: string): void {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    throw new Error("Realtime infrastructure fetch requires an absolute URL.");
+  }
+
+  const host = url.host.toLowerCase();
+  const isFalInfrastructure =
+    url.protocol === "https:" &&
+    (host === "fal.ai" ||
+      host.endsWith(".fal.ai") ||
+      FAL_SERVICE_HOSTS.has(host));
+  if (!isFalInfrastructure) {
+    throw new Error(
+      "Realtime infrastructure fetch is restricted to fal-operated HTTPS hosts.",
+    );
+  }
+}
+
 // Define the context
 interface Context {
   token?: string;
@@ -703,6 +726,7 @@ export function createRealtimeClient({
     const controller = new AbortController();
     const cleanups: Array<() => void | Promise<void>> = [];
     let closed = false;
+    let cleanupPromise: Promise<void> | undefined;
     let session: RealtimeSession | undefined;
     // Owned by the kernel, not the extension. The kernel is the only thing that knows about abort,
     // failed opens and idempotent close, so it is the only thing that can report those honestly —
@@ -725,24 +749,29 @@ export function createRealtimeClient({
       }
     };
 
-    const cleanup = async () => {
-      if (closed) return;
+    const cleanup = (): Promise<void> => {
+      if (cleanupPromise) return cleanupPromise;
       closed = true;
       setState("closed");
       controller.abort();
       externalSignal?.removeEventListener("abort", abort);
-      try {
-        await session?.close();
-      } finally {
-        for (const release of cleanups.reverse()) {
-          try {
-            await release();
-          } catch {
-            // Teardown is best-effort; one failed release must not prevent the
-            // remaining resources from being closed.
+      // Defer the work by one microtask so cleanupPromise is assigned before an
+      // extension close hook can re-enter cleanup through context.close().
+      cleanupPromise = Promise.resolve().then(async () => {
+        try {
+          await session?.close();
+        } finally {
+          for (const release of cleanups.reverse()) {
+            try {
+              await release();
+            } catch {
+              // Teardown is best-effort; one failed release must not prevent the
+              // remaining resources from being closed.
+            }
           }
         }
-      }
+      });
+      return cleanupPromise;
     };
     const abort = () => {
       void cleanup();
@@ -813,6 +842,10 @@ export function createRealtimeClient({
           // application stays proxied and the extension never sees a key. Raw `Response` rather than
           // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
           fetch: async (url: string, init: RequestInit = {}) => {
+            // Validate the extension-controlled destination before middleware may rewrite it to an
+            // application-controlled proxy. Otherwise an extension could send the parent API key to
+            // an arbitrary host merely by naming it here.
+            assertFalInfrastructureUrl(url);
             // Destructure before invocation: native fetch validates its receiver, so calling it as a
             // method of the config object can throw "Illegal invocation".
             const { fetch: doFetch, credentials: credentialsValue } = config;
@@ -843,6 +876,7 @@ export function createRealtimeClient({
           gatherIce: (pc, iceOptions) =>
             gatherIceCandidates(pc, {
               ...iceOptions,
+              signal: controller.signal,
               onProgress: (result) =>
                 diagnostic({
                   kind: "progress",

@@ -164,6 +164,8 @@ export interface IceGatheringOptions {
   timeoutMs?: number;
   /** How long the candidate set must stop changing before it is considered settled. */
   quietPeriodMs?: number;
+  /** Cancel gathering immediately and remove its listeners and timers. */
+  signal?: AbortSignal;
 }
 
 export interface RealtimeExtensionContext {
