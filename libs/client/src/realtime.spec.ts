@@ -176,6 +176,34 @@ describe("createRealtimeClient", () => {
     second.close();
   });
 
+  it("lets the latest reused handle close despite a discarded older handle", async () => {
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    second.close();
+    first.send({ prompt: "must stay closed" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).not.toHaveBeenCalled();
+    expect(WebSocketMock).not.toHaveBeenCalled();
+  });
+
   it("drops a throttled send that was pending when the connection closed", async () => {
     const tokenProvider = jest.fn(() => new Promise<string>(() => undefined));
     const client = createRealtimeClient({ config });

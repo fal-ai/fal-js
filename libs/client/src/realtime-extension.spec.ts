@@ -594,6 +594,40 @@ describe("realtime extension context additions", () => {
     expect(data).toEqual(['{"a":1}']);
   });
 
+  it("drops media and data emitted after teardown begins", async () => {
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "k" }),
+    });
+    let emitMedia!: (stream: MediaStream) => void;
+    let emitData!: (raw: string) => void;
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/closed-channels",
+      defaultEndpoint: "test/closed-channels",
+      async open(context) {
+        emitMedia = context.media;
+        emitData = context.data;
+        return { close: jest.fn() };
+      },
+    });
+    const media = jest.fn();
+    const data = jest.fn();
+    const session = await client.open(probe, {
+      onMedia: media,
+      onData: data,
+    });
+
+    const closing = session.close();
+    emitMedia({ id: "late" } as unknown as MediaStream);
+    emitData("late");
+    await closing;
+
+    expect(media).not.toHaveBeenCalled();
+    expect(data).not.toHaveBeenCalled();
+  });
+
   it("a throwing media or data handler cannot fail the session", async () => {
     // These fire from inside pc.ontrack and channel.onmessage, where a throw lands in a browser event
     // handler no caller can catch. An application whose render throws must not take the session down,

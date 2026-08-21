@@ -355,7 +355,7 @@ type ConnectionStateMachine = {
   callbacks: RealtimeConnectionCallback;
   dispose: () => void;
   disposed: boolean;
-  handles: Map<symbol, RealtimeConnectionCallback>;
+  handleId: symbol;
 };
 
 type ConnectionOnChange = InterpretOnChangeFunction<
@@ -392,12 +392,12 @@ function reuseInterpreter(
       callbacks,
       dispose,
       disposed: false,
-      handles: new Map(),
+      handleId,
     };
     connectionCache.set(key, cached);
   }
   const cached = connectionCache.get(key) as ConnectionStateMachine;
-  cached.handles.set(handleId, callbacks);
+  cached.handleId = handleId;
   cached.callbacks = callbacks;
   cached.disposed = false;
   return cached;
@@ -750,13 +750,9 @@ export function createRealtimeClient({
       const close = () => {
         if (handleClosed) return;
         handleClosed = true;
-        stateMachine.handles.delete(handleId);
-        if (stateMachine.handles.size > 0) {
-          for (const remaining of stateMachine.handles.values()) {
-            stateMachine.callbacks = remaining;
-          }
-          return;
-        }
+        // Reusing a connection key transfers ownership to the newest handle. A stale
+        // render must not close it, and a discarded stale handle must not keep it alive.
+        if (stateMachine.handleId !== handleId) return;
         if (stateMachine.disposed) return;
         stateMachine.disposed = true;
         stateMachine.dispose();
@@ -885,6 +881,7 @@ export function createRealtimeClient({
     const onMedia = (options as { onMedia?: (stream: MediaStream) => void })
       ?.onMedia;
     const media = (stream: MediaStream) => {
+      if (closed) return;
       try {
         onMedia?.(stream);
       } catch {
@@ -893,6 +890,7 @@ export function createRealtimeClient({
     };
     const onData = (options as { onData?: (raw: string) => void })?.onData;
     const data = (raw: string) => {
+      if (closed) return;
       try {
         onData?.(raw);
       } catch {
