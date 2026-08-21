@@ -141,6 +141,11 @@ describe("realtime extensions", () => {
   it("shares teardown with a synchronous abort-listener close", async () => {
     const cleanup = jest.fn();
     const extensionClose = jest.fn();
+    let finishLateCleanup!: () => void;
+    const lateCleanupDone = new Promise<void>((resolve) => {
+      finishLateCleanup = resolve;
+    });
+    const lateCleanup = jest.fn(() => lateCleanupDone);
     let closeFromAbort: Promise<void> | undefined;
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
@@ -154,6 +159,7 @@ describe("realtime extensions", () => {
       async open(context) {
         context.addCleanup(cleanup);
         context.signal.addEventListener("abort", () => {
+          context.addCleanup(lateCleanup);
           closeFromAbort = context.close();
         });
         return { close: extensionClose };
@@ -164,9 +170,20 @@ describe("realtime extensions", () => {
     const closeFromCaller = session.close();
 
     expect(closeFromAbort).toBe(closeFromCaller);
+    let closeFinished = false;
+    void closeFromCaller.then(() => {
+      closeFinished = true;
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(lateCleanup).toHaveBeenCalledTimes(1);
+    expect(closeFinished).toBe(false);
+
+    finishLateCleanup();
     await closeFromCaller;
     expect(extensionClose).toHaveBeenCalledTimes(1);
     expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(closeFinished).toBe(true);
   });
 
   it("does not invoke an extension when opening was already aborted", async () => {
@@ -477,6 +494,7 @@ describe("realtime extension context additions", () => {
       async open(context) {
         const response = await context.fetch("https://wma.fal.run/session", {
           body: JSON.stringify({ app_id: "x" }),
+          headers: { "Content-Type": "application/json" },
         });
         expect(response.status).toBe(200);
         return { close: jest.fn() };
@@ -486,9 +504,9 @@ describe("realtime extension context additions", () => {
     await client.open(probe, {});
     expect(seen).toHaveLength(1);
     expect(seen[0].url).toBe("https://wma.fal.run/session");
-    expect((seen[0].init.headers as Record<string, string>).Authorization).toBe(
-      "Key secret-key",
-    );
+    const headers = new Headers(seen[0].init.headers);
+    expect(headers.get("authorization")).toBe("Key secret-key");
+    expect(headers.get("content-type")).toBe("application/json");
     // Defaults to POST, and the abort signal is wired without the extension asking.
     expect(seen[0].init.method).toBe("POST");
     expect(seen[0].init.signal).toBeDefined();

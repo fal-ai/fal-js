@@ -851,6 +851,7 @@ export function createRealtimeClient({
               // remaining resources from being closed.
             }
           }
+          await Promise.all(lateCleanups);
         }
       });
       // abort listeners run synchronously and may re-enter through context.close()
@@ -968,15 +969,22 @@ export function createRealtimeClient({
               url,
               headers: requestHeaders,
             });
+            const finalHeaders = new Headers();
+            if (credentials) {
+              finalHeaders.set("Authorization", `Key ${credentials}`);
+            }
+            finalHeaders.set("Content-Type", "application/json");
+            for (const [name, value] of Object.entries(headers ?? {})) {
+              finalHeaders.set(
+                name,
+                Array.isArray(value) ? value.join(", ") : value,
+              );
+            }
             return doFetch(targetUrl, {
               ...init,
               method,
               signal: init.signal ?? controller.signal,
-              headers: {
-                ...(credentials ? { Authorization: `Key ${credentials}` } : {}),
-                "Content-Type": "application/json",
-                ...(headers ?? {}),
-              },
+              headers: finalHeaders,
             });
           },
           gatherIce: (pc, iceOptions) =>
