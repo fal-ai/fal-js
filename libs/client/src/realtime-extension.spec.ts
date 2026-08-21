@@ -161,7 +161,7 @@ describe("realtime extensions", () => {
   it("closes a session that finishes opening after abort", async () => {
     const controller = new AbortController();
     const reason = new Error("user left during setup");
-    const close = jest.fn();
+    const close = jest.fn().mockRejectedValue(new Error("late close failed"));
     let finishSetup = () => undefined;
     const setup = new Promise<void>((resolve) => {
       finishSetup = resolve;
@@ -303,6 +303,55 @@ describe("realtime extensions", () => {
     await expect(opening).rejects.toBe(reason);
   });
 
+  it("awaits a late cleanup when aborted extension setup rejects", async () => {
+    const controller = new AbortController();
+    const setupFailure = new Error("setup failed after abort");
+    let finishSetup = () => undefined;
+    let finishCleanup = () => undefined;
+    const setup = new Promise<void>((resolve) => {
+      finishSetup = resolve;
+    });
+    const cleanupDone = new Promise<void>((resolve) => {
+      finishCleanup = resolve;
+    });
+    const cleanup = jest.fn(() => cleanupDone);
+    const broken = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/reject-after-abort",
+      defaultEndpoint: "test/reject-after-abort",
+      async open(context) {
+        await setup;
+        context.addCleanup(cleanup);
+        throw setupFailure;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const opening = client.open(broken, { abortSignal: controller.signal });
+    let settled = false;
+    void opening.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      },
+    );
+    controller.abort(new Error("user left"));
+    finishSetup();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+    finishCleanup();
+    await expect(opening).rejects.toBe(setupFailure);
+  });
+
   it("preserves the caller's abort reason while an extension is opening", async () => {
     const controller = new AbortController();
     const reason = new Error("user left during negotiation");
@@ -364,7 +413,7 @@ describe("realtime extension context additions", () => {
       id: "test/untrusted-run",
       defaultEndpoint: "test/untrusted-run",
       async open(context) {
-        await context.run("https://notfal.run/steal", { input: {} });
+        await context.run("  https://notfal.run/steal  ", { input: {} });
         return { close: jest.fn() };
       },
     });

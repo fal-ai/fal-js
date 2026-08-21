@@ -374,23 +374,21 @@ function reuseInterpreter(
 ) {
   if (!connectionCache.has(key)) {
     const service = interpret(connectionStateMachine, onChange);
-    connectionCache.set(key, {
+    const guardedSend = (event: Event) => {
+      if (connectionCache.get(key) === cached && !cached.disposed) {
+        return service.send(event);
+      }
+    };
+    const cached: ConnectionStateMachine = {
       service,
       throttledSend:
         throttleInterval > 0
-          ? throttle(
-              (event: Event) => {
-                if (!connectionCache.get(key)?.disposed) {
-                  return service.send(event);
-                }
-              },
-              throttleInterval,
-              true,
-            )
+          ? throttle(guardedSend, throttleInterval, true)
           : service.send,
       callbacks,
       disposed: false,
-    });
+    };
+    connectionCache.set(key, cached);
   }
   const cached = connectionCache.get(key) as ConnectionStateMachine;
   cached.callbacks = callbacks;
@@ -896,7 +894,11 @@ export function createRealtimeClient({
             id: string,
             runOptions: RunOptions<Input>,
           ): Promise<Result<Output>> => {
-            if (/^[a-z][a-z\d+.-]*:/i.test(id) || id.startsWith("//")) {
+            const normalizedId = id.trim();
+            if (
+              /^[a-z][a-z\d+.-]*:/i.test(normalizedId) ||
+              normalizedId.startsWith("//")
+            ) {
               throw new Error(
                 "Realtime extension run() requires an app endpoint id, not an absolute URL.",
               );
@@ -907,7 +909,7 @@ export function createRealtimeClient({
               );
             }
             return getClient().run(
-              id,
+              normalizedId,
               runOptions as RunOptions<Record<string, any>>,
             ) as Promise<Result<Output>>;
           },
@@ -996,7 +998,11 @@ export function createRealtimeClient({
         options,
       );
       if (controller.signal.aborted) {
-        await closeSession();
+        try {
+          await closeSession();
+        } catch {
+          // Preserve the caller's abort reason when a late session close hook is broken.
+        }
         await cleanup();
         await Promise.all(lateCleanups);
         throw controller.signal.reason ?? new Error("Realtime open aborted");
@@ -1015,6 +1021,7 @@ export function createRealtimeClient({
       // mean different things and a status UI should be able to tell them apart.
       setState("failed");
       await cleanup();
+      await Promise.all(lateCleanups);
       throw error;
     }
   }

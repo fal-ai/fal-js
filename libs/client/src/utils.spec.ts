@@ -1,4 +1,4 @@
-import { ensureEndpointIdFormat, parseEndpointId } from "./utils";
+import { ensureEndpointIdFormat, isValidUrl, parseEndpointId } from "./utils";
 
 describe("The utils test suite", () => {
   it("shoud match a current appOwner/appId format", () => {
@@ -43,5 +43,14 @@ describe("The utils test suite", () => {
       alias: "fast-sdxl",
       namespace: "workflows",
     });
+  });
+
+  it("accepts only HTTPS URLs on actual fal domains", () => {
+    expect(isValidUrl("https://fal.run/fal-ai/flux")).toBe(true);
+    expect(isValidUrl("https://queue.fal.run/fal-ai/flux")).toBe(true);
+    expect(isValidUrl("https://api.fal.ai/models")).toBe(true);
+    expect(isValidUrl("https://notfal.run/steal")).toBe(false);
+    expect(isValidUrl("https://fal.run.attacker.example/steal")).toBe(false);
+    expect(isValidUrl("http://fal.run/fal-ai/flux")).toBe(false);
   });
 });

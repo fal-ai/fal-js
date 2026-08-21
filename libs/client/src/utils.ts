@@ -67,8 +67,15 @@ export function resolveEndpointPath(
 
 export function isValidUrl(url: string) {
   try {
-    const { host } = new URL(url);
-    return /(fal\.(ai|run))$/.test(host);
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    return (
+      parsed.protocol === "https:" &&
+      (hostname === "fal.ai" ||
+        hostname.endsWith(".fal.ai") ||
+        hostname === "fal.run" ||
+        hostname.endsWith(".fal.run"))
+    );
   } catch (_) {
     return false;
   }

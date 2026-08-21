@@ -147,6 +147,30 @@ describe("createRealtimeClient", () => {
     expect(WebSocketMock).toHaveBeenCalledTimes(1);
   });
 
+  it("drops a throttled send that was pending when the connection closed", async () => {
+    const tokenProvider = jest.fn(() => new Promise<string>(() => undefined));
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    connection.send({ prompt: "starts auth" });
+    connection.send({ prompt: "must be dropped" });
+    await Promise.resolve();
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+
+    connection.close();
+    jest.advanceTimersByTime(25);
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).not.toHaveBeenCalled();
+  });
+
   it("sends msgpack payloads by default", async () => {
     const client = createRealtimeClient({ config });
     const connection = client.connect("123-myapp", {
