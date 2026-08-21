@@ -730,6 +730,7 @@ export function createRealtimeClient({
     let closed = false;
     let cleanupPromise: Promise<void> | undefined;
     let session: RealtimeSession | undefined;
+    let sessionClosePromise: Promise<void> | undefined;
     // Owned by the kernel, not the extension. The kernel is the only thing that knows about abort,
     // failed opens and idempotent close, so it is the only thing that can report those honestly —
     // and an extension's own state field cannot then contradict it.
@@ -751,6 +752,17 @@ export function createRealtimeClient({
       }
     };
 
+    const closeSession = (): Promise<void> => {
+      if (!session) return Promise.resolve();
+      if (!sessionClosePromise) {
+        const openedSession = session;
+        sessionClosePromise = Promise.resolve().then(() =>
+          openedSession.close(),
+        );
+      }
+      return sessionClosePromise;
+    };
+
     const cleanup = (): Promise<void> => {
       if (cleanupPromise) return cleanupPromise;
       closed = true;
@@ -761,7 +773,7 @@ export function createRealtimeClient({
       // extension close hook can re-enter cleanup through context.close().
       cleanupPromise = Promise.resolve().then(async () => {
         try {
-          await session?.close();
+          await closeSession();
         } finally {
           for (const release of cleanups.reverse()) {
             try {
@@ -924,6 +936,7 @@ export function createRealtimeClient({
         options,
       );
       if (controller.signal.aborted) {
+        await closeSession();
         await cleanup();
         throw controller.signal.reason ?? new Error("Realtime open aborted");
       }

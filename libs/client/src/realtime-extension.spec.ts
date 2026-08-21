@@ -158,6 +158,37 @@ describe("realtime extensions", () => {
     expect(open).not.toHaveBeenCalled();
   });
 
+  it("closes a session that finishes opening after abort", async () => {
+    const controller = new AbortController();
+    const reason = new Error("user left during setup");
+    const close = jest.fn();
+    let finishSetup = () => undefined;
+    const setup = new Promise<void>((resolve) => {
+      finishSetup = resolve;
+    });
+    const late = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/late-session",
+      defaultEndpoint: "test/late-session",
+      async open() {
+        await setup;
+        return { close };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const opening = client.open(late, { abortSignal: controller.signal });
+    controller.abort(reason);
+    finishSetup();
+
+    await expect(opening).rejects.toBe(reason);
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     [
       "throws",
