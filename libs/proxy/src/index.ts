@@ -57,11 +57,28 @@ function getUrlWithoutScheme(targetUrl: string): string {
  * on it is fal's own — `wma.fal.run` is signalling, with paths like `session` and `session/heartbeat`.
  */
 const FAL_SERVICE_HOSTS = new Set(["wma.fal.run"]);
+const WMA_APP_SCOPED_PATHS = new Set(["/ice", "/session"]);
 
 /** Is this fal's own service infrastructure, carrying no customer app? */
 function isFalServiceHost(targetUrl: string): boolean {
   const url = new URL(targetUrl);
   return url.protocol === "https:" && FAL_SERVICE_HOSTS.has(url.host);
+}
+
+function isWmaAppScopedRoute(targetUrl: string): boolean {
+  const url = new URL(targetUrl);
+  const path = url.pathname.replace(/\/+$/, "") || "/";
+  return isFalServiceHost(targetUrl) && WMA_APP_SCOPED_PATHS.has(path);
+}
+
+function appIdFromRequestBody(body: string | undefined): string | undefined {
+  if (!body) return undefined;
+  try {
+    const value = JSON.parse(body) as { app_id?: unknown };
+    return typeof value.app_id === "string" ? value.app_id : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -163,6 +180,15 @@ export async function handleRequest<ResponseType>(
   const resolvedConfig = isResolved
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
+  let requestBody: string | undefined;
+  let requestBodyRead = false;
+  const readRequestBody = async () => {
+    if (!requestBodyRead) {
+      requestBody = await behavior.getRequestBody();
+      requestBodyRead = true;
+    }
+    return requestBody;
+  };
 
   const urlToValidate = getUrlWithoutScheme(targetUrl);
   // fal's own SERVICE hosts skip the URL allowlist entirely, and are deliberately absent from
@@ -187,13 +213,23 @@ export async function handleRequest<ResponseType>(
     );
   }
 
-  // App-serving POSTs are subject to endpoint allowlisting; fal infrastructure routes are not app ids.
+  // App-serving POST paths carry the app id in the URL. WMA's app-scoped infrastructure routes
+  // carry it in JSON instead, so both must enforce the same endpoint policy.
+  const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
   if (
     behavior.method?.toUpperCase() === "POST" &&
-    !isFalInfrastructure(targetUrl)
+    allowedEndpoints.length > 0
   ) {
-    const endpoint = getEndpoint(targetUrl);
-    if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
+    const wmaAppScoped = isWmaAppScopedRoute(targetUrl);
+    const endpoint = wmaAppScoped
+      ? appIdFromRequestBody(await readRequestBody())
+      : isFalInfrastructure(targetUrl)
+        ? undefined
+        : getEndpoint(targetUrl);
+    if (
+      (wmaAppScoped && endpoint === undefined) ||
+      (endpoint !== undefined && !isAllowedEndpoint(endpoint, allowedEndpoints))
+    ) {
       // The URL is allowlisted and the path is not, which is a different option and a different fix.
       return behavior.respondWith(
         400,
@@ -238,7 +274,7 @@ export async function handleRequest<ResponseType>(
     body:
       behavior.method?.toUpperCase() === "GET"
         ? undefined
-        : await behavior.getRequestBody(),
+        : await readRequestBody(),
   });
 
   // copy headers from fal to the proxied response

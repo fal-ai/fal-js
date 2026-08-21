@@ -117,6 +117,9 @@ describe("lucyRealtime", () => {
     (peer.ontrack as unknown as (event: unknown) => void)({
       streams: [stream],
     });
+    (peer.ontrack as unknown as (event: unknown) => void)({
+      streams: [stream],
+    });
     expect(seen).toEqual([stream]);
   });
 

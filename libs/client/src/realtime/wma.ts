@@ -43,9 +43,8 @@ export interface WmaOptions {
    */
   endpointId?: string;
   /**
-   * Media direction. `"recvonly"` is the default for runner-generated output. An app that also
-   * sends camera media passes `"sendrecv"`; this is the transport-level distinction between a pure
-   * output stream and an interactive transform.
+   * Media direction. Sessions without a local stream default to `"recvonly"`; sessions with local
+   * tracks preserve addTrack's `"sendrecv"` behavior. Pass an explicit direction for other flows.
    */
   direction?: RTCRtpTransceiverDirection;
   /**
@@ -271,12 +270,16 @@ export function wma(endpointId?: string) {
 
       // The default that matters: recvonly. A generated stream never needs an inbound track,
       // and asking for one would make the runner negotiate media it will not send.
-      // addTrack OR addTransceiver, never both. addTrack creates its own transceiver, so doing both
-      // negotiates two video m-lines and the runner answers a stream nobody reads.
+      // A local track is added through a transceiver so the caller's requested direction reaches
+      // SDP. Never add a second media transceiver for the same track.
       const localTracks = options.localStream?.getTracks() ?? [];
       if (localTracks.length > 0) {
-        for (const track of localTracks)
-          pc.addTrack(track, options.localStream!);
+        for (const track of localTracks) {
+          pc.addTransceiver(track, {
+            direction: options.direction ?? "sendrecv",
+            streams: [options.localStream!],
+          });
+        }
       } else {
         pc.addTransceiver("video", {
           direction: options.direction ?? "recvonly",
@@ -306,8 +309,14 @@ export function wma(endpointId?: string) {
       // arrived" means the same thing in every protocol, so the kernel names it once and an
       // application offering two extensions learns one name. See RealtimeOpenOptions.onData.
       channel.onmessage = (event) => context.data(String(event.data));
-      pc.ontrack = (event) =>
-        context.media(event.streams[0] ?? new MediaStream([event.track]));
+      const publishedStreams = new WeakSet<MediaStream>();
+      pc.ontrack = (event) => {
+        const stream = event.streams[0] ?? new MediaStream([event.track]);
+        if (!publishedStreams.has(stream)) {
+          publishedStreams.add(stream);
+          context.media(stream);
+        }
+      };
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "failed") {
           const turnOffered = countTurnServers(iceServers);

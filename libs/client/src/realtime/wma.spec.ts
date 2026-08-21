@@ -444,12 +444,14 @@ describe("wma", () => {
     const session = await wma().open(context, {
       endpointId: "me/transform",
       localStream: stream,
+      direction: "sendonly",
     });
 
-    expect(peer.addTransceiver).not.toHaveBeenCalled();
-    expect(
-      (peer as never as { addTrack: jest.Mock }).addTrack,
-    ).toHaveBeenCalledWith(track, stream);
+    expect(peer.addTrack).not.toHaveBeenCalled();
+    expect(peer.addTransceiver).toHaveBeenCalledWith(track, {
+      direction: "sendonly",
+      streams: [stream],
+    });
     // The caller owns the camera. Closing the session must not turn their device off.
     await session.close();
     expect(track.stop).not.toHaveBeenCalled();
@@ -498,6 +500,10 @@ describe("wma", () => {
     await wma().open(context, { endpointId: "me/world" });
 
     const stream = { id: "remote" } as unknown as MediaStream;
+    (peer.ontrack as (event: unknown) => void)({
+      streams: [stream],
+      track: {},
+    });
     (peer.ontrack as (event: unknown) => void)({
       streams: [stream],
       track: {},

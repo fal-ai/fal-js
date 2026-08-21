@@ -703,10 +703,12 @@ export function createRealtimeClient({
     extension: AnyRealtimeExtension,
     options: unknown,
   ): Promise<RealtimeSession> {
-    const optionEndpointId =
+    const rawOptionEndpointId =
       typeof options === "object" && options !== null && "endpointId" in options
-        ? String((options as { endpointId: unknown }).endpointId)
+        ? (options as { endpointId: unknown }).endpointId
         : undefined;
+    const optionEndpointId =
+      rawOptionEndpointId == null ? undefined : String(rawOptionEndpointId);
     const endpointId = optionEndpointId ?? extension.defaultEndpoint ?? "";
 
     if (!endpointId) {

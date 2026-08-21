@@ -364,14 +364,18 @@ describe("handleRequest rejection reasons", () => {
    * paths that get PAST validation, auth is left unsatisfied on purpose: a 401 then proves the request
    * cleared the endpoint gate, which is exactly what the exemption tests need to show.
    */
-  function behaviorFor(targetUrl: string | undefined, method = "POST") {
+  function behaviorFor(
+    targetUrl: string | undefined,
+    method = "POST",
+    requestBody = "{}",
+  ) {
     const responses: Array<{ status: number; data: unknown }> = [];
     return {
       responses,
       behavior: {
         id: "test",
         method,
-        getRequestBody: async () => "{}",
+        getRequestBody: async () => requestBody,
         getHeaders: () => ({}),
         getHeader: (name: string) =>
           name === "x-fal-target-url" ? targetUrl : undefined,
@@ -389,8 +393,9 @@ describe("handleRequest rejection reasons", () => {
     targetUrl: string | undefined,
     config: Record<string, unknown> = {},
     method = "POST",
+    requestBody = "{}",
   ) => {
-    const { behavior, responses } = behaviorFor(targetUrl, method);
+    const { behavior, responses } = behaviorFor(targetUrl, method, requestBody);
     await handleRequest(
       behavior as never,
       {
@@ -447,13 +452,16 @@ describe("handleRequest rejection reasons", () => {
     }
   });
 
-  it("exempts the WMA signalling bridge from the endpoint check", async () => {
-    // Reaches auth (401) rather than being rejected as a bad endpoint (400). `session` is not an app
-    // id and can never match one, so applying an app allowlist to it only ever rejects valid traffic.
+  it("checks the WMA app id instead of treating its route as an app path", async () => {
+    // Reaches auth (401) because the body app_id is allowed. The literal `session` path is bridge
+    // infrastructure and is not itself an endpoint id.
     expect(
-      await run("https://wma.fal.run/session", {
-        allowedEndpoints: ["me/my-app/**"],
-      }),
+      await run(
+        "https://wma.fal.run/session",
+        { allowedEndpoints: ["me/my-app/**"] },
+        "POST",
+        JSON.stringify({ app_id: "me/my-app/world" }),
+      ),
     ).toEqual({ status: 401, data: "Unauthorized" });
   });
 
@@ -469,11 +477,46 @@ describe("handleRequest rejection reasons", () => {
     // caller who scopes the proxy to their own apps — the careful configuration — would otherwise lose
     // signalling with no way to know why.
     expect(
-      await run("https://wma.fal.run/session", {
-        allowedUrlPatterns: ["fal.run/me/my-app/**"],
-        allowedEndpoints: ["me/my-app/**"],
-      }),
+      await run(
+        "https://wma.fal.run/session",
+        {
+          allowedUrlPatterns: ["fal.run/me/my-app/**"],
+          allowedEndpoints: ["me/my-app/**"],
+        },
+        "POST",
+        JSON.stringify({ app_id: "me/my-app/world" }),
+      ),
     ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("enforces allowedEndpoints against WMA request app_id values", async () => {
+    for (const path of ["ice", "session"]) {
+      expect(
+        await run(
+          `https://wma.fal.run/${path}`,
+          { allowedEndpoints: ["me/my-app/**"] },
+          "POST",
+          JSON.stringify({ app_id: "someone/other-app" }),
+        ),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: target path is not permitted by allowedEndpoints",
+      });
+    }
+  });
+
+  it("rejects an app-scoped WMA request with no app_id when endpoints are restricted", async () => {
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        { allowedEndpoints: ["me/my-app/**"] },
+        "POST",
+        "{}",
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
   });
 
   it("does not exempt the bridge host over plaintext HTTP", async () => {

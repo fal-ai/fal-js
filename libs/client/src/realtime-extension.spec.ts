@@ -41,6 +41,19 @@ describe("realtime extensions", () => {
     expect(session.label).toBe("hello");
   });
 
+  it("uses the extension default when endpointId is explicitly undefined", async () => {
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = await client.open(extension(), {
+      endpointId: undefined,
+      label: "defaulted",
+    });
+
+    expect(session.label).toBe("defaulted");
+  });
+
   it("rejects an endpoint the extension declares it cannot open", async () => {
     // `supports` is an optional guard, not a routing registry: catch a stale or mistyped id at the
     // call site rather than partway through a negotiation that cannot succeed.

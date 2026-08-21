@@ -81,6 +81,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         };
       } = {};
       let remoteStream: MediaStream | null = null;
+      const publishedStreams = new WeakSet<MediaStream>();
       let state: LucyConnectionState = "negotiating";
       let hasRemoteDescription = false;
       let initialized = false;
@@ -166,7 +167,10 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         }
         peer.ontrack = (event) => {
           remoteStream = event.streams[0] ?? new MediaStream([event.track]);
-          context.media(remoteStream);
+          if (!publishedStreams.has(remoteStream)) {
+            publishedStreams.add(remoteStream);
+            context.media(remoteStream);
+          }
         };
         peer.onicecandidate = (event) => {
           if (!event.candidate) return;
