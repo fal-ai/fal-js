@@ -1039,10 +1039,10 @@ export function createRealtimeClient({
       }
       setState("live");
       return new Proxy(session, {
-        get(target, property, receiver) {
+        get(target, property) {
           if (property === "close") return cleanup;
           if (property === "state") return state;
-          const value = Reflect.get(target, property, receiver);
+          const value = Reflect.get(target, property, target);
           return typeof value === "function" ? value.bind(target) : value;
         },
       });

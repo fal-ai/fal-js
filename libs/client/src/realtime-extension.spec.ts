@@ -41,6 +41,37 @@ describe("realtime extensions", () => {
     expect(session.label).toBe("hello");
   });
 
+  it("evaluates class session getters against the original instance", async () => {
+    class PrivateSession implements RealtimeSession {
+      readonly #label = "private";
+
+      get label() {
+        return this.#label;
+      }
+
+      close() {
+        // Managed teardown wraps this method.
+      }
+    }
+    const classExtension = defineRealtimeExtension<
+      Record<never, never>,
+      PrivateSession
+    >({
+      id: "test/class-session",
+      defaultEndpoint: "test/class-session",
+      async open() {
+        return new PrivateSession();
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = await client.open(classExtension, {});
+
+    expect(session.label).toBe("private");
+  });
+
   it("uses the extension default when endpointId is explicitly undefined", async () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
