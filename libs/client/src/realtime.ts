@@ -910,7 +910,11 @@ export function createRealtimeClient({
           },
           addCleanup: (release) => {
             if (closed) {
-              void release();
+              void Promise.resolve()
+                .then(release)
+                .catch(() => {
+                  // Late registration follows the same best-effort rule as normal teardown.
+                });
             } else {
               cleanups.push(release);
             }

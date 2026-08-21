@@ -76,7 +76,9 @@ export async function gatherIceCandidates(
     const sufficient = () =>
       iceTransportPolicy === "relay"
         ? counts.relay > 0
-        : counts.srflx > 0 && (!requireRelay || counts.relay > 0);
+        : requireRelay
+          ? counts.relay > 0
+          : counts.srflx > 0;
 
     const removeWaiters = () => {
       clearTimeout(hardBound);

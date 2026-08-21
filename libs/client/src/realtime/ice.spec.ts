@@ -110,6 +110,22 @@ describe("gatherIceCandidates", () => {
     });
   });
 
+  it("settles on a relay without waiting for srflx when TURN is configured", async () => {
+    const pc = fakePc();
+    const done = gatherIceCandidates(pc as unknown as RTCPeerConnection, {
+      iceServers: [{ urls: "turn:example:3478" }],
+      quietPeriodMs: 15,
+    });
+    pc.emitCandidate(line("relay"));
+    const result = await done;
+    expect(result).toEqual({
+      host: 0,
+      srflx: 0,
+      relay: 1,
+      state: "sufficient",
+    });
+  });
+
   it("settles on a relay without waiting for srflx in relay-only mode", async () => {
     const pc = fakePc();
     const done = gatherIceCandidates(pc as any, {

@@ -158,6 +158,45 @@ describe("realtime extensions", () => {
     expect(open).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [
+      "throws",
+      () => {
+        throw new Error("late");
+      },
+    ],
+    ["rejects", () => Promise.reject(new Error("late"))],
+  ])("contains a late cleanup that %s after abort", async (_, cleanup) => {
+    const controller = new AbortController();
+    const reason = new Error("user left");
+    let finishSetup = () => undefined;
+    const setup = new Promise<void>((resolve) => {
+      finishSetup = resolve;
+    });
+    const late = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/late-cleanup",
+      defaultEndpoint: "test/late-cleanup",
+      async open(context) {
+        await setup;
+        context.addCleanup(cleanup);
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const opening = client.open(late, { abortSignal: controller.signal });
+    controller.abort(reason);
+    finishSetup();
+
+    await expect(opening).rejects.toBe(reason);
+    await Promise.resolve();
+  });
+
   it("preserves the caller's abort reason while an extension is opening", async () => {
     const controller = new AbortController();
     const reason = new Error("user left during negotiation");
