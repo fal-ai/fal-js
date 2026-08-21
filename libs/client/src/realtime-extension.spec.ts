@@ -138,6 +138,37 @@ describe("realtime extensions", () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
+  it("shares teardown with a synchronous abort-listener close", async () => {
+    const cleanup = jest.fn();
+    const extensionClose = jest.fn();
+    let closeFromAbort: Promise<void> | undefined;
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const reentrant = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/reentrant-cleanup",
+      defaultEndpoint: "test/reentrant-cleanup",
+      async open(context) {
+        context.addCleanup(cleanup);
+        context.signal.addEventListener("abort", () => {
+          closeFromAbort = context.close();
+        });
+        return { close: extensionClose };
+      },
+    });
+    const session = await client.open(reentrant, {});
+
+    const closeFromCaller = session.close();
+
+    expect(closeFromAbort).toBe(closeFromCaller);
+    await closeFromCaller;
+    expect(extensionClose).toHaveBeenCalledTimes(1);
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
   it("does not invoke an extension when opening was already aborted", async () => {
     const controller = new AbortController();
     const reason = new Error("user left");

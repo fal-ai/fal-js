@@ -841,10 +841,6 @@ export function createRealtimeClient({
       if (cleanupPromise) return cleanupPromise;
       closed = true;
       setState("closed");
-      controller.abort();
-      externalSignal?.removeEventListener("abort", abort);
-      // Defer the work by one microtask so cleanupPromise is assigned before an
-      // extension close hook can re-enter cleanup through context.close().
       cleanupPromise = Promise.resolve().then(async () => {
         try {
           await closeSession();
@@ -861,6 +857,10 @@ export function createRealtimeClient({
           }
         }
       });
+      // abort listeners run synchronously and may re-enter through context.close()
+      // or context.fail(), so publish the shared teardown promise first.
+      controller.abort();
+      externalSignal?.removeEventListener("abort", abort);
       return cleanupPromise;
     };
     const abort = () => {
