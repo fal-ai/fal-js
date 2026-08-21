@@ -120,13 +120,16 @@ describe("lucyRealtime", () => {
     await opening;
 
     const stream = { id: "lucy-remote" } as unknown as MediaStream;
+    const secondStream = {
+      id: "lucy-remote-secondary",
+    } as unknown as MediaStream;
     (peer.ontrack as unknown as (event: unknown) => void)({
-      streams: [stream],
+      streams: [stream, secondStream],
     });
     (peer.ontrack as unknown as (event: unknown) => void)({
-      streams: [stream],
+      streams: [stream, secondStream],
     });
-    expect(seen).toEqual([stream]);
+    expect(seen).toEqual([stream, secondStream]);
   });
 
   it("synthesizes a stream for a streamless remote track", async () => {

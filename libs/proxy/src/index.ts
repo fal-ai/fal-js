@@ -216,11 +216,19 @@ export async function handleRequest<ResponseType>(
   // App-serving POST paths carry the app id in the URL. WMA's app-scoped infrastructure routes
   // carry it in JSON instead, so both must enforce the same endpoint policy.
   const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
-  if (
-    behavior.method?.toUpperCase() === "POST" &&
-    allowedEndpoints.length > 0
-  ) {
-    const wmaAppScoped = isWmaAppScopedRoute(targetUrl);
+  const restrictEndpoints =
+    behavior.method?.toUpperCase() === "POST" && allowedEndpoints.length > 0;
+  const wmaAppScoped = restrictEndpoints && isWmaAppScopedRoute(targetUrl);
+  let isAuthenticated: boolean | undefined;
+  if (wmaAppScoped) {
+    isAuthenticated =
+      (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
+    if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
+      return behavior.respondWith(401, "Unauthorized");
+    }
+  }
+
+  if (restrictEndpoints) {
     const endpoint = wmaAppScoped
       ? appIdFromRequestBody(await readRequestBody())
       : isFalInfrastructure(targetUrl)
@@ -238,7 +246,7 @@ export async function handleRequest<ResponseType>(
     }
   }
 
-  const isAuthenticated =
+  isAuthenticated ??=
     (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
   if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
     return behavior.respondWith(401, "Unauthorized");

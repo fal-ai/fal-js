@@ -106,6 +106,47 @@ describe("createRealtimeClient", () => {
     );
   });
 
+  it("evicts a closed connection and ignores its pending authentication", async () => {
+    let resolveToken: (token: string) => void = () => undefined;
+    const pendingToken = new Promise<string>((resolve) => {
+      resolveToken = resolve;
+    });
+    const tokenProvider = jest.fn(() => pendingToken);
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    first.send({ prompt: "start" });
+    await Promise.resolve();
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    first.close();
+    resolveToken("too-late");
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(WebSocketMock).not.toHaveBeenCalled();
+
+    const nextTokenProvider = jest.fn().mockResolvedValue("fresh");
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: nextTokenProvider,
+      onResult: jest.fn(),
+    });
+    second.send({ prompt: "restart" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(nextTokenProvider).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+  });
+
   it("sends msgpack payloads by default", async () => {
     const client = createRealtimeClient({ config });
     const connection = client.connect("123-myapp", {
@@ -389,6 +430,35 @@ describe("createRealtimeClient", () => {
         status: 401,
       }),
     );
+  });
+
+  it("exits authInProgress even when the error callback throws", async () => {
+    const tokenProvider = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("first token failed"))
+      .mockResolvedValueOnce("recovered-token");
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+      onError: () => {
+        throw new Error("render failed");
+      },
+    });
+
+    connection.send({ attempt: 1 });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    connection.send({ attempt: 2 });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(2);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
   });
 
   it("uses default getTemporaryAuthToken when tokenProvider is not provided", async () => {

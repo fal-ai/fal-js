@@ -311,10 +311,15 @@ export function wma(endpointId?: string) {
       channel.onmessage = (event) => context.data(String(event.data));
       const publishedStreams = new WeakSet<MediaStream>();
       pc.ontrack = (event) => {
-        const stream = event.streams[0] ?? new MediaStream([event.track]);
-        if (!publishedStreams.has(stream)) {
-          publishedStreams.add(stream);
-          context.media(stream);
+        const streams =
+          event.streams.length > 0
+            ? event.streams
+            : [new MediaStream([event.track])];
+        for (const stream of streams) {
+          if (!publishedStreams.has(stream)) {
+            publishedStreams.add(stream);
+            context.media(stream);
+          }
         }
       };
       pc.onconnectionstatechange = () => {

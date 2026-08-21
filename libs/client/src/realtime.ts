@@ -352,6 +352,8 @@ type ConnectionStateMachine = {
     event: Event,
     payload?: any,
   ) => void | Promise<void> | undefined;
+  callbacks: RealtimeConnectionCallback;
+  disposed: boolean;
 };
 
 type ConnectionOnChange = InterpretOnChangeFunction<
@@ -364,11 +366,11 @@ type RealtimeConnectionCallback = Pick<
 >;
 
 const connectionCache = new Map<string, ConnectionStateMachine>();
-const connectionCallbacks = new Map<string, RealtimeConnectionCallback>();
 function reuseInterpreter(
   key: string,
   throttleInterval: number,
   onChange: ConnectionOnChange,
+  callbacks: RealtimeConnectionCallback,
 ) {
   if (!connectionCache.has(key)) {
     const service = interpret(connectionStateMachine, onChange);
@@ -376,11 +378,24 @@ function reuseInterpreter(
       service,
       throttledSend:
         throttleInterval > 0
-          ? throttle(service.send, throttleInterval, true)
+          ? throttle(
+              (event: Event) => {
+                if (!connectionCache.get(key)?.disposed) {
+                  return service.send(event);
+                }
+              },
+              throttleInterval,
+              true,
+            )
           : service.send,
+      callbacks,
+      disposed: false,
     });
   }
-  return connectionCache.get(key) as ConnectionStateMachine;
+  const cached = connectionCache.get(key) as ConnectionStateMachine;
+  cached.callbacks = callbacks;
+  cached.disposed = false;
+  return cached;
 }
 
 const noop = () => {
@@ -510,13 +525,12 @@ export function createRealtimeClient({
       // when the state machine is reused. This is needed because the callbacks
       // are passed as part of the handler object, which can be different across
       // different calls to `connect`.
-      connectionCallbacks.set(connectionKey, {
+      const callbacks: RealtimeConnectionCallback = {
         decodeMessage: decodeMessageFn,
         onError: handler.onError,
         onResult: handler.onResult,
-      });
-      const getCallbacks = () =>
-        connectionCallbacks.get(connectionKey) as RealtimeConnectionCallback;
+      };
+      const getCallbacks = () => connectionCache.get(connectionKey)?.callbacks;
       const stateMachine = reuseInterpreter(
         connectionKey,
         throttleInterval,
@@ -558,26 +572,38 @@ export function createRealtimeClient({
             const scheduleTokenRefresh =
               effectiveExpiration !== undefined
                 ? () => {
+                    if (stateMachine.disposed) return;
                     clearTimeout(tokenRefreshTimer);
                     const refreshMs = Math.round(
                       effectiveExpiration * 0.9 * 1000,
                     );
                     tokenRefreshTimer = setTimeout(() => {
-                      if (generation !== tokenRefreshGeneration) {
+                      if (
+                        stateMachine.disposed ||
+                        generation !== tokenRefreshGeneration
+                      ) {
                         return;
                       }
                       fetchToken()
                         .then((newToken) => {
-                          if (generation !== tokenRefreshGeneration) {
+                          if (
+                            stateMachine.disposed ||
+                            generation !== tokenRefreshGeneration
+                          ) {
                             return;
                           }
                           queueMicrotask(() => {
-                            send({ type: "authenticated", token: newToken });
+                            if (!stateMachine.disposed) {
+                              send({ type: "authenticated", token: newToken });
+                            }
                           });
                           scheduleTokenRefresh();
                         })
                         .catch(() => {
-                          if (generation !== tokenRefreshGeneration) {
+                          if (
+                            stateMachine.disposed ||
+                            generation !== tokenRefreshGeneration
+                          ) {
                             return;
                           }
                           const retryMs = Math.round(
@@ -593,28 +619,38 @@ export function createRealtimeClient({
 
             fetchToken()
               .then((token) => {
+                if (stateMachine.disposed) return;
                 queueMicrotask(() => {
-                  send({ type: "authenticated", token });
+                  if (!stateMachine.disposed) {
+                    send({ type: "authenticated", token });
+                  }
                 });
                 scheduleTokenRefresh();
               })
               .catch((error) => {
-                const { onError = noop } = getCallbacks();
-                onError(
-                  error instanceof ApiError
-                    ? error
-                    : new ApiError({
-                        message:
-                          error instanceof Error
-                            ? error.message
-                            : String(error),
-                        status: 401,
-                        body: error,
-                      }),
-                );
+                if (stateMachine.disposed) return;
+                const { onError = noop } = getCallbacks() ?? {};
                 queueMicrotask(() => {
-                  send({ type: "unauthorized", error });
+                  if (!stateMachine.disposed) {
+                    send({ type: "unauthorized", error });
+                  }
                 });
+                try {
+                  onError(
+                    error instanceof ApiError
+                      ? error
+                      : new ApiError({
+                          message:
+                            error instanceof Error
+                              ? error.message
+                              : String(error),
+                          status: 401,
+                          body: error,
+                        }),
+                  );
+                } catch {
+                  // A caller's callback must not strand the state machine in authInProgress.
+                }
               });
           }
           if (
@@ -626,6 +662,10 @@ export function createRealtimeClient({
               buildRealtimeUrl(app, { token, maxBuffering, path }),
             );
             ws.onopen = () => {
+              if (stateMachine.disposed) {
+                ws.close();
+                return;
+              }
               send({ type: "connected", websocket: ws });
               const queued =
                 stateMachine.service.context?.enqueuedMessage ??
@@ -639,8 +679,9 @@ export function createRealtimeClient({
               }
             };
             ws.onclose = (event) => {
+              if (stateMachine.disposed) return;
               if (event.code !== WebSocketErrorCodes.NORMAL_CLOSURE) {
-                const { onError = noop } = getCallbacks();
+                const { onError = noop } = getCallbacks() ?? {};
                 onError(
                   new ApiError({
                     message: `Error closing the connection: ${event.reason}`,
@@ -651,16 +692,19 @@ export function createRealtimeClient({
               send({ type: "connectionClosed", code: event.code });
             };
             ws.onerror = () => {
+              if (stateMachine.disposed) return;
               // TODO specify error protocol for identified errors
-              const { onError = noop } = getCallbacks();
+              const { onError = noop } = getCallbacks() ?? {};
               onError(new ApiError({ message: "Unknown error", status: 500 }));
             };
             ws.onmessage = (event) => {
+              const callbacks = getCallbacks();
+              if (!callbacks || stateMachine.disposed) return;
               const {
                 decodeMessage = decodeMessageFn,
                 onResult,
                 onError = noop,
-              } = getCallbacks();
+              } = callbacks;
 
               handleRealtimeMessage({
                 data: event.data,
@@ -677,9 +721,11 @@ export function createRealtimeClient({
           }
           previousState = machine.current;
         },
+        callbacks,
       );
 
       const send = (input: Input & Partial<WithRequestId>) => {
+        if (stateMachine.disposed) return;
         // Use throttled send to avoid sending too many messages
         stateMachine.throttledSend({
           type: "send",
@@ -688,7 +734,12 @@ export function createRealtimeClient({
       };
 
       const close = () => {
+        if (stateMachine.disposed) return;
+        stateMachine.disposed = true;
+        tokenRefreshGeneration++;
+        clearTimeout(tokenRefreshTimer);
         stateMachine.service.send({ type: "close" });
+        connectionCache.delete(connectionKey);
       };
 
       return {
@@ -727,6 +778,7 @@ export function createRealtimeClient({
       ?.abortSignal;
     const controller = new AbortController();
     const cleanups: Array<() => void | Promise<void>> = [];
+    const lateCleanups: Array<Promise<void>> = [];
     let closed = false;
     let cleanupPromise: Promise<void> | undefined;
     let session: RealtimeSession | undefined;
@@ -774,6 +826,8 @@ export function createRealtimeClient({
       cleanupPromise = Promise.resolve().then(async () => {
         try {
           await closeSession();
+        } catch {
+          // Teardown is best-effort; a broken extension close hook must not leak rejection.
         } finally {
           for (const release of cleanups.reverse()) {
             try {
@@ -842,6 +896,11 @@ export function createRealtimeClient({
             id: string,
             runOptions: RunOptions<Input>,
           ): Promise<Result<Output>> => {
+            if (/^[a-z][a-z\d+.-]*:/i.test(id) || id.startsWith("//")) {
+              throw new Error(
+                "Realtime extension run() requires an app endpoint id, not an absolute URL.",
+              );
+            }
             if (!getClient) {
               throw new Error(
                 "This realtime client was created without fal request access.",
@@ -922,11 +981,12 @@ export function createRealtimeClient({
           },
           addCleanup: (release) => {
             if (closed) {
-              void Promise.resolve()
+              const lateCleanup = Promise.resolve()
                 .then(release)
                 .catch(() => {
                   // Late registration follows the same best-effort rule as normal teardown.
                 });
+              lateCleanups.push(lateCleanup);
             } else {
               cleanups.push(release);
             }
@@ -938,6 +998,7 @@ export function createRealtimeClient({
       if (controller.signal.aborted) {
         await closeSession();
         await cleanup();
+        await Promise.all(lateCleanups);
         throw controller.signal.reason ?? new Error("Realtime open aborted");
       }
       setState("live");

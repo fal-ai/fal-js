@@ -500,15 +500,16 @@ describe("wma", () => {
     await wma().open(context, { endpointId: "me/world" });
 
     const stream = { id: "remote" } as unknown as MediaStream;
+    const secondStream = { id: "remote-secondary" } as unknown as MediaStream;
     (peer.ontrack as (event: unknown) => void)({
-      streams: [stream],
+      streams: [stream, secondStream],
       track: {},
     });
     (peer.ontrack as (event: unknown) => void)({
-      streams: [stream],
+      streams: [stream, secondStream],
       track: {},
     });
-    expect(seenMedia).toEqual([stream]);
+    expect(seenMedia).toEqual([stream, secondStream]);
 
     channel.onmessage?.({ data: '{"type":"session_info"}' });
     channel.onmessage?.({ data: '{"type":"pong","ts":1}' });

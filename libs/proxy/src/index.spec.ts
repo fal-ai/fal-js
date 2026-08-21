@@ -465,6 +465,27 @@ describe("handleRequest rejection reasons", () => {
     ).toEqual({ status: 401, data: "Unauthorized" });
   });
 
+  it("authenticates before reading an app-scoped WMA body", async () => {
+    const { behavior, responses } = behaviorFor(
+      "https://wma.fal.run/session",
+      "POST",
+      JSON.stringify({ app_id: "me/my-app" }),
+    );
+    const getRequestBody = jest.spyOn(behavior, "getRequestBody");
+
+    await handleRequest(
+      behavior as never,
+      {
+        allowedEndpoints: ["me/my-app/**"],
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => false,
+      } as never,
+    );
+
+    expect(responses[0]).toEqual({ status: 401, data: "Unauthorized" });
+    expect(getRequestBody).not.toHaveBeenCalled();
+  });
+
   it("allows the bridge by default, without any allowlisting", async () => {
     expect(await run("https://wma.fal.run/session/heartbeat")).toEqual({
       status: 401,
@@ -494,7 +515,10 @@ describe("handleRequest rejection reasons", () => {
       expect(
         await run(
           `https://wma.fal.run/${path}`,
-          { allowedEndpoints: ["me/my-app/**"] },
+          {
+            allowedEndpoints: ["me/my-app/**"],
+            isAuthenticated: async () => true,
+          },
           "POST",
           JSON.stringify({ app_id: "someone/other-app" }),
         ),
@@ -509,7 +533,10 @@ describe("handleRequest rejection reasons", () => {
     expect(
       await run(
         "https://wma.fal.run/session",
-        { allowedEndpoints: ["me/my-app/**"] },
+        {
+          allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
+        },
         "POST",
         "{}",
       ),

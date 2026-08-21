@@ -167,10 +167,16 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
           peer.addTransceiver("video", { direction: "recvonly" });
         }
         peer.ontrack = (event) => {
-          remoteStream = event.streams[0] ?? new MediaStream([event.track]);
-          if (!publishedStreams.has(remoteStream)) {
-            publishedStreams.add(remoteStream);
-            context.media(remoteStream);
+          const streams =
+            event.streams.length > 0
+              ? event.streams
+              : [new MediaStream([event.track])];
+          remoteStream = streams[0];
+          for (const stream of streams) {
+            if (!publishedStreams.has(stream)) {
+              publishedStreams.add(stream);
+              context.media(stream);
+            }
           }
         };
         peer.onicecandidate = (event) => {

