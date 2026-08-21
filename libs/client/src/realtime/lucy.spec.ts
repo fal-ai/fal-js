@@ -208,4 +208,34 @@ describe("lucyRealtime", () => {
     await Promise.all(cleanups.map((cleanup) => cleanup()));
     expect(handler).toBeDefined();
   });
+
+  it("rejects when fallback peer initialization fails", async () => {
+    const failure = new Error("could not create an offer");
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const peer = {
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockRejectedValue(failure),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+    });
+
+    const opening = lucyRealtime().open(context, {
+      input: { prompt: "anything" },
+      iceServerGraceMs: 0,
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({ type: "ready", request_id: "ready" });
+
+    await expect(opening).rejects.toBe(failure);
+  });
 });

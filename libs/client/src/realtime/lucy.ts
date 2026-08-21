@@ -214,7 +214,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
               await initializePeer(supplied);
             } else {
               iceGraceTimer = setTimeout(
-                () => void initializePeer(),
+                () => void initializePeer().catch(fail),
                 options.iceServerGraceMs ?? 1_000,
               );
             }

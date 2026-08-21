@@ -158,6 +158,35 @@ describe("realtime extensions", () => {
     expect(open).not.toHaveBeenCalled();
   });
 
+  it("preserves the caller's abort reason while an extension is opening", async () => {
+    const controller = new AbortController();
+    const reason = new Error("user left during negotiation");
+    const waiting = defineRealtimeExtension<
+      { endpointId?: string },
+      RealtimeSession
+    >({
+      id: "test/waiting",
+      defaultEndpoint: "test/waiting",
+      open(context) {
+        return new Promise((_, reject) => {
+          context.signal.addEventListener(
+            "abort",
+            () => reject(context.signal.reason),
+            { once: true },
+          );
+        });
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const opening = client.open(waiting, { abortSignal: controller.signal });
+    controller.abort(reason);
+
+    await expect(opening).rejects.toBe(reason);
+  });
+
   it("reports an extension that cannot name an endpoint to open", async () => {
     const noDefault = defineRealtimeExtension<
       { endpointId?: string },
@@ -246,6 +275,45 @@ describe("realtime extension context additions", () => {
     );
     expect(requestMiddleware).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["Headers", new Headers([["X-Trace", "from-headers"]])],
+    ["header tuples", [["X-Trace", "from-tuples"]] as [string, string][]],
+  ])("context.fetch preserves %s through middleware", async (_, headers) => {
+    const seen: RequestInit[] = [];
+    const requestMiddleware = jest.fn(async (request) => request);
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        requestMiddleware,
+        fetch: async (url, init = {}) => {
+          expect(url).toBe("https://wma.fal.run/session");
+          seen.push(init);
+          return new Response("{}");
+        },
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<string, never>,
+      RealtimeSession
+    >({
+      id: "test/header-shapes",
+      defaultEndpoint: "test/header-shapes",
+      async open(context) {
+        await context.fetch("https://wma.fal.run/session", { headers });
+        return { close: jest.fn() };
+      },
+    });
+
+    await client.open(probe, {});
+
+    expect(requestMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: { "x-trace": expect.stringMatching(/^from-/) },
+      }),
+    );
+    expect(new Headers(seen[0].headers).get("x-trace")).toMatch(/^from-/);
   });
 
   it("routes context.media and context.data to the caller's handlers", async () => {

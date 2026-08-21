@@ -776,6 +776,7 @@ export function createRealtimeClient({
       return cleanupPromise;
     };
     const abort = () => {
+      controller.abort(externalSignal?.reason);
       void cleanup();
     };
     // Dropped when the caller did not ask, so an extension can report unconditionally rather than
@@ -855,6 +856,14 @@ export function createRealtimeClient({
               typeof credentialsValue === "function"
                 ? credentialsValue()
                 : credentialsValue;
+            let requestHeaders: Record<string, string> | undefined;
+            if (init.headers !== undefined) {
+              const normalized: Record<string, string> = {};
+              new Headers(init.headers).forEach((value, key) => {
+                normalized[key] = value;
+              });
+              requestHeaders = normalized;
+            }
             const {
               method,
               url: targetUrl,
@@ -862,7 +871,7 @@ export function createRealtimeClient({
             } = await config.requestMiddleware({
               method: (init.method ?? "POST").toUpperCase(),
               url,
-              headers: (init.headers as Record<string, string>) ?? undefined,
+              headers: requestHeaders,
             });
             return doFetch(targetUrl, {
               ...init,
