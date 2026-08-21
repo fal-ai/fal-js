@@ -463,7 +463,11 @@ export function wma(endpointId?: string) {
             .then(async (response) => {
               if (!response.ok) return;
               const status = (await response.json()) as { alive?: boolean };
-              if (status.alive === false) {
+              if (
+                status.alive === false &&
+                !closed &&
+                !context.signal.aborted
+              ) {
                 await context.fail(
                   "WMA bridge reports that the session is no longer alive",
                 );

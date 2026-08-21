@@ -472,6 +472,53 @@ describe("wma", () => {
     }
   });
 
+  it("ignores a dead heartbeat response that finishes after close", async () => {
+    jest.useFakeTimers();
+    try {
+      install();
+      let finishHeartbeat!: (status: { alive: boolean }) => void;
+      const heartbeatStatus = new Promise<{ alive: boolean }>((resolve) => {
+        finishHeartbeat = resolve;
+      });
+      const heartbeatJson = jest.fn(() => heartbeatStatus);
+      const fail = jest.fn(async () => undefined);
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fail,
+        fetch: async (url: string) => {
+          if (url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({ ice_servers: [{ urls: "stun:x" }] }),
+            );
+          }
+          if (url.endsWith("/heartbeat")) {
+            return { ok: true, json: heartbeatJson } as unknown as Response;
+          }
+          return new Response(
+            JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+          );
+        },
+      });
+      const session = await wma().open(context, {
+        endpointId: "me/my-world",
+      });
+
+      jest.advanceTimersByTime(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(heartbeatJson).toHaveBeenCalledTimes(1);
+
+      await session.close();
+      finishHeartbeat({ alive: false });
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(fail).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("surfaces a bridge error message instead of a bare status code", async () => {
     install();
     const context = fakeExtensionContext({
