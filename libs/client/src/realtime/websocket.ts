@@ -16,6 +16,39 @@ import {
   type WithRequestId,
 } from "./protocol";
 
+function abortReason(signal: AbortSignal): unknown {
+  return (
+    signal.reason ??
+    new DOMException("Realtime authentication aborted", "AbortError")
+  );
+}
+
+function raceWithAbort<T>(
+  promise: Promise<T>,
+  signal: AbortSignal,
+): Promise<T> {
+  if (signal.aborted) return Promise.reject(abortReason(signal));
+  return new Promise<T>((resolve, reject) => {
+    const cleanup = () => signal.removeEventListener("abort", onAbort);
+    const onAbort = () => {
+      cleanup();
+      reject(abortReason(signal));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        cleanup();
+        resolve(value);
+      },
+      (error) => {
+        cleanup();
+        reject(error);
+      },
+    );
+    if (signal.aborted) onAbort();
+  });
+}
+
 export interface WebsocketOptions<Output = any> {
   /** The endpoint to open, when the extension was not constructed with one. */
   endpointId?: string;
@@ -121,10 +154,10 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
       } = options;
 
       context.diagnostic({ kind: "progress", phase: "authenticating" });
-      const token = await tokenProvider(
-        realtimeTokenScope(context.endpointId, path),
+      const token = await raceWithAbort(
+        tokenProvider(realtimeTokenScope(context.endpointId, path)),
+        context.signal,
       );
-      context.signal.throwIfAborted();
 
       context.diagnostic({ kind: "progress", phase: "connecting" });
       const ws = new WebSocket(

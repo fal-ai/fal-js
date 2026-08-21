@@ -133,6 +133,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         }
       };
       const abortNegotiation = () => {
+        if (settled) return;
         fail(
           context.signal.reason ??
             new DOMException("Lucy signaling aborted", "AbortError"),
@@ -266,7 +267,9 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         context.signal.removeEventListener("abort", abortNegotiation);
         clearTimeout(negotiationTimer);
         clearTimeout(iceGraceTimer);
-        transport.connection?.close();
+        const connection = transport.connection;
+        transport.connection = undefined;
+        connection?.close();
         peer?.close();
         peer = null;
         reportState("closed");
@@ -276,6 +279,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       try {
         await negotiation;
         settled = true;
+        context.signal.removeEventListener("abort", abortNegotiation);
       } finally {
         clearTimeout(negotiationTimer);
       }

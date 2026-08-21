@@ -220,6 +220,22 @@ describe("websocket", () => {
     await expect(session).rejects.toThrow("caller went away");
   });
 
+  it("stops opening when token acquisition is still pending", async () => {
+    const controller = new AbortController();
+    const context = fakeExtensionContext({ signal: controller.signal });
+    const pendingToken = jest.fn(() => new Promise<string>(() => undefined));
+    const session = websocket().open(context, {
+      tokenProvider: pendingToken,
+      onResult: jest.fn(),
+    });
+    const reason = new Error("caller left during auth");
+
+    controller.abort(reason);
+
+    await expect(session).rejects.toBe(reason);
+    expect(FakeWebSocket.last).toBeUndefined();
+  });
+
   it("claims no endpoints, and opens the one it was given", () => {
     expect(websocket("fal-ai/fast-sdxl").supports).toBeUndefined();
     expect(websocket("fal-ai/fast-sdxl").defaultEndpoint).toBe(

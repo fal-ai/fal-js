@@ -12,6 +12,8 @@ describe("lucyRealtime", () => {
     let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
     const send = jest.fn();
     const close = jest.fn();
+    const fail = jest.fn();
+    const controller = new AbortController();
     const cleanups: Array<() => void | Promise<void>> = [];
     const diagnostics: unknown[] = [];
     const peer = {
@@ -26,7 +28,7 @@ describe("lucyRealtime", () => {
     } as unknown as RTCPeerConnection;
     const context = fakeExtensionContext({
       endpointId: "decart/lucy-2-5/realtime",
-      signal: new AbortController().signal,
+      signal: controller.signal,
       run: jest.fn(),
       connect: ((_endpointId: string, nextHandler: typeof handler) => {
         handler = nextHandler;
@@ -38,7 +40,7 @@ describe("lucyRealtime", () => {
         cleanups.push(cleanup),
       close: jest.fn(),
       diagnostic: (event: unknown) => diagnostics.push(event),
-      fail: jest.fn(),
+      fail,
     });
 
     const opening = lucyRealtime().open(context, {
@@ -64,8 +66,12 @@ describe("lucyRealtime", () => {
       direction: "recvonly",
     });
 
+    controller.abort();
     await Promise.all(cleanups.map((cleanup) => cleanup()));
+    session.send({ prompt: "must stay closed" });
     expect(close).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(fail).not.toHaveBeenCalled();
     expect(peer.close).toHaveBeenCalledTimes(1);
     // Lucy's own vocabulary is progress detail; the uniform lifecycle belongs to the kernel, and
     // this spec drives open() directly so there is no kernel here to ask.
