@@ -20,6 +20,7 @@ describe("lucyRealtime", () => {
       addTransceiver: jest.fn(),
       createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
       setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      setRemoteDescription: jest.fn().mockResolvedValue(undefined),
       close: jest.fn(),
       connectionState: "connecting",
       ontrack: null,
@@ -52,6 +53,13 @@ describe("lucyRealtime", () => {
       type: "iceServers",
       iceServers: [],
       request_id: "ready",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    handler?.onResult({
+      type: "answer",
+      sdp: "remote-answer",
+      request_id: "answer",
     });
     const session = await opening;
 
@@ -91,6 +99,7 @@ describe("lucyRealtime", () => {
       addTransceiver: jest.fn(),
       createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
       setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      setRemoteDescription: jest.fn().mockResolvedValue(undefined),
       close: jest.fn(),
       connectionState: "connecting",
       ontrack: null,
@@ -116,6 +125,13 @@ describe("lucyRealtime", () => {
       type: "iceServers",
       iceServers: [],
       request_id: "ready",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    handler?.onResult({
+      type: "answer",
+      sdp: "remote-answer",
+      request_id: "answer",
     });
     await opening;
 
@@ -145,6 +161,7 @@ describe("lucyRealtime", () => {
       addTransceiver: jest.fn(),
       createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
       setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      setRemoteDescription: jest.fn().mockResolvedValue(undefined),
       close: jest.fn(),
       connectionState: "connecting",
       ontrack: null,
@@ -169,6 +186,13 @@ describe("lucyRealtime", () => {
       type: "iceServers",
       iceServers: [],
       request_id: "ready",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    handler?.onResult({
+      type: "answer",
+      sdp: "remote-answer",
+      request_id: "answer",
     });
     await opening;
 
@@ -240,5 +264,41 @@ describe("lucyRealtime", () => {
     handler?.onResult({ type: "ready", request_id: "ready" });
 
     await expect(opening).rejects.toBe(failure);
+  });
+
+  it("keeps waiting when ICE servers arrive without an SDP answer", async () => {
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const peer = {
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
+      setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+    });
+
+    const opening = lucyRealtime().open(context, {
+      input: { prompt: "anything" },
+      negotiationTimeoutMs: 1,
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({
+      type: "iceServers",
+      iceServers: [],
+      request_id: "ready",
+    });
+
+    await expect(opening).rejects.toThrow(
+      "Lucy signaling did not return an SDP answer within 1ms",
+    );
   });
 });

@@ -21,7 +21,7 @@ export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
   localStream?: MediaStream | null;
   /** Used only when the endpoint does not supply STUN/TURN configuration. */
   fallbackIceServers?: RTCIceServer[];
-  /** How long to wait for the endpoint's first signaling message. */
+  /** How long to wait for the endpoint's remote SDP answer. */
   negotiationTimeoutMs?: number;
   /** How long to wait after `ready` for a separate ICE-server message. */
   iceServerGraceMs?: number;
@@ -112,7 +112,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       const negotiationTimer = setTimeout(() => {
         rejectNegotiation(
           new Error(
-            `Lucy signaling did not become ready within ${
+            `Lucy signaling did not return an SDP answer within ${
               options.negotiationTimeoutMs ?? 15_000
             }ms`,
           ),
@@ -209,7 +209,6 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
         await peer.setLocalDescription(offer);
         if (!offer.sdp) throw new Error("Lucy WebRTC offer has no SDP");
         transport.connection?.send({ type: "offer", sdp: offer.sdp });
-        resolveNegotiation();
       };
 
       const handleMessage = async (message: SignalingMessage) => {
@@ -240,6 +239,7 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
             });
             hasRemoteDescription = true;
             await flushCandidates();
+            resolveNegotiation();
             break;
           }
           case "icecandidate": {
