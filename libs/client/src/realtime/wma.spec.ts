@@ -378,6 +378,28 @@ describe("wma", () => {
     expect(global.RTCPeerConnection).not.toHaveBeenCalled();
   });
 
+  it("observes ICE gathering when setting the local description fails", async () => {
+    const { peer } = install();
+    const localFailure = new Error("local description failed");
+    const gatherFailure = new Error("gathering aborted");
+    peer.setLocalDescription.mockRejectedValue(localFailure);
+    let rejectGathering: (error: Error) => void = () => undefined;
+    const gathering = new Promise<never>((_resolve, reject) => {
+      rejectGathering = reject;
+    });
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      gatherIce: () => gathering,
+      fetch: async () =>
+        new Response(JSON.stringify({ ice_servers: [{ urls: "stun:x" }] })),
+    });
+
+    const opening = wma().open(context, { endpointId: "me/my-world" });
+    await expect(opening).rejects.toBe(localFailure);
+    rejectGathering(gatherFailure);
+    await Promise.resolve();
+  });
+
   it("reports peer and control-channel transport death through context.fail", async () => {
     const { peer, channel } = install();
     const fail = jest.fn(async () => undefined);

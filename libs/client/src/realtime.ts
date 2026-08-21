@@ -353,7 +353,9 @@ type ConnectionStateMachine = {
     payload?: any,
   ) => void | Promise<void> | undefined;
   callbacks: RealtimeConnectionCallback;
+  dispose: () => void;
   disposed: boolean;
+  handles: Map<symbol, RealtimeConnectionCallback>;
 };
 
 type ConnectionOnChange = InterpretOnChangeFunction<
@@ -371,6 +373,8 @@ function reuseInterpreter(
   throttleInterval: number,
   onChange: ConnectionOnChange,
   callbacks: RealtimeConnectionCallback,
+  dispose: () => void,
+  handleId: symbol,
 ) {
   if (!connectionCache.has(key)) {
     const service = interpret(connectionStateMachine, onChange);
@@ -386,11 +390,14 @@ function reuseInterpreter(
           ? throttle(guardedSend, throttleInterval, true)
           : service.send,
       callbacks,
+      dispose,
       disposed: false,
+      handles: new Map(),
     };
     connectionCache.set(key, cached);
   }
   const cached = connectionCache.get(key) as ConnectionStateMachine;
+  cached.handles.set(handleId, callbacks);
   cached.callbacks = callbacks;
   cached.disposed = false;
   return cached;
@@ -527,6 +534,12 @@ export function createRealtimeClient({
         decodeMessage: decodeMessageFn,
         onError: handler.onError,
         onResult: handler.onResult,
+      };
+      const handleId = Symbol(connectionKey);
+      const dispose = () => {
+        tokenRefreshGeneration++;
+        clearTimeout(tokenRefreshTimer);
+        tokenRefreshTimer = undefined;
       };
       const getCallbacks = () => connectionCache.get(connectionKey)?.callbacks;
       const stateMachine = reuseInterpreter(
@@ -720,10 +733,13 @@ export function createRealtimeClient({
           previousState = machine.current;
         },
         callbacks,
+        dispose,
+        handleId,
       );
 
+      let handleClosed = false;
       const send = (input: Input & Partial<WithRequestId>) => {
-        if (stateMachine.disposed) return;
+        if (handleClosed || stateMachine.disposed) return;
         // Use throttled send to avoid sending too many messages
         stateMachine.throttledSend({
           type: "send",
@@ -732,10 +748,18 @@ export function createRealtimeClient({
       };
 
       const close = () => {
+        if (handleClosed) return;
+        handleClosed = true;
+        stateMachine.handles.delete(handleId);
+        if (stateMachine.handles.size > 0) {
+          for (const remaining of stateMachine.handles.values()) {
+            stateMachine.callbacks = remaining;
+          }
+          return;
+        }
         if (stateMachine.disposed) return;
         stateMachine.disposed = true;
-        tokenRefreshGeneration++;
-        clearTimeout(tokenRefreshTimer);
+        stateMachine.dispose();
         stateMachine.service.send({ type: "close" });
         connectionCache.delete(connectionKey);
       };

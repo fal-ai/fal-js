@@ -405,8 +405,10 @@ export function wma(endpointId?: string) {
           iceServers,
           iceTransportPolicy: options.iceTransportPolicy,
         });
-        await pc.setLocalDescription(offer);
-        const gathered_ice = await gathering;
+        const [gathered_ice] = await Promise.all([
+          gathering,
+          pc.setLocalDescription(offer),
+        ]);
         observed.host = gathered_ice.host;
         observed.srflx = gathered_ice.srflx;
         observed.relay = gathered_ice.relay;
