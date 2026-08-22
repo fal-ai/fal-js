@@ -30,6 +30,7 @@ import { countTurnServers } from "./ice";
 
 const WMA_URL = "https://wma.fal.run";
 const HEARTBEAT_INTERVAL_MS = 5_000;
+const HEARTBEAT_TIMEOUT_MS = 4_000;
 const MAX_QUEUED_MESSAGES = 64;
 const DEFAULT_STUN_URL = "stun:stun.l.google.com:19302";
 
@@ -362,12 +363,15 @@ export function wma(endpointId?: string) {
       };
 
       let heartbeat: ReturnType<typeof setInterval> | null = null;
+      let heartbeatController: AbortController | null = null;
       let heartbeatInFlight = false;
       let closed = false;
       const teardown = () => {
         if (closed) return;
         closed = true;
         if (heartbeat !== null) clearInterval(heartbeat);
+        heartbeatController?.abort();
+        heartbeatController = null;
         channel.close();
         pc.close();
       };
@@ -453,10 +457,20 @@ export function wma(endpointId?: string) {
         heartbeat = setInterval(() => {
           if (heartbeatInFlight) return;
           heartbeatInFlight = true;
+          const controller = new AbortController();
+          heartbeatController = controller;
+          const abortHeartbeat = () => controller.abort(context.signal.reason);
+          context.signal.addEventListener("abort", abortHeartbeat, {
+            once: true,
+          });
+          const heartbeatTimeout = setTimeout(
+            () => controller.abort(),
+            HEARTBEAT_TIMEOUT_MS,
+          );
           context
             .fetch(`${WMA_URL}/session/heartbeat`, {
               method: "POST",
-              signal: context.signal,
+              signal: controller.signal,
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ session_id: answer.session_id }),
             })
@@ -478,6 +492,11 @@ export function wma(endpointId?: string) {
               // alive=false response proves that this session is gone.
             })
             .finally(() => {
+              clearTimeout(heartbeatTimeout);
+              context.signal.removeEventListener("abort", abortHeartbeat);
+              if (heartbeatController === controller) {
+                heartbeatController = null;
+              }
               heartbeatInFlight = false;
             });
         }, HEARTBEAT_INTERVAL_MS);

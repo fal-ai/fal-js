@@ -800,7 +800,9 @@ export function createRealtimeClient({
     let closed = false;
     let cleanupPromise: Promise<void> | undefined;
     let session: RealtimeSession | undefined;
+    let extensionClose: (() => void | Promise<void>) | undefined;
     let sessionClosePromise: Promise<void> | undefined;
+    let sessionCloseInProgress = false;
     // Owned by the kernel, not the extension. The kernel is the only thing that knows about abort,
     // failed opens and idempotent close, so it is the only thing that can report those honestly —
     // and an extension's own state field cannot then contradict it.
@@ -823,12 +825,17 @@ export function createRealtimeClient({
     };
 
     const closeSession = (): Promise<void> => {
-      if (!session) return Promise.resolve();
+      if (!extensionClose) return Promise.resolve();
       if (!sessionClosePromise) {
-        const openedSession = session;
-        sessionClosePromise = Promise.resolve().then(() =>
-          openedSession.close(),
-        );
+        const closeExtension = extensionClose;
+        sessionClosePromise = Promise.resolve().then(async () => {
+          sessionCloseInProgress = true;
+          try {
+            await closeExtension();
+          } finally {
+            sessionCloseInProgress = false;
+          }
+        });
       }
       return sessionClosePromise;
     };
@@ -1023,10 +1030,14 @@ export function createRealtimeClient({
               cleanups.push(release);
             }
           },
-          close: cleanup,
+          close: () => (sessionCloseInProgress ? Promise.resolve() : cleanup()),
         },
         options,
       );
+      extensionClose = session.close.bind(session);
+      // Raw class methods are bound to the original instance for private fields.
+      // Route an internal this.close() through managed teardown when possible.
+      Reflect.set(session, "close", cleanup, session);
       if (controller.signal.aborted) {
         try {
           await closeSession();
@@ -1038,15 +1049,44 @@ export function createRealtimeClient({
         throw controller.signal.reason ?? new Error("Realtime open aborted");
       }
       setState("live");
-      return new Proxy(session, {
-        get(target, property) {
+      const proxyTarget = Object.create(
+        Object.getPrototypeOf(session),
+      ) as RealtimeSession;
+      const boundMethods = new Map<
+        PropertyKey,
+        { source: unknown; bound: unknown }
+      >();
+      return new Proxy(proxyTarget, {
+        get(_target, property) {
           if (property === "close") return cleanup;
           if (property === "state") return state;
-          const value = Reflect.get(target, property, target);
-          return typeof value === "function" ? value.bind(target) : value;
+          const value = Reflect.get(session, property, session);
+          if (typeof value !== "function") return value;
+          const cached = boundMethods.get(property);
+          if (cached?.source === value) return cached.bound;
+          const bound = value.bind(session);
+          boundMethods.set(property, { source: value, bound });
+          return bound;
         },
-        set(target, property, value) {
-          return Reflect.set(target, property, value, target);
+        set(_target, property, value) {
+          return Reflect.set(session, property, value, session);
+        },
+        has(_target, property) {
+          return (
+            property === "close" ||
+            property === "state" ||
+            Reflect.has(session, property)
+          );
+        },
+        ownKeys() {
+          return Reflect.ownKeys(session);
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          const descriptor = Reflect.getOwnPropertyDescriptor(
+            session,
+            property,
+          );
+          return descriptor ? { ...descriptor, configurable: true } : undefined;
         },
       });
     } catch (error) {

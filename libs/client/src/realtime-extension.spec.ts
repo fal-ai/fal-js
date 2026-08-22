@@ -53,6 +53,10 @@ describe("realtime extensions", () => {
         this.#label = value;
       }
 
+      send() {
+        return this.#label;
+      }
+
       close() {
         // Managed teardown wraps this method.
       }
@@ -76,6 +80,38 @@ describe("realtime extensions", () => {
     expect(session.label).toBe("private");
     session.label = "updated";
     expect(session.label).toBe("updated");
+    expect(session.send).toBe(session.send);
+    expect(session.send()).toBe("updated");
+  });
+
+  it("manages frozen extension sessions without violating proxy invariants", async () => {
+    const extensionClose = jest.fn();
+    const frozen = Object.freeze({
+      close: extensionClose,
+      state: "closed" as const,
+      value: 42,
+    });
+    const frozenExtension = defineRealtimeExtension<
+      Record<never, never>,
+      typeof frozen
+    >({
+      id: "test/frozen-session",
+      defaultEndpoint: "test/frozen-session",
+      async open() {
+        return frozen;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = await client.open(frozenExtension, {});
+
+    expect(session.value).toBe(42);
+    expect(session.state).toBe("live");
+    expect(Object.keys(session)).toEqual(["close", "state", "value"]);
+    await session.close();
+    expect(extensionClose).toHaveBeenCalledTimes(1);
   });
 
   it("uses the extension default when endpointId is explicitly undefined", async () => {
@@ -221,6 +257,60 @@ describe("realtime extensions", () => {
     expect(extensionClose).toHaveBeenCalledTimes(1);
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(closeFinished).toBe(true);
+  });
+
+  it("does not await teardown through an extension close hook", async () => {
+    const cleanup = jest.fn();
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const reentrant = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/close-delegation",
+      defaultEndpoint: "test/close-delegation",
+      async open(context) {
+        context.addCleanup(cleanup);
+        return { close: () => context.close() };
+      },
+    });
+    const session = await client.open(reentrant, {});
+
+    await session.close();
+
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it("routes internal class close calls through managed teardown", async () => {
+    class SelfClosingSession implements RealtimeSession {
+      close = jest.fn();
+
+      stop() {
+        return this.close();
+      }
+    }
+    const cleanup = jest.fn();
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const selfClosing = defineRealtimeExtension<
+      Record<never, never>,
+      SelfClosingSession
+    >({
+      id: "test/self-closing",
+      defaultEndpoint: "test/self-closing",
+      async open(context) {
+        context.addCleanup(cleanup);
+        return new SelfClosingSession();
+      },
+    });
+    const session = await client.open(selfClosing, {});
+
+    await session.stop();
+
+    expect(session.state).toBe("closed");
+    expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
   it("does not invoke an extension when opening was already aborted", async () => {

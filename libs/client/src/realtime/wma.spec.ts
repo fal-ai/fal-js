@@ -519,6 +519,63 @@ describe("wma", () => {
     }
   });
 
+  it("times out a stalled heartbeat and retries on the next tick", async () => {
+    jest.useFakeTimers();
+    try {
+      install();
+      const heartbeatSignals: AbortSignal[] = [];
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fetch: async (url: string, init?: RequestInit) => {
+          if (url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({ ice_servers: [{ urls: "stun:x" }] }),
+            );
+          }
+          if (!url.endsWith("/heartbeat")) {
+            return new Response(
+              JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+            );
+          }
+          const signal = init?.signal as AbortSignal;
+          heartbeatSignals.push(signal);
+          return new Promise<Response>((_resolve, reject) => {
+            signal.addEventListener(
+              "abort",
+              () => reject(new DOMException("aborted", "AbortError")),
+              { once: true },
+            );
+          });
+        },
+      });
+      const session = await wma().open(context, {
+        endpointId: "me/my-world",
+      });
+
+      jest.advanceTimersByTime(5_000);
+      await Promise.resolve();
+      expect(heartbeatSignals).toHaveLength(1);
+      expect(heartbeatSignals[0].aborted).toBe(false);
+
+      jest.advanceTimersByTime(3_999);
+      expect(heartbeatSignals[0].aborted).toBe(false);
+      jest.advanceTimersByTime(1);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(heartbeatSignals[0].aborted).toBe(true);
+
+      jest.advanceTimersByTime(1_000);
+      await Promise.resolve();
+      expect(heartbeatSignals).toHaveLength(2);
+      await session.close();
+      expect(heartbeatSignals[1].aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("surfaces a bridge error message instead of a bare status code", async () => {
     install();
     const context = fakeExtensionContext({
