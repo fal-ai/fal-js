@@ -313,36 +313,42 @@ describe("realtime extensions", () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
-  it("routes internal close calls from a frozen session", async () => {
-    class FrozenSelfClosingSession implements RealtimeSession {
-      close = jest.fn();
+  it("preserves private-field receivers for frozen sessions", async () => {
+    class FrozenPrivateSession implements RealtimeSession {
+      #label = "frozen-private";
 
-      stop() {
-        return this.close();
+      get label() {
+        return this.#label;
+      }
+
+      readLabel() {
+        return this.#label;
+      }
+
+      close() {
+        // Managed teardown wraps this method.
       }
     }
-    const cleanup = jest.fn();
-    const frozen = Object.freeze(new FrozenSelfClosingSession());
+    const frozen = Object.freeze(
+      new FrozenPrivateSession(),
+    ) as FrozenPrivateSession;
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
-    const selfClosing = defineRealtimeExtension<
+    const frozenExtension = defineRealtimeExtension<
       Record<never, never>,
-      FrozenSelfClosingSession
+      FrozenPrivateSession
     >({
-      id: "test/frozen-self-closing",
-      defaultEndpoint: "test/frozen-self-closing",
-      async open(context) {
-        context.addCleanup(cleanup);
+      id: "test/frozen-private",
+      defaultEndpoint: "test/frozen-private",
+      async open() {
         return frozen;
       },
     });
-    const session = await client.open(selfClosing, {});
+    const session = await client.open(frozenExtension, {});
 
-    await session.stop();
-
-    expect(session.state).toBe("closed");
-    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(session.label).toBe("frozen-private");
+    expect(session.readLabel()).toBe("frozen-private");
   });
 
   it("does not invoke an extension when opening was already aborted", async () => {

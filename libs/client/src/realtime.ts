@@ -1037,12 +1037,7 @@ export function createRealtimeClient({
       extensionClose = session.close.bind(session);
       // Raw class methods are bound to the original instance for private fields.
       // Route an internal this.close() through managed teardown when possible.
-      const routesInternalClose = Reflect.set(
-        session,
-        "close",
-        cleanup,
-        session,
-      );
+      Reflect.set(session, "close", cleanup, session);
       if (controller.signal.aborted) {
         try {
           await closeSession();
@@ -1062,14 +1057,18 @@ export function createRealtimeClient({
         { source: unknown; bound: unknown }
       >();
       return new Proxy(proxyTarget, {
-        get(_target, property, receiver) {
+        get(_target, property) {
           if (property === "close") return cleanup;
           if (property === "state") return state;
           const value = Reflect.get(session, property, session);
           if (typeof value !== "function") return value;
           const cached = boundMethods.get(property);
           if (cached?.source === value) return cached.bound;
-          const bound = value.bind(routesInternalClose ? session : receiver);
+          // Class methods must always observe the original instance. In particular, a Proxy cannot
+          // satisfy private-field brand checks, and a frozen instance cannot have its raw `close`
+          // hook replaced. Extensions end themselves through context.close(); the session's own
+          // close method is the resource hook the kernel invokes during managed teardown.
+          const bound = value.bind(session);
           boundMethods.set(property, { source: value, bound });
           return bound;
         },
