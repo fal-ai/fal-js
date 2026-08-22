@@ -29,6 +29,7 @@ import {
 import { countTurnServers } from "./ice";
 
 const WMA_URL = "https://wma.fal.run";
+const ICE_DISCOVERY_TIMEOUT_MS = 5_000;
 const HEARTBEAT_INTERVAL_MS = 5_000;
 const HEARTBEAT_TIMEOUT_MS = 4_000;
 const MAX_QUEUED_MESSAGES = 64;
@@ -123,10 +124,21 @@ export interface IceGatheringProgress extends IceCandidateCounts {
 async function fetchIceServers(
   context: RealtimeExtensionContext,
 ): Promise<RTCIceServer[]> {
+  const controller = new AbortController();
+  const abortDiscovery = () => controller.abort(context.signal.reason);
+  if (context.signal.aborted) {
+    abortDiscovery();
+  } else {
+    context.signal.addEventListener("abort", abortDiscovery, { once: true });
+  }
+  const discoveryTimeout = setTimeout(
+    () => controller.abort(),
+    ICE_DISCOVERY_TIMEOUT_MS,
+  );
   try {
     const response = await context.fetch(`${WMA_URL}/ice`, {
       method: "POST",
-      signal: context.signal,
+      signal: controller.signal,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ app_id: context.endpointId }),
     });
@@ -174,6 +186,9 @@ async function fetchIceServers(
       phase: "ice-servers",
       detail: { source: "bridge-unavailable; trying app fallback" },
     });
+  } finally {
+    clearTimeout(discoveryTimeout);
+    context.signal.removeEventListener("abort", abortDiscovery);
   }
   // Fallback to the app's own /ice endpoint.
   try {

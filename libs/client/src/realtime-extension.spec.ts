@@ -313,6 +313,38 @@ describe("realtime extensions", () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
+  it("routes internal close calls from a frozen session", async () => {
+    class FrozenSelfClosingSession implements RealtimeSession {
+      close = jest.fn();
+
+      stop() {
+        return this.close();
+      }
+    }
+    const cleanup = jest.fn();
+    const frozen = Object.freeze(new FrozenSelfClosingSession());
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const selfClosing = defineRealtimeExtension<
+      Record<never, never>,
+      FrozenSelfClosingSession
+    >({
+      id: "test/frozen-self-closing",
+      defaultEndpoint: "test/frozen-self-closing",
+      async open(context) {
+        context.addCleanup(cleanup);
+        return frozen;
+      },
+    });
+    const session = await client.open(selfClosing, {});
+
+    await session.stop();
+
+    expect(session.state).toBe("closed");
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
   it("does not invoke an extension when opening was already aborted", async () => {
     const controller = new AbortController();
     const reason = new Error("user left");

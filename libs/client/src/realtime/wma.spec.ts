@@ -151,6 +151,59 @@ describe("wma", () => {
     );
   });
 
+  it("times out stalled bridge ICE discovery before app fallback", async () => {
+    jest.useFakeTimers();
+    try {
+      install();
+      const bridgeSignals: AbortSignal[] = [];
+      const run = jest.fn(async () => ({
+        data: {
+          ice_servers: [{ urls: "turn:app", username: "u", credential: "p" }],
+          status: "turn",
+        },
+        requestId: "r",
+      }));
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        run: run as never,
+        fetch: async (url: string, init?: RequestInit) => {
+          if (!url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+            );
+          }
+          const signal = init?.signal as AbortSignal;
+          bridgeSignals.push(signal);
+          return new Promise<Response>((_resolve, reject) => {
+            signal.addEventListener(
+              "abort",
+              () => reject(new DOMException("aborted", "AbortError")),
+              { once: true },
+            );
+          });
+        },
+      });
+
+      const opening = wma().open(context, { endpointId: "me/my-world" });
+      await Promise.resolve();
+      expect(bridgeSignals).toHaveLength(1);
+      jest.advanceTimersByTime(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const session = await opening;
+      expect(bridgeSignals[0].aborted).toBe(true);
+      expect(run).toHaveBeenCalledWith("me/my-world/ice", {
+        input: {},
+        abortSignal: context.signal,
+      });
+      await session.close();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("falls back to app-managed ICE when the bridge withholds managed TURN", async () => {
     install();
     const events: unknown[] = [];

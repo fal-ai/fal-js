@@ -1037,7 +1037,12 @@ export function createRealtimeClient({
       extensionClose = session.close.bind(session);
       // Raw class methods are bound to the original instance for private fields.
       // Route an internal this.close() through managed teardown when possible.
-      Reflect.set(session, "close", cleanup, session);
+      const routesInternalClose = Reflect.set(
+        session,
+        "close",
+        cleanup,
+        session,
+      );
       if (controller.signal.aborted) {
         try {
           await closeSession();
@@ -1057,14 +1062,14 @@ export function createRealtimeClient({
         { source: unknown; bound: unknown }
       >();
       return new Proxy(proxyTarget, {
-        get(_target, property) {
+        get(_target, property, receiver) {
           if (property === "close") return cleanup;
           if (property === "state") return state;
           const value = Reflect.get(session, property, session);
           if (typeof value !== "function") return value;
           const cached = boundMethods.get(property);
           if (cached?.source === value) return cached.bound;
-          const bound = value.bind(session);
+          const bound = value.bind(routesInternalClose ? session : receiver);
           boundMethods.set(property, { source: value, bound });
           return bound;
         },
