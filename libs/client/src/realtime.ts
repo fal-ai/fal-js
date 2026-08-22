@@ -1045,6 +1045,9 @@ export function createRealtimeClient({
           const value = Reflect.get(target, property, target);
           return typeof value === "function" ? value.bind(target) : value;
         },
+        set(target, property, value) {
+          return Reflect.set(target, property, value, target);
+        },
       });
     } catch (error) {
       // Before cleanup, so a caller watching state sees "failed" rather than only "closed" — the two

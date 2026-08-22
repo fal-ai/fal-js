@@ -43,10 +43,14 @@ describe("realtime extensions", () => {
 
   it("evaluates class session getters against the original instance", async () => {
     class PrivateSession implements RealtimeSession {
-      readonly #label = "private";
+      #label = "private";
 
       get label() {
         return this.#label;
+      }
+
+      set label(value: string) {
+        this.#label = value;
       }
 
       close() {
@@ -70,6 +74,8 @@ describe("realtime extensions", () => {
     const session = await client.open(classExtension, {});
 
     expect(session.label).toBe("private");
+    session.label = "updated";
+    expect(session.label).toBe("updated");
   });
 
   it("uses the extension default when endpointId is explicitly undefined", async () => {
