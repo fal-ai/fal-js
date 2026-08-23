@@ -434,6 +434,7 @@ type HandleRealtimeMessageParams = {
   onResult: RealtimeConnectionCallback["onResult"];
   onError: NonNullable<RealtimeConnectionCallback["onError"]> | typeof noop;
   send: ConnectionStateMachine["service"]["send"];
+  isCurrent: () => boolean;
 };
 
 function handleRealtimeMessage({
@@ -442,6 +443,7 @@ function handleRealtimeMessage({
   onResult,
   onError,
   send,
+  isCurrent,
 }: HandleRealtimeMessageParams) {
   const handleDecoded = (decoded: any) => {
     // Drop messages that are not related to the actual result.
@@ -478,8 +480,11 @@ function handleRealtimeMessage({
   };
 
   Promise.resolve(decodeMessage ? decodeMessage(data) : data)
-    .then(handleDecoded)
+    .then((decoded) => {
+      if (isCurrent()) handleDecoded(decoded);
+    })
     .catch((error) => {
+      if (!isCurrent()) return;
       onError(
         new ApiError({
           message:
@@ -723,6 +728,15 @@ export function createRealtimeClient({
                 onResult,
                 onError,
                 send,
+                isCurrent: () => {
+                  const current = connectionCache.get(connectionKey);
+                  return (
+                    current === stateMachine &&
+                    !stateMachine.disposed &&
+                    current.callbacks === callbacks &&
+                    stateMachine.service.context.websocket === ws
+                  );
+                },
               });
             };
           }

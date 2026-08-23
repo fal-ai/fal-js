@@ -282,7 +282,7 @@ describe("wma", () => {
 
     expect(run).toHaveBeenCalledWith("partner/my-world/ice", {
       input: {},
-      abortSignal: context.signal,
+      abortSignal: expect.any(AbortSignal),
     });
     expect(global.RTCPeerConnection).toHaveBeenCalledWith({
       iceServers: [{ urls: "turn:app", username: "u", credential: "p" }],

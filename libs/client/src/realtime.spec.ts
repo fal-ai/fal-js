@@ -438,6 +438,75 @@ describe("createRealtimeClient", () => {
     expect(errorArg.status).toBe(400);
   });
 
+  it("drops a decoded result that finishes after the connection closes", async () => {
+    let finishDecode!: (value: unknown) => void;
+    const decoded = new Promise((resolve) => {
+      finishDecode = resolve;
+    });
+    const onResult = jest.fn();
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      decodeMessage: () => decoded,
+      onResult,
+    });
+
+    connection.send({ prompt: "start" });
+    await Promise.resolve();
+    await Promise.resolve();
+    const socket = sockets[0];
+    socket.triggerOpen();
+    socket.onmessage?.({ data: "pending" });
+
+    connection.close();
+    finishDecode({ status: "ok", request_id: "late" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onResult).not.toHaveBeenCalled();
+  });
+
+  it("drops a decoded result owned by a replaced connection handle", async () => {
+    let finishDecode!: (value: unknown) => void;
+    const decoded = new Promise((resolve) => {
+      finishDecode = resolve;
+    });
+    const firstResult = jest.fn();
+    const secondResult = jest.fn();
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      decodeMessage: () => decoded,
+      onResult: firstResult,
+    });
+
+    first.send({ prompt: "start" });
+    await Promise.resolve();
+    await Promise.resolve();
+    const socket = sockets[0];
+    socket.triggerOpen();
+    socket.onmessage?.({ data: "pending" });
+
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      onResult: secondResult,
+    });
+    finishDecode({ status: "ok", request_id: "stale" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(firstResult).not.toHaveBeenCalled();
+    expect(secondResult).not.toHaveBeenCalled();
+    second.close();
+  });
+
   it("uses custom tokenProvider when provided", async () => {
     const customTokenProvider = jest.fn().mockResolvedValue("custom-token");
     const client = createRealtimeClient({ config });
