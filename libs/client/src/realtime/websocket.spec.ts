@@ -112,6 +112,22 @@ describe("websocket", () => {
     await expect(session).rejects.toThrow(/policy violation/);
   });
 
+  it("times out a WebSocket handshake that remains connecting", async () => {
+    jest.useFakeTimers();
+    try {
+      const { session } = start();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(FakeWebSocket.last?.readyState).toBe(FakeWebSocket.CONNECTING);
+
+      jest.advanceTimersByTime(15_000);
+      await expect(session).rejects.toThrow(/Timed out opening/);
+      expect(FakeWebSocket.last?.onopen).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("mints the token for the realtime path and carries it in the url", async () => {
     const { session } = start();
     await flush();

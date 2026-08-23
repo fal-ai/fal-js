@@ -30,6 +30,7 @@ import { countTurnServers } from "./ice";
 
 const WMA_URL = "https://wma.fal.run";
 const ICE_DISCOVERY_TIMEOUT_MS = 5_000;
+const SESSION_NEGOTIATION_TIMEOUT_MS = 120_000;
 const HEARTBEAT_INTERVAL_MS = 5_000;
 const HEARTBEAT_TIMEOUT_MS = 4_000;
 const MAX_QUEUED_MESSAGES = 64;
@@ -458,28 +459,48 @@ export function wma(endpointId?: string) {
         const gathered = pc.localDescription;
         if (!gathered) throw new Error("failed to create WebRTC offer");
 
-        // Auth comes from the client's configured credentials rather than a pasted key.
-        // context.signal is honoured per the extension contract: it aborts when the caller
-        // cancels opening or closes the session.
-        const response = await context.fetch(`${WMA_URL}/session`, {
-          method: "POST",
-          signal: context.signal,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            app_id: context.endpointId,
-            sdp: gathered.sdp,
-            type: gathered.type,
-          }),
-        });
-        if (!response.ok) throw new Error(await readErrorMessage(response));
-
-        if (context.signal.aborted)
-          throw new Error("cancelled before answer applied");
-        const answer = (await response.json()) as {
+        const sessionController = new AbortController();
+        const abortSession = () =>
+          sessionController.abort(context.signal.reason);
+        if (context.signal.aborted) {
+          abortSession();
+        } else {
+          context.signal.addEventListener("abort", abortSession, {
+            once: true,
+          });
+        }
+        const sessionTimeout = setTimeout(
+          () => sessionController.abort(),
+          SESSION_NEGOTIATION_TIMEOUT_MS,
+        );
+        let answer: {
           session_id: string;
           sdp: string;
           type: RTCSdpType;
         };
+        try {
+          // Auth comes from the client's configured credentials rather than a pasted key. The child
+          // signal preserves caller cancellation while bounding a bridge that accepts but never
+          // answers the negotiation request.
+          const response = await context.fetch(`${WMA_URL}/session`, {
+            method: "POST",
+            signal: sessionController.signal,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              app_id: context.endpointId,
+              sdp: gathered.sdp,
+              type: gathered.type,
+            }),
+          });
+          if (!response.ok) throw new Error(await readErrorMessage(response));
+          answer = (await response.json()) as typeof answer;
+        } finally {
+          clearTimeout(sessionTimeout);
+          context.signal.removeEventListener("abort", abortSession);
+        }
+
+        if (context.signal.aborted)
+          throw new Error("cancelled before answer applied");
         await pc.setRemoteDescription({ sdp: answer.sdp, type: answer.type });
 
         // Trap 4.

@@ -298,6 +298,51 @@ describe("wma", () => {
     );
   });
 
+  it("times out a stalled session negotiation request", async () => {
+    jest.useFakeTimers();
+    try {
+      install();
+      const sessionSignals: AbortSignal[] = [];
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fetch: async (url: string, init?: RequestInit) => {
+          if (url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({
+                ice_servers: [{ urls: "stun:example" }],
+                status: "stun_only",
+              }),
+            );
+          }
+          const signal = init?.signal as AbortSignal;
+          sessionSignals.push(signal);
+          return new Promise<Response>((_resolve, reject) => {
+            signal.addEventListener(
+              "abort",
+              () => reject(new DOMException("aborted", "AbortError")),
+              { once: true },
+            );
+          });
+        },
+      });
+
+      const opening = wma().open(context, {
+        endpointId: "me/my-world",
+        iceServers: [{ urls: "stun:example" }],
+      });
+      for (let turn = 0; turn < 10 && sessionSignals.length === 0; turn++) {
+        await Promise.resolve();
+      }
+      expect(sessionSignals).toHaveLength(1);
+
+      jest.advanceTimersByTime(120_000);
+      await expect(opening).rejects.toThrow(/aborted/i);
+      expect(sessionSignals[0].aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("asks the kernel to gather ICE rather than reimplementing it", async () => {
     install();
     const gatherIce = jest.fn(

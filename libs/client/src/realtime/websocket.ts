@@ -16,6 +16,8 @@ import {
   type WithRequestId,
 } from "./protocol";
 
+const WEBSOCKET_HANDSHAKE_TIMEOUT_MS = 15_000;
+
 function abortReason(signal: AbortSignal): unknown {
   return (
     signal.reason ??
@@ -173,7 +175,11 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
       });
 
       await new Promise<void>((resolve, reject) => {
+        let settled = false;
         const settle = (finish: () => void) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(handshakeTimeout);
           ws.onopen = null;
           ws.onerror = null;
           ws.onclose = null;
@@ -209,6 +215,18 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
             ),
           );
         context.signal.addEventListener("abort", onAbort, { once: true });
+        const handshakeTimeout = setTimeout(
+          () =>
+            settle(() =>
+              reject(
+                new ApiError({
+                  message: `Timed out opening a realtime connection to ${context.endpointId}`,
+                  status: 504,
+                }),
+              ),
+            ),
+          WEBSOCKET_HANDSHAKE_TIMEOUT_MS,
+        );
       });
 
       ws.onmessage = (event) => {

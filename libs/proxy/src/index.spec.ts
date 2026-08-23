@@ -529,6 +529,23 @@ describe("handleRequest rejection reasons", () => {
     }
   });
 
+  it("enforces WMA app identity through percent-encoded route spellings", async () => {
+    expect(
+      await run(
+        "https://wma.fal.run/%73ession",
+        {
+          allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
+        },
+        "POST",
+        JSON.stringify({ app_id: "someone/other-app" }),
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
   it("rejects an app-scoped WMA request with no app_id when endpoints are restricted", async () => {
     expect(
       await run(

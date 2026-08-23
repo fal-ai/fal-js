@@ -67,8 +67,18 @@ function isFalServiceHost(targetUrl: string): boolean {
 
 function isWmaAppScopedRoute(targetUrl: string): boolean {
   const url = new URL(targetUrl);
-  const path = url.pathname.replace(/\/+$/, "") || "/";
-  return isFalServiceHost(targetUrl) && WMA_APP_SCOPED_PATHS.has(path);
+  if (!isFalServiceHost(targetUrl)) return false;
+  let path: string;
+  try {
+    // URL.pathname keeps percent escapes intact, while the upstream router decodes them. Apply the
+    // same normalization before deciding whether the route carries app authority in its JSON body.
+    path = decodeURIComponent(url.pathname).replace(/\/{2,}/g, "/");
+  } catch {
+    // A malformed escape must not turn a potentially app-scoped service route into an exemption.
+    return true;
+  }
+  path = path.replace(/\/+$/, "") || "/";
+  return WMA_APP_SCOPED_PATHS.has(path);
 }
 
 function appIdFromRequestBody(body: string | undefined): string | undefined {
