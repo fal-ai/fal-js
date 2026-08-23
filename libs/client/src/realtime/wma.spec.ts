@@ -196,7 +196,59 @@ describe("wma", () => {
       expect(bridgeSignals[0].aborted).toBe(true);
       expect(run).toHaveBeenCalledWith("me/my-world/ice", {
         input: {},
-        abortSignal: context.signal,
+        abortSignal: expect.any(AbortSignal),
+      });
+      await session.close();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("times out stalled app-local ICE before STUN fallback", async () => {
+    jest.useFakeTimers();
+    try {
+      install();
+      jest.spyOn(console, "warn").mockImplementation(() => undefined);
+      const appSignals: AbortSignal[] = [];
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        run: (async (
+          _endpoint: string,
+          options: { abortSignal: AbortSignal },
+        ) => {
+          appSignals.push(options.abortSignal);
+          return new Promise((_resolve, reject) => {
+            options.abortSignal.addEventListener(
+              "abort",
+              () => reject(new DOMException("aborted", "AbortError")),
+              { once: true },
+            );
+          });
+        }) as never,
+        fetch: async (url: string) => {
+          if (url.endsWith("/ice")) {
+            return new Response("down", { status: 503 });
+          }
+          return new Response(
+            JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+          );
+        },
+      });
+
+      const opening = wma().open(context, { endpointId: "me/my-world" });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(appSignals).toHaveLength(1);
+      jest.advanceTimersByTime(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const session = await opening;
+      expect(appSignals[0].aborted).toBe(true);
+      expect(global.RTCPeerConnection).toHaveBeenCalledWith({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        iceTransportPolicy: undefined,
       });
       await session.close();
     } finally {

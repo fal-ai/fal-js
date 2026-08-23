@@ -191,10 +191,21 @@ async function fetchIceServers(
     context.signal.removeEventListener("abort", abortDiscovery);
   }
   // Fallback to the app's own /ice endpoint.
+  const fallbackController = new AbortController();
+  const abortFallback = () => fallbackController.abort(context.signal.reason);
+  if (context.signal.aborted) {
+    abortFallback();
+  } else {
+    context.signal.addEventListener("abort", abortFallback, { once: true });
+  }
+  const fallbackTimeout = setTimeout(
+    () => fallbackController.abort(),
+    ICE_DISCOVERY_TIMEOUT_MS,
+  );
   try {
     const result = await context.run(`${context.endpointId}/ice`, {
       input: {},
-      abortSignal: context.signal,
+      abortSignal: fallbackController.signal,
     });
     const payload = result.data as {
       ice_servers?: RTCIceServer[];
@@ -235,6 +246,9 @@ async function fetchIceServers(
         source: `ice-endpoint-failed: ${exc instanceof Error ? exc.message : String(exc)}`,
       },
     });
+  } finally {
+    clearTimeout(fallbackTimeout);
+    context.signal.removeEventListener("abort", abortFallback);
   }
   return [{ urls: DEFAULT_STUN_URL }];
 }
