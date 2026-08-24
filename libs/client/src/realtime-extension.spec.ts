@@ -114,6 +114,43 @@ describe("realtime extensions", () => {
     expect(extensionClose).toHaveBeenCalledTimes(1);
   });
 
+  it("forwards property deletion and definition to the extension session", async () => {
+    const raw: RealtimeSession & Record<string, unknown> = {
+      close: jest.fn(),
+      removable: "old",
+    };
+    const mutableExtension = defineRealtimeExtension<
+      Record<never, never>,
+      typeof raw
+    >({
+      id: "test/mutable-session",
+      defaultEndpoint: "test/mutable-session",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(mutableExtension, {});
+
+    expect(delete session.removable).toBe(true);
+    expect("removable" in raw).toBe(false);
+    Object.defineProperty(session, "fixed", {
+      configurable: false,
+      enumerable: true,
+      value: 42,
+      writable: false,
+    });
+
+    expect(raw.fixed).toBe(42);
+    expect(session.fixed).toBe(42);
+    expect(Object.keys(session)).toContain("fixed");
+    expect(
+      Object.getOwnPropertyDescriptor(session, "fixed")?.configurable,
+    ).toBe(false);
+  });
+
   it("uses the extension default when endpointId is explicitly undefined", async () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),

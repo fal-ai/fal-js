@@ -1134,7 +1134,35 @@ export function createRealtimeClient({
           return bound;
         },
         set(_target, property, value) {
-          return Reflect.set(session, property, value, session);
+          const updated = Reflect.set(session, property, value, session);
+          const targetDescriptor = Reflect.getOwnPropertyDescriptor(
+            proxyTarget,
+            property,
+          );
+          if (
+            updated &&
+            targetDescriptor &&
+            !targetDescriptor.configurable &&
+            "value" in targetDescriptor &&
+            targetDescriptor.writable
+          ) {
+            Reflect.set(proxyTarget, property, value, proxyTarget);
+          }
+          return updated;
+        },
+        defineProperty(_target, property, descriptor) {
+          if (!Reflect.defineProperty(session, property, descriptor)) {
+            return false;
+          }
+          // A non-configurable property must also exist on the neutral target or the Proxy would
+          // violate the language's invariants. Configurable properties can remain source-only.
+          return descriptor.configurable === false
+            ? Reflect.defineProperty(proxyTarget, property, descriptor)
+            : true;
+        },
+        deleteProperty(_target, property) {
+          boundMethods.delete(property);
+          return Reflect.deleteProperty(session, property);
         },
         has(_target, property) {
           return (
@@ -1147,6 +1175,13 @@ export function createRealtimeClient({
           return Reflect.ownKeys(session);
         },
         getOwnPropertyDescriptor(_target, property) {
+          const targetDescriptor = Reflect.getOwnPropertyDescriptor(
+            proxyTarget,
+            property,
+          );
+          if (targetDescriptor && !targetDescriptor.configurable) {
+            return targetDescriptor;
+          }
           const descriptor = Reflect.getOwnPropertyDescriptor(
             session,
             property,

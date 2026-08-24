@@ -279,13 +279,15 @@ export async function handleRequest<ResponseType>(
 
   const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
+  const contentType =
+    singleHeaderValue(behavior.getHeader("content-type")) ?? "application/json";
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
       ...headers,
       authorization,
       accept: "application/json",
-      "content-type": "application/json",
+      "content-type": contentType,
       "user-agent": userAgent,
       "x-fal-client-proxy": proxyUserAgent,
     } as HeadersInit,

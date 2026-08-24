@@ -409,6 +409,39 @@ describe("handleRequest rejection reasons", () => {
     return responses[0];
   };
 
+  it("preserves multipart boundaries when forwarding a request body", async () => {
+    const boundary = "multipart/form-data; boundary=----fal-test-boundary";
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      "------fal-test-boundary--",
+    );
+    behavior.getHeaders = () => ({ "content-type": boundary });
+    behavior.getHeader = (name: string) => {
+      if (name === "x-fal-target-url") return "https://wma.fal.run/upload";
+      if (name.toLowerCase() === "content-type") return boundary;
+      return undefined;
+    };
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "secret",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://wma.fal.run/upload",
+        expect.objectContaining({
+          headers: expect.objectContaining({ "content-type": boundary }),
+        }),
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("names the missing header", async () => {
     expect(await run(undefined)).toEqual({
       status: 400,
