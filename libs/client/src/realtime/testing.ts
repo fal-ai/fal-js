@@ -13,6 +13,8 @@ import type {
  *
  * Exported from `@fal-ai/client/realtime/testing` so external extensions can use the same checked
  * fixture. It stays out of the `./realtime` barrel so production bundles do not include it.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export function fakeExtensionContext(
   overrides: Partial<RealtimeExtensionContext> = {},

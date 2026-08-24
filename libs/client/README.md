@@ -48,6 +48,14 @@ const result = await fal.subscribe("my-function-id", {
 
 ## Protocol-aware realtime sessions
 
+> [!WARNING]
+>
+> **Experimental.** Everything reached through `fal.realtime.open()` — the
+> extension contract, the bundled `wma()`, `lucyRealtime()`, and `websocket()`
+> extensions, and the `/realtime/*` subpath exports — is experimental surface
+> area and may change in a minor release. `fal.realtime.connect()` is not
+> affected and keeps its existing stability guarantees.
+
 `fal.realtime.open()` opens a session with a named protocol extension. Models
 that need WebRTC signaling, provider SDKs, heartbeats, or another negotiation
 protocol expose that behavior as an application-installed extension, and fal's

@@ -10,6 +10,8 @@ import type { Result, RunOptions } from "../types/common";
  * Extensions may add any model-specific fields and methods they need. The
  * client only standardizes teardown so callers always have one reliable way
  * to release the resources owned by a session.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export interface RealtimeSession {
   close(): void | Promise<void>;
@@ -38,6 +40,8 @@ export interface RealtimeSession {
  * `"failed"` forever, and does not decay into `"closed"` as its resources are released. Teardown
  * happens either way, so reporting it would overwrite the only thing that separates "the transport
  * died" from "the user pressed disconnect".
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export type RealtimeState = "opening" | "live" | "failed" | "closed";
 
@@ -47,6 +51,8 @@ export type RealtimeState = "opening" | "live" | "failed" | "closed";
  * The wrapper is why `state` is required here and optional on {@link RealtimeSession} — an
  * extension returns whatever it likes and the kernel adds the members it alone can guarantee: a
  * `close()` that is idempotent and runs the registered cleanups, and a `state` readable at any time.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
   Session,
@@ -75,6 +81,8 @@ export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
  * `Options & RealtimeOpenOptions` contradictory and rejects `onMedia`, `onState` and `onDiagnostic`
  * at the call site — leaving an extension that takes no product inputs unable to receive any kernel
  * option at all.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export interface RealtimeOpenOptions {
   /** Cancels opening, and closes the session if it is already open. */
@@ -121,6 +129,8 @@ export interface RealtimeOpenOptions {
  * message naming symmetric NAT or blocked UDP sends whoever reads it into the network, and the cause
  * of a connection that gathered no relay candidate is at least as often a credential or a
  * misconfigured server. Report the counts and the errors; let the reader conclude.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export type RealtimeDiagnostic =
   | {
@@ -140,7 +150,11 @@ export type RealtimeDiagnostic =
       observed?: Record<string, number | string>;
     };
 
-/** Counts of gathered ICE candidates by type, and why gathering stopped. */
+/**
+ * Counts of gathered ICE candidates by type, and why gathering stopped.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
+ */
 export interface IceGatheringResult {
   host: number;
   srflx: number;
@@ -148,6 +162,7 @@ export interface IceGatheringResult {
   state: "complete" | "sufficient" | "timeout";
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface IceGatheringOptions {
   /**
    * The servers handed to the peer connection. Used to decide what "sufficient" means: when TURN is
@@ -168,6 +183,7 @@ export interface IceGatheringOptions {
   signal?: AbortSignal;
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface RealtimeExtensionContext {
   /** The endpoint selected by `fal.realtime.open()`. */
   readonly endpointId: string;
@@ -282,6 +298,8 @@ export interface RealtimeExtensionContext {
  *
  * Which extension opens a session is the caller's decision, made at the call site by naming one. The
  * kernel owns lifecycle; the extension owns negotiation and the model-specific session API.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export interface RealtimeExtension<
   Options = unknown,
@@ -312,18 +330,23 @@ export interface RealtimeExtension<
   open(context: RealtimeExtensionContext, options: Options): Promise<Session>;
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type AnyRealtimeExtension = RealtimeExtension<unknown, RealtimeSession>;
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type RealtimeExtensionOptions<Extension> =
   Extension extends RealtimeExtension<infer Options, RealtimeSession>
     ? Options
     : never;
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type RealtimeExtensionSession<Extension> =
   Extension extends RealtimeExtension<unknown, infer Session> ? Session : never;
 
 /**
  * Identity helper that preserves an extension's options and session types.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export function defineRealtimeExtension<
   Options,

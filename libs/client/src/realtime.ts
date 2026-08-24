@@ -339,6 +339,8 @@ export interface RealtimeClient {
   /**
    * Open a model-specific realtime session with an explicitly supplied
    * extension. This form preserves the extension's options and session types.
+   *
+   * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
    */
   open<Extension extends AnyRealtimeExtension>(
     extension: Extension,

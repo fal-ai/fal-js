@@ -1,9 +1,15 @@
 import type { IceGatheringOptions, IceGatheringResult } from "./extension";
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export const DEFAULT_ICE_TIMEOUT_MS = 12_000;
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export const DEFAULT_ICE_QUIET_PERIOD_MS = 1_250;
 
-/** Number of configured TURN servers, counting each server object at most once. */
+/**
+ * Number of configured TURN servers, counting each server object at most once.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
+ */
 export function countTurnServers(iceServers: RTCIceServer[]): number {
   return iceServers.filter((server) => {
     const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
@@ -11,12 +17,20 @@ export function countTurnServers(iceServers: RTCIceServer[]): number {
   }).length;
 }
 
-/** Does this configuration include a TURN server? Then a relay candidate is required. */
+/**
+ * Does this configuration include a TURN server? Then a relay candidate is required.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
+ */
 export function hasTurnServer(iceServers: RTCIceServer[]): boolean {
   return countTurnServers(iceServers) > 0;
 }
 
-/** `typ host`, `typ srflx` or `typ relay` out of a candidate line. */
+/**
+ * `typ host`, `typ srflx` or `typ relay` out of a candidate line.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
+ */
 export function parseIceCandidateType(
   candidate: string,
 ): "host" | "srflx" | "relay" | null {
@@ -32,6 +46,8 @@ export function parseIceCandidateType(
  * rather than the first usable address the browser happens to find. A TURN configuration is not
  * "sufficient" until a relay candidate exists: shipping an offer without one when TURN was configured
  * produces a connection that cannot work and reports nothing about why.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export async function gatherIceCandidates(
   pc: Pick<

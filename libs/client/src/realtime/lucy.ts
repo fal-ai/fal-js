@@ -10,8 +10,10 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
 ];
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type LucyConnectionState = "negotiating" | RTCPeerConnectionState;
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
   /** Overrides the extension's default endpoint. */
   endpointId?: string;
@@ -34,6 +36,7 @@ export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
   ) => RTCPeerConnection;
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface LucyRealtimeSession<Input = Record<string, unknown>>
   extends RealtimeSession {
   readonly remoteStream: MediaStream | null;
@@ -49,6 +52,7 @@ type SignalingMessage = {
   iceservers?: RTCIceServer[];
 };
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface LucyRealtimeExtensionConfig {
   endpoints?: readonly string[];
 }
@@ -59,6 +63,8 @@ export interface LucyRealtimeExtensionConfig {
  * The extension owns SDP/ICE ordering, remote-candidate buffering, and
  * teardown. The application only provides media, observes the remote stream,
  * and sends model controls.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
   const endpoints = config.endpoints ?? DEFAULT_ENDPOINTS;

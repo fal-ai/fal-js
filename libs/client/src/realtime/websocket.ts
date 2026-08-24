@@ -51,6 +51,7 @@ function raceWithAbort<T>(
   });
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WebsocketOptions<Output = any> {
   /** The endpoint to open, when the extension was not constructed with one. */
   endpointId?: string;
@@ -98,6 +99,7 @@ export interface WebsocketOptions<Output = any> {
   onResult(result: Output & WithRequestId): void;
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WebsocketRealtimeSession<Input = any> extends RealtimeSession {
   /**
    * Queue one input. Throttled, and a no-op once the session is no longer live — a dead socket is a
@@ -134,6 +136,8 @@ export interface WebsocketRealtimeSession<Input = any> extends RealtimeSession {
  *
  * Both APIs intentionally coexist: `connect()` is synchronous and lazy; `open(websocket())` is
  * asynchronous and eager.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export function websocket<Input = any, Output = any>(endpointId?: string) {
   return defineRealtimeExtension<

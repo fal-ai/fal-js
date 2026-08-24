@@ -36,8 +36,10 @@ const HEARTBEAT_TIMEOUT_MS = 4_000;
 const MAX_QUEUED_MESSAGES = 64;
 const DEFAULT_STUN_URL = "stun:stun.l.google.com:19302";
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type WmaControlMessage = object;
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaOptions {
   /**
    * Endpoint to open. Read by the client as `optionEndpointId ?? extension.defaultEndpoint`,
@@ -85,6 +87,7 @@ export interface WmaOptions {
   iceTransportPolicy?: RTCIceTransportPolicy;
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaRealtimeSession extends RealtimeSession {
   sessionId: string;
   /** Bounded-queued until the control channel opens; dropped once closing. */
@@ -92,16 +95,19 @@ export interface WmaRealtimeSession extends RealtimeSession {
   close(): void;
 }
 
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface IceCandidateCounts {
   host: number;
   srflx: number;
   relay: number;
 }
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type IceGatheringState =
   | "gathering"
   | "complete"
   | "sufficient"
   | "timeout";
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface IceGatheringProgress extends IceCandidateCounts {
   state: IceGatheringState;
 }
@@ -287,6 +293,8 @@ async function readErrorMessage(response: Response): Promise<string> {
  * name from an endpoint with no realtime path at all. That is also why there is no `supports()`
  * here: whether a model speaks WMA is declared — by the caller naming this extension, or by the
  * model's own `x-fal-realtime` contract — and never inferred from a string.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
 export function wma(endpointId?: string) {
   return defineRealtimeExtension<WmaOptions, WmaRealtimeSession>({
