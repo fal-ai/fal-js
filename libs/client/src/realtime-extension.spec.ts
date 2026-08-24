@@ -677,6 +677,83 @@ describe("realtime extension context additions", () => {
     expect(seen[0].init.signal).toBeDefined();
   });
 
+  it("context.fetch lets FormData generate its multipart boundary", async () => {
+    const seen: RequestInit[] = [];
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: async (_url, init = {}) => {
+          seen.push(init);
+          return new Response("{}");
+        },
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/form-data",
+      defaultEndpoint: "test/form-data",
+      async open(context) {
+        const body = new FormData();
+        body.set("field", "payload");
+        await context.fetch("https://wma.fal.run/upload", { body });
+        return { close: jest.fn() };
+      },
+    });
+
+    await client.open(probe, {});
+
+    expect(seen[0].body).toBeInstanceOf(FormData);
+    expect(new Headers(seen[0].headers).has("content-type")).toBe(false);
+  });
+
+  it("context.gatherIce honors extension-local cancellation", async () => {
+    const listeners: Record<string, EventListener[]> = {};
+    const pc = {
+      iceGatheringState: "gathering" as RTCIceGatheringState,
+      addEventListener(type: string, listener: EventListener) {
+        (listeners[type] ??= []).push(listener);
+      },
+      removeEventListener(type: string, listener: EventListener) {
+        listeners[type] = (listeners[type] ?? []).filter(
+          (candidate) => candidate !== listener,
+        );
+      },
+    };
+    const iceController = new AbortController();
+    const reason = new Error("extension stopped gathering");
+    let gatheringStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      gatheringStarted = resolve;
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/local-ice-cancel",
+      defaultEndpoint: "test/local-ice-cancel",
+      async open(context) {
+        const gathering = context.gatherIce(pc as RTCPeerConnection, {
+          signal: iceController.signal,
+          timeoutMs: 10_000,
+        });
+        gatheringStarted();
+        await gathering;
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const opening = client.open(probe, {});
+    await started;
+    iceController.abort(reason);
+
+    await expect(opening).rejects.toBe(reason);
+  });
+
   it("context.fetch rejects extension-controlled non-fal destinations", async () => {
     const fetch = jest.fn(async () => new Response("{}"));
     const requestMiddleware = jest.fn(async (request) => request);

@@ -994,7 +994,6 @@ export function createRealtimeClient({
             if (credentials) {
               finalHeaders.set("Authorization", `Key ${credentials}`);
             }
-            finalHeaders.set("Content-Type", "application/json");
             for (const [name, value] of Object.entries(headers ?? {})) {
               finalHeaders.set(
                 name,
@@ -1008,17 +1007,59 @@ export function createRealtimeClient({
               headers: finalHeaders,
             });
           },
-          gatherIce: (pc, iceOptions) =>
-            gatherIceCandidates(pc, {
-              ...iceOptions,
-              signal: controller.signal,
-              onProgress: (result) =>
-                diagnostic({
-                  kind: "progress",
-                  phase: "ice-gathering",
-                  detail: { ...result },
-                }),
-            }),
+          gatherIce: async (pc, iceOptions) => {
+            const extensionSignal = iceOptions?.signal;
+            if (!extensionSignal || extensionSignal === controller.signal) {
+              return gatherIceCandidates(pc, {
+                ...iceOptions,
+                signal: controller.signal,
+                onProgress: (result) =>
+                  diagnostic({
+                    kind: "progress",
+                    phase: "ice-gathering",
+                    detail: { ...result },
+                  }),
+              });
+            }
+
+            const gatherController = new AbortController();
+            const abortFromSession = () =>
+              gatherController.abort(controller.signal.reason);
+            const abortFromExtension = () =>
+              gatherController.abort(extensionSignal.reason);
+            if (controller.signal.aborted) {
+              abortFromSession();
+            } else if (extensionSignal.aborted) {
+              abortFromExtension();
+            } else {
+              controller.signal.addEventListener("abort", abortFromSession, {
+                once: true,
+              });
+              extensionSignal.addEventListener("abort", abortFromExtension, {
+                once: true,
+              });
+              if (controller.signal.aborted) {
+                abortFromSession();
+              } else if (extensionSignal.aborted) {
+                abortFromExtension();
+              }
+            }
+            try {
+              return await gatherIceCandidates(pc, {
+                ...iceOptions,
+                signal: gatherController.signal,
+                onProgress: (result) =>
+                  diagnostic({
+                    kind: "progress",
+                    phase: "ice-gathering",
+                    detail: { ...result },
+                  }),
+              });
+            } finally {
+              controller.signal.removeEventListener("abort", abortFromSession);
+              extensionSignal.removeEventListener("abort", abortFromExtension);
+            }
+          },
           diagnostic,
           media,
           data,
