@@ -773,6 +773,56 @@ describe("realtime extension context additions", () => {
     expect(seen[0].init.signal).toBeDefined();
   });
 
+  it("context.fetch aborts a request-local-signal fetch when the session aborts", async () => {
+    // A request-local signal (say, an extension's own fetch timeout) must not displace the managed
+    // session signal — aborting open() has to cancel the in-flight request, or open() stays stuck
+    // awaiting extension.open() despite the abortSignal contract.
+    let fetchStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      fetchStarted = resolve;
+    });
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: ((_url: string, init: RequestInit = {}) => {
+          fetchStarted();
+          return new Promise<Response>((_resolve, reject) => {
+            init.signal?.addEventListener("abort", () =>
+              reject(
+                init.signal?.reason ??
+                  new DOMException("aborted", "AbortError"),
+              ),
+            );
+          });
+        }) as any,
+      }),
+    });
+    const requestLocal = new AbortController();
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/fetch-session-abort",
+      defaultEndpoint: "test/fetch-session-abort",
+      async open(context) {
+        await context.fetch("https://wma.fal.run/session", {
+          signal: requestLocal.signal,
+        });
+        return { close: jest.fn() };
+      },
+    });
+
+    const controller = new AbortController();
+    const opening = client.open(probe, { abortSignal: controller.signal });
+    const settled = opening.catch((error) => error);
+    await started;
+    const reason = new Error("session aborted");
+    controller.abort(reason);
+
+    expect(await settled).toBe(reason);
+    expect(requestLocal.signal.aborted).toBe(false);
+  });
+
   it("context.fetch lets FormData generate its multipart boundary", async () => {
     const seen: RequestInit[] = [];
     const client = createRealtimeClient({

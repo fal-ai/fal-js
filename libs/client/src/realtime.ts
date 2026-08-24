@@ -937,6 +937,40 @@ export function createRealtimeClient({
       externalSignal?.addEventListener("abort", abort, { once: true });
     }
 
+    // A request-local signal an extension hands to context.fetch() or context.gatherIce() must not
+    // displace the managed session signal: either one aborts the work. Hand-rolled rather than
+    // AbortSignal.any() to keep the runtime floor unchanged; dispose() detaches the listeners so a
+    // long-lived session does not accumulate one pair per request.
+    const withSessionSignal = (
+      requestSignal: AbortSignal | null | undefined,
+    ): { signal: AbortSignal; dispose: () => void } => {
+      if (!requestSignal || requestSignal === controller.signal) {
+        return { signal: controller.signal, dispose: () => undefined };
+      }
+      const combined = new AbortController();
+      const abortFromSession = () => combined.abort(controller.signal.reason);
+      const abortFromRequest = () => combined.abort(requestSignal.reason);
+      if (controller.signal.aborted) {
+        abortFromSession();
+      } else if (requestSignal.aborted) {
+        abortFromRequest();
+      } else {
+        controller.signal.addEventListener("abort", abortFromSession, {
+          once: true,
+        });
+        requestSignal.addEventListener("abort", abortFromRequest, {
+          once: true,
+        });
+      }
+      return {
+        signal: combined.signal,
+        dispose: () => {
+          controller.signal.removeEventListener("abort", abortFromSession);
+          requestSignal.removeEventListener("abort", abortFromRequest);
+        },
+      };
+    };
+
     try {
       session = await extension.open(
         {
@@ -1008,54 +1042,24 @@ export function createRealtimeClient({
                 Array.isArray(value) ? value.join(", ") : value,
               );
             }
-            return doFetch(targetUrl, {
-              ...init,
-              method,
-              signal: init.signal ?? controller.signal,
-              headers: finalHeaders,
-            });
+            const { signal, dispose } = withSessionSignal(init.signal);
+            try {
+              return await doFetch(targetUrl, {
+                ...init,
+                method,
+                signal,
+                headers: finalHeaders,
+              });
+            } finally {
+              dispose();
+            }
           },
           gatherIce: async (pc, iceOptions) => {
-            const extensionSignal = iceOptions?.signal;
-            if (!extensionSignal || extensionSignal === controller.signal) {
-              return gatherIceCandidates(pc, {
-                ...iceOptions,
-                signal: controller.signal,
-                onProgress: (result) =>
-                  diagnostic({
-                    kind: "progress",
-                    phase: "ice-gathering",
-                    detail: { ...result },
-                  }),
-              });
-            }
-
-            const gatherController = new AbortController();
-            const abortFromSession = () =>
-              gatherController.abort(controller.signal.reason);
-            const abortFromExtension = () =>
-              gatherController.abort(extensionSignal.reason);
-            if (controller.signal.aborted) {
-              abortFromSession();
-            } else if (extensionSignal.aborted) {
-              abortFromExtension();
-            } else {
-              controller.signal.addEventListener("abort", abortFromSession, {
-                once: true,
-              });
-              extensionSignal.addEventListener("abort", abortFromExtension, {
-                once: true,
-              });
-              if (controller.signal.aborted) {
-                abortFromSession();
-              } else if (extensionSignal.aborted) {
-                abortFromExtension();
-              }
-            }
+            const { signal, dispose } = withSessionSignal(iceOptions?.signal);
             try {
               return await gatherIceCandidates(pc, {
                 ...iceOptions,
-                signal: gatherController.signal,
+                signal,
                 onProgress: (result) =>
                   diagnostic({
                     kind: "progress",
@@ -1064,8 +1068,7 @@ export function createRealtimeClient({
                   }),
               });
             } finally {
-              controller.signal.removeEventListener("abort", abortFromSession);
-              extensionSignal.removeEventListener("abort", abortFromExtension);
+              dispose();
             }
           },
           diagnostic,
