@@ -823,6 +823,45 @@ describe("realtime extension context additions", () => {
     expect(requestLocal.signal.aborted).toBe(false);
   });
 
+  it("keeps a request-local fetch signal combined while the body is consumed", async () => {
+    // fetch() resolves at headers, but its signal also cancels later body reads. Detaching the
+    // combined signal at resolution would leave a stalled body unaffected by session teardown.
+    let observed: AbortSignal | null | undefined;
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async (_url: string, init: RequestInit = {}) => {
+          observed = init.signal;
+          return new Response("{}");
+        }) as any,
+      }),
+    });
+    const requestLocal = new AbortController();
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/fetch-body-abort",
+      defaultEndpoint: "test/fetch-body-abort",
+      async open(context) {
+        await context.fetch("https://wma.fal.run/session", {
+          signal: requestLocal.signal,
+        });
+        return { close: jest.fn() };
+      },
+    });
+
+    const controller = new AbortController();
+    const session = await client.open(probe, {
+      abortSignal: controller.signal,
+    });
+    expect(observed?.aborted).toBe(false);
+
+    controller.abort(new Error("late abort"));
+    expect(observed?.aborted).toBe(true);
+    await session.close();
+  });
+
   it("context.fetch lets FormData generate its multipart boundary", async () => {
     const seen: RequestInit[] = [];
     const client = createRealtimeClient({

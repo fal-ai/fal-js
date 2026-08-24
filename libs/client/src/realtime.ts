@@ -1044,14 +1044,24 @@ export function createRealtimeClient({
             }
             const { signal, dispose } = withSessionSignal(init.signal);
             try {
-              return await doFetch(targetUrl, {
+              const response = await doFetch(targetUrl, {
                 ...init,
                 method,
                 signal,
                 headers: finalHeaders,
               });
-            } finally {
+              // The Response outlives this call: callers read the body afterwards, and a fetch
+              // signal also cancels those reads. Disposing here would sever the combination just
+              // when a stalled body needs it, so the listeners stay attached until either side
+              // aborts — and session teardown always aborts the session signal, so nothing
+              // outlives the session.
+              if (signal !== controller.signal) {
+                signal.addEventListener("abort", dispose, { once: true });
+              }
+              return response;
+            } catch (error) {
               dispose();
+              throw error;
             }
           },
           gatherIce: async (pc, iceOptions) => {

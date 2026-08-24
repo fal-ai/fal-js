@@ -470,6 +470,42 @@ describe("handleRequest rejection reasons", () => {
     }
   });
 
+  it("forwards general request headers but never proxy-host credentials", async () => {
+    // An extension's provider header or a non-JSON accept must survive the documented proxy path,
+    // while credentials addressed to the proxy host (authorization, cookie) must not leak upstream
+    // — the proxy substitutes its own fal authorization after the pass-through.
+    const incoming: Record<string, string> = {
+      "x-fal-target-url": "https://wma.fal.run/session",
+      accept: "text/event-stream",
+      "x-provider-ticket": "abc",
+      authorization: "Bearer proxy-user-token",
+      cookie: "session=1",
+    };
+    const { behavior } = behaviorFor("https://wma.fal.run/session");
+    behavior.getHeaders = () => incoming;
+    behavior.getHeader = (name: string) => incoming[name.toLowerCase()];
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      const sent = fetchMock.mock.calls[0][1]?.headers as Record<
+        string,
+        string
+      >;
+      expect(sent["x-provider-ticket"]).toBe("abc");
+      expect(sent.accept).toBe("text/event-stream");
+      expect(sent.authorization).toBe("Key secret");
+      expect(sent.cookie).toBeUndefined();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("extracts the WMA app id from a bytes body", async () => {
     // Adapters now hand over raw bytes; the app-id gate decodes them for parsing while the
     // forwarded body stays untouched. Auth is satisfied and no fal credential is configured, so a

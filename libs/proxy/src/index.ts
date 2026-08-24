@@ -160,6 +160,27 @@ function getFalKey(): string | undefined {
 
 const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 
+// Request headers the proxy owns or that must not travel: credentials meant for the proxy host
+// (`authorization`, `cookie`), hop-by-hop headers the upstream fetch manages itself, and headers
+// derived from the incoming connection. Everything else passes through, so an extension header or
+// a non-JSON `accept` behaves the same through the proxy as with a direct fetch.
+const EXCLUDED_REQUEST_HEADERS = new Set([
+  "authorization",
+  "cookie",
+  "host",
+  "content-length",
+  "content-encoding",
+  "connection",
+  "transfer-encoding",
+  "keep-alive",
+  "upgrade",
+  "te",
+  "trailer",
+  "expect",
+  "accept-encoding",
+  "proxy-authorization",
+]);
+
 /**
  * A request handler that proxies the request to the fal API
  * endpoint. This is useful so client-side calls to the fal endpoint
@@ -285,16 +306,22 @@ export async function handleRequest<ResponseType>(
     return behavior.respondWith(401, "Unauthorized");
   }
 
-  // pass over headers prefixed with x-fal-*
+  // Pass request headers through, minus the ones the proxy owns. A realtime extension's
+  // provider-specific header or `accept: text/event-stream` must survive the documented proxy
+  // path, or the same code silently changes protocol depending on how the client is configured.
+  // The proxy-owned values are applied after the spread, so a caller cannot override them.
   const headers: Record<string, HeaderValue> = {};
   Object.keys(behavior.getHeaders()).forEach((key) => {
-    if (key.toLowerCase().startsWith("x-fal-")) {
-      headers[key.toLowerCase()] = behavior.getHeader(key);
+    const name = key.toLowerCase();
+    if (!EXCLUDED_REQUEST_HEADERS.has(name)) {
+      headers[name] = behavior.getHeader(key);
     }
   });
 
   const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
+  const accept =
+    singleHeaderValue(behavior.getHeader("accept")) ?? "application/json";
   const contentType =
     singleHeaderValue(behavior.getHeader("content-type")) ?? "application/json";
   const res = await fetch(targetUrl, {
@@ -302,7 +329,7 @@ export async function handleRequest<ResponseType>(
     headers: {
       ...headers,
       authorization,
-      accept: "application/json",
+      accept,
       "content-type": contentType,
       "user-agent": userAgent,
       "x-fal-client-proxy": proxyUserAgent,
