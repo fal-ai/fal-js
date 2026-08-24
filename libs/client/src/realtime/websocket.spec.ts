@@ -318,6 +318,28 @@ describe("websocket", () => {
     await expect(session).rejects.toThrow("caller went away");
   });
 
+  it("honors an abort issued synchronously from the connecting diagnostic", async () => {
+    // The abort lands after the handshake promise's throw-if-aborted moment but before its abort
+    // listener exists, and an AbortSignal does not replay its event. Without the recheck, the open
+    // waits out the 15-second handshake timeout and reports that instead of the caller's reason.
+    const controller = new AbortController();
+    const reason = new Error("aborted mid-diagnostic");
+    const context = fakeExtensionContext({
+      signal: controller.signal,
+      diagnostic: (event) => {
+        if (event.kind === "progress" && event.phase === "connecting") {
+          controller.abort(reason);
+        }
+      },
+    });
+    const session = websocket().open(context, {
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    await expect(session).rejects.toBe(reason);
+  });
+
   it("stops opening when token acquisition is still pending", async () => {
     const controller = new AbortController();
     const context = fakeExtensionContext({ signal: controller.signal });

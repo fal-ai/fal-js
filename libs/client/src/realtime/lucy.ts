@@ -148,6 +148,12 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       context.signal.addEventListener("abort", abortNegotiation, {
         once: true,
       });
+      // A caller can abort synchronously from the "negotiating" diagnostic, before this listener
+      // exists — and an AbortSignal does not replay its event. Without the recheck, negotiation
+      // waits out its timeout and reports that instead of the caller's abort reason.
+      if (context.signal.aborted) {
+        abortNegotiation();
+      }
 
       const flushCandidates = async () => {
         if (!peer || !hasRemoteDescription) return;

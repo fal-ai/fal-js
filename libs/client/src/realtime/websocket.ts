@@ -231,6 +231,13 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
             ),
           WEBSOCKET_HANDSHAKE_TIMEOUT_MS,
         );
+        // A caller can abort synchronously from the "connecting" diagnostic, before the listener
+        // above exists — and an AbortSignal does not replay its event. Without this recheck (after
+        // `handshakeTimeout` exists, because settle clears it), the open waits out the handshake
+        // timeout and reports it instead of the caller's abort reason.
+        if (context.signal.aborted) {
+          onAbort();
+        }
       });
 
       ws.onmessage = (event) => {

@@ -367,7 +367,7 @@ describe("handleRequest rejection reasons", () => {
   function behaviorFor(
     targetUrl: string | undefined,
     method = "POST",
-    requestBody = "{}",
+    requestBody: string | Uint8Array = "{}",
   ) {
     const responses: Array<{ status: number; data: unknown }> = [];
     return {
@@ -393,7 +393,7 @@ describe("handleRequest rejection reasons", () => {
     targetUrl: string | undefined,
     config: Record<string, unknown> = {},
     method = "POST",
-    requestBody = "{}",
+    requestBody: string | Uint8Array = "{}",
   ) => {
     const { behavior, responses } = behaviorFor(targetUrl, method, requestBody);
     await handleRequest(
@@ -440,6 +440,64 @@ describe("handleRequest rejection reasons", () => {
     } finally {
       fetchMock.mockRestore();
     }
+  });
+
+  it("forwards a binary request body byte-identical", async () => {
+    // Multipart file parts are binary. A body that ever passes through a string corrupts the bytes
+    // that are not valid UTF-8, so the proxy must hand fetch exactly what the adapter read.
+    const binary = new Uint8Array([0xff, 0x00, 0xd8, 0x88, 0x01]);
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      binary,
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "secret",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://wma.fal.run/upload",
+        expect.objectContaining({ body: binary }),
+      );
+      expect(fetchMock.mock.calls[0][1]?.body).toBe(binary);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("extracts the WMA app id from a bytes body", async () => {
+    // Adapters now hand over raw bytes; the app-id gate decodes them for parsing while the
+    // forwarded body stays untouched. Auth is satisfied and no fal credential is configured, so a
+    // 401 from the credential step proves the gate accepted the decoded id — a rejected id would
+    // have returned 400 before it.
+    const body = new TextEncoder().encode(
+      JSON.stringify({ app_id: "me/my-app/world" }),
+    );
+    const config = {
+      allowedEndpoints: ["me/my-app/**"],
+      isAuthenticated: async () => true,
+      // No credential, so an accepted app id stops at the credential 401 instead of fetching.
+      resolveFalAuth: async () => undefined,
+    };
+    expect(
+      await run("https://wma.fal.run/session", config, "POST", body),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        config,
+        "POST",
+        new TextEncoder().encode(JSON.stringify({ app_id: "someone/else" })),
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
   });
 
   it("names the missing header", async () => {

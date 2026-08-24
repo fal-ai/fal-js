@@ -4,7 +4,7 @@ import {
   DEFAULT_ALLOWED_URL_PATTERNS,
   type ProxyConfig,
 } from "./config";
-import type { HeaderValue, ProxyBehavior } from "./types";
+import type { HeaderValue, ProxyBehavior, ProxyRequestBody } from "./types";
 import { singleHeaderValue } from "./utils";
 
 export {
@@ -13,7 +13,11 @@ export {
   resolveProxyConfig,
   type ProxyConfig,
 } from "./config";
-export { type HeaderValue, type ProxyBehavior } from "./types";
+export {
+  type HeaderValue,
+  type ProxyBehavior,
+  type ProxyRequestBody,
+} from "./types";
 
 export const TARGET_URL_HEADER = "x-fal-target-url";
 
@@ -190,7 +194,7 @@ export async function handleRequest<ResponseType>(
   const resolvedConfig = isResolved
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
-  let requestBody: string | undefined;
+  let requestBody: ProxyRequestBody;
   let requestBodyRead = false;
   const readRequestBody = async () => {
     if (!requestBodyRead) {
@@ -198,6 +202,18 @@ export async function handleRequest<ResponseType>(
       requestBodyRead = true;
     }
     return requestBody;
+  };
+  // The forwarded body stays raw bytes — decoding a multipart payload corrupts its file parts.
+  // Only the WMA app-id extraction needs text, and those routes carry JSON.
+  const readRequestBodyText = async (): Promise<string | undefined> => {
+    const body = await readRequestBody();
+    if (typeof body === "string") {
+      return body;
+    }
+    if (body === undefined) {
+      return undefined;
+    }
+    return new TextDecoder().decode(body);
   };
 
   const urlToValidate = getUrlWithoutScheme(targetUrl);
@@ -240,7 +256,7 @@ export async function handleRequest<ResponseType>(
 
   if (restrictEndpoints) {
     const endpoint = wmaAppScoped
-      ? appIdFromRequestBody(await readRequestBody())
+      ? appIdFromRequestBody(await readRequestBodyText())
       : isFalInfrastructure(targetUrl)
         ? undefined
         : getEndpoint(targetUrl);

@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { ProxyConfig, resolveProxyConfig } from "./config";
 import { DEFAULT_PROXY_ROUTE, handleRequest } from "./index";
+import { serializeParsedBody } from "./utils";
 
 /**
  * The default Express route for the fal.ai client proxy.
@@ -25,7 +26,7 @@ export const createHandler = (
       {
         id: "express",
         method: request.method,
-        getRequestBody: async () => JSON.stringify(request.body),
+        getRequestBody: async () => serializeParsedBody(request.body),
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],
         sendHeader: (name, value) => response.setHeader(name, value),

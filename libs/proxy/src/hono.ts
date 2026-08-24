@@ -7,6 +7,7 @@ import {
   resolveApiKeyFromEnv,
   responsePassthrough,
 } from "./index";
+import { readWebRequestBody } from "./utils";
 
 /**
  * @deprecated Use `Partial<ProxyConfig>` instead.
@@ -49,7 +50,7 @@ export function createRouteHandler({
         getHeaders: () => responseHeaders,
         getHeader: (name) => context.req.header(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),
-        getRequestBody: async () => JSON.stringify(await context.req.json()),
+        getRequestBody: async () => readWebRequestBody(context.req.raw),
         sendResponse: responsePassthrough,
         resolveApiKey,
       },

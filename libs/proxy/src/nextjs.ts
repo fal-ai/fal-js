@@ -7,6 +7,7 @@ import {
   handleRequest,
   responsePassthrough,
 } from "./index";
+import { readWebRequestBody, serializeParsedBody } from "./utils";
 
 /**
  * The default Next API route for the fal.ai client proxy.
@@ -29,7 +30,7 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-page-router",
         method: request.method || "POST",
-        getRequestBody: async () => JSON.stringify(request.body),
+        getRequestBody: async () => serializeParsedBody(request.body),
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],
         sendHeader: (name, value) => response.setHeader(name, value),
@@ -91,7 +92,7 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-app-router",
         method: request.method,
-        getRequestBody: async () => request.text(),
+        getRequestBody: async () => readWebRequestBody(request),
         getHeaders: () => fromHeaders(request.headers),
         getHeader: (name) => request.headers.get(name),
         sendHeader: (name, value) => responseHeaders.set(name, value),

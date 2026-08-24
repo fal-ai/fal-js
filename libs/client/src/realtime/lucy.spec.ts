@@ -236,6 +236,29 @@ describe("lucyRealtime", () => {
     expect(handler).toBeDefined();
   });
 
+  it("honors an abort issued synchronously from the negotiating diagnostic", async () => {
+    // The initial "negotiating" report fires after open()'s throwIfAborted but before the
+    // negotiation abort listener exists, and an AbortSignal does not replay its event. Without the
+    // recheck, negotiation waits out its timeout and reports that instead of the caller's reason.
+    const controller = new AbortController();
+    const reason = new Error("aborted mid-diagnostic");
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      signal: controller.signal,
+      connect: (() => ({
+        send: jest.fn(),
+        close: jest.fn(),
+      })) as unknown as RealtimeExtensionContext["connect"],
+      diagnostic: () => controller.abort(reason),
+    });
+
+    const opening = lucyRealtime().open(context, {
+      input: { prompt: "make it cinematic" },
+    });
+
+    await expect(opening).rejects.toBe(reason);
+  });
+
   it("rejects when fallback peer initialization fails", async () => {
     const failure = new Error("could not create an offer");
     let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
