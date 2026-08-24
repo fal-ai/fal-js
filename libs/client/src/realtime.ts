@@ -753,7 +753,13 @@ export function createRealtimeClient({
 
       let handleClosed = false;
       const send = (input: Input & Partial<WithRequestId>) => {
-        if (handleClosed || stateMachine.disposed) return;
+        if (
+          handleClosed ||
+          stateMachine.disposed ||
+          stateMachine.handleId !== handleId
+        ) {
+          return;
+        }
         // Use throttled send to avoid sending too many messages
         stateMachine.throttledSend({
           type: "send",

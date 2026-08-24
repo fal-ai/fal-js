@@ -176,6 +176,41 @@ describe("createRealtimeClient", () => {
     second.close();
   });
 
+  it("prevents an older reused handle from sending into the new owner", async () => {
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    first.send({ prompt: "stale" });
+    second.send({ prompt: "current" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    expect(sockets).toHaveLength(1);
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    expect(socket.send).toHaveBeenCalledTimes(1);
+    expect(decode(socket.send.mock.calls[0][0])).toEqual({ prompt: "current" });
+    second.close();
+  });
+
   it("lets the latest reused handle close despite a discarded older handle", async () => {
     const tokenProvider = jest.fn().mockResolvedValue("shared-token");
     const client = createRealtimeClient({ config });
