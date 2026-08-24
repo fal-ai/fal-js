@@ -114,6 +114,65 @@ describe("realtime extensions", () => {
     expect(extensionClose).toHaveBeenCalledTimes(1);
   });
 
+  it("survives a caller freezing, sealing, or preventing extensions on the session", async () => {
+    // Object.freeze/seal/preventExtensions make the proxy target non-extensible, and from then on
+    // the language requires ownKeys to report exactly the target's own keys. Without mirroring,
+    // any of the three throws a TypeError and enumeration is broken afterwards.
+    const sessionFor = async (label: string) => {
+      const client = createRealtimeClient({
+        config: createConfig({ credentials: "test-key" }),
+      });
+      return client.open(extension(), { label });
+    };
+
+    const prevented = await sessionFor("prevented");
+    expect(() => Object.preventExtensions(prevented)).not.toThrow();
+    expect(Object.keys(prevented).sort()).toEqual(["close", "label"]);
+    expect(prevented.label).toBe("prevented");
+    expect(Object.isExtensible(prevented)).toBe(false);
+
+    const sealed = await sessionFor("sealed");
+    expect(() => Object.seal(sealed)).not.toThrow();
+    expect(Object.isSealed(sealed)).toBe(true);
+    expect(sealed.state).toBe("live");
+    await sealed.close();
+    // Sealed but still writable: state keeps reporting the live lifecycle.
+    expect(sealed.state).toBe("closed");
+
+    const frozen = await sessionFor("frozen");
+    expect(() => Object.freeze(frozen)).not.toThrow();
+    expect(Object.isFrozen(frozen)).toBe(true);
+    expect(Object.keys(frozen).sort()).toEqual(["close", "label"]);
+    expect(frozen.label).toBe("frozen");
+    // close() is the kernel's idempotent teardown even after freezing.
+    await frozen.close();
+  });
+
+  it("pins a frozen own state property at its frozen value", async () => {
+    // An extension session that owns a `state` key mirrors it onto the target when the caller
+    // freezes; a non-configurable, non-writable data property must then report that exact value.
+    const stateful = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { note: string }
+    >({
+      id: "test/stateful",
+      defaultEndpoint: "test/stateful",
+      async open() {
+        return { state: "opening", note: "kept", close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(stateful, {});
+
+    Object.freeze(session);
+    expect(session.state).toBe("live");
+    await session.close();
+    expect(session.state).toBe("live");
+    expect(session.note).toBe("kept");
+  });
+
   it("forwards property deletion and definition to the extension session", async () => {
     const raw: RealtimeSession & Record<string, unknown> = {
       close: jest.fn(),

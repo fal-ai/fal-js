@@ -1119,21 +1119,61 @@ export function createRealtimeClient({
         PropertyKey,
         { source: unknown; bound: unknown }
       >();
+      // What the `get` trap serves for a property, shared with the traps that mirror properties
+      // onto the neutral target: once the target is non-extensible, the language requires a
+      // non-configurable, non-writable target value and the trap result to be the SAME value, so
+      // both sides must resolve through one function.
+      const resolveProperty = (property: PropertyKey, value: unknown) => {
+        if (property === "close") return cleanup;
+        if (property === "state") return state;
+        if (typeof value !== "function") return value;
+        const cached = boundMethods.get(property);
+        if (cached?.source === value) return cached.bound;
+        // Class methods must always observe the original instance. In particular, a Proxy cannot
+        // satisfy private-field brand checks, and a frozen instance cannot have its raw `close`
+        // hook replaced. Extensions end themselves through context.close(); the session's own
+        // close method is the resource hook the kernel invokes during managed teardown.
+        const bound = value.bind(session);
+        boundMethods.set(property, { source: value, bound });
+        return bound;
+      };
+      const mirrorOntoTarget = (
+        property: PropertyKey,
+        descriptor: PropertyDescriptor,
+      ) =>
+        Reflect.defineProperty(
+          proxyTarget,
+          property,
+          "value" in descriptor
+            ? {
+                ...descriptor,
+                value: resolveProperty(property, descriptor.value),
+              }
+            : descriptor,
+        );
       return new Proxy(proxyTarget, {
         get(_target, property) {
-          if (property === "close") return cleanup;
-          if (property === "state") return state;
-          const value = Reflect.get(session, property, session);
-          if (typeof value !== "function") return value;
-          const cached = boundMethods.get(property);
-          if (cached?.source === value) return cached.bound;
-          // Class methods must always observe the original instance. In particular, a Proxy cannot
-          // satisfy private-field brand checks, and a frozen instance cannot have its raw `close`
-          // hook replaced. Extensions end themselves through context.close(); the session's own
-          // close method is the resource hook the kernel invokes during managed teardown.
-          const bound = value.bind(session);
-          boundMethods.set(property, { source: value, bound });
-          return bound;
+          if (property === "state") {
+            const pinned = Reflect.getOwnPropertyDescriptor(
+              proxyTarget,
+              property,
+            );
+            // A caller that froze the session pinned `state` at its frozen value; the invariant for
+            // a non-configurable, non-writable data property forbids reporting anything newer.
+            if (
+              pinned &&
+              !pinned.configurable &&
+              pinned.writable === false &&
+              "value" in pinned
+            ) {
+              return pinned.value;
+            }
+            return state;
+          }
+          return resolveProperty(
+            property,
+            Reflect.get(session, property, session),
+          );
         },
         set(_target, property, value) {
           const updated = Reflect.set(session, property, value, session);
@@ -1157,14 +1197,44 @@ export function createRealtimeClient({
             return false;
           }
           // A non-configurable property must also exist on the neutral target or the Proxy would
-          // violate the language's invariants. Configurable properties can remain source-only.
-          return descriptor.configurable === false
-            ? Reflect.defineProperty(proxyTarget, property, descriptor)
+          // violate the language's invariants. Configurable properties can remain source-only —
+          // unless the target is already non-extensible, where its key set must track the session's.
+          return descriptor.configurable === false ||
+            !Reflect.isExtensible(proxyTarget)
+            ? mirrorOntoTarget(property, descriptor)
             : true;
         },
         deleteProperty(_target, property) {
           boundMethods.delete(property);
-          return Reflect.deleteProperty(session, property);
+          if (!Reflect.deleteProperty(session, property)) {
+            return false;
+          }
+          // Keep the neutral target's key set in step with the session's, or a delete after
+          // `Object.preventExtensions()` would leave `ownKeys` reporting fewer keys than the
+          // non-extensible target owns.
+          return Reflect.deleteProperty(proxyTarget, property);
+        },
+        preventExtensions() {
+          // `Object.freeze()`, `Object.seal()`, and `Object.preventExtensions()` all land here
+          // first. Once the target is non-extensible the language requires `ownKeys` to report
+          // exactly the target's own keys, so mirror every session key onto the target — with the
+          // same values the `get` trap serves — and make the session non-extensible too so no new
+          // key can appear later on one side only.
+          if (!Reflect.preventExtensions(session)) {
+            return false;
+          }
+          for (const property of Reflect.ownKeys(session)) {
+            if (!Reflect.getOwnPropertyDescriptor(proxyTarget, property)) {
+              const descriptor = Reflect.getOwnPropertyDescriptor(
+                session,
+                property,
+              );
+              if (descriptor) {
+                mirrorOntoTarget(property, descriptor);
+              }
+            }
+          }
+          return Reflect.preventExtensions(proxyTarget);
         },
         has(_target, property) {
           return (
