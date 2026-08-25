@@ -1453,6 +1453,28 @@ describe("handleRequest rejection reasons", () => {
     });
   });
 
+  it("rejects duplicate app_id keys written with JSON escapes", async () => {
+    for (const body of [
+      '{"app_id":"blocked/app","app_\\u0069d":"owner/app"}',
+      '{"app_\\u0069d":"blocked/app","app_id":"owner/app"}',
+    ]) {
+      expect(
+        await run(
+          "https://wma.fal.run/session",
+          {
+            allowedEndpoints: ["owner/app"],
+            isAuthenticated: async () => true,
+          },
+          "POST",
+          body,
+        ),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: target path is not permitted by allowedEndpoints",
+      });
+    }
+  });
+
   it("lets operators refuse service hosts entirely with serviceHosts: []", async () => {
     expect(
       await run("https://wma.fal.run/session", {

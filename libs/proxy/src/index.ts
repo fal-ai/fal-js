@@ -89,13 +89,42 @@ function normalizeServicePath(url: URL): string | undefined {
   return path.replace(/\/+$/, "") || "/";
 }
 
+function countJsonKeys(body: string, key: string): number {
+  let count = 0;
+  for (let index = 0; index < body.length; index++) {
+    if (body[index] !== '"') continue;
+    const start = index;
+    for (index++; index < body.length; index++) {
+      if (body[index] === "\\") {
+        // Skip the escaped character so an escaped quote cannot look like a string boundary.
+        index++;
+        continue;
+      }
+      if (body[index] !== '"') continue;
+
+      let next = index + 1;
+      while (/\s/.test(body[next] ?? "")) next++;
+      if (body[next] === ":") {
+        try {
+          if (JSON.parse(body.slice(start, index + 1)) === key) count++;
+        } catch {
+          // The full JSON parse below rejects malformed strings. This scan only decides whether
+          // a syntactically decodable key appears more than once.
+        }
+      }
+      break;
+    }
+  }
+  return count;
+}
+
 function appIdFromRequestBody(body: string | undefined): string | undefined {
   if (!body) return undefined;
   // Fail closed on duplicate keys: JSON parsers disagree about which duplicate wins, and this
   // value gates allowedEndpoints — the proxy's verdict must not depend on its parser agreeing
-  // with the upstream's. (Matching the raw text over-counts an "app_id" inside a nested string,
-  // which only ever rejects more, never less.)
-  if ((body.match(/"app_id"\s*:/g) ?? []).length > 1) return undefined;
+  // with the upstream's. Decode every object-key token so escaped spellings such as
+  // `app_\u0069d` count too. Nested keys are deliberately included; that can only reject more.
+  if (countJsonKeys(body, "app_id") > 1) return undefined;
   try {
     const value = JSON.parse(body) as { app_id?: unknown };
     return typeof value.app_id === "string" ? value.app_id : undefined;
