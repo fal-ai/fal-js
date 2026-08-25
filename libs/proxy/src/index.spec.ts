@@ -390,20 +390,16 @@ describe("serializeParsedBody", () => {
     expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
     // A string under a JSON content type: raw JSON text passes through; a parser-produced
     // top-level string value (json strict:false) re-encodes or the upstream gets invalid JSON.
-    expect(serializeParsedBody('{"a":1}', "application/json")).toBe('{"a":1}');
-    expect(serializeParsedBody('"quoted"', "application/json")).toBe(
-      '"quoted"',
-    );
+    // An UNPARSEABLE string is decidably a parsed top-level value and re-encodes; any PARSEABLE
+    // string is ambiguous under json strict:false (raw text vs quoted string value) and fails
+    // loudly rather than silently changing the upstream value's type. Non-JSON types pass raw.
     expect(serializeParsedBody("hello", "application/json")).toBe('"hello"');
     expect(serializeParsedBody("hello", "text/plain")).toBe("hello");
-    // Raw text `123` vs parsed value "123" is genuinely undecidable — silently changing the
-    // upstream value's type is worse than failing loudly.
-    expect(() => serializeParsedBody("123", "application/json")).toThrow(
-      /strict/,
-    );
-    expect(() => serializeParsedBody("null", "application/json")).toThrow(
-      /strict/,
-    );
+    for (const ambiguous of ['{"a":1}', '"quoted"', "123", "null", "[1,2]"]) {
+      expect(() => serializeParsedBody(ambiguous, "application/json")).toThrow(
+        /strict/,
+      );
+    }
     // Parsed JSON null is a real body; null under other types still reads as absent.
     expect(serializeParsedBody(null, "application/json")).toBe("null");
     expect(serializeParsedBody(null, "application/json; charset=utf-8")).toBe(
