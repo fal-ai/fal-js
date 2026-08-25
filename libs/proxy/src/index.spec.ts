@@ -954,6 +954,36 @@ describe("createPageRouterHandler body handling", () => {
     }
   });
 
+  it("does not double-encode structured-suffix JSON that Next leaves as raw text", async () => {
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "POST",
+      body: '{"title":"bad request"}',
+      headers: {
+        "x-fal-target-url": "https://fal.run/owner/app",
+        "content-type": "application/problem+json",
+      },
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handler(request as never, response as never);
+      expect(fetchMock.mock.calls[0][1]?.body).toBe('{"title":"bad request"}');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("forwards a binary upstream response as exact bytes", async () => {
     // A forwarded accept header can make the upstream answer with binary (an image, an
     // octet-stream); text() would UTF-8-decode and corrupt it before it reaches the caller.

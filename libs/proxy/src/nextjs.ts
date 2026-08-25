@@ -46,6 +46,12 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
             request.headers["content-type"] ?? ""
           ).toLowerCase();
           const jsonBody = isJsonContentType(contentType);
+          const mediaType = contentType.split(";", 1)[0].trim();
+          // Next's pages parser only JSON-parses these two media types. Other structured-suffix
+          // JSON types remain raw text, even though they are still JSON on the wire.
+          const parsedByNextAsJson =
+            mediaType === "application/json" ||
+            mediaType === "application/ld+json";
           const losslesslyParsed =
             jsonBody ||
             contentType.startsWith("application/x-www-form-urlencoded") ||
@@ -69,9 +75,13 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           // JSON text — it must re-encode ("hello" → "\"hello\"") or the upstream receives
           // invalid JSON under a JSON content type. (Express is different: its string bodies are
           // raw text and pass through.)
-          if (jsonBody && typeof request.body === "string") {
+          if (parsedByNextAsJson && typeof request.body === "string") {
             assertUtf8ParsedBody(contentType);
             return JSON.stringify(request.body);
+          }
+          if (jsonBody && typeof request.body === "string") {
+            assertUtf8ParsedBody(contentType);
+            return request.body;
           }
           const parsed = serializeParsedBody(
             request.body,
