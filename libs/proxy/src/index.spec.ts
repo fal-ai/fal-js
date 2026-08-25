@@ -536,6 +536,45 @@ describe("createPageRouterHandler body handling", () => {
     }
   });
 
+  it("forwards a binary upstream response as exact bytes", async () => {
+    // A forwarded accept header can make the upstream answer with binary (an image, an
+    // octet-stream); text() would UTF-8-decode and corrupt it before it reaches the caller.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "GET",
+      body: undefined,
+      headers: {
+        "x-fal-target-url": "https://wma.fal.run/preview",
+        accept: "image/png",
+      },
+    };
+    const send = jest.fn();
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send })),
+    };
+    // Invalid UTF-8 on purpose: a lone continuation byte (0x80) becomes U+FFFD through text().
+    const payload = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x80, 0x00, 0xff]);
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue(
+      new Response(payload, {
+        headers: { "content-type": "image/png" },
+      }),
+    );
+    try {
+      await handler(request as never, response as never);
+      const sent = send.mock.calls[0][0] as Buffer;
+      expect(Buffer.isBuffer(sent)).toBe(true);
+      expect(new Uint8Array(sent)).toEqual(payload);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("fails loudly for untyped bodies Next decoded as text", async () => {
     // Binary posted without a content-type is text-decoded by Next's default parser too — and a
     // forwarded string would then be labeled application/json by the string default.

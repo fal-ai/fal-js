@@ -88,7 +88,12 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           if (res.headers.get("content-type")?.includes("application/json")) {
             return response.status(res.status).json(await res.json());
           }
-          return response.status(res.status).send(await res.text());
+          // Bytes, not text(): a forwarded accept header can make the upstream answer with a
+          // binary payload (an image, an octet-stream), and decoding it through UTF-8 corrupts
+          // it before it reaches the caller.
+          return response
+            .status(res.status)
+            .send(Buffer.from(await res.arrayBuffer()));
         },
       },
       resolvedConfig,
