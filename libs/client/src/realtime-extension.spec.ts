@@ -285,6 +285,69 @@ describe("realtime extensions", () => {
     expect(observed?.aborted).toBe(false);
   });
 
+  it("does not lock the response when body is merely accessed", async () => {
+    // "Inspect body, then call json()" is a normal pattern; property access must not acquire a
+    // reader on the native stream, or the later standard read rejects.
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async () => new Response('{"ok":true}')) as any,
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/body-peek",
+      defaultEndpoint: "test/body-peek",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/session");
+        expect(response.body).toBeTruthy(); // peek only
+        expect(await response.json()).toEqual({ ok: true });
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await expect(session.ready).resolves.toBeDefined();
+    await session.close();
+  });
+
+  it("keeps the handle non-thenable when a session declares its own then", async () => {
+    // Resolving `ready` with the handle, `await handle`, and Promise.all() all probe `then`;
+    // forwarding a session's model-specific then would assimilate the handle into an unrelated
+    // promise instead of treating it as a value.
+    // A thenable can never arrive THROUGH extension.open() — promise assimilation would swallow
+    // it inside the extension's own async function. The reachable case is a session that grows a
+    // `then` after it is live; the handle must still read as a plain value.
+    const sessionThen = jest.fn();
+    const raw: RealtimeSession & Record<string, unknown> = { close: jest.fn() };
+    const thenable = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/thenable-session",
+      defaultEndpoint: "test/thenable-session",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = client.open(thenable, {});
+    const resolved = await session.ready;
+    expect(resolved.state).toBe("live");
+
+    raw.then = sessionThen; // the model-specific facade sprouts a then
+    expect((session as { then?: unknown }).then).toBeUndefined();
+    const awaited = await session; // still a value, not an assimilation target
+    expect(awaited).toBe(session);
+    expect(sessionThen).not.toHaveBeenCalled();
+    await session.close();
+  });
+
   it("cancels a still-opening session through close()", async () => {
     const neverOpens = defineRealtimeExtension<
       Record<never, never>,

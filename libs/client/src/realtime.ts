@@ -1129,32 +1129,45 @@ export function createRealtimeClient({
           dispose();
         }
       };
-      // Lazy, because acquiring a reader locks the original stream and would break the patched
-      // convenience methods for callers that never touch `body` directly.
+      // The native reader is acquired only when the monitored stream is actually READ — merely
+      // accessing `response.body` must not lock the response, or the common "inspect body, then
+      // call json()" pattern would throw. highWaterMark 0 stops the wrapper from prefetching,
+      // which would otherwise acquire the reader at construction.
       let monitored: ReadableStream<Uint8Array> | undefined;
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      const acquireReader = () => {
+        if (!reader) {
+          reader = originalBody.getReader();
+          // Covers end-of-stream, stream error, and reader-side cancellation alike.
+          void reader.closed.then(settle, settle);
+        }
+        return reader;
+      };
       Object.defineProperty(response, "body", {
         configurable: true,
         enumerable: true,
         get: () => {
           if (!monitored) {
-            const reader = originalBody.getReader();
-            // Covers end-of-stream, stream error, and reader-side cancellation alike.
-            void reader.closed.then(settle, settle);
-            monitored = new ReadableStream<Uint8Array>({
-              pull: async (streamController) => {
-                const { done, value } = await reader.read();
-                if (done) {
-                  streamController.close();
+            monitored = new ReadableStream<Uint8Array>(
+              {
+                pull: async (streamController) => {
+                  const { done, value } = await acquireReader().read();
+                  if (done) {
+                    streamController.close();
+                    settle();
+                    return;
+                  }
+                  streamController.enqueue(value);
+                },
+                cancel: async (reason) => {
                   settle();
-                  return;
-                }
-                streamController.enqueue(value);
+                  await (reader
+                    ? reader.cancel(reason)
+                    : originalBody.cancel(reason));
+                },
               },
-              cancel: async (reason) => {
-                settle();
-                await reader.cancel(reason);
-              },
-            });
+              { highWaterMark: 0 },
+            );
           }
           return monitored;
         },
@@ -1200,6 +1213,11 @@ export function createRealtimeClient({
       if (property === "close") return publicClose;
       if (property === "state") return state;
       if (property === "ready") return ready;
+      // The handle must NEVER be thenable, whatever the extension's session declares: resolving
+      // `ready` with it, `await handle`, and Promise.all() all probe `then` and would assimilate
+      // the handle into an unrelated promise instead of treating it as a value. A session's own
+      // `then` stays reachable only inside the extension.
+      if (property === "then") return undefined;
       if (typeof value !== "function") return value;
       const cached = boundMethods.get(property);
       if (cached?.source === value) return cached.bound;
