@@ -1436,6 +1436,12 @@ export function createRealtimeClient({
               message: string,
               observed?: Record<string, number | string>,
             ) => {
+              // A failure reported after managed teardown began is stale: the caller already
+              // closed, the lifecycle correctly reads "closed", and surfacing the report would
+              // render a failure for a session the user ended — the same suppression rule the
+              // media and data channels apply. An extension's in-flight work observing its own
+              // teardown lands here.
+              if (closed) return;
               diagnostic({ kind: "failure", message, observed });
               // Before cleanup: cleanup sets "closed", and a caller watching transitions needs to see
               // that this session died rather than ended.

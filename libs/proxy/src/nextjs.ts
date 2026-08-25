@@ -30,7 +30,8 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-page-router",
         method: request.method || "POST",
-        getRequestBody: async () => serializeParsedBody(request.body),
+        getRequestBody: async () =>
+          serializeParsedBody(request.body, request.headers["content-type"]),
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],
         sendHeader: (name, value) => response.setHeader(name, value),

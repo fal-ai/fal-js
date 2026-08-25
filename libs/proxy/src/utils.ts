@@ -34,17 +34,26 @@ export async function readWebRequestBody(request: {
 
 /**
  * Turn a framework-parsed request body (Express, Next.js pages router) back into a forwardable
- * payload. Raw bytes and strings pass through unchanged — re-stringifying is only for bodies the
- * framework already parsed into an object.
+ * payload. Raw bytes and strings pass through unchanged — re-encoding is only for bodies the
+ * framework already parsed into an object, and it must match the request's declared content type:
+ * the proxy forwards that header verbatim, so serializing a parsed form body as JSON would send
+ * JSON bytes labeled `application/x-www-form-urlencoded` to the upstream.
  *
  * @private
  */
-export function serializeParsedBody(body: unknown): ProxyRequestBody {
+export function serializeParsedBody(
+  body: unknown,
+  contentType?: HeaderValue,
+): ProxyRequestBody {
   if (body === undefined || body === null) {
     return undefined;
   }
   if (typeof body === "string" || body instanceof Uint8Array) {
     return body;
+  }
+  const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
+  if (declared.startsWith("application/x-www-form-urlencoded")) {
+    return new URLSearchParams(body as Record<string, string>).toString();
   }
   return JSON.stringify(body);
 }

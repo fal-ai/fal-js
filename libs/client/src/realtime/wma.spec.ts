@@ -622,6 +622,50 @@ describe("wma", () => {
     }
   });
 
+  it("drains the body of a non-OK heartbeat response", async () => {
+    // The kernel releases each request's signal bookkeeping when the body is consumed, so a
+    // degraded bridge answering every beat with an error must not retain one combination per
+    // heartbeat for the life of the session.
+    jest.useFakeTimers();
+    try {
+      install();
+      const drained = jest.fn(async () => new ArrayBuffer(0));
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fetch: async (url: string) => {
+          if (url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({ ice_servers: [{ urls: "stun:x" }] }),
+            );
+          }
+          if (url.endsWith("/heartbeat")) {
+            return {
+              ok: false,
+              status: 503,
+              arrayBuffer: drained,
+            } as unknown as Response;
+          }
+          return new Response(
+            JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+          );
+        },
+      });
+      const session = await wma().open(context, {
+        endpointId: "me/my-world",
+      });
+
+      jest.advanceTimersByTime(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(drained).toHaveBeenCalledTimes(1);
+      await session.close();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("ignores a dead heartbeat response that finishes after close", async () => {
     jest.useFakeTimers();
     try {

@@ -533,7 +533,13 @@ export function wma(endpointId?: string) {
               body: JSON.stringify({ session_id: answer.session_id }),
             })
             .then(async (response) => {
-              if (!response.ok) return;
+              if (!response.ok) {
+                // Drain the body even though it carries nothing useful: the kernel releases each
+                // request's signal bookkeeping when the body is consumed, so a degraded bridge
+                // returning errors every beat must not retain one combination per heartbeat.
+                await response.arrayBuffer().catch(() => undefined);
+                return;
+              }
               const status = (await response.json()) as { alive?: boolean };
               if (
                 status.alive === false &&

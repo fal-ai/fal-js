@@ -356,6 +356,36 @@ describe("isAllowedEndpoint", () => {
   });
 });
 
+describe("serializeParsedBody", () => {
+  it("re-encodes a parsed form body as form data, not JSON", async () => {
+    // The proxy forwards the request's content-type verbatim, so a body the framework parsed from
+    // application/x-www-form-urlencoded must be re-encoded the same way — JSON bytes labeled as
+    // form data cannot be parsed upstream.
+    const { serializeParsedBody } = await import("./utils");
+    expect(
+      serializeParsedBody(
+        { prompt: "a cat", seed: "42" },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("prompt=a+cat&seed=42");
+    expect(
+      serializeParsedBody(
+        { prompt: "a cat" },
+        "application/x-www-form-urlencoded; charset=utf-8",
+      ),
+    ).toBe("prompt=a+cat");
+    // JSON stays JSON, strings and bytes pass through, empty stays empty.
+    expect(serializeParsedBody({ a: 1 }, "application/json")).toBe('{"a":1}');
+    expect(serializeParsedBody({ a: 1 }, undefined)).toBe('{"a":1}');
+    expect(
+      serializeParsedBody("raw", "application/x-www-form-urlencoded"),
+    ).toBe("raw");
+    const bytes = new Uint8Array([1, 2]);
+    expect(serializeParsedBody(bytes, "multipart/form-data")).toBe(bytes);
+    expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
+  });
+});
+
 describe("handleRequest rejection reasons", () => {
   /**
    * A minimal ProxyBehavior that records what handleRequest responded with.

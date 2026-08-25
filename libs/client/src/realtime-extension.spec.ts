@@ -229,6 +229,42 @@ describe("realtime extensions", () => {
     expect(errors).toEqual([]);
   });
 
+  it("ignores a failure reported after managed teardown began", async () => {
+    // An extension's in-flight work can observe its own teardown and report it as a transport
+    // failure. After the caller closed, that report is stale: the lifecycle correctly reads
+    // "closed" and neither onError nor a failure diagnostic may fire for a user-ended session.
+    let captured!: RealtimeExtensionContext;
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/stale-fail",
+      defaultEndpoint: "test/stale-fail",
+      async open(context) {
+        captured = context;
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const errors: unknown[] = [];
+    const diagnostics: unknown[] = [];
+
+    const session = client.open(probe, {
+      onError: (e) => errors.push(e),
+      onDiagnostic: (event) => diagnostics.push(event),
+    });
+    await session.ready;
+    await session.close();
+
+    await captured.fail("stale transport death", { code: 1006 });
+
+    expect(session.state).toBe("closed");
+    expect(errors).toEqual([]);
+    expect(diagnostics).toEqual([]);
+  });
+
   it("keeps close() pending until a late-opening session is torn down", async () => {
     // An extension mid-operation may not observe the abort promptly and can still hand back a
     // resource-bearing session. An awaited close() must cover that late session's teardown
