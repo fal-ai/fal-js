@@ -150,6 +150,10 @@ async function fetchIceServers(
       body: JSON.stringify({ app_id: context.endpointId }),
     });
     if (!response.ok) {
+      // Drain before throwing: the kernel releases this request's signal bookkeeping when the
+      // body is consumed, and a fallback session that outlives a failed bridge probe must not
+      // pin the response for its whole lifetime. Same rule as the heartbeat's error drain.
+      await response.arrayBuffer().catch(() => undefined);
       throw new Error(`bridge /ice request failed (HTTP ${response.status})`);
     }
     const payload = (await response.json()) as {

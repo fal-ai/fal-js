@@ -62,7 +62,10 @@ export type RealtimeState = "opening" | "live" | "failed" | "closed";
  */
 export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
   Session,
-  "state" | "close" | "send"
+  // `then` is omitted because the handle is deliberately never thenable — the kernel serves
+  // undefined for it at runtime so `await handle`, Promise.all(), and `ready`'s resolution treat
+  // the handle as a value; the type must not offer what the runtime hides.
+  "state" | "close" | "send" | "then"
 > &
   (Session extends { send: (...args: infer Args) => unknown }
     ? {

@@ -151,6 +151,36 @@ describe("wma", () => {
     );
   });
 
+  it("drains a failed bridge /ice response before falling back", async () => {
+    // The kernel releases each request's signal bookkeeping when its body is consumed; a fallback
+    // session that outlives the failed probe must not pin the error response for its lifetime.
+    const { peer } = install();
+    const drained = jest.fn(async () => new ArrayBuffer(0));
+    const context = fakeExtensionContext({
+      endpointId: "me/my-world",
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:app" }] },
+        requestId: "r",
+      })) as never,
+      fetch: async (url: string) => {
+        if (url.endsWith("/ice")) {
+          return {
+            ok: false,
+            status: 503,
+            arrayBuffer: drained,
+          } as unknown as Response;
+        }
+        return new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        );
+      },
+    });
+
+    await wma().open(context, { endpointId: "me/my-world" });
+    expect(peer.addTransceiver).toHaveBeenCalled();
+    expect(drained).toHaveBeenCalledTimes(1);
+  });
+
   it("times out stalled bridge ICE discovery before app fallback", async () => {
     jest.useFakeTimers();
     try {
@@ -236,8 +266,11 @@ describe("wma", () => {
       });
 
       const opening = wma().open(context, { endpointId: "me/my-world" });
-      await Promise.resolve();
-      await Promise.resolve();
+      // Extra flushes: the failed bridge probe now drains its error body (a real Response read,
+      // several microtasks) before the app fallback starts.
+      for (let flushes = 0; flushes < 20; flushes += 1) {
+        await Promise.resolve();
+      }
       expect(appSignals).toHaveLength(1);
       jest.advanceTimersByTime(5_000);
       await Promise.resolve();
