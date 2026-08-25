@@ -50,6 +50,27 @@ export function isJsonContentType(contentType: HeaderValue): boolean {
   );
 }
 
+// Provenance brand for byte bodies. Body-parser middleware inflates compressed requests before
+// handing bytes to the route (express.raw's default `inflate: true`), so a parser-produced
+// Uint8Array/Buffer no longer matches the request's declared content-encoding — while bytes read
+// from the unconsumed stream still do. A WeakSet brand lets handleRequest strip the header for
+// the former without widening the public ProxyRequestBody type.
+const parserProducedByteBodies = new WeakSet<object>();
+
+/**
+ * Whether a byte body came out of a body parser (already inflated) rather than the raw request
+ * stream. String bodies are always parser output and never need this check.
+ *
+ * @private
+ */
+export function isParserProducedByteBody(body: ProxyRequestBody): boolean {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    parserProducedByteBodies.has(body)
+  );
+}
+
 /**
  * Turn a framework-parsed request body (Express, Next.js pages router) back into a forwardable
  * payload. Raw bytes and strings pass through unchanged — re-encoding is only for bodies the
@@ -95,6 +116,9 @@ export function serializeParsedBody(
     return body;
   }
   if (body instanceof Uint8Array || body instanceof ArrayBuffer) {
+    // Parser output, not stream bytes: express.raw() inflated any compressed request before
+    // producing this buffer, so brand it for the content-encoding strip in handleRequest.
+    parserProducedByteBodies.add(body);
     return body;
   }
   if (declared.startsWith("multipart/")) {

@@ -1521,6 +1521,14 @@ export function createRealtimeClient({
           if (!Reflect.preventExtensions(session)) {
             return false;
           }
+          // The prototype refreshes with the mirrors: a bound method may have re-parented the
+          // raw session without passing the setPrototypeOf trap, and locking the target with a
+          // stale prototype would leave getPrototypeOf disagreeing with inherited-property
+          // resolution forever. Only the first lock can (or needs to) move it — this trap just
+          // pinned the session's own prototype.
+          if (Reflect.isExtensible(proxyTarget)) {
+            Object.setPrototypeOf(proxyTarget, Reflect.getPrototypeOf(session));
+          }
           // Purge mirrors whose session key is GONE: a bound method can delete a configurable
           // field without passing the deleteProperty trap, and a stale mirror would keep the key
           // enumerable and make a later freeze throw while pinning it on the now-non-extensible
@@ -1593,6 +1601,31 @@ export function createRealtimeClient({
           return Reflect.ownKeys(proxyTarget);
         }
         return Reflect.ownKeys(session);
+      },
+      getPrototypeOf() {
+        // The session is the source of truth for inheritance — `get` and `has` resolve
+        // inherited members through it — so the reported prototype must be the session's, or a
+        // post-attach Object.setPrototypeOf on the raw session would leave getPrototypeOf
+        // disagreeing with property resolution. A non-extensible target pins the answer by
+        // language invariant, and before the session exists the bare target is all there is.
+        if (!session || !Reflect.isExtensible(proxyTarget)) {
+          return Reflect.getPrototypeOf(proxyTarget);
+        }
+        return Reflect.getPrototypeOf(session);
+      },
+      setPrototypeOf(_target, proto) {
+        // A non-extensible target pins the prototype by language invariant: only a no-op
+        // "change" to the current prototype may report success.
+        if (!Reflect.isExtensible(proxyTarget)) {
+          return proto === Reflect.getPrototypeOf(proxyTarget);
+        }
+        // Like set/defineProperty, the facade materializes with the session — there is nothing
+        // to re-parent yet.
+        if (!session) return false;
+        // Both sides move together: the session so `get`/`has` actually resolve the new
+        // prototype's members, the target so a later freeze pins a prototype that agrees.
+        if (!Reflect.setPrototypeOf(session, proto)) return false;
+        return Reflect.setPrototypeOf(proxyTarget, proto);
       },
       getOwnPropertyDescriptor(_target, property) {
         const targetDescriptor = Reflect.getOwnPropertyDescriptor(

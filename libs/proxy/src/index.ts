@@ -5,7 +5,7 @@ import {
   type ProxyConfig,
 } from "./config";
 import type { HeaderValue, ProxyBehavior, ProxyRequestBody } from "./types";
-import { singleHeaderValue } from "./utils";
+import { isParserProducedByteBody, singleHeaderValue } from "./utils";
 
 export {
   createUrlMatcher,
@@ -348,11 +348,15 @@ export async function handleRequest<ResponseType>(
   const contentType =
     incomingContentType ??
     (typeof body === "string" ? "application/json" : undefined);
-  // An explicitly forwarded content-encoding only describes RAW BYTE bodies: a string body came
-  // out of a parser, and parsers inflate compressed requests before parsing — the original
-  // encoding no longer describes the re-serialized text, and forwarding it would make the
-  // upstream try to decompress plain JSON.
-  if (typeof body === "string" && "content-encoding" in headers) {
+  // An explicitly forwarded content-encoding only describes bytes read from the RAW STREAM.
+  // Parser output no longer matches it: parsers inflate compressed requests before parsing, so
+  // both a re-serialized string and a parser-produced buffer (express.raw's default inflation)
+  // are already identity-encoded, and forwarding the original label would make the upstream try
+  // to decompress plain bytes.
+  if (
+    (typeof body === "string" || isParserProducedByteBody(body)) &&
+    "content-encoding" in headers
+  ) {
     delete headers["content-encoding"];
   }
   const res = await fetch(targetUrl, {

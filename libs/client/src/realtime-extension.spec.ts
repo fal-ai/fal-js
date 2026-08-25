@@ -1147,6 +1147,61 @@ describe("realtime extensions", () => {
     expect((session as Record<string, unknown>).handler).toBe(before);
   });
 
+  it("keeps prototype changes and property resolution in agreement", async () => {
+    const raw: RealtimeSession & Record<string, unknown> = {
+      close: jest.fn(),
+    };
+    const protoExtension = defineRealtimeExtension<
+      Record<never, never>,
+      typeof raw
+    >({
+      id: "test/proto-session",
+      defaultEndpoint: "test/proto-session",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const opening = client.open(protoExtension, {});
+    // Pre-session there is no facade to re-parent yet — like set and defineProperty.
+    expect(() =>
+      Object.setPrototypeOf(opening, { inherited: () => "yes" }),
+    ).toThrow(TypeError);
+    const session = await opening.ready;
+
+    // Post-live, a prototype swap must be visible through BOTH getPrototypeOf and property
+    // resolution: get/has resolve inherited members via the raw session, so the session and the
+    // neutral target move together.
+    const proto = {
+      inherited() {
+        return "yes";
+      },
+    };
+    Object.setPrototypeOf(session, proto);
+    expect(Object.getPrototypeOf(session)).toBe(proto);
+    expect(Object.getPrototypeOf(raw)).toBe(proto);
+    expect("inherited" in session).toBe(true);
+    expect((session as unknown as { inherited(): string }).inherited()).toBe(
+      "yes",
+    );
+
+    // A prototype change applied to the RAW session (through a bound method, say) must be what
+    // the handle reports — the session is the source of truth for inheritance.
+    const rawProto = { viaRaw: true };
+    Object.setPrototypeOf(raw, rawProto);
+    expect(Object.getPrototypeOf(session)).toBe(rawProto);
+
+    // A frozen handle pins the prototype: only the no-op "change" succeeds.
+    Object.freeze(session);
+    expect(() => Object.setPrototypeOf(session, proto)).toThrow(TypeError);
+    expect(Object.setPrototypeOf(session, Object.getPrototypeOf(session))).toBe(
+      session,
+    );
+    await session.close();
+  });
+
   it("serves a caller-pinned function definition verbatim", async () => {
     // Object.defineProperty with a non-configurable, non-writable function must succeed and read
     // back the caller's exact value — the language validates the trap against the supplied

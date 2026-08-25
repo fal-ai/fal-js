@@ -792,6 +792,31 @@ describe("handleRequest rejection reasons", () => {
       });
       sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
       expect(sent["content-encoding"]).toBe("gzip");
+
+      // A parser-produced buffer (express.raw output) is already inflated too — the brand from
+      // serializeParsedBody must strip the header even though the body is bytes, not a string.
+      fetchMock.mockClear();
+      const { serializeParsedBody } = await import("./utils");
+      const parsedBytes = serializeParsedBody(
+        new Uint8Array([0x7b, 0x7d]),
+        "application/octet-stream",
+      ) as Uint8Array;
+      const parsedByteBehavior = behaviorFor(
+        "https://wma.fal.run/session",
+        "POST",
+        parsedBytes,
+      ).behavior;
+      parsedByteBehavior.getHeaders = () => incoming;
+      parsedByteBehavior.getHeader = (name: string) =>
+        incoming[name.toLowerCase()];
+      await handleRequest(parsedByteBehavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["content-encoding"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["content-encoding"]).toBeUndefined();
       delete incoming["content-encoding"];
     } finally {
       fetchMock.mockRestore();
