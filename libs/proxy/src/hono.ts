@@ -53,7 +53,14 @@ export function createRouteHandler({
         getHeaders: () => fromHeaders(context.req.raw.headers),
         getHeader: (name) => context.req.header(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),
-        getRequestBody: async () => readWebRequestBody(context.req.raw),
+        // Through HonoRequest's bodyCache, NOT context.req.raw: upstream middleware (a
+        // validator calling c.req.json()) has often already consumed the raw single-use stream,
+        // and reading it again would reject with "Body is unusable". The cache-aware accessor
+        // replays the same bytes.
+        getRequestBody: async () =>
+          readWebRequestBody({
+            arrayBuffer: () => context.req.arrayBuffer(),
+          }),
         sendResponse: responsePassthrough,
         resolveApiKey,
       },

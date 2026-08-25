@@ -39,12 +39,28 @@ export const createHandler = (
             // read the stream, which is also what makes serializeParsedBody's multipart error
             // truthful: at that point a multipart parser really did consume the bytes.
             if (request.readable) {
-              return readUnconsumedRequestBody(request);
+              return readUnconsumedRequestBody(
+                request,
+                resolvedConfig.maxRequestBodyBytes,
+              );
             }
-            return serializeParsedBody(
+            const parsed = serializeParsedBody(
               request.body,
               request.headers["content-type"],
             );
+            if (parsed !== undefined) return parsed;
+            // Not readable AND no parser output: something consumed the stream without leaving
+            // anything to forward (an audit/signature middleware, say). If the request declared
+            // a body, forwarding nothing under its intact content-type would make the payload
+            // silently vanish upstream — fail loudly where the developer can fix the route.
+            const declaredLength = Number(request.headers["content-length"] ?? 0);
+            if (declaredLength > 0 || request.headers["transfer-encoding"]) {
+              throw new Error(
+                "The request body was consumed before the fal proxy ran, without producing a " +
+                  "parsed body to forward. Exclude body-consuming middleware from the proxy route.",
+              );
+            }
+            return undefined;
           },
           getHeaders: () => request.headers,
           getHeader: (name) => request.headers[name],
@@ -52,6 +68,10 @@ export const createHandler = (
           respondWith: (status, data) => response.status(status).json(data),
           sendResponse: async (res) => {
             if (res.body instanceof ReadableStream) {
+              // The upstream STATUS rides the stream branch too — every undici response body is
+              // a ReadableStream, so without this line a fal 401/422/429 error payload streamed
+              // back under HTTP 200 and the client treated it as a successful result.
+              response.status(res.status);
               const reader = res.body.getReader();
               const stream = async () => {
                 const { done, value } = await reader.read();
@@ -74,7 +94,11 @@ export const createHandler = (
             if (res.headers.get("content-type")?.includes("application/json")) {
               return response.status(res.status).json(await res.json());
             }
-            return response.status(res.status).send(await res.text());
+            // Bytes, not text(): the same UTF-8 corruption the pages-router response fix
+            // removed — a binary response admitted by the forwarded accept header must survive.
+            return response
+              .status(res.status)
+              .send(Buffer.from(await res.arrayBuffer()));
           },
         },
         resolvedConfig,

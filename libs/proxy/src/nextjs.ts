@@ -78,7 +78,10 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           // With bodyParser disabled the body is unset and the stream unread — forward raw bytes.
           return parsed !== undefined
             ? parsed
-            : readUnconsumedRequestBody(request);
+            : readUnconsumedRequestBody(
+                request,
+                resolvedConfig.maxRequestBodyBytes,
+              );
         },
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],

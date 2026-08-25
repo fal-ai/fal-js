@@ -186,18 +186,32 @@ export function serializeParsedBody(
  *
  * @private
  */
+/** The raw-stream path buffers whole bodies; parser-backed paths have the parser's own limits. */
+export const DEFAULT_MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
+
+const streamChunkEncoder = new TextEncoder();
+
 export async function readUnconsumedRequestBody(
   stream: AsyncIterable<unknown>,
+  maxBytes: number = DEFAULT_MAX_REQUEST_BODY_BYTES,
 ): Promise<ProxyRequestBody> {
   const chunks: Uint8Array[] = [];
   let total = 0;
   for await (const chunk of stream) {
     const bytes =
       typeof chunk === "string"
-        ? new TextEncoder().encode(chunk)
+        ? streamChunkEncoder.encode(chunk)
         : (chunk as Uint8Array);
     chunks.push(bytes);
     total += bytes.byteLength;
+    if (total > maxBytes) {
+      // Bounded, or the one unparsed path (multipart/binary — the LARGEST bodies) would be the
+      // only one an oversized or hostile request could use to exhaust the server's memory.
+      throw new Error(
+        `The request body exceeded ${maxBytes} bytes; the proxy buffers raw bodies whole. ` +
+          "Raise maxRequestBodyBytes in the proxy config if this size is intended.",
+      );
+    }
   }
   if (total === 0) {
     return undefined;

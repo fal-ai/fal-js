@@ -474,6 +474,18 @@ describe("serializeParsedBody", () => {
   });
 });
 
+describe("readUnconsumedRequestBody", () => {
+  it("caps raw-stream buffering instead of holding unbounded bodies in memory", async () => {
+    const { readUnconsumedRequestBody } = await import("./utils");
+    async function* endless() {
+      for (;;) yield new Uint8Array(1024 * 1024);
+    }
+    await expect(
+      readUnconsumedRequestBody(endless(), 4 * 1024 * 1024),
+    ).rejects.toThrow(/exceeded/);
+  });
+});
+
 describe("createHandler (express) body handling", () => {
   function expressRequest(options: {
     readable: boolean;
@@ -486,7 +498,7 @@ describe("createHandler (express) body handling", () => {
       readable: options.readable,
       body: options.body,
       headers: {
-        "x-fal-target-url": "https://wma.fal.run/upload",
+        "x-fal-target-url": "https://fal.run/owner/app",
         ...(options.contentType ? { "content-type": options.contentType } : {}),
       },
       async *[Symbol.asyncIterator]() {
@@ -569,7 +581,7 @@ describe("createPageRouterHandler body handling", () => {
       resolveFalAuth: async () => "Key secret",
     });
     const headers: Record<string, string> = {
-      "x-fal-target-url": "https://wma.fal.run/upload",
+      "x-fal-target-url": "https://fal.run/owner/app",
       "content-type": "multipart/form-data; boundary=x",
     };
     const request = {
@@ -632,7 +644,7 @@ describe("createPageRouterHandler body handling", () => {
       method: "GET",
       body: undefined,
       headers: {
-        "x-fal-target-url": "https://wma.fal.run/preview",
+        "x-fal-target-url": "https://fal.run/owner/app",
         accept: "image/png",
       },
     };
@@ -670,7 +682,7 @@ describe("createPageRouterHandler body handling", () => {
     const request = {
       method: "POST",
       body: "already�mangled",
-      headers: { "x-fal-target-url": "https://wma.fal.run/upload" },
+      headers: { "x-fal-target-url": "https://fal.run/owner/app" },
     };
     const response = {
       setHeader: jest.fn(),
@@ -764,13 +776,13 @@ describe("handleRequest rejection reasons", () => {
   it("preserves multipart boundaries when forwarding a request body", async () => {
     const boundary = "multipart/form-data; boundary=----fal-test-boundary";
     const { behavior } = behaviorFor(
-      "https://wma.fal.run/upload",
+      "https://fal.run/owner/app",
       "POST",
       "------fal-test-boundary--",
     );
     behavior.getHeaders = () => ({ "content-type": boundary });
     behavior.getHeader = (name: string) => {
-      if (name === "x-fal-target-url") return "https://wma.fal.run/upload";
+      if (name === "x-fal-target-url") return "https://fal.run/owner/app";
       if (name.toLowerCase() === "content-type") return boundary;
       return undefined;
     };
@@ -784,7 +796,7 @@ describe("handleRequest rejection reasons", () => {
         resolveFalAuth: async () => "secret",
       });
       expect(fetchMock).toHaveBeenCalledWith(
-        "https://wma.fal.run/upload",
+        "https://fal.run/owner/app",
         expect.objectContaining({
           headers: expect.objectContaining({ "content-type": boundary }),
         }),
@@ -799,7 +811,7 @@ describe("handleRequest rejection reasons", () => {
     // that are not valid UTF-8, so the proxy must hand fetch exactly what the adapter read.
     const binary = new Uint8Array([0xff, 0x00, 0xd8, 0x88, 0x01]);
     const { behavior } = behaviorFor(
-      "https://wma.fal.run/upload",
+      "https://fal.run/owner/app",
       "POST",
       binary,
     );
@@ -813,7 +825,7 @@ describe("handleRequest rejection reasons", () => {
         resolveFalAuth: async () => "secret",
       });
       expect(fetchMock).toHaveBeenCalledWith(
-        "https://wma.fal.run/upload",
+        "https://fal.run/owner/app",
         expect.objectContaining({ body: binary }),
       );
       expect(fetchMock.mock.calls[0][1]?.body).toBe(binary);
@@ -950,7 +962,7 @@ describe("handleRequest rejection reasons", () => {
     // would make upstream endpoints parse valid bytes as JSON. Present headers pass through
     // untouched, absent ones stay absent.
     const { behavior } = behaviorFor(
-      "https://wma.fal.run/upload",
+      "https://fal.run/owner/app",
       "POST",
       new Uint8Array([0xff, 0x00]),
     );
@@ -978,7 +990,7 @@ describe("handleRequest rejection reasons", () => {
     // JSON rewrite (the browser would otherwise have labeled the body text/plain). Binary bodies
     // stay label-free; string bodies keep the JSON default.
     const { behavior } = behaviorFor(
-      "https://wma.fal.run/upload",
+      "https://fal.run/owner/app",
       "POST",
       '{"prompt":"a cat"}',
     );
@@ -1045,12 +1057,110 @@ describe("handleRequest rejection reasons", () => {
     });
   });
 
+  it("rejects non-POST methods on fal service hosts", async () => {
+    // The allowlist bypass must not become a method-shaped hole: endpoint policy is POST-only,
+    // so a GET/PUT/DELETE to the bridge would otherwise forward credentialed with no check.
+    for (const method of ["GET", "PUT", "PATCH", "DELETE"]) {
+      expect(
+        await run(
+          "https://wma.fal.run/session",
+          { isAuthenticated: async () => true },
+          method,
+        ),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: fal service hosts only accept POST",
+      });
+    }
+  });
+
+  it("rejects unknown fal service routes (default-deny)", async () => {
+    // A route added upstream must be added HERE deliberately — unknown spellings, matrix
+    // parameters, embedded NULs, and plain unknown paths all refuse rather than forward.
+    for (const path of [
+      "/upload",
+      "/session;x=1",
+      "/session%00",
+      "/session/v2",
+    ]) {
+      expect(
+        await run(`https://wma.fal.run${path}`, {
+          isAuthenticated: async () => true,
+        }),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: unknown fal service route",
+      });
+    }
+  });
+
+  it("allows the session-scoped heartbeat without an app id under restriction", async () => {
+    expect(
+      await run("https://wma.fal.run/session/heartbeat", {
+        allowedEndpoints: ["me/my-app/**"],
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => undefined,
+      }),
+    ).toEqual({ status: 401, data: "Unauthorized" }); // passed policy, stopped only by no key
+  });
+
+  it("rejects duplicate app_id keys in an app-scoped service body", async () => {
+    // JSON parsers disagree about which duplicate wins; the allowlist verdict must not depend
+    // on the proxy's parser agreeing with the upstream's.
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        {
+          allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
+        },
+        "POST",
+        '{"app_id":"me/my-app","app_id":"someone/other-app"}',
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
+  it("lets operators refuse service hosts entirely with serviceHosts: []", async () => {
+    expect(
+      await run("https://wma.fal.run/session", {
+        serviceHosts: [],
+        isAuthenticated: async () => true,
+      }),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
+    });
+  });
+
+  it("rejects a malformed target URL as a 400, not a 500", async () => {
+    expect(
+      await run("not a url at all", { isAuthenticated: async () => true }),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: x-fal-target-url is not a valid absolute URL",
+    });
+  });
+
+  it("rejects an unauthenticated caller before revealing endpoint policy", async () => {
+    // Auth runs FIRST: an unauthenticated caller must not learn which endpoints this proxy
+    // permits by reading which check rejected them.
+    expect(
+      await run("https://fal.run/someone/other-app", {
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
   it("names allowedEndpoints when the path is not permitted", async () => {
     // The URL is allowlisted but the path is not. Naming the failed policy tells the caller whether
     // to update host permissions, endpoint permissions, or request construction.
     expect(
       await run("https://fal.run/someone/other-app", {
         allowedEndpoints: ["me/my-app/**"],
+        isAuthenticated: async () => true,
       }),
     ).toEqual({
       status: 400,
@@ -1066,6 +1176,7 @@ describe("handleRequest rejection reasons", () => {
       expect(
         await run(`https://${host}/someone/other-app`, {
           allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
         }),
       ).toEqual({
         status: 400,

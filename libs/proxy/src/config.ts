@@ -53,6 +53,27 @@ export interface ProxyConfig {
   allowedUrlPatterns?: string[];
 
   /**
+   * fal-operated SERVICE hosts (infrastructure that serves no customer app, like the WMA
+   * signalling bridge). These bypass `allowedUrlPatterns` — their paths are not app ids — but are
+   * default-deny by route: only the service's known paths forward, and app-scoped routes enforce
+   * `allowedEndpoints` against the app identity in the request body. Set to `[]` to refuse
+   * service hosts entirely, or extend it when fal ships a new service host before your package
+   * updates.
+   *
+   * @default ["wma.fal.run"]
+   */
+  serviceHosts?: string[];
+
+  /**
+   * Upper bound, in bytes, for request bodies the proxy buffers whole (the raw-stream path used
+   * for multipart and binary bodies). Parser-backed paths are bounded by the parser's own limits;
+   * this bounds the one path that had none.
+   *
+   * @default 33554432 (32 MiB)
+   */
+  maxRequestBodyBytes?: number;
+
+  /**
    * Endpoint patterns (glob-style) that are allowed to be called via POST requests.
    * The endpoint is the path portion of the URL without the leading slash.
    *
@@ -141,6 +162,8 @@ export async function isAuthorizationHeaderPresent(
 
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
   allowedUrlPatterns: DEFAULT_ALLOWED_URL_PATTERNS,
+  serviceHosts: ["wma.fal.run"],
+  maxRequestBodyBytes: 32 * 1024 * 1024,
   allowedEndpoints: [],
   forwardRequestHeaders: [],
   allowUnauthorizedRequests: true,

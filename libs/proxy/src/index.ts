@@ -37,9 +37,21 @@ const defaultUrlMatcher = createUrlMatcher(DEFAULT_ALLOWED_URL_PATTERNS);
  * @param patterns the allowed URL patterns (glob-style). If not provided, uses default patterns.
  * @returns whether the URL is allowed.
  */
+// Compiled matchers are memoized by the pattern array's identity: a resolved config carries the
+// same array on every request, and glob→regex compilation is the expensive half of the check.
+const matcherCache = new WeakMap<string[], (url: string) => boolean>();
+function cachedMatcher(patterns: string[]): (url: string) => boolean {
+  let matcher = matcherCache.get(patterns);
+  if (!matcher) {
+    matcher = createUrlMatcher(patterns);
+    matcherCache.set(patterns, matcher);
+  }
+  return matcher;
+}
+
 export function isAllowedUrl(url: string, patterns?: string[]): boolean {
   if (patterns) {
-    return createUrlMatcher(patterns)(url);
+    return cachedMatcher(patterns)(url);
   }
   return defaultUrlMatcher(url);
 }
@@ -55,38 +67,37 @@ function getUrlWithoutScheme(targetUrl: string): string {
 }
 
 /**
- * fal service hosts that serve no customer app, and therefore have no app id to match.
- *
- * Kept as an explicit set so adding one is a deliberate act. A host belongs here only if every path
- * on it is fal's own — `wma.fal.run` is signalling, with paths like `session` and `session/heartbeat`.
+ * Routes fal's service hosts are permitted to forward, DEFAULT-DENY: a path absent from both sets
+ * is rejected, so a route added upstream can never silently escape endpoint policy before this
+ * list learns about it. App-scoped routes carry the app identity in their JSON body and enforce
+ * `allowedEndpoints` against it; session-scoped routes act on an already-negotiated session and
+ * carry no app authority.
  */
-const FAL_SERVICE_HOSTS = new Set(["wma.fal.run"]);
-const WMA_APP_SCOPED_PATHS = new Set(["/ice", "/session"]);
+const SERVICE_APP_SCOPED_PATHS = new Set(["/ice", "/session"]);
+const SERVICE_SESSION_SCOPED_PATHS = new Set(["/session/heartbeat"]);
 
-/** Is this fal's own service infrastructure, carrying no customer app? */
-function isFalServiceHost(targetUrl: string): boolean {
-  const url = new URL(targetUrl);
-  return url.protocol === "https:" && FAL_SERVICE_HOSTS.has(url.host);
-}
-
-function isWmaAppScopedRoute(targetUrl: string): boolean {
-  const url = new URL(targetUrl);
-  if (!isFalServiceHost(targetUrl)) return false;
+/**
+ * The service-relative path, normalized the way the upstream router sees it (percent escapes
+ * decoded, duplicate slashes collapsed, trailing slashes stripped). `undefined` for malformed
+ * escapes — which never match a known route, failing closed.
+ */
+function normalizeServicePath(url: URL): string | undefined {
   let path: string;
   try {
-    // URL.pathname keeps percent escapes intact, while the upstream router decodes them. Apply the
-    // same normalization before deciding whether the route carries app authority in its JSON body.
     path = decodeURIComponent(url.pathname).replace(/\/{2,}/g, "/");
   } catch {
-    // A malformed escape must not turn a potentially app-scoped service route into an exemption.
-    return true;
+    return undefined;
   }
-  path = path.replace(/\/+$/, "") || "/";
-  return WMA_APP_SCOPED_PATHS.has(path);
+  return path.replace(/\/+$/, "") || "/";
 }
 
 function appIdFromRequestBody(body: string | undefined): string | undefined {
   if (!body) return undefined;
+  // Fail closed on duplicate keys: JSON parsers disagree about which duplicate wins, and this
+  // value gates allowedEndpoints — the proxy's verdict must not depend on its parser agreeing
+  // with the upstream's. (Matching the raw text over-counts an "app_id" inside a nested string,
+  // which only ever rejects more, never less.)
+  if ((body.match(/"app_id"\s*:/g) ?? []).length > 1) return undefined;
   try {
     const value = JSON.parse(body) as { app_id?: unknown };
     return typeof value.app_id === "string" ? value.app_id : undefined;
@@ -108,14 +119,16 @@ function appIdFromRequestBody(body: string | undefined): string | undefined {
  * @param targetUrl the full URL including scheme.
  * @returns true when the host is fal's own service infrastructure.
  */
-function isFalInfrastructure(targetUrl: string): boolean {
-  const { host } = new URL(targetUrl);
+function isFalInfrastructure(url: URL, serviceHosts: Set<string>): boolean {
   // Enumerated, NOT a suffix rule on `.fal.run`. `fal.run` and `queue.fal.run` serve customer apps,
   // and `getEndpoint()` on those yields an app id — which is exactly what `allowedEndpoints` is for.
   // Exempting the whole domain would leave that option restricting nothing on its main path, so the
   // widening has to name the service hosts rather than the domain they happen to share.
+  const host = url.host.toLowerCase();
   return (
-    host === "fal.ai" || host.endsWith(".fal.ai") || isFalServiceHost(targetUrl)
+    host === "fal.ai" ||
+    host.endsWith(".fal.ai") ||
+    (url.protocol === "https:" && serviceHosts.has(host))
   );
 }
 
@@ -145,7 +158,7 @@ export function isAllowedEndpoint(
   if (patterns.length === 0) {
     return true;
   }
-  return createUrlMatcher(patterns)(endpoint);
+  return cachedMatcher(patterns)(endpoint);
 }
 
 function getFalKey(): string | undefined {
@@ -216,15 +229,10 @@ export async function handleRequest<ResponseType>(
   const resolvedConfig = isResolved
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
-  let requestBody: ProxyRequestBody;
-  let requestBodyRead = false;
-  const readRequestBody = async () => {
-    if (!requestBodyRead) {
-      requestBody = await behavior.getRequestBody();
-      requestBodyRead = true;
-    }
-    return requestBody;
-  };
+  // One cached promise, so the read-once guarantee is unrepresentable to break — a flag-plus-value
+  // pair invites a concurrent double read of an already-consumed stream.
+  let requestBodyPromise: Promise<ProxyRequestBody> | undefined;
+  const readRequestBody = () => (requestBodyPromise ??= behavior.getRequestBody());
   // The forwarded body stays raw bytes — decoding a multipart payload corrupts its file parts.
   // Only the WMA app-id extraction needs text, and those routes carry JSON.
   const readRequestBodyText = async (): Promise<string | undefined> => {
@@ -238,20 +246,37 @@ export async function handleRequest<ResponseType>(
     return new TextDecoder().decode(body);
   };
 
-  const urlToValidate = getUrlWithoutScheme(targetUrl);
-  // fal's own SERVICE hosts skip the URL allowlist entirely, and are deliberately absent from
-  // DEFAULT_ALLOWED_URL_PATTERNS: this short-circuit runs first, so a default entry could never be
-  // the thing that admits them. Supplying `allowedUrlPatterns` REPLACES the defaults, so an entry
+  // ONE parse for the whole request, and the single choke point for malformed target URLs —
+  // a throwing `new URL` inside a helper would otherwise surface as a 500 from whichever check
+  // happened to run first.
+  let url: URL;
+  try {
+    url = new URL(targetUrl);
+  } catch {
+    return behavior.respondWith(
+      400,
+      `Invalid request: ${TARGET_URL_HEADER} is not a valid absolute URL`,
+    );
+  }
+  const serviceHosts = new Set(
+    (resolvedConfig.serviceHosts ?? ["wma.fal.run"]).map((host) =>
+      host.toLowerCase(),
+    ),
+  );
+  const isServiceHost =
+    url.protocol === "https:" && serviceHosts.has(url.host.toLowerCase());
+
+  // fal's own SERVICE hosts skip the URL allowlist, and are deliberately absent from
+  // DEFAULT_ALLOWED_URL_PATTERNS: supplying `allowedUrlPatterns` REPLACES the defaults, so an entry
   // there would only help callers who never narrow the list — and narrowing it is the careful thing
   // to do. Anyone scoping the proxy to their two apps would lose signalling and have no way to know
-  // why, which is the failure this exists to remove.
-  //
-  // Deliberately the enumerated service set and NOT `.fal.ai`: fal.ai is not allowed by default today
-  // and this must not quietly start permitting it. Service hosts carry no customer-app authority —
-  // `wma.fal.run` only signals — so allowing them is equivalent to allowing realtime sessions at all.
+  // why. Operators who want them refused entirely set `serviceHosts: []`.
   if (
-    !isFalServiceHost(targetUrl) &&
-    !isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)
+    !isServiceHost &&
+    !isAllowedUrl(
+      `${url.host}${url.pathname}${url.search}`,
+      resolvedConfig.allowedUrlPatterns,
+    )
   ) {
     // Names the OPTION, never its contents. Which check rejected you is something a blocked caller
     // can already infer; the configured patterns would hand them a map of what this proxy may reach.
@@ -261,29 +286,55 @@ export async function handleRequest<ResponseType>(
     );
   }
 
-  // App-serving POST paths carry the app id in the URL. WMA's app-scoped infrastructure routes
-  // carry it in JSON instead, so both must enforce the same endpoint policy.
-  const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
-  const restrictEndpoints =
-    behavior.method?.toUpperCase() === "POST" && allowedEndpoints.length > 0;
-  const wmaAppScoped = restrictEndpoints && isWmaAppScopedRoute(targetUrl);
-  let isAuthenticated: boolean | undefined;
-  if (wmaAppScoped) {
-    isAuthenticated =
-      (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
-    if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
-      return behavior.respondWith(401, "Unauthorized");
+  // Authentication FIRST, once: an unauthenticated caller learns nothing about endpoint policy,
+  // and the check cannot diverge between the service and app paths.
+  const isAuthenticated =
+    (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
+  if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
+    return behavior.respondWith(401, "Unauthorized");
+  }
+
+  // Service hosts are DEFAULT-DENY by shape: fal's signalling legs are all POST to a known route,
+  // so anything else — another method, an unknown or unnormalizable path — is refused rather than
+  // forwarded with credentials. A route added upstream must be added here deliberately.
+  let serviceAppScoped = false;
+  if (isServiceHost) {
+    if (behavior.method?.toUpperCase() !== "POST") {
+      return behavior.respondWith(
+        400,
+        "Invalid request: fal service hosts only accept POST",
+      );
+    }
+    const servicePath = normalizeServicePath(url);
+    serviceAppScoped =
+      servicePath !== undefined && SERVICE_APP_SCOPED_PATHS.has(servicePath);
+    if (
+      !serviceAppScoped &&
+      (servicePath === undefined ||
+        !SERVICE_SESSION_SCOPED_PATHS.has(servicePath))
+    ) {
+      return behavior.respondWith(
+        400,
+        "Invalid request: unknown fal service route",
+      );
     }
   }
 
+  // App-serving POST paths carry the app id in the URL. The service hosts' app-scoped routes
+  // carry it in JSON instead, so both enforce the same endpoint policy.
+  const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
+  const restrictEndpoints =
+    behavior.method?.toUpperCase() === "POST" && allowedEndpoints.length > 0;
   if (restrictEndpoints) {
-    const endpoint = wmaAppScoped
-      ? appIdFromRequestBody(await readRequestBodyText())
-      : isFalInfrastructure(targetUrl)
+    const endpoint = isServiceHost
+      ? serviceAppScoped
+        ? appIdFromRequestBody(await readRequestBodyText())
+        : undefined
+      : isFalInfrastructure(url, serviceHosts)
         ? undefined
         : getEndpoint(targetUrl);
     if (
-      (wmaAppScoped && endpoint === undefined) ||
+      (isServiceHost && serviceAppScoped && endpoint === undefined) ||
       (endpoint !== undefined && !isAllowedEndpoint(endpoint, allowedEndpoints))
     ) {
       // The URL is allowlisted and the path is not, which is a different option and a different fix.
@@ -292,12 +343,6 @@ export async function handleRequest<ResponseType>(
         "Invalid request: target path is not permitted by allowedEndpoints",
       );
     }
-  }
-
-  isAuthenticated ??=
-    (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
-  if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
-    return behavior.respondWith(401, "Unauthorized");
   }
 
   const authorization =
