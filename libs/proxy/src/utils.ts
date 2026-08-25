@@ -53,7 +53,57 @@ export function serializeParsedBody(
   }
   const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
   if (declared.startsWith("application/x-www-form-urlencoded")) {
-    return new URLSearchParams(body as Record<string, string>).toString();
+    // Entry by entry rather than the URLSearchParams record constructor: parsers represent a
+    // repeated field (`tag=a&tag=b`) as an array, and the record form would stringify it into one
+    // comma-joined value, changing the request's semantics upstream.
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(
+      body as Record<string, unknown>,
+    )) {
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          params.append(key, String(entry));
+        }
+      } else if (value !== undefined && value !== null) {
+        params.append(key, String(value));
+      }
+    }
+    return params.toString();
   }
   return JSON.stringify(body);
+}
+
+/**
+ * Read the raw bytes of a request stream the framework's body parser did not consume.
+ *
+ * `express.json()` and Next's pages-router parser only handle the content types they are
+ * configured for; a multipart or binary request leaves `request.body` unset and the stream
+ * unread. Forwarding "no body" while preserving the multipart content type and boundary would
+ * hand the upstream an unparseable request, so the adapter falls back to the raw stream.
+ *
+ * @private
+ */
+export async function readUnconsumedRequestBody(
+  stream: AsyncIterable<unknown>,
+): Promise<ProxyRequestBody> {
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for await (const chunk of stream) {
+    const bytes =
+      typeof chunk === "string"
+        ? new TextEncoder().encode(chunk)
+        : (chunk as Uint8Array);
+    chunks.push(bytes);
+    total += bytes.byteLength;
+  }
+  if (total === 0) {
+    return undefined;
+  }
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
 }

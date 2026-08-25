@@ -384,6 +384,49 @@ describe("serializeParsedBody", () => {
     expect(serializeParsedBody(bytes, "multipart/form-data")).toBe(bytes);
     expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
   });
+
+  it("preserves repeated URL-encoded fields", async () => {
+    // Parsers represent `tag=a&tag=b` as { tag: ["a", "b"] }; the record-constructor form of
+    // URLSearchParams would collapse that to tag=a%2Cb and change the upstream semantics.
+    const { serializeParsedBody } = await import("./utils");
+    expect(
+      serializeParsedBody(
+        { tag: ["a", "b"], solo: "x" },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("tag=a&tag=b&solo=x");
+    expect(
+      serializeParsedBody(
+        { keep: "yes", missing: undefined, empty: null },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("keep=yes");
+  });
+});
+
+describe("readUnconsumedRequestBody", () => {
+  const streamOf = (chunks: Array<string | Uint8Array>) =>
+    (async function* () {
+      for (const chunk of chunks) {
+        yield chunk;
+      }
+    })();
+
+  it("concatenates raw stream chunks byte-identical", async () => {
+    const { readUnconsumedRequestBody } = await import("./utils");
+    const body = await readUnconsumedRequestBody(
+      streamOf([new Uint8Array([0xff, 0x00]), new Uint8Array([0xd8])]),
+    );
+    expect(body).toEqual(new Uint8Array([0xff, 0x00, 0xd8]));
+  });
+
+  it("encodes string chunks and treats an empty stream as no body", async () => {
+    const { readUnconsumedRequestBody } = await import("./utils");
+    expect(await readUnconsumedRequestBody(streamOf(["ab", "c"]))).toEqual(
+      new TextEncoder().encode("abc"),
+    );
+    expect(await readUnconsumedRequestBody(streamOf([]))).toBeUndefined();
+  });
 });
 
 describe("handleRequest rejection reasons", () => {

@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import { ProxyConfig, resolveProxyConfig } from "./config";
 import { DEFAULT_PROXY_ROUTE, handleRequest } from "./index";
-import { serializeParsedBody } from "./utils";
+import { readUnconsumedRequestBody, serializeParsedBody } from "./utils";
 
 /**
  * The default Express route for the fal.ai client proxy.
@@ -26,8 +26,17 @@ export const createHandler = (
       {
         id: "express",
         method: request.method,
-        getRequestBody: async () =>
-          serializeParsedBody(request.body, request.headers["content-type"]),
+        getRequestBody: async () => {
+          const parsed = serializeParsedBody(
+            request.body,
+            request.headers["content-type"],
+          );
+          // A parser that does not handle this content type (multipart, binary) leaves the body
+          // unset and the stream unread — forward the raw bytes instead of an empty body.
+          return parsed !== undefined
+            ? parsed
+            : readUnconsumedRequestBody(request);
+        },
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],
         sendHeader: (name, value) => response.setHeader(name, value),

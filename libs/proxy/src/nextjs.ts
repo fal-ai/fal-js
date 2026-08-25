@@ -7,7 +7,11 @@ import {
   handleRequest,
   responsePassthrough,
 } from "./index";
-import { readWebRequestBody, serializeParsedBody } from "./utils";
+import {
+  readUnconsumedRequestBody,
+  readWebRequestBody,
+  serializeParsedBody,
+} from "./utils";
 
 /**
  * The default Next API route for the fal.ai client proxy.
@@ -30,8 +34,17 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-page-router",
         method: request.method || "POST",
-        getRequestBody: async () =>
-          serializeParsedBody(request.body, request.headers["content-type"]),
+        getRequestBody: async () => {
+          const parsed = serializeParsedBody(
+            request.body,
+            request.headers["content-type"],
+          );
+          // The pages-router parser only handles json/urlencoded/text; a multipart or binary
+          // request leaves the body unset and the stream unread — forward the raw bytes.
+          return parsed !== undefined
+            ? parsed
+            : readUnconsumedRequestBody(request);
+        },
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],
         sendHeader: (name, value) => response.setHeader(name, value),
