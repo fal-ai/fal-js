@@ -553,6 +553,13 @@ export function wma(endpointId?: string) {
         if (context.signal.aborted)
           throw new Error("cancelled before answer applied");
         await pc.setRemoteDescription({ sdp: answer.sdp, type: answer.type });
+        // Recheck AFTER the await: a close or abort landing while the remote description was
+        // being applied has already run the registered teardown with no heartbeat to clear —
+        // creating the interval now would leave a timer firing aborted requests forever, since
+        // the late session's close hits the already-latched teardown.
+        if (closed || context.signal.aborted) {
+          throw new Error("cancelled while applying the answer");
+        }
 
         // Trap 4.
         heartbeat = setInterval(() => {
