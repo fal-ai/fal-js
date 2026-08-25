@@ -1397,9 +1397,13 @@ export function createRealtimeClient({
           return pinned.value;
         }
         // A pinned ACCESSOR rules the read too — even over kernel names: with no getter the
-        // language requires undefined, and with one, the caller's getter is what they defined.
+        // language requires undefined, and with one, the getter is honored. The RECEIVER is the
+        // raw session: every target accessor also lives on the session (mirrors copy the
+        // session's own descriptor; caller definitions are forwarded to the session first), and
+        // a constructor-defined getter reading a private field would throw a brand TypeError
+        // against any other receiver.
         if (pinned && !pinned.configurable && !("value" in pinned)) {
-          return pinned.get ? pinned.get.call(handle) : undefined;
+          return pinned.get ? pinned.get.call(session ?? handle) : undefined;
         }
         if (property === "state") return state;
         if (property === "ready") return ready;

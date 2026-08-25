@@ -1140,6 +1140,47 @@ describe("realtime extensions", () => {
     expect((session as Record<string, unknown>).bare).toBe(bare);
   });
 
+  it("keeps private-field getters working after the caller seals the handle", async () => {
+    // Sealing mirrors the session's own accessors onto the target as non-configurable; their
+    // getters must keep the raw session as receiver or a private-field brand check throws.
+    class PrivateGetterSession implements RealtimeSession {
+      #value = "secret";
+      declare value: string;
+      constructor() {
+        // An OWN accessor (class-body getters live on the prototype and are never mirrored)
+        // whose getter reads a private field of its RECEIVER — the brand check is the point.
+        Object.defineProperty(this, "value", {
+          enumerable: true,
+          configurable: true,
+          get(this: PrivateGetterSession) {
+            return this.#value;
+          },
+        });
+      }
+      close() {
+        // Managed teardown wraps this method.
+      }
+    }
+    const classy = defineRealtimeExtension<
+      Record<never, never>,
+      PrivateGetterSession
+    >({
+      id: "test/private-getter",
+      defaultEndpoint: "test/private-getter",
+      async open() {
+        return new PrivateGetterSession();
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(classy, {}).ready;
+
+    expect(session.value).toBe("secret");
+    expect(() => Object.seal(session)).not.toThrow();
+    expect(session.value).toBe("secret");
+  });
+
   it("honors pinned accessor definitions, even over kernel names", async () => {
     // A non-configurable accessor mirrored onto the target rules the read: with no getter the
     // language requires undefined (a setter-only pin must not throw on every access), and with
