@@ -910,6 +910,27 @@ export function createRealtimeClient({
       controller.abort(externalSignal?.reason);
       void cleanup();
     };
+    // What the CALLER's close() returns. A close during negotiation must not report done while the
+    // extension can still hand back a resource-bearing session — the opening task observes the
+    // abort and tears any late session down, so completion includes the task. The task itself only
+    // ever awaits cleanup(), never this wrapper, so an extension that closes or fails from inside
+    // its own open() cannot deadlock against it.
+    // Assigned once, after the handle exists — publicClose only reads it through a closure, which
+    // prefer-const cannot see past.
+    // eslint-disable-next-line prefer-const
+    let openTaskPromise: Promise<void> | undefined;
+    let publicClosePromise: Promise<void> | undefined;
+    const publicClose = (): Promise<void> => {
+      // Memoized so every concurrent close awaits the same teardown, the same identity guarantee
+      // cleanup() itself makes.
+      if (!publicClosePromise) {
+        const teardown = cleanup();
+        publicClosePromise = openTaskPromise
+          ? teardown.then(() => openTaskPromise)
+          : teardown;
+      }
+      return publicClosePromise;
+    };
     // Dropped when the caller did not ask, so an extension can report unconditionally rather than
     // guarding every call site.
     const onDiagnostic = (
@@ -1134,7 +1155,7 @@ export function createRealtimeClient({
     // non-configurable, non-writable target value and the trap result to be the SAME value, so
     // both sides must resolve through one function.
     const resolveProperty = (property: PropertyKey, value: unknown) => {
-      if (property === "close") return cleanup;
+      if (property === "close") return publicClose;
       if (property === "state") return state;
       if (property === "ready") return ready;
       if (typeof value !== "function") return value;
@@ -1182,7 +1203,7 @@ export function createRealtimeClient({
           return state;
         }
         if (property === "ready") return ready;
-        if (property === "close") return cleanup;
+        if (property === "close") return publicClose;
         if (!session) {
           // `send` queues while opening so the handle is usable immediately; the rest of the
           // extension's facade materializes with the session. Note `then` also lands here as
@@ -1468,27 +1489,36 @@ export function createRealtimeClient({
         setState("live");
         resolveReady(handle);
       } catch (error) {
-        // Before cleanup, so a caller watching state sees "failed" rather than only "closed" — the
-        // two mean different things and a status UI should be able to tell them apart. (An abort
-        // that already ran cleanup latched "closed"; the latch keeps that reading.)
         const wasTerminal = state === "failed" || state === "closed";
-        setState("failed");
+        // A cancellation the caller initiated — close(), an aborted abortSignal, or a signal
+        // aborted before open() — is an orderly ending, not a failure: cleanup reports it as
+        // "closed" and it must not reach onError, or a callback-driven UI would render a failure
+        // for its own disconnect button. Everything else moves to "failed" BEFORE cleanup, so a
+        // caller watching state sees that this session died rather than ended.
+        const cancelled = controller.signal.aborted && state !== "failed";
+        if (!cancelled) {
+          setState("failed");
+        }
         await cleanup();
         await drainLateCleanups();
-        if (!wasTerminal) {
-          // The synchronous shape has no returned promise whose rejection could carry this, so the
-          // failure that was previously a rejection is also a reportable diagnostic — unless the
-          // extension already reported it through context.fail().
-          diagnostic({
-            kind: "failure",
-            message: error instanceof Error ? error.message : String(error),
-          });
+        if (state === "failed") {
+          if (!wasTerminal) {
+            // The synchronous shape has no returned promise whose rejection could carry this, so
+            // the failure that was previously a rejection is also a reportable diagnostic —
+            // unless the extension already reported it through context.fail().
+            diagnostic({
+              kind: "failure",
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
+          reportError(error);
         }
-        reportError(error);
+        // Rejects either way: a caller awaiting `ready` must not wait forever on a session that
+        // will never become live, whether it failed or was cancelled.
         rejectReady(error);
       }
     };
-    void openTask();
+    openTaskPromise = openTask();
     return handle;
   }
 

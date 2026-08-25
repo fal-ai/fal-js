@@ -216,13 +216,59 @@ describe("realtime extensions", () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
+    const errors: unknown[] = [];
 
-    const session = client.open(neverOpens, {});
+    const session = client.open(neverOpens, { onError: (e) => errors.push(e) });
     expect(session.state).toBe("opening");
     await session.close();
 
+    // An orderly, caller-initiated ending: "closed", ready rejected so awaiters are released,
+    // and NO onError — a UI must not render a failure for its own disconnect button.
     expect(session.state).toBe("closed");
     await expect(session.ready).rejects.toBeDefined();
+    expect(errors).toEqual([]);
+  });
+
+  it("keeps close() pending until a late-opening session is torn down", async () => {
+    // An extension mid-operation may not observe the abort promptly and can still hand back a
+    // resource-bearing session. An awaited close() must cover that late session's teardown
+    // rather than reporting completion while negotiation is still running.
+    const events: string[] = [];
+    let releaseOpen!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseOpen = resolve;
+    });
+    const stubborn = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/stubborn",
+      defaultEndpoint: "test/stubborn",
+      async open() {
+        await gate; // deliberately ignores context.signal
+        return {
+          close: () => {
+            events.push("session-closed");
+          },
+        };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = client.open(stubborn, {});
+    const closing = session.close().then(() => {
+      events.push("close-resolved");
+    });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(events).toEqual([]); // close() is still pending on the open attempt
+
+    releaseOpen();
+    await closing;
+
+    expect(events).toEqual(["session-closed", "close-resolved"]);
+    expect(session.state).toBe("closed");
   });
 
   it("evaluates class session getters against the original instance", async () => {
@@ -523,21 +569,32 @@ describe("realtime extensions", () => {
 
     const closeFromCaller = session.close();
 
-    expect(closeFromAbort).toBe(closeFromCaller);
+    // Both closes complete the same memoized teardown. They are no longer the identical promise:
+    // the caller's close additionally covers the opening task (see "keeps close() pending until a
+    // late-opening session is torn down"), while the extension-internal close deliberately does
+    // not — an extension awaiting context.close() from inside its own open() must not deadlock.
+    expect(closeFromAbort).toBeDefined();
     let closeFinished = false;
+    let abortCloseFinished = false;
     void closeFromCaller.then(() => {
       closeFinished = true;
+    });
+    void closeFromAbort!.then(() => {
+      abortCloseFinished = true;
     });
     await Promise.resolve();
     await Promise.resolve();
     expect(lateCleanup).toHaveBeenCalledTimes(1);
     expect(closeFinished).toBe(false);
+    expect(abortCloseFinished).toBe(false);
 
     finishLateCleanup();
     await closeFromCaller;
+    await closeFromAbort;
     expect(extensionClose).toHaveBeenCalledTimes(1);
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(closeFinished).toBe(true);
+    expect(abortCloseFinished).toBe(true);
   });
 
   it("does not await teardown through an extension close hook", async () => {
