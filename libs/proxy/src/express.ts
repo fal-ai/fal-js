@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { ProxyConfig, resolveProxyConfig } from "./config";
 import { DEFAULT_PROXY_ROUTE, handleRequest } from "./index";
+import { readUnconsumedRequestBody, serializeParsedBody } from "./utils";
 
 /**
  * The default Express route for the fal.ai client proxy.
@@ -21,45 +22,62 @@ export const createHandler = (
 ): RequestHandler => {
   const resolvedConfig = resolveProxyConfig(config);
   return async (request, response, next) => {
-    await handleRequest(
-      {
-        id: "express",
-        method: request.method,
-        getRequestBody: async () => JSON.stringify(request.body),
-        getHeaders: () => request.headers,
-        getHeader: (name) => request.headers[name],
-        sendHeader: (name, value) => response.setHeader(name, value),
-        respondWith: (status, data) => response.status(status).json(data),
-        sendResponse: async (res) => {
-          if (res.body instanceof ReadableStream) {
-            const reader = res.body.getReader();
-            const stream = async () => {
-              const { done, value } = await reader.read();
-              if (done) {
-                response.end();
-                return response;
-              }
-              response.write(value);
-              return await stream();
-            };
+    // Express 4 does not route a rejected async handler to error middleware; without this
+    // try/catch a deliberate proxy throw (a parser-consumed multipart body, say) becomes an
+    // unhandled rejection with the request left open.
+    try {
+      await handleRequest(
+        {
+          id: "express",
+          method: request.method,
+          getRequestBody: async () => {
+            const parsed = serializeParsedBody(
+              request.body,
+              request.headers["content-type"],
+            );
+            // A parser that does not handle this content type (multipart, binary) leaves the body
+            // unset and the stream unread — forward the raw bytes instead of an empty body.
+            return parsed !== undefined
+              ? parsed
+              : readUnconsumedRequestBody(request);
+          },
+          getHeaders: () => request.headers,
+          getHeader: (name) => request.headers[name],
+          sendHeader: (name, value) => response.setHeader(name, value),
+          respondWith: (status, data) => response.status(status).json(data),
+          sendResponse: async (res) => {
+            if (res.body instanceof ReadableStream) {
+              const reader = res.body.getReader();
+              const stream = async () => {
+                const { done, value } = await reader.read();
+                if (done) {
+                  response.end();
+                  return response;
+                }
+                response.write(value);
+                return await stream();
+              };
 
-            return await stream().catch((error) => {
-              if (!response.headersSent) {
-                response.status(500).send(error.message);
-              } else {
-                response.end();
-              }
-            });
-          }
-          if (res.headers.get("content-type")?.includes("application/json")) {
-            return response.status(res.status).json(await res.json());
-          }
-          return response.status(res.status).send(await res.text());
+              return await stream().catch((error) => {
+                if (!response.headersSent) {
+                  response.status(500).send(error.message);
+                } else {
+                  response.end();
+                }
+              });
+            }
+            if (res.headers.get("content-type")?.includes("application/json")) {
+              return response.status(res.status).json(await res.json());
+            }
+            return response.status(res.status).send(await res.text());
+          },
         },
-      },
-      resolvedConfig,
-    );
-    next();
+        resolvedConfig,
+      );
+      next();
+    } catch (error) {
+      next(error);
+    }
   };
 };
 

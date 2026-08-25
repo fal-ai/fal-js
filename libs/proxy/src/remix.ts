@@ -12,6 +12,7 @@ import {
   resolveApiKeyFromEnv,
   responsePassthrough,
 } from "./index";
+import { readWebRequestBody } from "./utils";
 
 export type FalRemixProxy = {
   action: ActionFunction;
@@ -52,7 +53,7 @@ export function createProxy({
         getHeaders: () => fromHeaders(request.headers),
         getHeader: (name) => request.headers.get(name),
         sendHeader: (name, value) => responseHeaders.set(name, value),
-        getRequestBody: async () => JSON.stringify(await request.json()),
+        getRequestBody: async () => readWebRequestBody(request),
         sendResponse: responsePassthrough,
         resolveApiKey,
       },

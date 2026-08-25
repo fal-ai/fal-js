@@ -1,5 +1,10 @@
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
-import { getEndpoint, isAllowedEndpoint, isAllowedUrl } from "./index";
+import {
+  getEndpoint,
+  handleRequest,
+  isAllowedEndpoint,
+  isAllowedUrl,
+} from "./index";
 
 const FAL_REST_API_URL = "rest.fal.ai";
 
@@ -97,6 +102,16 @@ describe("isAllowedUrl with default patterns", () => {
 
     it("should NOT allow queue.fal.ai", () => {
       expect(isAllowedUrl("queue.fal.ai/some/path")).toBe(false);
+    });
+  });
+
+  describe("wma.fal.run (admitted by the service-host rule, not this allowlist)", () => {
+    // Pins where the decision lives. `handleRequest` short-circuits on fal's service hosts BEFORE
+    // consulting the allowlist, so an entry here could never be what admits the bridge — it would
+    // read as load-bearing while being dead, and it would not survive a caller narrowing
+    // `allowedUrlPatterns` anyway. See "allows the bridge even when allowedUrlPatterns is narrowed".
+    it("should NOT be allowed by the default URL patterns", () => {
+      expect(isAllowedUrl("wma.fal.run/session")).toBe(false);
     });
   });
 
@@ -337,6 +352,774 @@ describe("isAllowedEndpoint", () => {
       expect(
         isAllowedEndpoint("fal-ai/flux-dev/requests/abc123/status", patterns),
       ).toBe(true);
+    });
+  });
+});
+
+describe("serializeParsedBody", () => {
+  it("re-encodes a parsed form body as form data, not JSON", async () => {
+    // The proxy forwards the request's content-type verbatim, so a body the framework parsed from
+    // application/x-www-form-urlencoded must be re-encoded the same way — JSON bytes labeled as
+    // form data cannot be parsed upstream.
+    const { serializeParsedBody } = await import("./utils");
+    expect(
+      serializeParsedBody(
+        { prompt: "a cat", seed: "42" },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("prompt=a+cat&seed=42");
+    expect(
+      serializeParsedBody(
+        { prompt: "a cat" },
+        "application/x-www-form-urlencoded; charset=utf-8",
+      ),
+    ).toBe("prompt=a+cat");
+    // JSON stays JSON, strings and bytes pass through, empty stays empty.
+    expect(serializeParsedBody({ a: 1 }, "application/json")).toBe('{"a":1}');
+    expect(serializeParsedBody({ a: 1 }, undefined)).toBe('{"a":1}');
+    expect(
+      serializeParsedBody("raw", "application/x-www-form-urlencoded"),
+    ).toBe("raw");
+    const bytes = new Uint8Array([1, 2]);
+    expect(serializeParsedBody(bytes, "multipart/form-data")).toBe(bytes);
+    // ArrayBuffer is part of ProxyRequestBody and must pass through, not stringify to "{}".
+    const buffer = new Uint8Array([3, 4]).buffer;
+    expect(serializeParsedBody(buffer, "application/octet-stream")).toBe(
+      buffer,
+    );
+    expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
+    // Every JSON-typed string lacks decidable provenance (raw text vs parsed value, parseable
+    // or not) and fails loudly; adapters that KNOW their parser re-encode before this helper.
+    // An UNPARSEABLE string is decidably a parsed top-level value and re-encodes; any PARSEABLE
+    // string is ambiguous under json strict:false (raw text vs quoted string value) and fails
+    // loudly rather than silently changing the upstream value's type. Non-JSON types pass raw.
+    expect(serializeParsedBody("hello", "text/plain")).toBe("hello");
+    for (const ambiguous of [
+      "hello",
+      '{"a":1}',
+      '"quoted"',
+      "123",
+      "null",
+      "[1,2]",
+    ]) {
+      expect(() => serializeParsedBody(ambiguous, "application/json")).toThrow(
+        /unambiguous/,
+      );
+    }
+    // Parsed JSON null is a real body; null under other types still reads as absent.
+    expect(serializeParsedBody(null, "application/json")).toBe("null");
+    expect(serializeParsedBody(null, "application/json; charset=utf-8")).toBe(
+      "null",
+    );
+    expect(serializeParsedBody(null, "multipart/form-data")).toBeUndefined();
+    expect(serializeParsedBody(null, undefined)).toBeUndefined();
+    // Structured-suffix JSON media types carry JSON payloads too (RFC 6839).
+    expect(serializeParsedBody(null, "application/ld+json")).toBe("null");
+    expect(
+      serializeParsedBody(null, "application/hal+json; charset=utf-8"),
+    ).toBe("null");
+    // Prefix lookalikes are NOT JSON documents: json-seq is a record-separated sequence.
+    expect(serializeParsedBody(null, "application/json-seq")).toBeUndefined();
+  });
+
+  it("preserves repeated URL-encoded fields", async () => {
+    // Parsers represent `tag=a&tag=b` as { tag: ["a", "b"] }; the record-constructor form of
+    // URLSearchParams would collapse that to tag=a%2Cb and change the upstream semantics.
+    const { serializeParsedBody } = await import("./utils");
+    expect(
+      serializeParsedBody(
+        { tag: ["a", "b"], solo: "x" },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("tag=a&tag=b&solo=x");
+    expect(
+      serializeParsedBody(
+        { keep: "yes", missing: undefined, empty: null },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("keep=yes");
+  });
+
+  it("rejects parsed multipart bodies instead of JSON-encoding them", async () => {
+    // multer/formidable populate request.body with an object after consuming the stream; the
+    // bytes and boundary framing are unrecoverable, and JSON under a multipart header would be
+    // corruption, not forwarding.
+    const { serializeParsedBody } = await import("./utils");
+    expect(() =>
+      serializeParsedBody(
+        { field: "value" },
+        "multipart/form-data; boundary=----x",
+      ),
+    ).toThrow(/multipart/);
+  });
+
+  it("re-encodes nested URL-encoded fields with bracket notation", async () => {
+    // express.urlencoded({ extended: true }) parses user[name]=alice into nested objects;
+    // stringifying those would forward user=%5Bobject+Object%5D.
+    const { serializeParsedBody } = await import("./utils");
+    expect(
+      serializeParsedBody(
+        { user: { name: "alice", tags: ["a", "b"] } },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("user%5Bname%5D=alice&user%5Btags%5D=a&user%5Btags%5D=b");
+    // Arrays of structured values keep their indices, or two objects collapse into one on
+    // reparse; scalar arrays stay repeated keys.
+    expect(
+      serializeParsedBody(
+        { users: [{ name: "alice" }, { name: "bob" }] },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("users%5B0%5D%5Bname%5D=alice&users%5B1%5D%5Bname%5D=bob");
+  });
+});
+
+describe("createPageRouterHandler body handling", () => {
+  it("fails loudly for multipart bodies Next's parser already corrupted", async () => {
+    // Next's default bodyParser drains EVERY request and stringifies unknown content types
+    // through UTF-8, so a multipart body reaching the adapter as a string is irreversibly
+    // corrupted — forwarding it would hand the upstream garbage under a valid boundary.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const headers: Record<string, string> = {
+      "x-fal-target-url": "https://wma.fal.run/upload",
+      "content-type": "multipart/form-data; boundary=x",
+    };
+    const request = {
+      method: "POST",
+      body: "already�corrupted",
+      headers,
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+
+    await expect(handler(request as never, response as never)).rejects.toThrow(
+      /bodyParser: false/,
+    );
+  });
+
+  it("re-encodes a parsed top-level JSON string body", async () => {
+    // Next PARSES application/json, so a string body is a JSON string VALUE; forwarding it
+    // verbatim would send invalid JSON (hello instead of "hello") under a JSON content type.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "POST",
+      body: "hello",
+      headers: {
+        "x-fal-target-url": "https://wma.fal.run/session",
+        "content-type": "application/json",
+      },
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handler(request as never, response as never);
+      expect(fetchMock.mock.calls[0][1]?.body).toBe('"hello"');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("forwards a binary upstream response as exact bytes", async () => {
+    // A forwarded accept header can make the upstream answer with binary (an image, an
+    // octet-stream); text() would UTF-8-decode and corrupt it before it reaches the caller.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "GET",
+      body: undefined,
+      headers: {
+        "x-fal-target-url": "https://wma.fal.run/preview",
+        accept: "image/png",
+      },
+    };
+    const send = jest.fn();
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send })),
+    };
+    // Invalid UTF-8 on purpose: a lone continuation byte (0x80) becomes U+FFFD through text().
+    const payload = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x80, 0x00, 0xff]);
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue(
+      new Response(payload, {
+        headers: { "content-type": "image/png" },
+      }),
+    );
+    try {
+      await handler(request as never, response as never);
+      const sent = send.mock.calls[0][0] as Buffer;
+      expect(Buffer.isBuffer(sent)).toBe(true);
+      expect(new Uint8Array(sent)).toEqual(payload);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("fails loudly for untyped bodies Next decoded as text", async () => {
+    // Binary posted without a content-type is text-decoded by Next's default parser too — and a
+    // forwarded string would then be labeled application/json by the string default.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "POST",
+      body: "already�mangled",
+      headers: { "x-fal-target-url": "https://wma.fal.run/upload" },
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+
+    await expect(handler(request as never, response as never)).rejects.toThrow(
+      /bodyParser: false/,
+    );
+  });
+});
+
+describe("readUnconsumedRequestBody", () => {
+  const streamOf = (chunks: Array<string | Uint8Array>) =>
+    (async function* () {
+      for (const chunk of chunks) {
+        yield chunk;
+      }
+    })();
+
+  it("concatenates raw stream chunks byte-identical", async () => {
+    const { readUnconsumedRequestBody } = await import("./utils");
+    const body = await readUnconsumedRequestBody(
+      streamOf([new Uint8Array([0xff, 0x00]), new Uint8Array([0xd8])]),
+    );
+    expect(body).toEqual(new Uint8Array([0xff, 0x00, 0xd8]));
+  });
+
+  it("encodes string chunks and treats an empty stream as no body", async () => {
+    const { readUnconsumedRequestBody } = await import("./utils");
+    expect(await readUnconsumedRequestBody(streamOf(["ab", "c"]))).toEqual(
+      new TextEncoder().encode("abc"),
+    );
+    expect(await readUnconsumedRequestBody(streamOf([]))).toBeUndefined();
+  });
+});
+
+describe("handleRequest rejection reasons", () => {
+  /**
+   * A minimal ProxyBehavior that records what handleRequest responded with.
+   *
+   * The 400 paths all return before any network call, so nothing needs stubbing for them. For the
+   * paths that get PAST validation, auth is left unsatisfied on purpose: a 401 then proves the request
+   * cleared the endpoint gate, which is exactly what the exemption tests need to show.
+   */
+  function behaviorFor(
+    targetUrl: string | undefined,
+    method = "POST",
+    requestBody: string | Uint8Array = "{}",
+  ) {
+    const responses: Array<{ status: number; data: unknown }> = [];
+    return {
+      responses,
+      behavior: {
+        id: "test",
+        method,
+        getRequestBody: async () => requestBody,
+        getHeaders: () => ({}),
+        getHeader: (name: string) =>
+          name === "x-fal-target-url" ? targetUrl : undefined,
+        sendHeader: () => undefined,
+        respondWith: (status: number, data: unknown) => {
+          responses.push({ status, data });
+          return undefined as never;
+        },
+        sendResponse: async () => undefined as never,
+      },
+    };
+  }
+
+  const run = async (
+    targetUrl: string | undefined,
+    config: Record<string, unknown> = {},
+    method = "POST",
+    requestBody: string | Uint8Array = "{}",
+  ) => {
+    const { behavior, responses } = behaviorFor(targetUrl, method, requestBody);
+    await handleRequest(
+      behavior as never,
+      {
+        // No credentials available, so anything reaching the auth step stops with 401 rather than
+        // attempting a real request.
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => false,
+        ...config,
+      } as never,
+    );
+    return responses[0];
+  };
+
+  it("preserves multipart boundaries when forwarding a request body", async () => {
+    const boundary = "multipart/form-data; boundary=----fal-test-boundary";
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      "------fal-test-boundary--",
+    );
+    behavior.getHeaders = () => ({ "content-type": boundary });
+    behavior.getHeader = (name: string) => {
+      if (name === "x-fal-target-url") return "https://wma.fal.run/upload";
+      if (name.toLowerCase() === "content-type") return boundary;
+      return undefined;
+    };
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "secret",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://wma.fal.run/upload",
+        expect.objectContaining({
+          headers: expect.objectContaining({ "content-type": boundary }),
+        }),
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("forwards a binary request body byte-identical", async () => {
+    // Multipart file parts are binary. A body that ever passes through a string corrupts the bytes
+    // that are not valid UTF-8, so the proxy must hand fetch exactly what the adapter read.
+    const binary = new Uint8Array([0xff, 0x00, 0xd8, 0x88, 0x01]);
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      binary,
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "secret",
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://wma.fal.run/upload",
+        expect.objectContaining({ body: binary }),
+      );
+      expect(fetchMock.mock.calls[0][1]?.body).toBe(binary);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("forwards an allowlist of request headers, never ambient credentials", async () => {
+    // Applications authenticate their own proxy route with custom headers no denylist can
+    // enumerate; forwarding is therefore allowlist-only. x-fal-* and accept travel by default, a
+    // provider header travels only when named in forwardRequestHeaders, and credentials addressed
+    // to the proxy host never travel — even ambient infra headers stay behind.
+    const incoming: Record<string, string> = {
+      "x-fal-target-url": "https://wma.fal.run/session",
+      accept: "text/event-stream",
+      "x-provider-ticket": "abc",
+      "x-session-token": "user-secret",
+      "x-forwarded-for": "10.0.0.1",
+      authorization: "Bearer proxy-user-token",
+      cookie: "session=1",
+    };
+    const makeBehavior = () => {
+      const { behavior } = behaviorFor("https://wma.fal.run/session");
+      behavior.getHeaders = () => incoming;
+      behavior.getHeader = (name: string) => incoming[name.toLowerCase()];
+      return behavior;
+    };
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      let sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["x-fal-target-url"]).toBe("https://wma.fal.run/session");
+      expect(sent.accept).toBe("text/event-stream");
+      expect(sent.authorization).toBe("Key secret");
+      // Not allowlisted: custom and ambient headers stay behind by default.
+      expect(sent["x-provider-ticket"]).toBeUndefined();
+      expect(sent["x-session-token"]).toBeUndefined();
+      expect(sent["x-forwarded-for"]).toBeUndefined();
+      expect(sent.cookie).toBeUndefined();
+
+      fetchMock.mockClear();
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["x-provider-ticket", "cookie"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      // The named provider header now travels; proxy-host credentials never do, even when named.
+      expect(sent["x-provider-ticket"]).toBe("abc");
+      expect(sent["x-session-token"]).toBeUndefined();
+      expect(sent.cookie).toBeUndefined();
+
+      // content-encoding is end-to-end metadata for the raw-bytes path: never forwarded by
+      // default, forwardable when the operator names it.
+      incoming["content-encoding"] = "gzip";
+      fetchMock.mockClear();
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["content-encoding"]).toBeUndefined();
+
+      fetchMock.mockClear();
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["content-encoding"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      // The behavior's body is a STRING here — parser output, already inflated — so even an
+      // explicitly forwarded content-encoding is stripped; it only describes raw byte bodies.
+      expect(sent["content-encoding"]).toBeUndefined();
+
+      fetchMock.mockClear();
+      const rawBehavior = behaviorFor(
+        "https://wma.fal.run/session",
+        "POST",
+        new Uint8Array([0x1f, 0x8b, 0x08]),
+      ).behavior;
+      rawBehavior.getHeaders = () => incoming;
+      rawBehavior.getHeader = (name: string) => incoming[name.toLowerCase()];
+      await handleRequest(rawBehavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["content-encoding"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["content-encoding"]).toBe("gzip");
+
+      // A parser-produced buffer (express.raw output) is already inflated too — the brand from
+      // serializeParsedBody must strip the header even though the body is bytes, not a string.
+      fetchMock.mockClear();
+      const { serializeParsedBody } = await import("./utils");
+      const parsedBytes = serializeParsedBody(
+        new Uint8Array([0x7b, 0x7d]),
+        "application/octet-stream",
+      ) as Uint8Array;
+      const parsedByteBehavior = behaviorFor(
+        "https://wma.fal.run/session",
+        "POST",
+        parsedBytes,
+      ).behavior;
+      parsedByteBehavior.getHeaders = () => incoming;
+      parsedByteBehavior.getHeader = (name: string) =>
+        incoming[name.toLowerCase()];
+      await handleRequest(parsedByteBehavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["content-encoding"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["content-encoding"]).toBeUndefined();
+      delete incoming["content-encoding"];
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("omits content-type when the incoming request omitted it", async () => {
+    // Fetch generates no content type for raw binary bodies; the proxy defaulting one to JSON
+    // would make upstream endpoints parse valid bytes as JSON. Present headers pass through
+    // untouched, absent ones stay absent.
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      new Uint8Array([0xff, 0x00]),
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      const sent = fetchMock.mock.calls[0][1]?.headers as Record<
+        string,
+        string
+      >;
+      expect("content-type" in sent).toBe(false);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("defaults string bodies to application/json when no content-type came in", async () => {
+    // Bare fetch(proxy, { body: JSON.stringify(x) }) callers relied on the proxy's historical
+    // JSON rewrite (the browser would otherwise have labeled the body text/plain). Binary bodies
+    // stay label-free; string bodies keep the JSON default.
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      '{"prompt":"a cat"}',
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      const sent = fetchMock.mock.calls[0][1]?.headers as Record<
+        string,
+        string
+      >;
+      expect(sent["content-type"]).toBe("application/json");
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("extracts the WMA app id from a bytes body", async () => {
+    // Adapters now hand over raw bytes; the app-id gate decodes them for parsing while the
+    // forwarded body stays untouched. Auth is satisfied and no fal credential is configured, so a
+    // 401 from the credential step proves the gate accepted the decoded id — a rejected id would
+    // have returned 400 before it.
+    const body = new TextEncoder().encode(
+      JSON.stringify({ app_id: "me/my-app/world" }),
+    );
+    const config = {
+      allowedEndpoints: ["me/my-app/**"],
+      isAuthenticated: async () => true,
+      // No credential, so an accepted app id stops at the credential 401 instead of fetching.
+      resolveFalAuth: async () => undefined,
+    };
+    expect(
+      await run("https://wma.fal.run/session", config, "POST", body),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        config,
+        "POST",
+        new TextEncoder().encode(JSON.stringify({ app_id: "someone/else" })),
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
+  it("names the missing header", async () => {
+    expect(await run(undefined)).toEqual({
+      status: 400,
+      data: "Invalid request: missing x-fal-target-url header",
+    });
+  });
+
+  it("names allowedUrlPatterns when the host is not permitted", async () => {
+    expect(await run("https://evil.example/steal")).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
+    });
+  });
+
+  it("names allowedEndpoints when the path is not permitted", async () => {
+    // The URL is allowlisted but the path is not. Naming the failed policy tells the caller whether
+    // to update host permissions, endpoint permissions, or request construction.
+    expect(
+      await run("https://fal.run/someone/other-app", {
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
+  it("STILL enforces allowedEndpoints for app-serving fal.run hosts", async () => {
+    // The security property. Exempting fal's service hosts from the endpoint check must not exempt
+    // the hosts that serve customer apps, or allowedEndpoints stops restricting anything on its main
+    // path. A suffix rule on `.fal.run` would break exactly this.
+    for (const host of ["fal.run", "queue.fal.run"]) {
+      expect(
+        await run(`https://${host}/someone/other-app`, {
+          allowedEndpoints: ["me/my-app/**"],
+        }),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: target path is not permitted by allowedEndpoints",
+      });
+    }
+  });
+
+  it("checks the WMA app id instead of treating its route as an app path", async () => {
+    // Reaches auth (401) because the body app_id is allowed. The literal `session` path is bridge
+    // infrastructure and is not itself an endpoint id.
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        { allowedEndpoints: ["me/my-app/**"] },
+        "POST",
+        JSON.stringify({ app_id: "me/my-app/world" }),
+      ),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("authenticates before reading an app-scoped WMA body", async () => {
+    const { behavior, responses } = behaviorFor(
+      "https://wma.fal.run/session",
+      "POST",
+      JSON.stringify({ app_id: "me/my-app" }),
+    );
+    const getRequestBody = jest.spyOn(behavior, "getRequestBody");
+
+    await handleRequest(
+      behavior as never,
+      {
+        allowedEndpoints: ["me/my-app/**"],
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => false,
+      } as never,
+    );
+
+    expect(responses[0]).toEqual({ status: 401, data: "Unauthorized" });
+    expect(getRequestBody).not.toHaveBeenCalled();
+  });
+
+  it("allows the bridge by default, without any allowlisting", async () => {
+    expect(await run("https://wma.fal.run/session/heartbeat")).toEqual({
+      status: 401,
+      data: "Unauthorized",
+    });
+  });
+
+  it("allows the bridge even when allowedUrlPatterns is narrowed", async () => {
+    // The case a default entry cannot cover: supplying allowedUrlPatterns REPLACES the defaults, so a
+    // caller who scopes the proxy to their own apps — the careful configuration — would otherwise lose
+    // signalling with no way to know why.
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        {
+          allowedUrlPatterns: ["fal.run/me/my-app/**"],
+          allowedEndpoints: ["me/my-app/**"],
+        },
+        "POST",
+        JSON.stringify({ app_id: "me/my-app/world" }),
+      ),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("enforces allowedEndpoints against WMA request app_id values", async () => {
+    for (const path of ["ice", "session"]) {
+      expect(
+        await run(
+          `https://wma.fal.run/${path}`,
+          {
+            allowedEndpoints: ["me/my-app/**"],
+            isAuthenticated: async () => true,
+          },
+          "POST",
+          JSON.stringify({ app_id: "someone/other-app" }),
+        ),
+      ).toEqual({
+        status: 400,
+        data: "Invalid request: target path is not permitted by allowedEndpoints",
+      });
+    }
+  });
+
+  it("enforces WMA app identity through percent-encoded route spellings", async () => {
+    expect(
+      await run(
+        "https://wma.fal.run/%73ession",
+        {
+          allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
+        },
+        "POST",
+        JSON.stringify({ app_id: "someone/other-app" }),
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
+  it("rejects an app-scoped WMA request with no app_id when endpoints are restricted", async () => {
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        {
+          allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
+        },
+        "POST",
+        "{}",
+      ),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target path is not permitted by allowedEndpoints",
+    });
+  });
+
+  it("does not exempt the bridge host over plaintext HTTP", async () => {
+    expect(
+      await run("http://wma.fal.run/session", {
+        allowedUrlPatterns: ["fal.run/me/my-app/**"],
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
+    });
+  });
+
+  it("does NOT implicitly allow fal.ai, which is not allowed by default today", async () => {
+    // The exemption is the enumerated service set, not every fal-owned domain. Widening it to `.fal.ai`
+    // would silently start permitting hosts this proxy has always refused.
+    expect(await run("https://fal.ai/anything")).toEqual({
+      status: 400,
+      data: "Invalid request: target URL is not permitted by allowedUrlPatterns",
     });
   });
 });
