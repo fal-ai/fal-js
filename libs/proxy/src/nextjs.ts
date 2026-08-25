@@ -75,6 +75,13 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
             request.body,
             request.headers["content-type"],
           );
+          if (parsed === undefined && request.readableDidRead) {
+            throw new Error(
+              "The request body was partially consumed before the fal proxy ran. Exclude " +
+                "body-consuming middleware from the proxy route so the complete raw stream " +
+                "reaches the proxy.",
+            );
+          }
           // With bodyParser disabled the body is unset and the stream unread — forward raw bytes.
           return parsed !== undefined
             ? parsed
@@ -149,7 +156,8 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-app-router",
         method: request.method,
-        getRequestBody: async () => readWebRequestBody(request),
+        getRequestBody: async () =>
+          readWebRequestBody(request, resolvedConfig.maxRequestBodyBytes),
         getHeaders: () => fromHeaders(request.headers),
         getHeader: (name) => request.headers.get(name),
         sendHeader: (name, value) => responseHeaders.set(name, value),

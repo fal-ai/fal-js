@@ -37,7 +37,8 @@ export const createRequestHandler = ({
       {
         id: "svelte-app-router",
         method: request.method,
-        getRequestBody: async () => readWebRequestBody(request),
+        getRequestBody: async () =>
+          readWebRequestBody(request, resolvedConfig.maxRequestBodyBytes),
         getHeaders: () => fromHeaders(request.headers),
         getHeader: (name) => request.headers.get(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),

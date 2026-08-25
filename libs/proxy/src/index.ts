@@ -5,7 +5,11 @@ import {
   type ProxyConfig,
 } from "./config";
 import type { HeaderValue, ProxyBehavior, ProxyRequestBody } from "./types";
-import { isParserProducedByteBody, singleHeaderValue } from "./utils";
+import {
+  isParserProducedByteBody,
+  RequestBodyTooLargeError,
+  singleHeaderValue,
+} from "./utils";
 
 export {
   createUrlMatcher,
@@ -37,16 +41,20 @@ const defaultUrlMatcher = createUrlMatcher(DEFAULT_ALLOWED_URL_PATTERNS);
  * @param patterns the allowed URL patterns (glob-style). If not provided, uses default patterns.
  * @returns whether the URL is allowed.
  */
-// Compiled matchers are memoized by the pattern array's identity: a resolved config carries the
-// same array on every request, and glob→regex compilation is the expensive half of the check.
-const matcherCache = new WeakMap<string[], (url: string) => boolean>();
+// Compiled matchers are memoized by the pattern array's identity and contents: a resolved config
+// normally carries the same unchanged array on every request, but callers may mutate it in place.
+const matcherCache = new WeakMap<
+  string[],
+  { signature: string; matcher: (url: string) => boolean }
+>();
 function cachedMatcher(patterns: string[]): (url: string) => boolean {
-  let matcher = matcherCache.get(patterns);
-  if (!matcher) {
-    matcher = createUrlMatcher(patterns);
-    matcherCache.set(patterns, matcher);
+  const signature = JSON.stringify(patterns);
+  let cached = matcherCache.get(patterns);
+  if (!cached || cached.signature !== signature) {
+    cached = { signature, matcher: createUrlMatcher(patterns) };
+    matcherCache.set(patterns, cached);
   }
-  return matcher;
+  return cached.matcher;
 }
 
 export function isAllowedUrl(url: string, patterns?: string[]): boolean {
@@ -54,16 +62,6 @@ export function isAllowedUrl(url: string, patterns?: string[]): boolean {
     return cachedMatcher(patterns)(url);
   }
   return defaultUrlMatcher(url);
-}
-
-/**
- * Extracts the URL without the scheme for validation purposes.
- * @param targetUrl the full URL including scheme.
- * @returns the URL without the scheme (host + path + query).
- */
-function getUrlWithoutScheme(targetUrl: string): string {
-  const url = new URL(targetUrl);
-  return `${url.host}${url.pathname}${url.search}`;
 }
 
 /**
@@ -232,7 +230,8 @@ export async function handleRequest<ResponseType>(
   // One cached promise, so the read-once guarantee is unrepresentable to break — a flag-plus-value
   // pair invites a concurrent double read of an already-consumed stream.
   let requestBodyPromise: Promise<ProxyRequestBody> | undefined;
-  const readRequestBody = () => (requestBodyPromise ??= behavior.getRequestBody());
+  const readRequestBody = () =>
+    (requestBodyPromise ??= behavior.getRequestBody());
   // The forwarded body stays raw bytes — decoding a multipart payload corrupts its file parts.
   // Only the WMA app-id extraction needs text, and those routes carry JSON.
   const readRequestBodyText = async (): Promise<string | undefined> => {
@@ -326,13 +325,21 @@ export async function handleRequest<ResponseType>(
   const restrictEndpoints =
     behavior.method?.toUpperCase() === "POST" && allowedEndpoints.length > 0;
   if (restrictEndpoints) {
-    const endpoint = isServiceHost
-      ? serviceAppScoped
-        ? appIdFromRequestBody(await readRequestBodyText())
-        : undefined
-      : isFalInfrastructure(url, serviceHosts)
-        ? undefined
-        : getEndpoint(targetUrl);
+    let endpoint: string | undefined;
+    if (isServiceHost) {
+      if (serviceAppScoped) {
+        try {
+          endpoint = appIdFromRequestBody(await readRequestBodyText());
+        } catch (error) {
+          if (error instanceof RequestBodyTooLargeError) {
+            return behavior.respondWith(error.status, error.message);
+          }
+          throw error;
+        }
+      }
+    } else if (!isFalInfrastructure(url, serviceHosts)) {
+      endpoint = getEndpoint(targetUrl);
+    }
     if (
       (isServiceHost && serviceAppScoped && endpoint === undefined) ||
       (endpoint !== undefined && !isAllowedEndpoint(endpoint, allowedEndpoints))
@@ -379,10 +386,18 @@ export async function handleRequest<ResponseType>(
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
   const accept =
     singleHeaderValue(behavior.getHeader("accept")) ?? "application/json";
-  const body =
-    behavior.method?.toUpperCase() === "GET"
-      ? undefined
-      : await readRequestBody();
+  let body: ProxyRequestBody;
+  try {
+    body =
+      behavior.method?.toUpperCase() === "GET"
+        ? undefined
+        : await readRequestBody();
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return behavior.respondWith(error.status, error.message);
+    }
+    throw error;
+  }
   // The incoming content-type is forwarded when present. When absent, string bodies keep the
   // historical application/json default (bare `fetch(proxy, { body: JSON.stringify(x) })` callers
   // relied on the old rewrite, and browsers would otherwise label them text/plain) — while raw

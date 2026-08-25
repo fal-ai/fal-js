@@ -1,3 +1,4 @@
+import { Readable } from "stream";
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
 import {
   getEndpoint,
@@ -203,6 +204,16 @@ describe("isAllowedUrl with custom patterns", () => {
   it("should work with empty patterns array", () => {
     expect(isAllowedUrl("fal.run/path", [])).toBe(false);
   });
+
+  it("recompiles a cached matcher when its pattern array changes", () => {
+    const patterns = ["fal.run/owner/app"];
+    expect(isAllowedUrl("fal.run/owner/app", patterns)).toBe(true);
+
+    patterns.splice(0, 1, "fal.run/owner/other-app");
+
+    expect(isAllowedUrl("fal.run/owner/app", patterns)).toBe(false);
+    expect(isAllowedUrl("fal.run/owner/other-app", patterns)).toBe(true);
+  });
 });
 
 describe("getEndpoint", () => {
@@ -324,6 +335,16 @@ describe("isAllowedEndpoint", () => {
       expect(isAllowedEndpoint("any/random/endpoint", [])).toBe(true);
       expect(isAllowedEndpoint("", [])).toBe(true);
     });
+  });
+
+  it("recompiles a cached endpoint matcher when its patterns change", () => {
+    const patterns = ["owner/app"];
+    expect(isAllowedEndpoint("owner/app", patterns)).toBe(true);
+
+    patterns.splice(0, 1, "owner/other-app");
+
+    expect(isAllowedEndpoint("owner/app", patterns)).toBe(false);
+    expect(isAllowedEndpoint("owner/other-app", patterns)).toBe(true);
   });
 
   describe("real-world endpoint examples", () => {
@@ -472,6 +493,17 @@ describe("serializeParsedBody", () => {
       ),
     ).toBe("users%5B0%5D%5Bname%5D=alice&users%5B1%5D%5Bname%5D=bob");
   });
+
+  it("rejects parsed objects whose declared media type cannot be reconstructed", async () => {
+    const { serializeParsedBody } = await import("./utils");
+
+    expect(() => serializeParsedBody({ value: 1 }, "application/xml")).toThrow(
+      /application\/xml/,
+    );
+    expect(() => serializeParsedBody({ value: 1 }, "application/cbor")).toThrow(
+      /application\/cbor/,
+    );
+  });
 });
 
 describe("readUnconsumedRequestBody", () => {
@@ -483,6 +515,57 @@ describe("readUnconsumedRequestBody", () => {
     await expect(
       readUnconsumedRequestBody(endless(), 4 * 1024 * 1024),
     ).rejects.toThrow(/exceeded/);
+  });
+
+  it("marks body-limit errors as HTTP 413", async () => {
+    const { readUnconsumedRequestBody } = await import("./utils");
+    async function* body() {
+      yield new Uint8Array([1, 2]);
+    }
+
+    await expect(readUnconsumedRequestBody(body(), 1)).rejects.toMatchObject({
+      status: 413,
+      statusCode: 413,
+    });
+  });
+
+  it("caps Fetch-API request streams before forwarding them", async () => {
+    const { readWebRequestBody } = await import("./utils");
+    const request = new Request("https://proxy.test", {
+      method: "POST",
+      body: new Uint8Array([1, 2]),
+    });
+
+    await expect(
+      (
+        readWebRequestBody as (
+          request: Request,
+          maxBytes: number,
+        ) => Promise<unknown>
+      )(request, 1),
+    ).rejects.toMatchObject({
+      status: 413,
+    });
+  });
+});
+
+describe("proxy body limit configuration", () => {
+  it("rejects values that would disable or make the byte bound ambiguous", async () => {
+    const { resolveProxyConfig } = await import("./config");
+    const safeConfig = {
+      allowedEndpoints: ["owner/app"],
+      allowUnauthorizedRequests: false,
+    };
+
+    for (const maxRequestBodyBytes of [NaN, Infinity, -1, 1.5]) {
+      expect(() =>
+        resolveProxyConfig({ ...safeConfig, maxRequestBodyBytes }),
+      ).toThrow(/non-negative safe integer/);
+    }
+    expect(
+      resolveProxyConfig({ ...safeConfig, maxRequestBodyBytes: 0 })
+        .maxRequestBodyBytes,
+    ).toBe(0);
   });
 });
 
@@ -563,6 +646,167 @@ describe("createHandler (express) body handling", () => {
     try {
       await handler(request as never, expressResponse() as never, jest.fn());
       expect(fetchMock.mock.calls[0][1]?.body).toBe('{"prompt":"hello"}');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("rejects a partially consumed request instead of forwarding its tail", async () => {
+    const { createHandler } = await import("./express");
+    const request = new Readable({ read: jest.fn() }) as Readable & {
+      method: string;
+      body: unknown;
+      headers: Record<string, string>;
+    };
+    request.push(Buffer.from("abc"));
+    request.push(Buffer.from("def"));
+    request.push(null);
+    request.method = "POST";
+    request.body = undefined;
+    request.headers = {
+      "x-fal-target-url": "https://fal.run/owner/app",
+      "content-type": "application/octet-stream",
+      "content-length": "6",
+    };
+    expect(request.read(3)?.toString()).toBe("abc");
+    expect(request.readable).toBe(true);
+    expect(request.readableDidRead).toBe(true);
+
+    const next = jest.fn();
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      await createHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      })(request as never, expressResponse() as never, next);
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/consumed/) }),
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+});
+
+describe("createRouteHandler (hono) body handling", () => {
+  it("replays cached JSON through Hono middleware", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.json();
+      await next();
+    });
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: {
+          "x-fal-target-url": "https://fal.run/owner/app",
+          "content-type": "application/json",
+        },
+        body: '{ "prompt": "hello" }',
+      });
+
+      expect(response.status).toBe(200);
+      expect(fetchMock.mock.calls[0][1]?.body).toEqual(
+        new TextEncoder().encode('{"prompt":"hello"}').buffer,
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("preserves cached multipart bytes when middleware cached arrayBuffer first", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.arrayBuffer();
+      await next();
+    });
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const form = new FormData();
+    form.append("field", "value");
+    const request = new Request("http://local.test/proxy", {
+      method: "POST",
+      headers: { "x-fal-target-url": "https://fal.run/owner/app" },
+      body: form,
+    });
+    const originalContentType = request.headers.get("content-type");
+    const originalBody = new Uint8Array(await request.clone().arrayBuffer());
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      const response = await app.request(request);
+
+      expect(response.status).toBe(200);
+      const forwarded = fetchMock.mock.calls[0][1];
+      expect(
+        (forwarded?.headers as Record<string, string>)["content-type"],
+      ).toBe(originalContentType);
+      expect(new Uint8Array(forwarded?.body as ArrayBuffer)).toEqual(
+        originalBody,
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("rejects cached FormData whose original multipart boundary is gone", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.formData();
+      await next();
+    });
+    app.onError((error, context) => context.text(error.message, 500));
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const form = new FormData();
+    form.append("field", "value");
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: { "x-fal-target-url": "https://fal.run/owner/app" },
+        body: form,
+      });
+
+      expect(response.status).toBe(500);
+      await expect(response.text()).resolves.toMatch(/multipart.*consumed/i);
+      expect(fetchMock).not.toHaveBeenCalled();
     } finally {
       fetchMock.mockRestore();
     }
@@ -692,6 +936,35 @@ describe("createPageRouterHandler body handling", () => {
     await expect(handler(request as never, response as never)).rejects.toThrow(
       /bodyParser: false/,
     );
+  });
+});
+
+describe("createRouteHandler (Next app router) body handling", () => {
+  it("returns 413 before fetch when a raw body exceeds maxRequestBodyBytes", async () => {
+    const { createRouteHandler } = await import("./nextjs");
+    const { POST } = createRouteHandler({
+      maxRequestBodyBytes: 1,
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = new Request("http://local.test/api/fal/proxy", {
+      method: "POST",
+      headers: {
+        "x-fal-target-url": "https://fal.run/owner/app",
+        "content-type": "application/octet-stream",
+      },
+      body: new Uint8Array([1, 2]),
+    });
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      const response = await POST(request as never);
+
+      expect(response.status).toBe(413);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
   });
 });
 
@@ -1041,6 +1314,23 @@ describe("handleRequest rejection reasons", () => {
       status: 400,
       data: "Invalid request: target path is not permitted by allowedEndpoints",
     });
+  });
+
+  it("returns 413 when the app-scoped service body exceeds the adapter limit", async () => {
+    const { RequestBodyTooLargeError } = await import("./utils");
+    const { behavior, responses } = behaviorFor("https://wma.fal.run/session");
+    behavior.getRequestBody = async () => {
+      throw new RequestBodyTooLargeError(1);
+    };
+
+    await handleRequest(behavior as never, {
+      allowedEndpoints: ["owner/app"],
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+
+    expect(responses[0]).toMatchObject({ status: 413 });
   });
 
   it("names the missing header", async () => {

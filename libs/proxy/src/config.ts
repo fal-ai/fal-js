@@ -1,6 +1,6 @@
 import picomatch from "picomatch";
 import { ProxyBehavior } from "./types";
-import { singleHeaderValue } from "./utils";
+import { DEFAULT_MAX_REQUEST_BODY_BYTES, singleHeaderValue } from "./utils";
 
 /**
  * The fal REST API URL used for storage operations.
@@ -163,7 +163,7 @@ export async function isAuthorizationHeaderPresent(
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
   allowedUrlPatterns: DEFAULT_ALLOWED_URL_PATTERNS,
   serviceHosts: ["wma.fal.run"],
-  maxRequestBodyBytes: 32 * 1024 * 1024,
+  maxRequestBodyBytes: DEFAULT_MAX_REQUEST_BODY_BYTES,
   allowedEndpoints: [],
   forwardRequestHeaders: [],
   allowUnauthorizedRequests: true,
@@ -182,6 +182,15 @@ export function applyProxyConfig(config: Partial<ProxyConfig>): ProxyConfig {
     ...DEFAULT_PROXY_CONFIG,
     ...config,
   };
+  resolvedConfig.maxRequestBodyBytes ??= DEFAULT_MAX_REQUEST_BODY_BYTES;
+  if (
+    !Number.isSafeInteger(resolvedConfig.maxRequestBodyBytes) ||
+    resolvedConfig.maxRequestBodyBytes < 0
+  ) {
+    throw new TypeError(
+      "maxRequestBodyBytes must be a non-negative safe integer",
+    );
+  }
   if (
     !Array.isArray(resolvedConfig.allowedEndpoints) ||
     resolvedConfig.allowedEndpoints.length === 0

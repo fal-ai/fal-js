@@ -53,14 +53,44 @@ export function createRouteHandler({
         getHeaders: () => fromHeaders(context.req.raw.headers),
         getHeader: (name) => context.req.header(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),
-        // Through HonoRequest's bodyCache, NOT context.req.raw: upstream middleware (a
-        // validator calling c.req.json()) has often already consumed the raw single-use stream,
-        // and reading it again would reject with "Body is unusable". The cache-aware accessor
-        // replays the same bytes.
-        getRequestBody: async () =>
-          readWebRequestBody({
-            arrayBuffer: () => context.req.arrayBuffer(),
-          }),
+        getRequestBody: async () => {
+          const bodyCacheKeys = Object.keys(context.req.bodyCache);
+          const contentType = context.req.header("content-type") ?? "";
+          if (
+            contentType.toLowerCase().startsWith("multipart/") &&
+            bodyCacheKeys.length > 0 &&
+            !("arrayBuffer" in context.req.bodyCache)
+          ) {
+            // Hono recreates arrayBuffer() from the first cached representation. Recreating it
+            // from FormData chooses a NEW multipart boundary while this proxy forwards the old
+            // content-type header, so the upstream cannot parse it.
+            throw new Error(
+              "The fal proxy cannot forward a multipart body that Hono middleware already " +
+                "consumed without caching its original bytes. Read c.req.arrayBuffer() before " +
+                "parsing, or exclude the proxy route from that middleware.",
+            );
+          }
+          if (context.req.raw.bodyUsed && bodyCacheKeys.length === 0) {
+            throw new Error(
+              "The request body was consumed before the fal proxy ran without a reusable Hono " +
+                "body cache. Exclude body-consuming middleware from the proxy route.",
+            );
+          }
+
+          // An untouched raw request can be streamed and capped before the full allocation.
+          // If middleware used Hono's cache, its cache-aware accessor is the only replayable copy.
+          const request =
+            bodyCacheKeys.length === 0
+              ? context.req.raw
+              : {
+                  arrayBuffer: () => context.req.arrayBuffer(),
+                  headers: context.req.raw.headers,
+                };
+          return readWebRequestBody(
+            request,
+            resolvedConfig.maxRequestBodyBytes,
+          );
+        },
         sendResponse: responsePassthrough,
         resolveApiKey,
       },

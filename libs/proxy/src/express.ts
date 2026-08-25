@@ -38,6 +38,13 @@ export const createHandler = (
             // global express.json()). Parser output is trusted only once something actually
             // read the stream, which is also what makes serializeParsedBody's multipart error
             // truthful: at that point a multipart parser really did consume the bytes.
+            if (request.readable && request.readableDidRead) {
+              throw new Error(
+                "The request body was partially consumed before the fal proxy ran. Exclude " +
+                  "body-consuming middleware from the proxy route so the complete raw stream " +
+                  "reaches the proxy.",
+              );
+            }
             if (request.readable) {
               return readUnconsumedRequestBody(
                 request,
@@ -53,7 +60,9 @@ export const createHandler = (
             // anything to forward (an audit/signature middleware, say). If the request declared
             // a body, forwarding nothing under its intact content-type would make the payload
             // silently vanish upstream — fail loudly where the developer can fix the route.
-            const declaredLength = Number(request.headers["content-length"] ?? 0);
+            const declaredLength = Number(
+              request.headers["content-length"] ?? 0,
+            );
             if (declaredLength > 0 || request.headers["transfer-encoding"]) {
               throw new Error(
                 "The request body was consumed before the fal proxy ran, without producing a " +

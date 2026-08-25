@@ -1,5 +1,21 @@
 import { HeaderValue, ProxyRequestBody } from "./types";
 
+/** The raw-body paths buffer whole requests, so all adapters share one conservative ceiling. */
+export const DEFAULT_MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
+
+export class RequestBodyTooLargeError extends Error {
+  readonly status = 413;
+  readonly statusCode = 413;
+
+  constructor(maxBytes: number) {
+    super(
+      `The request body exceeded ${maxBytes} bytes; the proxy buffers raw bodies whole. ` +
+        "Raise maxRequestBodyBytes in the proxy config if this size is intended.",
+    );
+    this.name = "RequestBodyTooLargeError";
+  }
+}
+
 /**
  * Utility to get a header value as `string` from a Headers object.
  *
@@ -25,10 +41,57 @@ export function singleHeaderValue(value: HeaderValue): string | undefined {
  *
  * @private
  */
-export async function readWebRequestBody(request: {
-  arrayBuffer(): Promise<ArrayBuffer>;
-}): Promise<ProxyRequestBody> {
+export async function readWebRequestBody(
+  request: {
+    arrayBuffer(): Promise<ArrayBuffer>;
+    body?: ReadableStream<Uint8Array> | null;
+    headers?: { get(name: string): string | null };
+  },
+  maxBytes: number = DEFAULT_MAX_REQUEST_BODY_BYTES,
+): Promise<ProxyRequestBody> {
+  const declaredLength = Number(request.headers?.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw new RequestBodyTooLargeError(maxBytes);
+  }
+
+  // Read the stream incrementally when it is available. `arrayBuffer()` allocates the complete
+  // request before its size can be checked, defeating the memory bound this option promises.
+  if (request.body && !request.body.locked) {
+    const reader = request.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > maxBytes) {
+          // Cancellation is best-effort. A source's broken cancel hook must not replace the
+          // useful 413 with an unrelated transport error.
+          await reader.cancel().catch(() => undefined);
+          throw new RequestBodyTooLargeError(maxBytes);
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    if (total === 0) return undefined;
+    const body = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return body;
+  }
+
+  // Framework caches (notably Hono's) expose only arrayBuffer(). They may already have allocated
+  // the body, but the post-read check still prevents an oversized payload from being forwarded.
   const body = await request.arrayBuffer();
+  if (body.byteLength > maxBytes) {
+    throw new RequestBodyTooLargeError(maxBytes);
+  }
   return body.byteLength > 0 ? body : undefined;
 }
 
@@ -173,7 +236,15 @@ export function serializeParsedBody(
     }
     return params.toString();
   }
-  return JSON.stringify(body);
+  if (declared === "" || jsonDeclared) {
+    return JSON.stringify(body);
+  }
+  const mediaType = declared.split(";", 1)[0].trim();
+  throw new Error(
+    `The fal proxy cannot reconstruct a parsed ${mediaType} request body without changing its ` +
+      "wire format. Exclude the proxy route from that body parser so the raw request stream " +
+      "reaches the proxy.",
+  );
 }
 
 /**
@@ -186,9 +257,6 @@ export function serializeParsedBody(
  *
  * @private
  */
-/** The raw-stream path buffers whole bodies; parser-backed paths have the parser's own limits. */
-export const DEFAULT_MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
-
 const streamChunkEncoder = new TextEncoder();
 
 export async function readUnconsumedRequestBody(
@@ -207,10 +275,7 @@ export async function readUnconsumedRequestBody(
     if (total > maxBytes) {
       // Bounded, or the one unparsed path (multipart/binary — the LARGEST bodies) would be the
       // only one an oversized or hostile request could use to exhaust the server's memory.
-      throw new Error(
-        `The request body exceeded ${maxBytes} bytes; the proxy buffers raw bodies whole. ` +
-          "Raise maxRequestBodyBytes in the proxy config if this size is intended.",
-      );
+      throw new RequestBodyTooLargeError(maxBytes);
     }
   }
   if (total === 0) {
