@@ -772,6 +772,25 @@ describe("handleRequest rejection reasons", () => {
         forwardRequestHeaders: ["content-encoding"],
       });
       sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      // The behavior's body is a STRING here — parser output, already inflated — so even an
+      // explicitly forwarded content-encoding is stripped; it only describes raw byte bodies.
+      expect(sent["content-encoding"]).toBeUndefined();
+
+      fetchMock.mockClear();
+      const rawBehavior = behaviorFor(
+        "https://wma.fal.run/session",
+        "POST",
+        new Uint8Array([0x1f, 0x8b, 0x08]),
+      ).behavior;
+      rawBehavior.getHeaders = () => incoming;
+      rawBehavior.getHeader = (name: string) => incoming[name.toLowerCase()];
+      await handleRequest(rawBehavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["content-encoding"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
       expect(sent["content-encoding"]).toBe("gzip");
       delete incoming["content-encoding"];
     } finally {

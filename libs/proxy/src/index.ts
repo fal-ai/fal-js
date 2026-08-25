@@ -348,6 +348,13 @@ export async function handleRequest<ResponseType>(
   const contentType =
     incomingContentType ??
     (typeof body === "string" ? "application/json" : undefined);
+  // An explicitly forwarded content-encoding only describes RAW BYTE bodies: a string body came
+  // out of a parser, and parsers inflate compressed requests before parsing — the original
+  // encoding no longer describes the re-serialized text, and forwarding it would make the
+  // upstream try to decompress plain JSON.
+  if (typeof body === "string" && "content-encoding" in headers) {
+    delete headers["content-encoding"];
+  }
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
