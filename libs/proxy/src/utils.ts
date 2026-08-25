@@ -45,8 +45,15 @@ export function serializeParsedBody(
   body: unknown,
   contentType?: HeaderValue,
 ): ProxyRequestBody {
-  if (body === undefined || body === null) {
+  if (body === undefined) {
     return undefined;
+  }
+  const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
+  if (body === null) {
+    // Only `undefined` means "the parser had nothing". A parsed JSON body can legitimately BE
+    // null, and treating it as absent would fall back to an already-consumed stream and forward
+    // no body at all. Outside JSON, null still reads as absent.
+    return declared.startsWith("application/json") ? "null" : undefined;
   }
   if (
     typeof body === "string" ||
@@ -55,7 +62,6 @@ export function serializeParsedBody(
   ) {
     return body;
   }
-  const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
   if (declared.startsWith("application/x-www-form-urlencoded")) {
     // Entry by entry rather than the URLSearchParams record constructor: parsers represent a
     // repeated field (`tag=a&tag=b`) as an array, and the record form would stringify it into one

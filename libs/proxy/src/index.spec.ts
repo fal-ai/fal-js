@@ -388,6 +388,13 @@ describe("serializeParsedBody", () => {
       buffer,
     );
     expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
+    // Parsed JSON null is a real body; null under other types still reads as absent.
+    expect(serializeParsedBody(null, "application/json")).toBe("null");
+    expect(serializeParsedBody(null, "application/json; charset=utf-8")).toBe(
+      "null",
+    );
+    expect(serializeParsedBody(null, "multipart/form-data")).toBeUndefined();
+    expect(serializeParsedBody(null, undefined)).toBeUndefined();
   });
 
   it("preserves repeated URL-encoded fields", async () => {

@@ -62,25 +62,36 @@ export type RealtimeState = "opening" | "live" | "failed" | "closed";
  */
 export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
   Session,
-  "state" | "close"
-> & {
-  readonly state: RealtimeState;
-  /**
-   * Always a promise, whatever the extension declared. The kernel substitutes its own idempotent
-   * teardown for the extension's `close`, and that teardown awaits every registered cleanup — so a
-   * caller that awaits this knows the resources are actually released, which is not something an
-   * extension returning `void` could promise. Calling it while the session is still opening
-   * cancels the negotiation.
-   */
-  close(): Promise<void>;
-  /**
-   * Resolves with this same handle once the session is live; rejects with the failure when
-   * opening fails or is aborted. Optional — every failure it can carry also reaches `onError`
-   * and `onState("failed")`, so a caller living entirely on callbacks never needs to touch it,
-   * and an ignored `ready` never becomes an unhandled rejection.
-   */
-  readonly ready: Promise<ManagedRealtimeSession<Session>>;
-};
+  "state" | "close" | "send"
+> &
+  (Session extends { send: (...args: infer Args) => unknown }
+    ? {
+        /**
+         * Fire-and-forget, whatever the extension's own `send` returns. A send issued while the
+         * session is still opening is queued and delivered later, so there is no extension return
+         * value to hand back at the call site — the type says so rather than pretending. Delivery
+         * failures surface as diagnostics.
+         */
+        send: (...args: Args) => void;
+      }
+    : Record<never, never>) & {
+    readonly state: RealtimeState;
+    /**
+     * Always a promise, whatever the extension declared. The kernel substitutes its own idempotent
+     * teardown for the extension's `close`, and that teardown awaits every registered cleanup — so a
+     * caller that awaits this knows the resources are actually released, which is not something an
+     * extension returning `void` could promise. Calling it while the session is still opening
+     * cancels the negotiation.
+     */
+    close(): Promise<void>;
+    /**
+     * Resolves with this same handle once the session is live; rejects with the failure when
+     * opening fails or is aborted. Optional — every failure it can carry also reaches `onError`
+     * and `onState("failed")`, so a caller living entirely on callbacks never needs to touch it,
+     * and an ignored `ready` never becomes an unhandled rejection.
+     */
+    readonly ready: Promise<ManagedRealtimeSession<Session>>;
+  };
 
 /**
  * Options the KERNEL reads, accepted alongside whatever an extension declares.

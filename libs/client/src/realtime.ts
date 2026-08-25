@@ -1043,7 +1043,20 @@ export function createRealtimeClient({
       }
       for (const args of pending) {
         try {
-          (send as (...sendArgs: unknown[]) => void).apply(session, args);
+          const result = (send as (...sendArgs: unknown[]) => unknown).apply(
+            session,
+            args,
+          );
+          // A value-returning send has no call site left to observe it — the caller's send was
+          // fire-and-forget by contract — so an async delivery failure becomes a diagnostic
+          // rather than an unhandled rejection.
+          void Promise.resolve(result).catch(() =>
+            diagnostic({
+              kind: "warning",
+              message:
+                "A queued message could not be delivered to the session.",
+            }),
+          );
         } catch {
           diagnostic({
             kind: "warning",

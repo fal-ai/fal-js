@@ -155,6 +155,51 @@ describe("realtime extensions", () => {
     expect(errors).toHaveLength(1);
   });
 
+  it("reports an async delivery failure of a queued send as a diagnostic", async () => {
+    // send() is fire-and-forget by contract; a flushed queued message whose extension send
+    // rejects asynchronously must become a warning, not an unhandled rejection.
+    let releaseOpen!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseOpen = resolve;
+    });
+    const gated = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { send(message: string): void }
+    >({
+      id: "test/rejecting-send",
+      defaultEndpoint: "test/rejecting-send",
+      async open() {
+        await gate;
+        return {
+          send: (() =>
+            Promise.reject(new Error("delivery failed"))) as unknown as (
+            message: string,
+          ) => void,
+          close: jest.fn(),
+        };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const warnings: string[] = [];
+
+    const session = client.open(gated, {
+      onDiagnostic: (event) => {
+        if (event.kind === "warning") warnings.push(event.message);
+      },
+    });
+    session.send("queued");
+    releaseOpen();
+    await session.ready;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    expect(warnings).toEqual([
+      "A queued message could not be delivered to the session.",
+    ]);
+    await session.close();
+  });
+
   it("bounds the pre-live send queue and warns once about drops", async () => {
     const delivered: unknown[] = [];
     let releaseOpen!: () => void;
