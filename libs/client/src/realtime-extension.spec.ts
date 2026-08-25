@@ -943,6 +943,36 @@ describe("realtime extensions", () => {
     expect(Object.getOwnPropertyDescriptor(session, "count")?.value).toBe(1);
   });
 
+  it("purges mirrors for fields a method deleted between preventExtensions and freeze", async () => {
+    // A bound method can delete a configurable own field without passing the deleteProperty trap;
+    // the stale mirror must not keep the key enumerable or make a later freeze throw while
+    // pinning it on the now-non-extensible session.
+    const raw = {
+      close: jest.fn(),
+      transient: "here",
+      drop() {
+        delete (this as Record<string, unknown>).transient;
+      },
+    };
+    const mutable = defineRealtimeExtension<Record<never, never>, typeof raw>({
+      id: "test/method-deletion",
+      defaultEndpoint: "test/method-deletion",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(mutable, {}).ready;
+
+    Object.preventExtensions(session);
+    session.drop();
+    expect(() => Object.freeze(session)).not.toThrow();
+    expect(Object.keys(session)).not.toContain("transient");
+    expect((session as Record<string, unknown>).transient).toBeUndefined();
+  });
+
   it("refreshes sealed writable mirrors before freezing", async () => {
     // Sealed mirrors are non-configurable but still writable; a bound-method mutation between
     // seal and freeze must be re-synchronized, or freeze pins the stale value and reads throw.

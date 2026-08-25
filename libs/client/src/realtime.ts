@@ -1470,6 +1470,23 @@ export function createRealtimeClient({
           if (!Reflect.preventExtensions(session)) {
             return false;
           }
+          // Purge mirrors whose session key is GONE: a bound method can delete a configurable
+          // field without passing the deleteProperty trap, and a stale mirror would keep the key
+          // enumerable and make a later freeze throw while pinning it on the now-non-extensible
+          // session. Only still-configurable mirrors can be removed — pinned ones cannot have
+          // lost their session twin, since pinning always reaches the session first.
+          for (const property of Reflect.ownKeys(proxyTarget)) {
+            const existing = Reflect.getOwnPropertyDescriptor(
+              proxyTarget,
+              property,
+            );
+            if (
+              existing?.configurable &&
+              !Reflect.getOwnPropertyDescriptor(session, property)
+            ) {
+              Reflect.deleteProperty(proxyTarget, property);
+            }
+          }
           for (const property of Reflect.ownKeys(session)) {
             // Refresh EXISTING mirrors too, not only missing ones: a bound extension method
             // mutates the raw session without passing the set trap, so a freeze after an earlier
