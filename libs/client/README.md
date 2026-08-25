@@ -60,13 +60,18 @@ const result = await fal.subscribe("my-function-id", {
 that need WebRTC signaling, provider SDKs, heartbeats, or another negotiation
 protocol expose that behavior as an application-installed extension, and fal's
 own WebSocket protocol is available through the same door as
-[`websocket()`](#fals-own-websocket-protocol-behind-open):
+[`websocket()`](#fals-own-websocket-protocol-behind-open).
+
+`open()` returns **synchronously**, with negotiation already running eagerly
+behind the handle. You can render from `session.state`, call `send()`
+immediately — sends are queued in order (bounded) and flushed the moment the
+session is live — and hear about everything through callbacks:
 
 ```ts
 import { fal } from "@fal-ai/client";
 import { lucyRealtime } from "@fal-ai/client/realtime";
 
-const lucy = await fal.realtime.open(lucyRealtime(), {
+const lucy = fal.realtime.open(lucyRealtime(), {
   input: {
     prompt: "Turn me into a marble statue",
     image_url: firstCameraFrame,
@@ -76,11 +81,23 @@ const lucy = await fal.realtime.open(lucyRealtime(), {
   onMedia(stream) {
     outputVideo.srcObject = stream;
   },
+  onState: (state) => setStatus(state), // "opening" | "live" | "failed" | "closed"
+  onError: (error) => console.error(error), // the terminal failure, delivered once
 });
 
-lucy.send({ prompt: "Now make it cinematic" });
+lucy.send({ prompt: "Now make it cinematic" }); // queued if still opening
 await lucy.close();
 ```
+
+Prefer the awaited style? `session.ready` resolves with the same handle once
+the session is live and rejects with the failure, so `const lucy = await
+fal.realtime.open(...).ready` gives the promise-shaped call site — but no
+caller is required to hold a promise: every failure `ready` can carry also
+reaches `onError` and `onState("failed")`, and an ignored `ready` never
+becomes an unhandled rejection. Extension-specific members (like Lucy's
+`remoteStream`) materialize when the session does; the kernel members
+(`state`, `send`, `close`, `ready`) work from the first tick, and `close()`
+during `"opening"` cancels the negotiation.
 
 Extensions are ordinary installed JavaScript, never code loaded from endpoint
 metadata. fal owns cancellation and idempotent cleanup; the extension owns its
@@ -108,9 +125,10 @@ const dragonWorld = defineRealtimeExtension<{ prompt: string }, DragonSession>({
   },
 });
 
+// The full typed facade (roar) via the awaited style:
 const world = await fal.realtime.open(dragonWorld, {
   prompt: "A storm above a ruined castle",
-});
+}).ready;
 ```
 
 Which extension opens a session is always named at the call site. There is no
@@ -134,23 +152,24 @@ _when_ the socket opens:
 ```ts
 import { websocket } from "@fal-ai/client/realtime";
 
-const session = await fal.realtime.open(websocket("fal-ai/fast-lightning-sdxl"), {
+const session = fal.realtime.open(websocket("fal-ai/fast-lightning-sdxl"), {
   tokenProvider: getRealtimeToken,
   onResult: (result) => setImage(result.images[0].url),
   onState: (state) => setStatus(state),
+  onError: (error) => setError(error),
 });
 
-session.send({ prompt: "a moonlit harbour" });
+session.send({ prompt: "a moonlit harbour" }); // queued until the socket is live
 await session.close();
 ```
 
-`connect()` is lazy: it returns synchronously, opens on the first `send()`, and
-buffers anything sent before the socket is up. That laziness is where its
-five-state machine, its single-slot message buffer, and its connection cache all
-come from. Awaiting negotiation leaves none of them anything to do — you cannot
-hold a `send` before there is a socket to send on, a failed handshake is a
-rejected promise at the call site instead of a callback that may never fire, and
-`state` reads `"live"` only when the transport agrees.
+`connect()` is lazy: nothing happens until the first `send()`, so a wrong key or
+a missing endpoint looks exactly like a model that has not answered yet. Here
+the socket opens **eagerly** — negotiation starts the moment `open()` returns —
+while the handle stays synchronous: sends queue in order until the socket is
+live, a failed handshake is reported once through `onError` (and rejects
+`session.ready` for awaited call sites) instead of a callback that may never
+fire, and `state` reads `"live"` only when the transport agrees.
 
 Two behaviors are deliberately not carried over:
 
@@ -186,7 +205,7 @@ Every session reports the same coarse lifecycle regardless of protocol, so an ap
 than one model renders one status indicator rather than one per extension:
 
 ```ts
-const session = await fal.realtime.open(lucyRealtime(), {
+const session = fal.realtime.open(lucyRealtime(), {
   input: { prompt: "a storm over a ruined castle" },
   onState: (state) => setStatus(state), // "opening" | "live" | "failed" | "closed"
   onDiagnostic: (event) => {
@@ -194,7 +213,7 @@ const session = await fal.realtime.open(lucyRealtime(), {
   },
 });
 
-session.state; // the same value, readable at any time
+session.state; // the same value, readable at any time — "opening" from the first tick
 ```
 
 Four states, deliberately. Anything finer is protocol detail: `negotiating` means something specific in
@@ -225,7 +244,7 @@ Whatever comes back arrives through two callbacks named once, by the client, rat
 extension:
 
 ```ts
-const session = await fal.realtime.open(wma("fal-ai/wma-outstream"), {
+const session = fal.realtime.open(wma("fal-ai/wma-outstream"), {
   onMedia: (stream) => {
     videoEl.srcObject = stream;
   },

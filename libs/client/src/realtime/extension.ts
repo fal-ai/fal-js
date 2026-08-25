@@ -48,6 +48,12 @@ export type RealtimeState = "opening" | "live" | "failed" | "closed";
 /**
  * What `fal.realtime.open()` returns: the extension's own session, wrapped by the kernel.
  *
+ * Returned SYNCHRONOUSLY, in state `"opening"`, while negotiation runs eagerly behind it. The
+ * caller can hold the handle, render from `state`, and call `send()` immediately — queued sends
+ * are flushed in order the moment the session is live. Extension-specific members materialize
+ * when the session does; before that they read as `undefined`. `ready` is for the caller that
+ * wants the awaited style anyway.
+ *
  * The wrapper is why `state` is required here and optional on {@link RealtimeSession} — an
  * extension returns whatever it likes and the kernel adds the members it alone can guarantee: a
  * `close()` that is idempotent and runs the registered cleanups, and a `state` readable at any time.
@@ -63,9 +69,17 @@ export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
    * Always a promise, whatever the extension declared. The kernel substitutes its own idempotent
    * teardown for the extension's `close`, and that teardown awaits every registered cleanup — so a
    * caller that awaits this knows the resources are actually released, which is not something an
-   * extension returning `void` could promise.
+   * extension returning `void` could promise. Calling it while the session is still opening
+   * cancels the negotiation.
    */
   close(): Promise<void>;
+  /**
+   * Resolves with this same handle once the session is live; rejects with the failure when
+   * opening fails or is aborted. Optional — every failure it can carry also reaches `onError`
+   * and `onState("failed")`, so a caller living entirely on callbacks never needs to touch it,
+   * and an ignored `ready` never becomes an unhandled rejection.
+   */
+  readonly ready: Promise<ManagedRealtimeSession<Session>>;
 };
 
 /**
@@ -89,6 +103,15 @@ export interface RealtimeOpenOptions {
   abortSignal?: AbortSignal;
   /** Coarse lifecycle transitions, uniform across every extension. */
   onState?: (state: RealtimeState) => void;
+  /**
+   * The terminal failure, delivered once: the error that failed opening, the abort reason, or the
+   * transport failure an extension reported through `context.fail()`.
+   *
+   * This is the failure channel for the synchronous `open()` shape — there is no returned promise
+   * whose rejection could carry it, and requiring every caller to attach to `ready` would turn an
+   * optional convenience into an obligation.
+   */
+  onError?: (error: unknown) => void;
   /** Progress and failure reports. See {@link RealtimeDiagnostic}. */
   onDiagnostic?: (event: RealtimeDiagnostic) => void;
   /**

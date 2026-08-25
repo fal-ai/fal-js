@@ -37,9 +37,192 @@ describe("realtime extensions", () => {
 
     const session = await client.open(world, {
       label: "hello",
-    });
+    }).ready;
 
     expect(session.label).toBe("hello");
+  });
+
+  it("returns a usable handle synchronously and flushes queued sends in order", async () => {
+    // The whole point of the synchronous shape: the caller holds the handle immediately, renders
+    // from state, and sends without awaiting anything. Queued sends are delivered in order the
+    // moment the session is live, before any send issued from onState("live").
+    const delivered: string[] = [];
+    let releaseOpen!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseOpen = resolve;
+    });
+    const gated = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { send(message: string): void }
+    >({
+      id: "test/gated",
+      defaultEndpoint: "test/gated",
+      async open() {
+        await gate;
+        return {
+          send: (message: string) => delivered.push(message),
+          close: jest.fn(),
+        };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const states: string[] = [];
+
+    const session = client.open(gated, {
+      onState: (next) => {
+        states.push(next);
+        if (next === "live") session.send("from-onstate");
+      },
+    });
+
+    expect(session.state).toBe("opening");
+    session.send("first");
+    session.send("second");
+    expect(delivered).toEqual([]);
+
+    releaseOpen();
+    await session.ready;
+
+    expect(delivered).toEqual(["first", "second", "from-onstate"]);
+    expect(session.state).toBe("live");
+    expect(states).toEqual(["live"]);
+    await session.close();
+  });
+
+  it("reports open failures through onError and a rejected ready", async () => {
+    const failure = new Error("negotiation exploded");
+    const broken = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/broken-open",
+      defaultEndpoint: "test/broken-open",
+      async open() {
+        throw failure;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const errors: unknown[] = [];
+    const states: string[] = [];
+    const diagnostics: Array<Record<string, unknown>> = [];
+
+    const session = client.open(broken, {
+      onError: (error) => errors.push(error),
+      onState: (next) => states.push(next),
+      onDiagnostic: (event) => diagnostics.push(event),
+    });
+
+    await expect(session.ready).rejects.toBe(failure);
+    expect(errors).toEqual([failure]);
+    expect(states).toEqual(["failed"]);
+    expect(session.state).toBe("failed");
+    expect(diagnostics).toContainEqual({
+      kind: "failure",
+      message: "negotiation exploded",
+    });
+    // Sends after a terminal state are dropped, mirroring a dead transport.
+    expect(() =>
+      (session as { send?: (message: string) => void }).send?.("late"),
+    ).not.toThrow();
+  });
+
+  it("does not surface an ignored ready as an unhandled rejection", async () => {
+    const broken = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/ignored-ready",
+      defaultEndpoint: "test/ignored-ready",
+      async open() {
+        throw new Error("nobody is listening");
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const errors: unknown[] = [];
+
+    // Callback-only consumption: ready is never touched.
+    const session = client.open(broken, { onError: (e) => errors.push(e) });
+    // Give the rejection a macrotask to become "unhandled" if it ever could.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(session.state).toBe("failed");
+    expect(errors).toHaveLength(1);
+  });
+
+  it("bounds the pre-live send queue and warns once about drops", async () => {
+    const delivered: unknown[] = [];
+    let releaseOpen!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseOpen = resolve;
+    });
+    const gated = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { send(message: number): void }
+    >({
+      id: "test/queue-cap",
+      defaultEndpoint: "test/queue-cap",
+      async open() {
+        await gate;
+        return {
+          send: (message: number) => delivered.push(message),
+          close: jest.fn(),
+        };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const warnings: string[] = [];
+
+    const session = client.open(gated, {
+      onDiagnostic: (event) => {
+        if (event.kind === "warning") warnings.push(event.message);
+      },
+    });
+    for (let i = 0; i < 70; i += 1) {
+      session.send(i);
+    }
+    releaseOpen();
+    await session.ready;
+
+    // Oldest-first eviction: the newest 64 survive.
+    expect(delivered).toHaveLength(64);
+    expect(delivered[0]).toBe(6);
+    expect(delivered[63]).toBe(69);
+    expect(warnings).toHaveLength(1);
+    await session.close();
+  });
+
+  it("cancels a still-opening session through close()", async () => {
+    const neverOpens = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/never-opens",
+      defaultEndpoint: "test/never-opens",
+      open: (context) =>
+        new Promise((_resolve, reject) => {
+          context.signal.addEventListener("abort", () =>
+            reject(context.signal.reason),
+          );
+        }),
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = client.open(neverOpens, {});
+    expect(session.state).toBe("opening");
+    await session.close();
+
+    expect(session.state).toBe("closed");
+    await expect(session.ready).rejects.toBeDefined();
   });
 
   it("evaluates class session getters against the original instance", async () => {
@@ -76,7 +259,7 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const session = await client.open(classExtension, {});
+    const session = await client.open(classExtension, {}).ready;
 
     expect(session.label).toBe("private");
     session.label = "updated";
@@ -106,7 +289,7 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const session = await client.open(frozenExtension, {});
+    const session = await client.open(frozenExtension, {}).ready;
 
     expect(session.value).toBe(42);
     expect(session.state).toBe("live");
@@ -123,7 +306,7 @@ describe("realtime extensions", () => {
       const client = createRealtimeClient({
         config: createConfig({ credentials: "test-key" }),
       });
-      return client.open(extension(), { label });
+      return client.open(extension(), { label }).ready;
     };
 
     const prevented = await sessionFor("prevented");
@@ -165,7 +348,7 @@ describe("realtime extensions", () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
-    const session = await client.open(stateful, {});
+    const session = await client.open(stateful, {}).ready;
 
     Object.freeze(session);
     expect(session.state).toBe("live");
@@ -192,7 +375,7 @@ describe("realtime extensions", () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
-    const session = await client.open(mutableExtension, {});
+    const session = await client.open(mutableExtension, {}).ready;
 
     expect(delete session.removable).toBe(true);
     expect("removable" in raw).toBe(false);
@@ -219,24 +402,25 @@ describe("realtime extensions", () => {
     const session = await client.open(extension(), {
       endpointId: undefined,
       label: "defaulted",
-    });
+    }).ready;
 
     expect(session.label).toBe("defaulted");
   });
 
-  it("rejects an endpoint the extension declares it cannot open", async () => {
+  it("rejects an endpoint the extension declares it cannot open", () => {
     // `supports` is an optional guard, not a routing registry: catch a stale or mistyped id at the
-    // call site rather than partway through a negotiation that cannot succeed.
+    // call site rather than partway through a negotiation that cannot succeed. Misconfiguration is
+    // a programmer error, so the synchronous open() throws it synchronously.
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
 
-    await expect(
+    expect(() =>
       client.open(extension(), {
         endpointId: "someone-else/world",
         label: "wrong",
       }),
-    ).rejects.toThrow(
+    ).toThrow(
       'Realtime extension "test/world" does not support "someone-else/world".',
     );
   });
@@ -258,7 +442,7 @@ describe("realtime extensions", () => {
     });
 
     await expect(
-      client.open(anyEndpoint, { endpointId: "anything/at-all" }),
+      client.open(anyEndpoint, { endpointId: "anything/at-all" }).ready,
     ).resolves.toBeDefined();
   });
 
@@ -270,7 +454,7 @@ describe("realtime extensions", () => {
     const session = await client.open(extension(cleanup), {
       endpointId: "test/world",
       label: "cleanup",
-    });
+    }).ready;
 
     await session.close();
     await session.close();
@@ -290,7 +474,7 @@ describe("realtime extensions", () => {
     const session = await client.open(extension(cleanup), {
       endpointId: "test/world",
       label: "concurrent-cleanup",
-    });
+    }).ready;
 
     const first = session.close();
     const second = session.close();
@@ -335,7 +519,7 @@ describe("realtime extensions", () => {
         return { close: extensionClose };
       },
     });
-    const session = await client.open(reentrant, {});
+    const session = await client.open(reentrant, {}).ready;
 
     const closeFromCaller = session.close();
 
@@ -372,7 +556,7 @@ describe("realtime extensions", () => {
         return { close: () => context.close() };
       },
     });
-    const session = await client.open(reentrant, {});
+    const session = await client.open(reentrant, {}).ready;
 
     await session.close();
 
@@ -402,7 +586,7 @@ describe("realtime extensions", () => {
         return new SelfClosingSession();
       },
     });
-    const session = await client.open(selfClosing, {});
+    const session = await client.open(selfClosing, {}).ready;
 
     await session.stop();
 
@@ -442,7 +626,7 @@ describe("realtime extensions", () => {
         return frozen;
       },
     });
-    const session = await client.open(frozenExtension, {});
+    const session = await client.open(frozenExtension, {}).ready;
 
     expect(session.label).toBe("frozen-private");
     expect(session.readLabel()).toBe("frozen-private");
@@ -462,7 +646,7 @@ describe("realtime extensions", () => {
       client.open(world, {
         label: "aborted",
         abortSignal: controller.signal,
-      }),
+      }).ready,
     ).rejects.toBe(reason);
 
     expect(open).not.toHaveBeenCalled();
@@ -491,7 +675,7 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const opening = client.open(late, { abortSignal: controller.signal });
+    const opening = client.open(late, { abortSignal: controller.signal }).ready;
     controller.abort(reason);
     finishSetup();
 
@@ -517,7 +701,7 @@ describe("realtime extensions", () => {
     });
     const session = await client.open(brokenClose, {
       abortSignal: controller.signal,
-    });
+    }).ready;
 
     controller.abort(new Error("user left"));
 
@@ -556,7 +740,7 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const opening = client.open(late, { abortSignal: controller.signal });
+    const opening = client.open(late, { abortSignal: controller.signal }).ready;
     controller.abort(reason);
     finishSetup();
 
@@ -592,7 +776,7 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const opening = client.open(late, { abortSignal: controller.signal });
+    const opening = client.open(late, { abortSignal: controller.signal }).ready;
     let settled = false;
     void opening.then(
       () => {
@@ -641,7 +825,9 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const opening = client.open(broken, { abortSignal: controller.signal });
+    const opening = client.open(broken, {
+      abortSignal: controller.signal,
+    }).ready;
     let settled = false;
     void opening.then(
       () => {
@@ -685,13 +871,15 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const opening = client.open(waiting, { abortSignal: controller.signal });
+    const opening = client.open(waiting, {
+      abortSignal: controller.signal,
+    }).ready;
     controller.abort(reason);
 
     await expect(opening).rejects.toBe(reason);
   });
 
-  it("reports an extension that cannot name an endpoint to open", async () => {
+  it("reports an extension that cannot name an endpoint to open", () => {
     const noDefault = defineRealtimeExtension<
       { endpointId?: string },
       RealtimeSession
@@ -705,7 +893,8 @@ describe("realtime extensions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    await expect(client.open(noDefault, {})).rejects.toThrow(
+    // Misconfiguration is a programmer error; the synchronous open() throws it synchronously.
+    expect(() => client.open(noDefault, {})).toThrow(
       'Realtime extension "test/no-default" requires an endpointId option',
     );
   });
@@ -728,7 +917,7 @@ describe("realtime extension context additions", () => {
       },
     });
 
-    await expect(client.open(probe, {})).rejects.toThrow(
+    await expect(client.open(probe, {}).ready).rejects.toThrow(
       "requires an app endpoint id",
     );
   });
@@ -763,7 +952,7 @@ describe("realtime extension context additions", () => {
       },
     });
 
-    await client.open(probe, {});
+    await client.open(probe, {}).ready;
     expect(seen).toHaveLength(1);
     expect(seen[0].url).toBe("https://wma.fal.run/session");
     const headers = new Headers(seen[0].init.headers);
@@ -814,7 +1003,9 @@ describe("realtime extension context additions", () => {
     });
 
     const controller = new AbortController();
-    const opening = client.open(probe, { abortSignal: controller.signal });
+    const opening = client.open(probe, {
+      abortSignal: controller.signal,
+    }).ready;
     const settled = opening.catch((error) => error);
     await started;
     const reason = new Error("session aborted");
@@ -855,7 +1046,7 @@ describe("realtime extension context additions", () => {
     const controller = new AbortController();
     const session = await client.open(probe, {
       abortSignal: controller.signal,
-    });
+    }).ready;
     expect(observed?.aborted).toBe(false);
 
     controller.abort(new Error("late abort"));
@@ -898,7 +1089,7 @@ describe("realtime extension context additions", () => {
       },
     });
 
-    const session = await client.open(probe, {});
+    const session = await client.open(probe, {}).ready;
     // The first request may install the one shared session hook; later requests add nothing.
     expect(listenersPerBeat[3]).toBe(listenersPerBeat[0]);
     await session.close();
@@ -923,7 +1114,7 @@ describe("realtime extension context additions", () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
     });
-    const session = await client.open(probe, {});
+    const session = await client.open(probe, {}).ready;
 
     const order: string[] = [];
     const closing = session.close();
@@ -966,7 +1157,7 @@ describe("realtime extension context additions", () => {
       },
     });
 
-    await client.open(probe, {});
+    await client.open(probe, {}).ready;
 
     expect(seen[0].body).toBeInstanceOf(FormData);
     expect(new Headers(seen[0].headers).has("content-type")).toBe(false);
@@ -1011,7 +1202,7 @@ describe("realtime extension context additions", () => {
       config: createConfig({ credentials: "test-key" }),
     });
 
-    const opening = client.open(probe, {});
+    const opening = client.open(probe, {}).ready;
     await started;
     iceController.abort(reason);
 
@@ -1040,7 +1231,7 @@ describe("realtime extension context additions", () => {
       },
     });
 
-    await expect(client.open(probe, {})).rejects.toThrow(
+    await expect(client.open(probe, {}).ready).rejects.toThrow(
       "restricted to fal-operated HTTPS hosts",
     );
     expect(requestMiddleware).not.toHaveBeenCalled();
@@ -1076,7 +1267,7 @@ describe("realtime extension context additions", () => {
       },
     });
 
-    await client.open(probe, {});
+    await client.open(probe, {}).ready;
 
     expect(requestMiddleware).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1113,7 +1304,7 @@ describe("realtime extension context additions", () => {
     await client.open(probe, {
       onMedia: (value) => media.push(value),
       onData: (value) => data.push(value),
-    });
+    }).ready;
     expect(media).toEqual([stream]);
     expect(data).toEqual(['{"a":1}']);
   });
@@ -1141,7 +1332,7 @@ describe("realtime extension context additions", () => {
     const session = await client.open(probe, {
       onMedia: media,
       onData: data,
-    });
+    }).ready;
 
     const closing = session.close();
     emitMedia({ id: "late" } as unknown as MediaStream);
@@ -1183,7 +1374,7 @@ describe("realtime extension context additions", () => {
       onData: () => {
         throw new Error("parse exploded");
       },
-    });
+    }).ready;
     // open() resolved at all, which is the assertion: both throws were swallowed at the boundary.
     expect((session as unknown as { reached: boolean }).reached).toBe(true);
     expect(session.state).toBe("live");
@@ -1211,7 +1402,7 @@ describe("realtime extension context additions", () => {
         return { close: jest.fn() };
       },
     });
-    await expect(client.open(probe, {})).resolves.toBeDefined();
+    await expect(client.open(probe, {}).ready).resolves.toBeDefined();
   });
 
   it("context.fetch does not call the configured fetch as a method", async () => {
@@ -1238,7 +1429,7 @@ describe("realtime extension context additions", () => {
       },
     });
     await expect(
-      client.open(probe, { endpointId: "test/receiver" } as never),
+      client.open(probe, { endpointId: "test/receiver" } as never).ready,
     ).resolves.toBeDefined();
   });
 
@@ -1267,7 +1458,7 @@ describe("realtime extension context additions", () => {
         return { close: jest.fn() };
       },
     });
-    await client.open(probe, { endpointId: "test/proxy" } as never);
+    await client.open(probe, { endpointId: "test/proxy" } as never).ready;
     expect(target).toBe("https://proxy.example/forward");
   });
 
@@ -1289,7 +1480,7 @@ describe("realtime extension context additions", () => {
     const session = await client.open(probe, {
       endpointId: "test/state",
       onState: (next: string) => states.push(next),
-    } as never);
+    } as never).ready;
     expect(session.state).toBe("live");
     await session.close();
     expect(session.state).toBe("closed");
@@ -1314,7 +1505,7 @@ describe("realtime extension context additions", () => {
       client.open(broken, {
         endpointId: "test/broken",
         onState: (next: string) => states.push(next),
-      } as never),
+      } as never).ready,
     ).rejects.toThrow("negotiation failed");
     // "failed" and nothing after it. Teardown still runs, but reporting it would overwrite the only
     // thing separating a crash from a clean teardown — and "closed" is what a caller would have seen
@@ -1347,7 +1538,7 @@ describe("realtime extension context additions", () => {
       endpointId: "test/fail",
       onState: (next: string) => states.push(next),
       onDiagnostic: (event: unknown) => events.push(event),
-    } as never);
+    } as never).ready;
 
     await failFromInside!("peer connection died");
     // "failed" latches over the teardown it triggers. Publishing "closed" afterward would erase the
@@ -1397,7 +1588,7 @@ describe("realtime extension context additions", () => {
         events.push(event);
         throw new Error("a caller's reporting bug must not fail the session");
       },
-    } as never);
+    } as never).ready;
     expect(events).toEqual([
       { kind: "progress", phase: "negotiating" },
       { kind: "failure", message: "no relay", observed: { relay: 0 } },
@@ -1421,7 +1612,7 @@ describe("realtime extension context additions", () => {
       },
     });
     await expect(
-      client.open(probe, { endpointId: "test/quiet" } as never),
+      client.open(probe, { endpointId: "test/quiet" } as never).ready,
     ).resolves.toBeDefined();
   });
 });

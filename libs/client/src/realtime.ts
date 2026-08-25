@@ -340,12 +340,18 @@ export interface RealtimeClient {
    * Open a model-specific realtime session with an explicitly supplied
    * extension. This form preserves the extension's options and session types.
    *
+   * Returns the managed session SYNCHRONOUSLY, in state `"opening"`, while negotiation starts
+   * eagerly behind it — the caller holds a usable handle immediately, `send()` queues until the
+   * session is live, and failures arrive through `onError` and `onState("failed")`. Await
+   * `session.ready` for the promise-style call site; misconfiguration (no endpoint, an endpoint
+   * the extension rejects) still throws synchronously.
+   *
    * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
    */
   open<Extension extends AnyRealtimeExtension>(
     extension: Extension,
     options: RealtimeExtensionOptions<Extension> & RealtimeOpenOptions,
-  ): Promise<ManagedRealtimeSession<RealtimeExtensionSession<Extension>>>;
+  ): ManagedRealtimeSession<RealtimeExtensionSession<Extension>>;
 }
 
 type ConnectionStateMachine = {
@@ -790,10 +796,10 @@ export function createRealtimeClient({
     open: undefined as unknown as RealtimeClient["open"],
   };
 
-  async function open(
+  function open(
     extension: AnyRealtimeExtension,
     options: unknown,
-  ): Promise<RealtimeSession> {
+  ): RealtimeSession {
     const rawOptionEndpointId =
       typeof options === "object" && options !== null && "endpointId" in options
         ? (options as { endpointId: unknown }).endpointId
@@ -939,14 +945,82 @@ export function createRealtimeClient({
       }
     };
     if (externalSignal?.aborted) {
+      // Not a synchronous throw: an already-aborted signal is a legitimate race (a component
+      // unmounting mid-render), not a programmer error. The opening task observes the aborted
+      // controller before calling the extension and fails the handle through the normal channels.
       controller.abort(externalSignal.reason);
-      throw (
-        externalSignal.reason ??
-        new DOMException("Realtime open aborted", "AbortError")
-      );
     } else {
       externalSignal?.addEventListener("abort", abort, { once: true });
     }
+
+    // The failure channel for the synchronous handle: there is no returned promise whose
+    // rejection could carry a terminal error, so it is delivered once through onError — and
+    // through `ready` for callers who chose the awaited style.
+    const onError = (options as { onError?: (error: unknown) => void })
+      ?.onError;
+    let errorReported = false;
+    const reportError = (error: unknown) => {
+      if (errorReported) return;
+      errorReported = true;
+      try {
+        onError?.(error);
+      } catch {
+        // A caller's error handler must never be able to fail teardown.
+      }
+    };
+    let resolveReady!: (value: RealtimeSession) => void;
+    let rejectReady!: (error: unknown) => void;
+    const ready = new Promise<RealtimeSession>((resolve, reject) => {
+      resolveReady = resolve;
+      rejectReady = reject;
+    });
+    // A caller may consume the session entirely through callbacks; an ignored `ready` must not
+    // surface a failed open as an unhandled rejection.
+    ready.catch(() => undefined);
+
+    // The handle is usable the moment open() returns: sends while "opening" are queued, bounded,
+    // and flushed in order the instant the session is live. Oldest-first eviction, because for a
+    // realtime input stream the newest message is the one that still matters. After a terminal
+    // state sends are dropped, mirroring what the extensions do with a dead transport.
+    const MAX_QUEUED_SENDS = 64;
+    const queuedSends: unknown[][] = [];
+    let warnedQueueOverflow = false;
+    const queuedSend = (...args: unknown[]) => {
+      if (state !== "opening") return;
+      if (queuedSends.length >= MAX_QUEUED_SENDS) {
+        queuedSends.shift();
+        if (!warnedQueueOverflow) {
+          warnedQueueOverflow = true;
+          diagnostic({
+            kind: "warning",
+            message: `More than ${MAX_QUEUED_SENDS} messages were queued before the session became live; the oldest are being dropped.`,
+          });
+        }
+      }
+      queuedSends.push(args);
+    };
+    const flushQueuedSends = () => {
+      if (queuedSends.length === 0 || !session) return;
+      const pending = queuedSends.splice(0);
+      const send = Reflect.get(session, "send", session) as unknown;
+      if (typeof send !== "function") {
+        diagnostic({
+          kind: "warning",
+          message: `The extension session has no send(); ${pending.length} queued message(s) were dropped.`,
+        });
+        return;
+      }
+      for (const args of pending) {
+        try {
+          (send as (...sendArgs: unknown[]) => void).apply(session, args);
+        } catch {
+          diagnostic({
+            kind: "warning",
+            message: "A queued message could not be delivered to the session.",
+          });
+        }
+      }
+    };
 
     // A request-local signal an extension hands to context.fetch() or context.gatherIce() must not
     // displace the managed session signal: either one aborts the work. Hand-rolled rather than
@@ -1046,264 +1120,130 @@ export function createRealtimeClient({
       }
     };
 
-    try {
-      session = await extension.open(
-        {
-          endpointId,
-          signal: controller.signal,
-          run: <Input, Output>(
-            id: string,
-            runOptions: RunOptions<Input>,
-          ): Promise<Result<Output>> => {
-            const normalizedId = id.trim();
-            if (
-              /^[a-z][a-z\d+.-]*:/i.test(normalizedId) ||
-              normalizedId.startsWith("//")
-            ) {
-              throw new Error(
-                "Realtime extension run() requires an app endpoint id, not an absolute URL.",
-              );
+    // The handle exists before the session does. The neutral target starts bare and adopts the
+    // session's prototype when it arrives; every trap treats "no session yet" as "the facade has
+    // no members yet", while the kernel members — state, close, ready, and the queueing send —
+    // work from the first tick.
+    const proxyTarget = Object.create(null) as RealtimeSession;
+    const boundMethods = new Map<
+      PropertyKey,
+      { source: unknown; bound: unknown }
+    >();
+    // What the `get` trap serves for a property, shared with the traps that mirror properties
+    // onto the neutral target: once the target is non-extensible, the language requires a
+    // non-configurable, non-writable target value and the trap result to be the SAME value, so
+    // both sides must resolve through one function.
+    const resolveProperty = (property: PropertyKey, value: unknown) => {
+      if (property === "close") return cleanup;
+      if (property === "state") return state;
+      if (property === "ready") return ready;
+      if (typeof value !== "function") return value;
+      const cached = boundMethods.get(property);
+      if (cached?.source === value) return cached.bound;
+      // Class methods must always observe the original instance. In particular, a Proxy cannot
+      // satisfy private-field brand checks, and a frozen instance cannot have its raw `close`
+      // hook replaced. Extensions end themselves through context.close(); the session's own
+      // close method is the resource hook the kernel invokes during managed teardown.
+      const bound = value.bind(session);
+      boundMethods.set(property, { source: value, bound });
+      return bound;
+    };
+    const mirrorOntoTarget = (
+      property: PropertyKey,
+      descriptor: PropertyDescriptor,
+    ) =>
+      Reflect.defineProperty(
+        proxyTarget,
+        property,
+        "value" in descriptor
+          ? {
+              ...descriptor,
+              value: resolveProperty(property, descriptor.value),
             }
-            if (!getClient) {
-              throw new Error(
-                "This realtime client was created without fal request access.",
-              );
-            }
-            return getClient().run(
-              normalizedId,
-              runOptions as RunOptions<Record<string, any>>,
-            ) as Promise<Result<Output>>;
-          },
-          connect: realtimeClient.connect,
-          // Credentials, request middleware and proxy come from the parent client, so a proxied
-          // application stays proxied and the extension never sees a key. Raw `Response` rather than
-          // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
-          fetch: async (url: string, init: RequestInit = {}) => {
-            // Validate the extension-controlled destination before middleware may rewrite it to an
-            // application-controlled proxy. Otherwise an extension could send the parent API key to
-            // an arbitrary host merely by naming it here.
-            assertFalInfrastructureUrl(url);
-            // Destructure before invocation: native fetch validates its receiver, so calling it as a
-            // method of the config object can throw "Illegal invocation".
-            const { fetch: doFetch, credentials: credentialsValue } = config;
-            const credentials =
-              typeof credentialsValue === "function"
-                ? credentialsValue()
-                : credentialsValue;
-            let requestHeaders: Record<string, string> | undefined;
-            if (init.headers !== undefined) {
-              const normalized: Record<string, string> = {};
-              new Headers(init.headers).forEach((value, key) => {
-                normalized[key] = value;
-              });
-              requestHeaders = normalized;
-            }
-            const {
-              method,
-              url: targetUrl,
-              headers,
-            } = await config.requestMiddleware({
-              method: (init.method ?? "POST").toUpperCase(),
-              url,
-              headers: requestHeaders,
-            });
-            const finalHeaders = new Headers();
-            if (credentials) {
-              finalHeaders.set("Authorization", `Key ${credentials}`);
-            }
-            for (const [name, value] of Object.entries(headers ?? {})) {
-              finalHeaders.set(
-                name,
-                Array.isArray(value) ? value.join(", ") : value,
-              );
-            }
-            const { signal, dispose } = withSessionSignal(init.signal);
-            try {
-              const response = await doFetch(targetUrl, {
-                ...init,
-                method,
-                signal,
-                headers: finalHeaders,
-              });
-              // The Response outlives this call: callers read the body afterwards, and a fetch
-              // signal also cancels those reads. Disposing here would sever the combination just
-              // when a stalled body needs it — keep it until the body is consumed or a side aborts.
-              disposeWhenBodyConsumed(response, dispose);
-              return response;
-            } catch (error) {
-              dispose();
-              throw error;
-            }
-          },
-          gatherIce: async (pc, iceOptions) => {
-            const { signal, dispose } = withSessionSignal(iceOptions?.signal);
-            try {
-              return await gatherIceCandidates(pc, {
-                ...iceOptions,
-                signal,
-                onProgress: (result) =>
-                  diagnostic({
-                    kind: "progress",
-                    phase: "ice-gathering",
-                    detail: { ...result },
-                  }),
-              });
-            } finally {
-              dispose();
-            }
-          },
-          diagnostic,
-          media,
-          data,
-          fail: async (
-            message: string,
-            observed?: Record<string, number | string>,
-          ) => {
-            diagnostic({ kind: "failure", message, observed });
-            // Before cleanup: cleanup sets "closed", and a caller watching transitions needs to see
-            // that this session died rather than ended.
-            setState("failed");
-            await cleanup();
-          },
-          addCleanup: (release) => {
-            if (closed) {
-              const lateCleanup = Promise.resolve()
-                .then(release)
-                .catch(() => {
-                  // Late registration follows the same best-effort rule as normal teardown.
-                });
-              lateCleanups.push(lateCleanup);
-            } else {
-              cleanups.push(release);
-            }
-          },
-          close: () => (sessionCloseInProgress ? Promise.resolve() : cleanup()),
-        },
-        options,
+          : descriptor,
       );
-      extensionClose = session.close.bind(session);
-      // Raw class methods are bound to the original instance for private fields.
-      // Route an internal this.close() through managed teardown when possible.
-      Reflect.set(session, "close", cleanup, session);
-      if (controller.signal.aborted) {
-        try {
-          await closeSession();
-        } catch {
-          // Preserve the caller's abort reason when a late session close hook is broken.
-        }
-        await cleanup();
-        await drainLateCleanups();
-        throw controller.signal.reason ?? new Error("Realtime open aborted");
-      }
-      setState("live");
-      const proxyTarget = Object.create(
-        Object.getPrototypeOf(session),
-      ) as RealtimeSession;
-      const boundMethods = new Map<
-        PropertyKey,
-        { source: unknown; bound: unknown }
-      >();
-      // What the `get` trap serves for a property, shared with the traps that mirror properties
-      // onto the neutral target: once the target is non-extensible, the language requires a
-      // non-configurable, non-writable target value and the trap result to be the SAME value, so
-      // both sides must resolve through one function.
-      const resolveProperty = (property: PropertyKey, value: unknown) => {
-        if (property === "close") return cleanup;
-        if (property === "state") return state;
-        if (typeof value !== "function") return value;
-        const cached = boundMethods.get(property);
-        if (cached?.source === value) return cached.bound;
-        // Class methods must always observe the original instance. In particular, a Proxy cannot
-        // satisfy private-field brand checks, and a frozen instance cannot have its raw `close`
-        // hook replaced. Extensions end themselves through context.close(); the session's own
-        // close method is the resource hook the kernel invokes during managed teardown.
-        const bound = value.bind(session);
-        boundMethods.set(property, { source: value, bound });
-        return bound;
-      };
-      const mirrorOntoTarget = (
-        property: PropertyKey,
-        descriptor: PropertyDescriptor,
-      ) =>
-        Reflect.defineProperty(
-          proxyTarget,
-          property,
-          "value" in descriptor
-            ? {
-                ...descriptor,
-                value: resolveProperty(property, descriptor.value),
-              }
-            : descriptor,
-        );
-      return new Proxy(proxyTarget, {
-        get(_target, property) {
-          if (property === "state") {
-            const pinned = Reflect.getOwnPropertyDescriptor(
-              proxyTarget,
-              property,
-            );
-            // A caller that froze the session pinned `state` at its frozen value; the invariant for
-            // a non-configurable, non-writable data property forbids reporting anything newer.
-            if (
-              pinned &&
-              !pinned.configurable &&
-              pinned.writable === false &&
-              "value" in pinned
-            ) {
-              return pinned.value;
-            }
-            return state;
-          }
-          return resolveProperty(
-            property,
-            Reflect.get(session, property, session),
-          );
-        },
-        set(_target, property, value) {
-          const updated = Reflect.set(session, property, value, session);
-          const targetDescriptor = Reflect.getOwnPropertyDescriptor(
+    const handle = new Proxy(proxyTarget, {
+      get(_target, property) {
+        if (property === "state") {
+          const pinned = Reflect.getOwnPropertyDescriptor(
             proxyTarget,
             property,
           );
+          // A caller that froze the session pinned `state` at its frozen value; the invariant for
+          // a non-configurable, non-writable data property forbids reporting anything newer.
           if (
-            updated &&
-            targetDescriptor &&
-            !targetDescriptor.configurable &&
-            "value" in targetDescriptor &&
-            targetDescriptor.writable
+            pinned &&
+            !pinned.configurable &&
+            pinned.writable === false &&
+            "value" in pinned
           ) {
-            Reflect.set(proxyTarget, property, value, proxyTarget);
+            return pinned.value;
           }
-          return updated;
-        },
-        defineProperty(_target, property, descriptor) {
-          if (!Reflect.defineProperty(session, property, descriptor)) {
-            return false;
-          }
-          // A non-configurable property must also exist on the neutral target or the Proxy would
-          // violate the language's invariants. Configurable properties can remain source-only —
-          // unless the target is already non-extensible, where its key set must track the session's.
-          return descriptor.configurable === false ||
-            !Reflect.isExtensible(proxyTarget)
-            ? mirrorOntoTarget(property, descriptor)
-            : true;
-        },
-        deleteProperty(_target, property) {
-          boundMethods.delete(property);
-          if (!Reflect.deleteProperty(session, property)) {
-            return false;
-          }
-          // Keep the neutral target's key set in step with the session's, or a delete after
-          // `Object.preventExtensions()` would leave `ownKeys` reporting fewer keys than the
-          // non-extensible target owns.
-          return Reflect.deleteProperty(proxyTarget, property);
-        },
-        preventExtensions() {
-          // `Object.freeze()`, `Object.seal()`, and `Object.preventExtensions()` all land here
-          // first. Once the target is non-extensible the language requires `ownKeys` to report
-          // exactly the target's own keys, so mirror every session key onto the target — with the
-          // same values the `get` trap serves — and make the session non-extensible too so no new
-          // key can appear later on one side only.
+          return state;
+        }
+        if (property === "ready") return ready;
+        if (property === "close") return cleanup;
+        if (!session) {
+          // `send` queues while opening so the handle is usable immediately; the rest of the
+          // extension's facade materializes with the session. Note `then` also lands here as
+          // undefined, so `await open(...)` passes the handle through instead of hanging on it.
+          return property === "send" ? queuedSend : undefined;
+        }
+        return resolveProperty(
+          property,
+          Reflect.get(session, property, session),
+        );
+      },
+      set(_target, property, value) {
+        if (!session) return false;
+        const updated = Reflect.set(session, property, value, session);
+        const targetDescriptor = Reflect.getOwnPropertyDescriptor(
+          proxyTarget,
+          property,
+        );
+        if (
+          updated &&
+          targetDescriptor &&
+          !targetDescriptor.configurable &&
+          "value" in targetDescriptor &&
+          targetDescriptor.writable
+        ) {
+          Reflect.set(proxyTarget, property, value, proxyTarget);
+        }
+        return updated;
+      },
+      defineProperty(_target, property, descriptor) {
+        if (!session) return false;
+        if (!Reflect.defineProperty(session, property, descriptor)) {
+          return false;
+        }
+        // A non-configurable property must also exist on the neutral target or the Proxy would
+        // violate the language's invariants. Configurable properties can remain source-only —
+        // unless the target is already non-extensible, where its key set must track the session's.
+        return descriptor.configurable === false ||
+          !Reflect.isExtensible(proxyTarget)
+          ? mirrorOntoTarget(property, descriptor)
+          : true;
+      },
+      deleteProperty(_target, property) {
+        if (!session) return false;
+        boundMethods.delete(property);
+        if (!Reflect.deleteProperty(session, property)) {
+          return false;
+        }
+        // Keep the neutral target's key set in step with the session's, or a delete after
+        // `Object.preventExtensions()` would leave `ownKeys` reporting fewer keys than the
+        // non-extensible target owns.
+        return Reflect.deleteProperty(proxyTarget, property);
+      },
+      preventExtensions() {
+        // `Object.freeze()`, `Object.seal()`, and `Object.preventExtensions()` all land here
+        // first. Once the target is non-extensible the language requires `ownKeys` to report
+        // exactly the target's own keys, so mirror every session key onto the target — with the
+        // same values the `get` trap serves — and make the session non-extensible too so no new
+        // key can appear later on one side only. Freezing a handle that is still opening locks
+        // the facade empty; the kernel members keep working because they are trap-served.
+        if (session) {
           if (!Reflect.preventExtensions(session)) {
             return false;
           }
@@ -1318,41 +1258,238 @@ export function createRealtimeClient({
               }
             }
           }
-          return Reflect.preventExtensions(proxyTarget);
-        },
-        has(_target, property) {
-          return (
-            property === "close" ||
-            property === "state" ||
-            Reflect.has(session, property)
+        }
+        return Reflect.preventExtensions(proxyTarget);
+      },
+      has(_target, property) {
+        if (
+          property === "close" ||
+          property === "state" ||
+          property === "ready"
+        ) {
+          return true;
+        }
+        return session ? Reflect.has(session, property) : false;
+      },
+      ownKeys() {
+        // Before the session exists — and once the target is non-extensible, when the language
+        // requires exact agreement — the neutral target is the source of truth.
+        if (!session || !Reflect.isExtensible(proxyTarget)) {
+          return Reflect.ownKeys(proxyTarget);
+        }
+        return Reflect.ownKeys(session);
+      },
+      getOwnPropertyDescriptor(_target, property) {
+        const targetDescriptor = Reflect.getOwnPropertyDescriptor(
+          proxyTarget,
+          property,
+        );
+        if (targetDescriptor && !targetDescriptor.configurable) {
+          return targetDescriptor;
+        }
+        if (!session) {
+          return targetDescriptor;
+        }
+        const descriptor = Reflect.getOwnPropertyDescriptor(session, property);
+        return descriptor ? { ...descriptor, configurable: true } : undefined;
+      },
+    }) as RealtimeSession;
+
+    const openTask = async (): Promise<void> => {
+      try {
+        if (controller.signal.aborted) {
+          throw (
+            controller.signal.reason ??
+            new DOMException("Realtime open aborted", "AbortError")
           );
-        },
-        ownKeys() {
-          return Reflect.ownKeys(session);
-        },
-        getOwnPropertyDescriptor(_target, property) {
-          const targetDescriptor = Reflect.getOwnPropertyDescriptor(
-            proxyTarget,
-            property,
-          );
-          if (targetDescriptor && !targetDescriptor.configurable) {
-            return targetDescriptor;
+        }
+        session = await extension.open(
+          {
+            endpointId,
+            signal: controller.signal,
+            run: <Input, Output>(
+              id: string,
+              runOptions: RunOptions<Input>,
+            ): Promise<Result<Output>> => {
+              const normalizedId = id.trim();
+              if (
+                /^[a-z][a-z\d+.-]*:/i.test(normalizedId) ||
+                normalizedId.startsWith("//")
+              ) {
+                throw new Error(
+                  "Realtime extension run() requires an app endpoint id, not an absolute URL.",
+                );
+              }
+              if (!getClient) {
+                throw new Error(
+                  "This realtime client was created without fal request access.",
+                );
+              }
+              return getClient().run(
+                normalizedId,
+                runOptions as RunOptions<Record<string, any>>,
+              ) as Promise<Result<Output>>;
+            },
+            connect: realtimeClient.connect,
+            // Credentials, request middleware and proxy come from the parent client, so a proxied
+            // application stays proxied and the extension never sees a key. Raw `Response` rather than
+            // a parsed result: this reaches infrastructure that does not speak fal's result envelope.
+            fetch: async (url: string, init: RequestInit = {}) => {
+              // Validate the extension-controlled destination before middleware may rewrite it to an
+              // application-controlled proxy. Otherwise an extension could send the parent API key to
+              // an arbitrary host merely by naming it here.
+              assertFalInfrastructureUrl(url);
+              // Destructure before invocation: native fetch validates its receiver, so calling it as a
+              // method of the config object can throw "Illegal invocation".
+              const { fetch: doFetch, credentials: credentialsValue } = config;
+              const credentials =
+                typeof credentialsValue === "function"
+                  ? credentialsValue()
+                  : credentialsValue;
+              let requestHeaders: Record<string, string> | undefined;
+              if (init.headers !== undefined) {
+                const normalized: Record<string, string> = {};
+                new Headers(init.headers).forEach((value, key) => {
+                  normalized[key] = value;
+                });
+                requestHeaders = normalized;
+              }
+              const {
+                method,
+                url: targetUrl,
+                headers,
+              } = await config.requestMiddleware({
+                method: (init.method ?? "POST").toUpperCase(),
+                url,
+                headers: requestHeaders,
+              });
+              const finalHeaders = new Headers();
+              if (credentials) {
+                finalHeaders.set("Authorization", `Key ${credentials}`);
+              }
+              for (const [name, value] of Object.entries(headers ?? {})) {
+                finalHeaders.set(
+                  name,
+                  Array.isArray(value) ? value.join(", ") : value,
+                );
+              }
+              const { signal, dispose } = withSessionSignal(init.signal);
+              try {
+                const response = await doFetch(targetUrl, {
+                  ...init,
+                  method,
+                  signal,
+                  headers: finalHeaders,
+                });
+                // The Response outlives this call: callers read the body afterwards, and a fetch
+                // signal also cancels those reads. Disposing here would sever the combination just
+                // when a stalled body needs it — keep it until the body is consumed or a side aborts.
+                disposeWhenBodyConsumed(response, dispose);
+                return response;
+              } catch (error) {
+                dispose();
+                throw error;
+              }
+            },
+            gatherIce: async (pc, iceOptions) => {
+              const { signal, dispose } = withSessionSignal(iceOptions?.signal);
+              try {
+                return await gatherIceCandidates(pc, {
+                  ...iceOptions,
+                  signal,
+                  onProgress: (result) =>
+                    diagnostic({
+                      kind: "progress",
+                      phase: "ice-gathering",
+                      detail: { ...result },
+                    }),
+                });
+              } finally {
+                dispose();
+              }
+            },
+            diagnostic,
+            media,
+            data,
+            fail: async (
+              message: string,
+              observed?: Record<string, number | string>,
+            ) => {
+              diagnostic({ kind: "failure", message, observed });
+              // Before cleanup: cleanup sets "closed", and a caller watching transitions needs to see
+              // that this session died rather than ended.
+              setState("failed");
+              const failure = new Error(message);
+              reportError(failure);
+              // No-ops once the session went live; before that, a caller awaiting `ready` must not
+              // wait out a negotiation the extension has already declared dead.
+              rejectReady(failure);
+              await cleanup();
+            },
+            addCleanup: (release) => {
+              if (closed) {
+                const lateCleanup = Promise.resolve()
+                  .then(release)
+                  .catch(() => {
+                    // Late registration follows the same best-effort rule as normal teardown.
+                  });
+                lateCleanups.push(lateCleanup);
+              } else {
+                cleanups.push(release);
+              }
+            },
+            close: () =>
+              sessionCloseInProgress ? Promise.resolve() : cleanup(),
+          },
+          options,
+        );
+        extensionClose = session.close.bind(session);
+        // Raw class methods are bound to the original instance for private fields.
+        // Route an internal this.close() through managed teardown when possible.
+        Reflect.set(session, "close", cleanup, session);
+        if (controller.signal.aborted) {
+          try {
+            await closeSession();
+          } catch {
+            // Preserve the caller's abort reason when a late session close hook is broken.
           }
-          const descriptor = Reflect.getOwnPropertyDescriptor(
-            session,
-            property,
-          );
-          return descriptor ? { ...descriptor, configurable: true } : undefined;
-        },
-      });
-    } catch (error) {
-      // Before cleanup, so a caller watching state sees "failed" rather than only "closed" — the two
-      // mean different things and a status UI should be able to tell them apart.
-      setState("failed");
-      await cleanup();
-      await drainLateCleanups();
-      throw error;
-    }
+          await cleanup();
+          await drainLateCleanups();
+          throw controller.signal.reason ?? new Error("Realtime open aborted");
+        }
+        // The extension facade appears on the handle the moment the session exists: the neutral
+        // target adopts the session's prototype (unless the caller already made the handle
+        // non-extensible), queued sends flush in order, and only then does state report "live" —
+        // so an onState("live") callback that sends immediately cannot jump the queue.
+        if (Reflect.isExtensible(proxyTarget)) {
+          Object.setPrototypeOf(proxyTarget, Object.getPrototypeOf(session));
+        }
+        flushQueuedSends();
+        setState("live");
+        resolveReady(handle);
+      } catch (error) {
+        // Before cleanup, so a caller watching state sees "failed" rather than only "closed" — the
+        // two mean different things and a status UI should be able to tell them apart. (An abort
+        // that already ran cleanup latched "closed"; the latch keeps that reading.)
+        const wasTerminal = state === "failed" || state === "closed";
+        setState("failed");
+        await cleanup();
+        await drainLateCleanups();
+        if (!wasTerminal) {
+          // The synchronous shape has no returned promise whose rejection could carry this, so the
+          // failure that was previously a rejection is also a reportable diagnostic — unless the
+          // extension already reported it through context.fail().
+          diagnostic({
+            kind: "failure",
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+        reportError(error);
+        rejectReady(error);
+      }
+    };
+    void openTask();
+    return handle;
   }
 
   realtimeClient.open = open as RealtimeClient["open"];
