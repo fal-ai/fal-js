@@ -855,6 +855,76 @@ describe("realtime extensions", () => {
     expect(Object.getOwnPropertyDescriptor(session, "count")?.value).toBe(1);
   });
 
+  it("refreshes sealed writable mirrors before freezing", async () => {
+    // Sealed mirrors are non-configurable but still writable; a bound-method mutation between
+    // seal and freeze must be re-synchronized, or freeze pins the stale value and reads throw.
+    const raw = {
+      close: jest.fn(),
+      count: 0,
+      bump() {
+        this.count += 1;
+      },
+    };
+    const sealable = defineRealtimeExtension<Record<never, never>, typeof raw>({
+      id: "test/seal-mutation",
+      defaultEndpoint: "test/seal-mutation",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(sealable, {}).ready;
+
+    Object.seal(session);
+    session.bump();
+    expect(() => Object.freeze(session)).not.toThrow();
+    expect(session.count).toBe(1);
+  });
+
+  it("serves the monitored body as a byte stream usable with BYOB readers", async () => {
+    // Native fetch bodies are byte streams; context.fetch() promises a raw Response, so a BYOB
+    // reader that works on a native body must work on the monitored one.
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async () => new Response("byob-bytes")) as any,
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/byob",
+      defaultEndpoint: "test/byob",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/session");
+        const reader = (response.body as ReadableStream<Uint8Array>).getReader({
+          mode: "byob",
+        });
+        const collected: number[] = [];
+        let view = new Uint8Array(4);
+        for (;;) {
+          const { done, value } = await reader.read(view);
+          if (value) {
+            collected.push(...value);
+            view = new Uint8Array(4);
+          }
+          if (done) break;
+        }
+        expect(new TextDecoder().decode(new Uint8Array(collected))).toBe(
+          "byob-bytes",
+        );
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await expect(session.ready).resolves.toBeDefined();
+    await session.close();
+  });
+
   it("pins a frozen own state property at its frozen value", async () => {
     // An extension session that owns a `state` key mirrors it onto the target when the caller
     // freezes; a non-configurable, non-writable data property must then report that exact value.

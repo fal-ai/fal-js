@@ -130,6 +130,7 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
     PATCH: handler,
     DELETE: handler,
     HEAD: handler,
+    OPTIONS: handler,
   };
 };
 

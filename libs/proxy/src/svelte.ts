@@ -65,5 +65,6 @@ export const createRequestHandler = ({
     PATCH: handler,
     DELETE: handler,
     HEAD: handler,
+    OPTIONS: handler,
   };
 };

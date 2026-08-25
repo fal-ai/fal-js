@@ -1202,26 +1202,38 @@ export function createRealtimeClient({
         enumerable: true,
         get: () => {
           if (!monitored) {
-            monitored = new ReadableStream<Uint8Array>(
+            // type "bytes", because native fetch bodies are byte streams and a BYOB reader that
+            // works on a raw Response must keep working here — context.fetch() promises a raw
+            // Response. The cast is only for older TS libs that lack the byte-source overload.
+            monitored = new ReadableStream(
               {
-                pull: async (streamController) => {
+                type: "bytes",
+                pull: async (
+                  streamController: ReadableByteStreamController,
+                ) => {
                   const { done, value } = await acquireReader().read();
                   if (done) {
                     streamController.close();
+                    // A pending BYOB request must be answered after close or the reader hangs.
+                    streamController.byobRequest?.respond(0);
                     settle();
                     return;
                   }
-                  streamController.enqueue(value);
+                  // A byte controller rejects empty chunks; skipping resolves this pull and the
+                  // stream simply pulls again.
+                  if (value && value.byteLength > 0) {
+                    streamController.enqueue(value);
+                  }
                 },
-                cancel: async (reason) => {
+                cancel: async (reason: unknown) => {
                   settle();
                   await (reader
                     ? reader.cancel(reason)
                     : currentNativeBody().cancel(reason));
                 },
-              },
+              } as UnderlyingDefaultSource<Uint8Array>,
               { highWaterMark: 0 },
-            );
+            ) as ReadableStream<Uint8Array>;
           }
           return monitored;
         },
@@ -1426,7 +1438,14 @@ export function createRealtimeClient({
               proxyTarget,
               property,
             );
-            if (!existing || existing.configurable) {
+            // Sealed mirrors are non-configurable but still WRITABLE, and redefining a
+            // non-configurable writable data property's value is legal — so a seal-then-mutate-
+            // then-freeze sequence refreshes too. Only fully pinned (non-writable) mirrors stay.
+            if (
+              !existing ||
+              existing.configurable ||
+              ("value" in existing && existing.writable === true)
+            ) {
               const descriptor = Reflect.getOwnPropertyDescriptor(
                 session,
                 property,
