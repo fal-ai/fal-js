@@ -1411,14 +1411,17 @@ export function createRealtimeClient({
         // success against the descriptor the caller supplied with SameValue, so storing a bound
         // variant would throw after both objects were already mutated. The get trap serves the
         // pinned target value verbatim, keeping the two invariants consistent.
+        // Omitted descriptor flags DEFAULT TO FALSE and arrive unset in the trap argument, so the
+        // pinned check is "not explicitly true" rather than "explicitly false" — a bare
+        // { value: fn } is fully pinned.
         if (
-          descriptor.configurable === false &&
-          descriptor.writable === false &&
+          descriptor.configurable !== true &&
+          descriptor.writable !== true &&
           "value" in descriptor
         ) {
           return Reflect.defineProperty(proxyTarget, property, descriptor);
         }
-        return descriptor.configurable === false ||
+        return descriptor.configurable !== true ||
           !Reflect.isExtensible(proxyTarget)
           ? mirrorOntoTarget(property, descriptor)
           : true;

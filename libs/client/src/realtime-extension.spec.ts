@@ -1043,8 +1043,18 @@ describe("realtime extensions", () => {
     const custom = (session as Record<string, unknown>).custom as () => string;
     expect(custom).toBe(fn);
     expect(custom()).toBe("custom");
+
+    // Omitted flags default to false and arrive UNSET in the trap argument; a bare { value } is
+    // just as pinned as an explicit { configurable: false, writable: false }.
+    const bare = () => "bare";
+    expect(() =>
+      Object.defineProperty(session, "bare", { value: bare }),
+    ).not.toThrow();
+    expect((session as Record<string, unknown>).bare).toBe(bare);
+
     expect(() => Object.freeze(session)).not.toThrow();
     expect((session as Record<string, unknown>).custom).toBe(fn);
+    expect((session as Record<string, unknown>).bare).toBe(bare);
   });
 
   it("uses the extension default when endpointId is explicitly undefined", async () => {

@@ -77,6 +77,22 @@ describe("gatherIceCandidates", () => {
     });
   });
 
+  it("settles even when the progress callback throws at completion", async () => {
+    // finish() runs from an event or timer with every waiter removed; a throwing onProgress could
+    // never surface as a rejection — only leave the returned promise pending forever.
+    const pc = fakePc();
+    const done = gatherIceCandidates(pc as any, {
+      quietPeriodMs: 20,
+      onProgress: () => {
+        throw new Error("reporting UI exploded");
+      },
+    });
+    pc.emitCandidate(line("host"));
+    pc.emitCandidate(line("srflx"));
+    const result = await done;
+    expect(result.state).toBe("sufficient");
+  });
+
   it("is NOT sufficient without a relay when TURN is configured", async () => {
     // The case that matters: shipping an offer with no relay candidate while TURN is configured
     // produces a connection that cannot work, and reports nothing about why.

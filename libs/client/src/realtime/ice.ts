@@ -81,7 +81,11 @@ export async function gatherIceCandidates(
 
   if (pc.iceGatheringState === "complete") {
     const done = snapshot("complete");
-    onProgress?.(done);
+    try {
+      onProgress?.(done);
+    } catch {
+      // A progress callback must never be able to fail gathering.
+    }
     return done;
   }
 
@@ -111,7 +115,14 @@ export async function gatherIceCandidates(
       settled = true;
       removeWaiters();
       const done = snapshot(state);
-      onProgress?.(done);
+      // The promise settles regardless of the caller's reporting callback: a throw here fires
+      // from an event or timer with every waiter already removed, so it could never surface as a
+      // rejection — only leave the returned promise pending forever.
+      try {
+        onProgress?.(done);
+      } catch {
+        // A progress callback must never be able to fail gathering.
+      }
       resolve(done);
     };
     const onAbort = () => {
