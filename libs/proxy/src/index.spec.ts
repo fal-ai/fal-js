@@ -474,6 +474,89 @@ describe("serializeParsedBody", () => {
   });
 });
 
+describe("createHandler (express) body handling", () => {
+  function expressRequest(options: {
+    readable: boolean;
+    body: unknown;
+    contentType?: string;
+    chunks?: Uint8Array[];
+  }) {
+    return {
+      method: "POST",
+      readable: options.readable,
+      body: options.body,
+      headers: {
+        "x-fal-target-url": "https://wma.fal.run/upload",
+        ...(options.contentType ? { "content-type": options.contentType } : {}),
+      },
+      async *[Symbol.asyncIterator]() {
+        for (const chunk of options.chunks ?? []) yield chunk;
+      },
+    };
+  }
+  function expressResponse() {
+    return {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+      write: jest.fn(),
+      end: jest.fn(),
+    };
+  }
+
+  it("forwards the raw stream when a global parser skipped the body", async () => {
+    // body-parser stamps req.body = {} on EVERY request before its content-type check, so a
+    // multipart POST through app.use(express.json()) arrives here as {} with the stream UNREAD.
+    // The stream, not req.body, decides: raw multipart bytes must be forwarded, not a throw
+    // blaming a multipart parser that does not exist (and not an empty body).
+    const { createHandler } = await import("./express");
+    const handler = createHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const payload = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x80, 0x00, 0xff]);
+    const request = expressRequest({
+      readable: true,
+      body: {}, // body-parser's untouched stamp
+      contentType: "multipart/form-data; boundary=x",
+      chunks: [payload],
+    });
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handler(request as never, expressResponse() as never, jest.fn());
+      const sent = fetchMock.mock.calls[0][1]?.body as Uint8Array;
+      expect(new Uint8Array(sent)).toEqual(payload);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("uses parser output once the stream was actually consumed", async () => {
+    const { createHandler } = await import("./express");
+    const handler = createHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = expressRequest({
+      readable: false, // express.json() read the stream
+      body: { prompt: "hello" },
+      contentType: "application/json",
+    });
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handler(request as never, expressResponse() as never, jest.fn());
+      expect(fetchMock.mock.calls[0][1]?.body).toBe('{"prompt":"hello"}');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+});
+
 describe("createPageRouterHandler body handling", () => {
   it("fails loudly for multipart bodies Next's parser already corrupted", async () => {
     // Next's default bodyParser drains EVERY request and stringifies unknown content types

@@ -31,15 +31,20 @@ export const createHandler = (
           id: "express",
           method: request.method,
           getRequestBody: async () => {
-            const parsed = serializeParsedBody(
+            // The STREAM decides which side to trust, not req.body: body-parser stamps
+            // `req.body = {}` on EVERY request before its content-type check, so a defined body
+            // does not mean the request was parsed. A still-readable stream means nothing
+            // consumed it — forward those raw bytes (the multipart and binary path, even with a
+            // global express.json()). Parser output is trusted only once something actually
+            // read the stream, which is also what makes serializeParsedBody's multipart error
+            // truthful: at that point a multipart parser really did consume the bytes.
+            if (request.readable) {
+              return readUnconsumedRequestBody(request);
+            }
+            return serializeParsedBody(
               request.body,
               request.headers["content-type"],
             );
-            // A parser that does not handle this content type (multipart, binary) leaves the body
-            // unset and the stream unread — forward the raw bytes instead of an empty body.
-            return parsed !== undefined
-              ? parsed
-              : readUnconsumedRequestBody(request);
           },
           getHeaders: () => request.headers,
           getHeader: (name) => request.headers[name],
