@@ -1074,7 +1074,10 @@ export function createRealtimeClient({
     // combinations — never one listener per request, because a session sending heartbeats every few
     // seconds would otherwise accumulate listeners for its whole lifetime. Each combination leaves
     // the set when it aborts or its request completes; the set itself is released with the session.
-    const activeRequestCombos = new Set<AbortController>();
+    const activeRequestCombos = new Set<{
+      combined: AbortController;
+      detach: () => void;
+    }>();
     let sessionComboHookInstalled = false;
     const withSessionSignal = (
       requestSignal: AbortSignal | null | undefined,
@@ -1092,8 +1095,16 @@ export function createRealtimeClient({
         return { signal: combined.signal, dispose: () => undefined };
       }
       const abortFromRequest = () => {
-        activeRequestCombos.delete(combined);
+        activeRequestCombos.delete(entry);
         combined.abort(requestSignal.reason);
+      };
+      // The entry carries its own detach so the session-abort sweep can remove the listener from
+      // the REQUEST signal too — a long-lived request signal outliving the session must not keep
+      // retaining the combined controller through a listener nobody will ever fire.
+      const entry = {
+        combined,
+        detach: () =>
+          requestSignal.removeEventListener("abort", abortFromRequest),
       };
       if (!sessionComboHookInstalled) {
         sessionComboHookInstalled = true;
@@ -1101,22 +1112,23 @@ export function createRealtimeClient({
           "abort",
           () => {
             for (const combo of activeRequestCombos) {
-              combo.abort(controller.signal.reason);
+              combo.detach();
+              combo.combined.abort(controller.signal.reason);
             }
             activeRequestCombos.clear();
           },
           { once: true },
         );
       }
-      activeRequestCombos.add(combined);
+      activeRequestCombos.add(entry);
       requestSignal.addEventListener("abort", abortFromRequest, {
         once: true,
       });
       return {
         signal: combined.signal,
         dispose: () => {
-          activeRequestCombos.delete(combined);
-          requestSignal.removeEventListener("abort", abortFromRequest);
+          activeRequestCombos.delete(entry);
+          entry.detach();
         },
       };
     };

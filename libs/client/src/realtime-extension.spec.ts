@@ -472,6 +472,41 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
+  it("detaches request-signal listeners at session close for unconsumed bodies", async () => {
+    // A long-lived request signal that outlives the session must not keep retaining the combined
+    // controller through an abort listener nobody will ever fire — the session-abort sweep
+    // removes the listener from the request signal, not only from its own bookkeeping.
+    const requestLocal = new AbortController();
+    const removed = jest.spyOn(requestLocal.signal, "removeEventListener");
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async () => new Response("never-read")) as any,
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/unconsumed-body",
+      defaultEndpoint: "test/unconsumed-body",
+      async open(context) {
+        await context.fetch("https://wma.fal.run/session", {
+          signal: requestLocal.signal,
+        });
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await session.ready;
+    expect(removed).not.toHaveBeenCalled();
+    await session.close();
+
+    expect(removed).toHaveBeenCalledWith("abort", expect.any(Function));
+    removed.mockRestore();
+  });
+
   it("releases the signal combination when a cloned body is consumed", async () => {
     // clone() tees the underlying source, so fully consuming either branch means the network
     // stream finished; a caller that parses only the clone must still release the combination.
