@@ -314,7 +314,17 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
           const next = pending.shift();
           if (next === undefined) return;
           lastSentAt = Date.now();
-          write(next);
+          // The drain runs inside a timer with no caller to observe a throw: an encoding failure
+          // (a circular object handed to the msgpack encoder, say) becomes a diagnostic and the
+          // remaining queue keeps draining, instead of an uncaught error that strands it.
+          try {
+            write(next);
+          } catch {
+            context.diagnostic({
+              kind: "warning",
+              message: "A paced message could not be encoded and was dropped.",
+            });
+          }
           if (pending.length > 0) {
             drainTimer = setTimeout(drain, throttleInterval);
           }

@@ -332,6 +332,40 @@ describe("websocket", () => {
     expect(decode(ws.sent[2] as Uint8Array)).toEqual({ n: 3 });
   });
 
+  it("keeps draining the pacer when a deferred message fails to encode", async () => {
+    // The drain timer has no caller to observe a throw; an encoding failure must become a
+    // diagnostic and the rest of the queue must still be delivered.
+    const diagnostics: string[] = [];
+    const context = fakeExtensionContext({
+      diagnostic: (event) => {
+        if (event.kind === "warning") diagnostics.push(event.message);
+      },
+    });
+    const session = websocket().open(context, {
+      tokenProvider,
+      throttleInterval: 10,
+      encodeMessage: (input: { n: number }) => {
+        if (input.n === 2) throw new Error("unencodable");
+        return JSON.stringify(input);
+      },
+      onResult: jest.fn(),
+    });
+    await flush();
+    const ws = FakeWebSocket.last!;
+    ws.open();
+    const live = await session;
+
+    live.send({ n: 1 });
+    live.send({ n: 2 }); // deferred, throws in the drain timer
+    live.send({ n: 3 });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    expect(ws.sent).toEqual(['{"n":1}', '{"n":3}']);
+    expect(diagnostics).toEqual([
+      "A paced message could not be encoded and was dropped.",
+    ]);
+  });
+
   it("stops opening when the caller aborts", async () => {
     const controller = new AbortController();
     const context = fakeExtensionContext({ signal: controller.signal });

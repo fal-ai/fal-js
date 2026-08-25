@@ -556,6 +556,34 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
+  it("rejects clone() once a reader holds the monitored body", async () => {
+    // Native fetch rejects cloning after a reader locks the body; the monitored wrapper defers
+    // locking the native stream, so the patched clone must enforce the same rule itself.
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async () => new Response("locked")) as any,
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/clone-locked",
+      defaultEndpoint: "test/clone-locked",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/session");
+        response.body!.getReader(); // hold, without reading
+        expect(() => response.clone()).toThrow(/disturbed or locked/);
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await expect(session.ready).resolves.toBeDefined();
+    await session.close();
+  });
+
   it("releases the signal combination when a cloned body is consumed", async () => {
     // clone() tees the underlying source, so fully consuming either branch means the network
     // stream finished; a caller that parses only the clone must still release the combination.

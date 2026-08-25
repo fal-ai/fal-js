@@ -1207,6 +1207,15 @@ export function createRealtimeClient({
         configurable: true,
         writable: true,
         value: () => {
+          // Native fetch rejects cloning once a reader holds the body. The monitored wrapper
+          // defers locking the NATIVE body until the first read, so without this check a caller
+          // holding a reader on the wrapper could still clone — teeing the source beneath an
+          // already-held reader, which a raw Response would never allow.
+          if (reader || monitored?.locked) {
+            throw new TypeError(
+              "Failed to execute 'clone' on 'Response': body is disturbed or locked",
+            );
+          }
           const cloned = originalClone();
           disposeWhenBodyConsumed(cloned, settle);
           return cloned;
