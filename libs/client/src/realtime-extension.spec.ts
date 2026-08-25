@@ -2,6 +2,7 @@ import { createConfig } from "./config";
 import { createRealtimeClient } from "./realtime";
 import {
   defineRealtimeExtension,
+  type RealtimeExtensionContext,
   type RealtimeSession,
 } from "./realtime/extension";
 
@@ -860,6 +861,84 @@ describe("realtime extension context additions", () => {
     controller.abort(new Error("late abort"));
     expect(observed?.aborted).toBe(true);
     await session.close();
+  });
+
+  it("does not accumulate session-signal listeners across repeated fetches", async () => {
+    // A heartbeat-style extension completes a request every few seconds with a fresh
+    // request-local signal that never aborts. The session signal must carry one shared hook for
+    // all of them, and consuming the body must release each combination.
+    let sessionSignal: AbortSignal | undefined;
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async () => new Response('{"alive":true}')) as any,
+      }),
+    });
+    const listenersPerBeat: number[] = [];
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/heartbeats",
+      defaultEndpoint: "test/heartbeats",
+      async open(context) {
+        sessionSignal = context.signal;
+        const added = jest.spyOn(context.signal, "addEventListener");
+        for (let beat = 0; beat < 4; beat += 1) {
+          const local = new AbortController();
+          const response = await context.fetch(
+            "https://wma.fal.run/session/heartbeat",
+            { signal: local.signal },
+          );
+          await response.json();
+          listenersPerBeat.push(added.mock.calls.length);
+        }
+        added.mockRestore();
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = await client.open(probe, {});
+    // The first request may install the one shared session hook; later requests add nothing.
+    expect(listenersPerBeat[3]).toBe(listenersPerBeat[0]);
+    await session.close();
+    expect(sessionSignal?.aborted).toBe(true);
+  });
+
+  it("awaits late cleanups registered by other late cleanups", async () => {
+    // A late cleanup that registers another one mid-flight must still be covered by the awaited
+    // close(); a single snapshot of the registrations would resolve before the nested one runs.
+    let captured!: RealtimeExtensionContext;
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/late-cleanups",
+      defaultEndpoint: "test/late-cleanups",
+      async open(context) {
+        captured = context;
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(probe, {});
+
+    const order: string[] = [];
+    const closing = session.close();
+    captured.addCleanup(async () => {
+      order.push("outer-start");
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      captured.addCleanup(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        order.push("inner");
+      });
+      order.push("outer-end");
+    });
+    await closing;
+
+    expect(order).toEqual(["outer-start", "outer-end", "inner"]);
   });
 
   it("context.fetch lets FormData generate its multipart boundary", async () => {

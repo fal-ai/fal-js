@@ -2,6 +2,7 @@ import { Context } from "hono";
 import { type StatusCode } from "hono/utils/http-status";
 import { ProxyConfig, resolveProxyConfig } from "./config";
 import {
+  fromHeaders,
   handleRequest,
   HeaderValue,
   resolveApiKeyFromEnv,
@@ -47,7 +48,9 @@ export function createRouteHandler({
         respondWith: (status, data) => {
           return context.json(data, status as StatusCode, responseHeaders);
         },
-        getHeaders: () => responseHeaders,
+        // The INCOMING request's headers — `responseHeaders` is the outgoing accumulator that
+        // `sendHeader` fills, and enumerating it here would make the proxy forward nothing.
+        getHeaders: () => fromHeaders(context.req.raw.headers),
         getHeader: (name) => context.req.header(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),
         getRequestBody: async () => readWebRequestBody(context.req.raw),

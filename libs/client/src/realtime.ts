@@ -819,6 +819,17 @@ export function createRealtimeClient({
     const controller = new AbortController();
     const cleanups: Array<() => void | Promise<void>> = [];
     const lateCleanups: Array<Promise<void>> = [];
+    // A running late cleanup may register another one, so a single Promise.all over a snapshot of
+    // the array can resolve while that nested registration is still pending. Drain in rounds until
+    // a round adds nothing new, so an awaited close() really means every registration finished.
+    const drainLateCleanups = async (): Promise<void> => {
+      let drained = 0;
+      while (drained < lateCleanups.length) {
+        const snapshot = lateCleanups.length;
+        await Promise.all(lateCleanups.slice(drained, snapshot));
+        drained = snapshot;
+      }
+    };
     let closed = false;
     let cleanupPromise: Promise<void> | undefined;
     let session: RealtimeSession | undefined;
@@ -880,7 +891,7 @@ export function createRealtimeClient({
               // remaining resources from being closed.
             }
           }
-          await Promise.all(lateCleanups);
+          await drainLateCleanups();
         }
       });
       // abort listeners run synchronously and may re-enter through context.close()
@@ -939,8 +950,14 @@ export function createRealtimeClient({
 
     // A request-local signal an extension hands to context.fetch() or context.gatherIce() must not
     // displace the managed session signal: either one aborts the work. Hand-rolled rather than
-    // AbortSignal.any() to keep the runtime floor unchanged; dispose() detaches the listeners so a
-    // long-lived session does not accumulate one pair per request.
+    // AbortSignal.any() to keep the runtime floor unchanged.
+    //
+    // The session signal carries ONE listener for all requests, driving a set of active
+    // combinations — never one listener per request, because a session sending heartbeats every few
+    // seconds would otherwise accumulate listeners for its whole lifetime. Each combination leaves
+    // the set when it aborts or its request completes; the set itself is released with the session.
+    const activeRequestCombos = new Set<AbortController>();
+    let sessionComboHookInstalled = false;
     const withSessionSignal = (
       requestSignal: AbortSignal | null | undefined,
     ): { signal: AbortSignal; dispose: () => void } => {
@@ -948,27 +965,85 @@ export function createRealtimeClient({
         return { signal: controller.signal, dispose: () => undefined };
       }
       const combined = new AbortController();
-      const abortFromSession = () => combined.abort(controller.signal.reason);
-      const abortFromRequest = () => combined.abort(requestSignal.reason);
       if (controller.signal.aborted) {
-        abortFromSession();
-      } else if (requestSignal.aborted) {
-        abortFromRequest();
-      } else {
-        controller.signal.addEventListener("abort", abortFromSession, {
-          once: true,
-        });
-        requestSignal.addEventListener("abort", abortFromRequest, {
-          once: true,
-        });
+        combined.abort(controller.signal.reason);
+        return { signal: combined.signal, dispose: () => undefined };
       }
+      if (requestSignal.aborted) {
+        combined.abort(requestSignal.reason);
+        return { signal: combined.signal, dispose: () => undefined };
+      }
+      const abortFromRequest = () => {
+        activeRequestCombos.delete(combined);
+        combined.abort(requestSignal.reason);
+      };
+      if (!sessionComboHookInstalled) {
+        sessionComboHookInstalled = true;
+        controller.signal.addEventListener(
+          "abort",
+          () => {
+            for (const combo of activeRequestCombos) {
+              combo.abort(controller.signal.reason);
+            }
+            activeRequestCombos.clear();
+          },
+          { once: true },
+        );
+      }
+      activeRequestCombos.add(combined);
+      requestSignal.addEventListener("abort", abortFromRequest, {
+        once: true,
+      });
       return {
         signal: combined.signal,
         dispose: () => {
-          controller.signal.removeEventListener("abort", abortFromSession);
+          activeRequestCombos.delete(combined);
           requestSignal.removeEventListener("abort", abortFromRequest);
         },
       };
+    };
+
+    // Dispose a request's signal combination once its response body has actually been consumed —
+    // fetch() resolves at headers, and the signal must keep covering body reads until then. The
+    // body-reading methods are patched per instance; a caller streaming `response.body` directly
+    // keeps its combination until it aborts or the session closes, which the set above bounds.
+    const disposeWhenBodyConsumed = (
+      response: Response,
+      dispose: () => void,
+    ) => {
+      if (!response.body) {
+        dispose();
+        return;
+      }
+      let disposed = false;
+      const settle = () => {
+        if (!disposed) {
+          disposed = true;
+          dispose();
+        }
+      };
+      for (const method of [
+        "arrayBuffer",
+        "blob",
+        "bytes",
+        "formData",
+        "json",
+        "text",
+      ] as const) {
+        const original = (response as Response & Record<string, unknown>)[
+          method
+        ];
+        if (typeof original !== "function") continue;
+        Object.defineProperty(response, method, {
+          configurable: true,
+          writable: true,
+          value: function patched(this: Response, ...args: unknown[]) {
+            return (original as (...a: unknown[]) => Promise<unknown>)
+              .apply(this, args)
+              .finally(settle);
+          },
+        });
+      }
     };
 
     try {
@@ -1052,12 +1127,8 @@ export function createRealtimeClient({
               });
               // The Response outlives this call: callers read the body afterwards, and a fetch
               // signal also cancels those reads. Disposing here would sever the combination just
-              // when a stalled body needs it, so the listeners stay attached until either side
-              // aborts — and session teardown always aborts the session signal, so nothing
-              // outlives the session.
-              if (signal !== controller.signal) {
-                signal.addEventListener("abort", dispose, { once: true });
-              }
+              // when a stalled body needs it — keep it until the body is consumed or a side aborts.
+              disposeWhenBodyConsumed(response, dispose);
               return response;
             } catch (error) {
               dispose();
@@ -1121,7 +1192,7 @@ export function createRealtimeClient({
           // Preserve the caller's abort reason when a late session close hook is broken.
         }
         await cleanup();
-        await Promise.all(lateCleanups);
+        await drainLateCleanups();
         throw controller.signal.reason ?? new Error("Realtime open aborted");
       }
       setState("live");
@@ -1279,7 +1350,7 @@ export function createRealtimeClient({
       // mean different things and a status UI should be able to tell them apart.
       setState("failed");
       await cleanup();
-      await Promise.all(lateCleanups);
+      await drainLateCleanups();
       throw error;
     }
   }
