@@ -1140,6 +1140,28 @@ describe("realtime extensions", () => {
     expect((session as Record<string, unknown>).bare).toBe(bare);
   });
 
+  it("honors pinned accessor definitions, even over kernel names", async () => {
+    // A non-configurable accessor mirrored onto the target rules the read: with no getter the
+    // language requires undefined (a setter-only pin must not throw on every access), and with
+    // one, the caller's getter wins — even over the kernel's own state.
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(extension(), { label: "acc" }).ready;
+
+    Object.defineProperty(session, "state", {
+      set: () => undefined,
+      configurable: false,
+    });
+    expect(session.state).toBeUndefined();
+
+    Object.defineProperty(session, "computed", {
+      get: () => "from-getter",
+      configurable: false,
+    });
+    expect((session as Record<string, unknown>).computed).toBe("from-getter");
+  });
+
   it("uses the extension default when endpointId is explicitly undefined", async () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),

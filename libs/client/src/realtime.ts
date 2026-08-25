@@ -1396,6 +1396,11 @@ export function createRealtimeClient({
         ) {
           return pinned.value;
         }
+        // A pinned ACCESSOR rules the read too — even over kernel names: with no getter the
+        // language requires undefined, and with one, the caller's getter is what they defined.
+        if (pinned && !pinned.configurable && !("value" in pinned)) {
+          return pinned.get ? pinned.get.call(handle) : undefined;
+        }
         if (property === "state") return state;
         if (property === "ready") return ready;
         if (property === "close") return publicClose;
