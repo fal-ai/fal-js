@@ -1187,6 +1187,16 @@ describe("realtime extensions", () => {
       "yes",
     );
 
+    // A chain that loops back through the handle must be rejected like an ordinary object's
+    // self-prototype — the language's own cycle walk stops at the exotic proxy, and accepting
+    // it would make every missing-property lookup recurse until the stack overflows.
+    expect(Reflect.setPrototypeOf(session, session)).toBe(false);
+    const cyclic = Object.create(session as object) as object;
+    expect(Reflect.setPrototypeOf(session, cyclic)).toBe(false);
+    // Neither side was mutated by the rejected attempts.
+    expect(Object.getPrototypeOf(session)).toBe(proto);
+    expect(Object.getPrototypeOf(raw)).toBe(proto);
+
     // A prototype change applied to the RAW session (through a bound method, say) must be what
     // the handle reports — the session is the source of truth for inheritance.
     const rawProto = { viaRaw: true };

@@ -1622,6 +1622,27 @@ export function createRealtimeClient({
         // Like set/defineProperty, the facade materializes with the session — there is nothing
         // to re-parent yet.
         if (!session) return false;
+        // An ordinary object rejects a prototype chain that loops back to itself, but the
+        // language's cycle walk stops at the first exotic object — so re-parenting the session
+        // onto the handle would succeed and every missing-property lookup would then recurse
+        // through the proxy until the stack overflows. Re-establish the check for every
+        // identity behind the handle BEFORE mutating either side. The seen-set bounds the walk
+        // when the chain contains other exotic objects with looping prototypes.
+        const seen = new Set<object>();
+        for (
+          let ancestor: object | null = proto;
+          ancestor !== null && !seen.has(ancestor);
+          ancestor = Reflect.getPrototypeOf(ancestor)
+        ) {
+          if (
+            ancestor === handle ||
+            ancestor === proxyTarget ||
+            ancestor === (session as object)
+          ) {
+            return false;
+          }
+          seen.add(ancestor);
+        }
         // Both sides move together: the session so `get`/`has` actually resolve the new
         // prototype's members, the target so a later freeze pins a prototype that agrees.
         if (!Reflect.setPrototypeOf(session, proto)) return false;
