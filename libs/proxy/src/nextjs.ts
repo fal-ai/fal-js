@@ -44,16 +44,22 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
             request.headers["content-type"] ?? ""
           ).toLowerCase();
           const losslesslyParsed =
-            contentType === "" ||
             contentType.startsWith("application/json") ||
             // Structured-suffix JSON types (application/ld+json, …) are UTF-8 text; decoding
             // them as a string loses nothing.
             /^application\/[^;\s]*\+json/.test(contentType) ||
             contentType.startsWith("application/x-www-form-urlencoded") ||
             contentType.startsWith("text/");
-          if (typeof request.body === "string" && !losslesslyParsed) {
+          // No content type is NOT an exemption: Next text-decodes those bodies too, and binary
+          // bytes posted without a label would be forwarded corrupted (and then labeled JSON by
+          // the string default). Only a genuinely empty body is safe to pass.
+          if (
+            typeof request.body === "string" &&
+            request.body !== "" &&
+            !losslesslyParsed
+          ) {
             throw new Error(
-              `The fal proxy cannot forward a ${contentType} body that Next's default bodyParser ` +
+              `The fal proxy cannot forward a ${contentType || "untyped"} body that Next's default bodyParser ` +
                 "already decoded as text — the bytes are irreversibly corrupted. Disable body " +
                 "parsing for this route (export const config = { api: { bodyParser: false } }) " +
                 "so the proxy can forward the raw request stream.",

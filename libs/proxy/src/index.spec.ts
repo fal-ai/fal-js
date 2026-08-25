@@ -483,6 +483,30 @@ describe("createPageRouterHandler body handling", () => {
       /bodyParser: false/,
     );
   });
+
+  it("fails loudly for untyped bodies Next decoded as text", async () => {
+    // Binary posted without a content-type is text-decoded by Next's default parser too — and a
+    // forwarded string would then be labeled application/json by the string default.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "POST",
+      body: "already�mangled",
+      headers: { "x-fal-target-url": "https://wma.fal.run/upload" },
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+
+    await expect(handler(request as never, response as never)).rejects.toThrow(
+      /bodyParser: false/,
+    );
+  });
 });
 
 describe("readUnconsumedRequestBody", () => {

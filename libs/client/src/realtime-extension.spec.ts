@@ -593,6 +593,47 @@ describe("realtime extensions", () => {
     expect(observed?.aborted).toBe(false);
   });
 
+  it("keeps the combination alive when only a clone branch is cancelled", async () => {
+    // Cancelling ONE tee branch does not finish the underlying source; the shared combination
+    // must keep covering the still-streaming original until it completes or the session ends.
+    let observed: AbortSignal | null | undefined;
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async (_url: string, init: RequestInit = {}) => {
+          observed = init.signal;
+          return new Response('{"ok":true}');
+        }) as any,
+      }),
+    });
+    const requestLocal = new AbortController();
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/clone-cancel",
+      defaultEndpoint: "test/clone-cancel",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/session", {
+          signal: requestLocal.signal,
+        });
+        const clone = response.clone();
+        // Cancel only the clone's branch; the original stays unconsumed and must remain covered.
+        void clone.body?.cancel();
+        await Promise.resolve();
+        await Promise.resolve();
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await session.ready;
+    await session.close();
+
+    // The combination was still active at teardown, so the session abort reached it.
+    expect(observed?.aborted).toBe(true);
+  });
+
   it("cancels a still-opening session through close()", async () => {
     const neverOpens = defineRealtimeExtension<
       Record<never, never>,

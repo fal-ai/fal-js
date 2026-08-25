@@ -1197,11 +1197,23 @@ export function createRealtimeClient({
       // which would otherwise acquire the reader at construction.
       let monitored: ReadableStream<Uint8Array> | undefined;
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      // Set while a consumer-initiated cancellation is in flight: reader.closed resolves the moment
+      // the READER is cancelled, but on a teed body (a clone) the underlying cancellation promise
+      // stays pending while the sibling branch is still streaming — and the shared combination
+      // must keep covering that sibling until it truly finishes.
+      let cancelling = false;
+      const settleUnlessCancelling = () => {
+        if (!cancelling) settle();
+      };
       const acquireReader = () => {
         if (!reader) {
           reader = currentNativeBody().getReader();
-          // Covers end-of-stream, stream error, and reader-side cancellation alike.
-          void reader.closed.then(settle, settle);
+          // Covers end-of-stream and stream error; cancellation settles through the cancel hook
+          // below, after the underlying (possibly composite tee) cancellation completes.
+          void reader.closed.then(
+            settleUnlessCancelling,
+            settleUnlessCancelling,
+          );
         }
         return reader;
       };
@@ -1234,10 +1246,17 @@ export function createRealtimeClient({
                   }
                 },
                 cancel: async (reason: unknown) => {
-                  settle();
-                  await (reader
-                    ? reader.cancel(reason)
-                    : currentNativeBody().cancel(reason));
+                  cancelling = true;
+                  try {
+                    await (reader
+                      ? reader.cancel(reason)
+                      : currentNativeBody().cancel(reason));
+                  } finally {
+                    // On a teed body this promise settles only once the composite cancellation
+                    // does; a sibling branch that instead completes normally settles the shared
+                    // state through its own hooks, and this late settle is then a no-op.
+                    settle();
+                  }
                 },
               } as UnderlyingDefaultSource<Uint8Array>,
               { highWaterMark: 0 },
