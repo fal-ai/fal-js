@@ -62,6 +62,18 @@ export function serializeParsedBody(
   ) {
     return body;
   }
+  if (declared.startsWith("multipart/")) {
+    // A parsed OBJECT under a multipart content type means a multipart parser (multer,
+    // formidable, …) consumed the stream: the original bytes and boundary framing are gone, and
+    // JSON-encoding the text fields while forwarding the multipart header would hand the upstream
+    // an unparseable request — with any file parts silently dropped. Nothing faithful can be
+    // reconstructed, so fail loudly.
+    throw new Error(
+      "The fal proxy cannot forward a multipart body that a parser (multer, formidable, …) has " +
+        "already consumed — the original bytes are gone. Exclude the proxy route from the " +
+        "multipart parser so the raw request stream reaches the proxy.",
+    );
+  }
   if (declared.startsWith("application/x-www-form-urlencoded")) {
     // Entry by entry rather than the URLSearchParams record constructor: parsers represent a
     // repeated field (`tag=a&tag=b`) as an array and a bracketed field (`user[name]=alice`, from

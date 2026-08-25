@@ -415,6 +415,19 @@ describe("serializeParsedBody", () => {
     ).toBe("keep=yes");
   });
 
+  it("rejects parsed multipart bodies instead of JSON-encoding them", async () => {
+    // multer/formidable populate request.body with an object after consuming the stream; the
+    // bytes and boundary framing are unrecoverable, and JSON under a multipart header would be
+    // corruption, not forwarding.
+    const { serializeParsedBody } = await import("./utils");
+    expect(() =>
+      serializeParsedBody(
+        { field: "value" },
+        "multipart/form-data; boundary=----x",
+      ),
+    ).toThrow(/multipart/);
+  });
+
   it("re-encodes nested URL-encoded fields with bracket notation", async () => {
     // express.urlencoded({ extended: true }) parses user[name]=alice into nested objects;
     // stringifying those would forward user=%5Bobject+Object%5D.
