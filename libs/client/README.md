@@ -53,8 +53,12 @@ const result = await fal.subscribe("my-function-id", {
 > **Experimental.** Everything reached through `fal.realtime.open()` — the
 > extension contract, the bundled `wma()`, `lucyRealtime()`, and `websocket()`
 > extensions, and the `/realtime/*` subpath exports — is experimental surface
-> area and may change in a minor release. `fal.realtime.connect()` is not
-> affected and keeps its existing stability guarantees.
+> area and may change in a minor release. `fal.realtime.connect()` keeps its
+> signature, with two behavioral fixes: when several `connect()` calls share a
+> `connectionKey`, the newest handle now owns the connection (a stale handle's
+> `send()`/`close()` no longer act on it), and a handle that was explicitly
+> `close()`d no longer reconnects on a later `send()` — both previously
+> delivered stale messages through connections they no longer owned.
 
 `fal.realtime.open()` opens a session with a named protocol extension. Models
 that need WebRTC signaling, provider SDKs, heartbeats, or another negotiation

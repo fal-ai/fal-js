@@ -1,4 +1,13 @@
 export function ensureEndpointIdFormat(id: string): string {
+  // A scheme-bearing string is a URL that already failed isValidUrl (http://, a non-fal host…).
+  // Passing it through as an "endpoint id" would build https://fal.run/http://… — a silently
+  // mangled 404 — so reject it loudly with the actual constraint instead.
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(id)) {
+    throw new Error(
+      `Invalid endpoint: ${id}. URLs must be https:// and point at a fal.run or fal.ai host; ` +
+        "anything else must be an endpoint id in the format <appOwner>/<appId>.",
+    );
+  }
   const parts = id.split("/");
   if (parts.length > 1) {
     return id;

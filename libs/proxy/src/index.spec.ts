@@ -436,6 +436,37 @@ describe("serializeParsedBody", () => {
   });
 });
 
+describe("createPageRouterHandler body handling", () => {
+  it("fails loudly for multipart bodies Next's parser already corrupted", async () => {
+    // Next's default bodyParser drains EVERY request and stringifies unknown content types
+    // through UTF-8, so a multipart body reaching the adapter as a string is irreversibly
+    // corrupted — forwarding it would hand the upstream garbage under a valid boundary.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const headers: Record<string, string> = {
+      "x-fal-target-url": "https://wma.fal.run/upload",
+      "content-type": "multipart/form-data; boundary=x",
+    };
+    const request = {
+      method: "POST",
+      body: "already�corrupted",
+      headers,
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+
+    await expect(handler(request as never, response as never)).rejects.toThrow(
+      /bodyParser: false/,
+    );
+  });
+});
+
 describe("readUnconsumedRequestBody", () => {
   const streamOf = (chunks: Array<string | Uint8Array>) =>
     (async function* () {
@@ -575,36 +606,56 @@ describe("handleRequest rejection reasons", () => {
     }
   });
 
-  it("forwards general request headers but never proxy-host credentials", async () => {
-    // An extension's provider header or a non-JSON accept must survive the documented proxy path,
-    // while credentials addressed to the proxy host (authorization, cookie) must not leak upstream
-    // — the proxy substitutes its own fal authorization after the pass-through.
+  it("forwards an allowlist of request headers, never ambient credentials", async () => {
+    // Applications authenticate their own proxy route with custom headers no denylist can
+    // enumerate; forwarding is therefore allowlist-only. x-fal-* and accept travel by default, a
+    // provider header travels only when named in forwardRequestHeaders, and credentials addressed
+    // to the proxy host never travel — even ambient infra headers stay behind.
     const incoming: Record<string, string> = {
       "x-fal-target-url": "https://wma.fal.run/session",
       accept: "text/event-stream",
       "x-provider-ticket": "abc",
+      "x-session-token": "user-secret",
+      "x-forwarded-for": "10.0.0.1",
       authorization: "Bearer proxy-user-token",
       cookie: "session=1",
     };
-    const { behavior } = behaviorFor("https://wma.fal.run/session");
-    behavior.getHeaders = () => incoming;
-    behavior.getHeader = (name: string) => incoming[name.toLowerCase()];
+    const makeBehavior = () => {
+      const { behavior } = behaviorFor("https://wma.fal.run/session");
+      behavior.getHeaders = () => incoming;
+      behavior.getHeader = (name: string) => incoming[name.toLowerCase()];
+      return behavior;
+    };
     const fetchMock = jest
       .spyOn(global, "fetch")
       .mockResolvedValue(new Response("{}"));
     try {
-      await handleRequest(behavior as never, {
+      await handleRequest(makeBehavior() as never, {
         allowUnauthorizedRequests: false,
         isAuthenticated: async () => true,
         resolveFalAuth: async () => "Key secret",
       });
-      const sent = fetchMock.mock.calls[0][1]?.headers as Record<
-        string,
-        string
-      >;
-      expect(sent["x-provider-ticket"]).toBe("abc");
+      let sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["x-fal-target-url"]).toBe("https://wma.fal.run/session");
       expect(sent.accept).toBe("text/event-stream");
       expect(sent.authorization).toBe("Key secret");
+      // Not allowlisted: custom and ambient headers stay behind by default.
+      expect(sent["x-provider-ticket"]).toBeUndefined();
+      expect(sent["x-session-token"]).toBeUndefined();
+      expect(sent["x-forwarded-for"]).toBeUndefined();
+      expect(sent.cookie).toBeUndefined();
+
+      fetchMock.mockClear();
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["x-provider-ticket", "cookie"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      // The named provider header now travels; proxy-host credentials never do, even when named.
+      expect(sent["x-provider-ticket"]).toBe("abc");
+      expect(sent["x-session-token"]).toBeUndefined();
       expect(sent.cookie).toBeUndefined();
     } finally {
       fetchMock.mockRestore();
@@ -634,6 +685,34 @@ describe("handleRequest rejection reasons", () => {
         string
       >;
       expect("content-type" in sent).toBe(false);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("defaults string bodies to application/json when no content-type came in", async () => {
+    // Bare fetch(proxy, { body: JSON.stringify(x) }) callers relied on the proxy's historical
+    // JSON rewrite (the browser would otherwise have labeled the body text/plain). Binary bodies
+    // stay label-free; string bodies keep the JSON default.
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      '{"prompt":"a cat"}',
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      const sent = fetchMock.mock.calls[0][1]?.headers as Record<
+        string,
+        string
+      >;
+      expect(sent["content-type"]).toBe("application/json");
     } finally {
       fetchMock.mockRestore();
     }

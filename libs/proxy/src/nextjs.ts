@@ -35,12 +35,32 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
         id: "nextjs-page-router",
         method: request.method || "POST",
         getRequestBody: async () => {
+          // Next's DEFAULT bodyParser drains every request and stringifies unknown content types
+          // through UTF-8 — so a multipart or binary body reaching this adapter as a string is
+          // already corrupted (invalid sequences replaced), and the original bytes are gone.
+          // Forwarding it under an intact multipart boundary would hand the upstream garbage that
+          // parses as a valid request; failing loudly is the only honest option.
+          const contentType = (
+            request.headers["content-type"] ?? ""
+          ).toLowerCase();
+          const losslesslyParsed =
+            contentType === "" ||
+            contentType.startsWith("application/json") ||
+            contentType.startsWith("application/x-www-form-urlencoded") ||
+            contentType.startsWith("text/");
+          if (typeof request.body === "string" && !losslesslyParsed) {
+            throw new Error(
+              `The fal proxy cannot forward a ${contentType} body that Next's default bodyParser ` +
+                "already decoded as text — the bytes are irreversibly corrupted. Disable body " +
+                "parsing for this route (export const config = { api: { bodyParser: false } }) " +
+                "so the proxy can forward the raw request stream.",
+            );
+          }
           const parsed = serializeParsedBody(
             request.body,
             request.headers["content-type"],
           );
-          // The pages-router parser only handles json/urlencoded/text; a multipart or binary
-          // request leaves the body unset and the stream unread — forward the raw bytes.
+          // With bodyParser disabled the body is unset and the stream unread — forward raw bytes.
           return parsed !== undefined
             ? parsed
             : readUnconsumedRequestBody(request);

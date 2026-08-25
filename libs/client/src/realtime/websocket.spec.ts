@@ -305,6 +305,33 @@ describe("websocket", () => {
     expect(ws.sent).toHaveLength(1);
   });
 
+  it("paces rapid sends as a FIFO, delivering every message in order", async () => {
+    // A leading+trailing throttle keeps only the last pending call, so a synchronous burst — the
+    // kernel's pre-live queue flush is exactly that — would drop everything in the middle. The
+    // pacer must deliver all messages, in order, at the configured rate.
+    const context = fakeExtensionContext();
+    const session = websocket().open(context, {
+      tokenProvider,
+      throttleInterval: 10,
+      onResult: jest.fn(),
+    });
+    await flush();
+    const ws = FakeWebSocket.last!;
+    ws.open();
+    const live = await session;
+
+    live.send({ n: 1 });
+    live.send({ n: 2 });
+    live.send({ n: 3 });
+    expect(ws.sent).toHaveLength(1); // leading edge
+
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(ws.sent).toHaveLength(3);
+    expect(decode(ws.sent[0] as Uint8Array)).toEqual({ n: 1 });
+    expect(decode(ws.sent[1] as Uint8Array)).toEqual({ n: 2 });
+    expect(decode(ws.sent[2] as Uint8Array)).toEqual({ n: 3 });
+  });
+
   it("stops opening when the caller aborts", async () => {
     const controller = new AbortController();
     const context = fakeExtensionContext({ signal: controller.signal });

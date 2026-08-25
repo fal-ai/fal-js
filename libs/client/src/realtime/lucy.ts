@@ -109,12 +109,24 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
       };
       reportState("negotiating");
 
-      let resolveNegotiation!: () => void;
-      let rejectNegotiation!: (error: Error) => void;
+      let resolveNegotiationRaw!: () => void;
+      let rejectNegotiationRaw!: (error: Error) => void;
       const negotiation = new Promise<void>((resolve, reject) => {
-        resolveNegotiation = resolve;
-        rejectNegotiation = reject;
+        resolveNegotiationRaw = resolve;
+        rejectNegotiationRaw = reject;
       });
+      // `settled` flips the moment the promise SETTLES, not when open()'s awaiting continuation
+      // runs — otherwise an error frame landing in the microtask gap between the answer's resolve
+      // and that continuation would call rejectNegotiation on an already-resolved promise (a
+      // silent no-op) instead of context.fail, and a terminal failure would vanish entirely.
+      const resolveNegotiation = () => {
+        settled = true;
+        resolveNegotiationRaw();
+      };
+      const rejectNegotiation = (error: Error) => {
+        settled = true;
+        rejectNegotiationRaw(error);
+      };
       const negotiationTimer = setTimeout(() => {
         rejectNegotiation(
           new Error(

@@ -90,6 +90,62 @@ describe("lucyRealtime", () => {
     });
   });
 
+  it("reports an error frame that lands right after the answer resolves", async () => {
+    // The failure window: the answer resolves the negotiation promise, but open()'s awaiting
+    // continuation has not run yet. An error frame handled in that microtask gap must reach
+    // context.fail — rejecting the already-resolved negotiation promise is a silent no-op.
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const fail = jest.fn(async () => undefined);
+    const peer = {
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
+      setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      setRemoteDescription: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+      fail,
+    });
+
+    const opening = lucyRealtime().open(context, {
+      endpointId: context.endpointId,
+      input: { prompt: "x" },
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({
+      type: "iceServers",
+      iceServers: [],
+      request_id: "ready",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    handler?.onResult({
+      type: "answer",
+      sdp: "remote-answer",
+      request_id: "answer",
+    });
+    await opening;
+    // An error frame after the negotiation settled must reach context.fail — `settled` flips at
+    // promise-settle time, so no microtask window exists where rejecting the already-resolved
+    // negotiation promise would swallow the failure silently.
+    handler?.onResult({ type: "error", request_id: "boom" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fail).toHaveBeenCalledWith(
+      "Lucy signaling endpoint reported an error",
+    );
+  });
+
   it("publishes its remote stream through context.media", async () => {
     // Inbound media goes through the kernel's channel, never an option of this extension's own, so
     // that an app offering more than one protocol has one name for it rather than one per protocol.

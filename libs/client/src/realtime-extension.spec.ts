@@ -647,6 +647,41 @@ describe("realtime extensions", () => {
     expect(diagnostics).toEqual([]);
   });
 
+  it('runs each cleanup exactly once when onState("closed") re-enters close()', async () => {
+    // setState("closed") fires the caller's onState synchronously; a handler that closes on
+    // seeing "closed" re-enters cleanup() — the teardown memo must already be published, and the
+    // release list is consumed destructively, so nothing runs twice.
+    const release = jest.fn();
+    const reentrant = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/onstate-reentry",
+      defaultEndpoint: "test/onstate-reentry",
+      async open(context) {
+        context.addCleanup(release);
+        return { close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    // Assigned once after open() returns; the callback only reads it. prefer-const cannot see
+    // through the closure.
+    // eslint-disable-next-line prefer-const
+    let handle: { close(): Promise<void> } | undefined;
+    const session = client.open(reentrant, {
+      onState: (next) => {
+        if (next === "closed") void handle?.close();
+      },
+    });
+    handle = session;
+    await session.ready;
+    await session.close();
+
+    expect(release).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps close() pending until a late-opening session is torn down", async () => {
     // An extension mid-operation may not observe the abort promptly and can still hand back a
     // resource-bearing session. An awaited close() must cover that late session's teardown

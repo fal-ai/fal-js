@@ -570,7 +570,9 @@ export function createRealtimeClient({
           latestEnqueuedMessage = enqueuedMessage;
           if (
             machine.current === "active" &&
-            enqueuedMessage &&
+            // Explicit undefined check: the message is already encoded, and a custom encoder can
+            // legitimately produce "" (an empty heartbeat frame) — truthiness would strand it.
+            enqueuedMessage !== undefined &&
             websocket?.readyState === WebSocket.OPEN
           ) {
             send({ type: "send", message: enqueuedMessage });
@@ -701,8 +703,11 @@ export function createRealtimeClient({
               const queued =
                 stateMachine.service.context?.enqueuedMessage ??
                 latestEnqueuedMessage;
-              if (queued) {
-                ws.send(encodeMessageFn(queued));
+              // The queued value was encoded by send() already — re-encoding would double-encode
+              // custom string framings — and "" is a legitimate encoded frame, so the gate is an
+              // explicit undefined check rather than truthiness.
+              if (queued !== undefined) {
+                ws.send(queued);
                 stateMachine.service.context = {
                   ...stateMachine.service.context,
                   enqueuedMessage: undefined,
@@ -892,14 +897,15 @@ export function createRealtimeClient({
     const cleanup = (): Promise<void> => {
       if (cleanupPromise) return cleanupPromise;
       closed = true;
-      setState("closed");
       cleanupPromise = Promise.resolve().then(async () => {
         try {
           await closeSession();
         } catch {
           // Teardown is best-effort; a broken extension close hook must not leak rejection.
         } finally {
-          for (const release of cleanups.reverse()) {
+          // splice() consumes the list, so any reentrant call that slips past the memo can never
+          // run a release twice, and reverse() no longer mutates a shared array.
+          for (const release of cleanups.splice(0).reverse()) {
             try {
               await release();
             } catch {
@@ -910,8 +916,10 @@ export function createRealtimeClient({
           await drainLateCleanups();
         }
       });
-      // abort listeners run synchronously and may re-enter through context.close()
-      // or context.fail(), so publish the shared teardown promise first.
+      // EVERY synchronous callback fired below can re-enter cleanup() — onState("closed") through
+      // a caller that closes on seeing "closed", abort listeners through context.close() or
+      // context.fail() — so the shared teardown promise is published before any of them run.
+      setState("closed");
       controller.abort();
       externalSignal?.removeEventListener("abort", abort);
       return cleanupPromise;

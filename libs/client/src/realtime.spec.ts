@@ -401,6 +401,34 @@ describe("createRealtimeClient", () => {
     expect(onResult).toHaveBeenCalledWith(result);
   });
 
+  it("delivers a falsy encoded message queued before the socket opened, without re-encoding", async () => {
+    // send() stores the ALREADY-ENCODED payload; a custom encoder can legitimately produce ""
+    // (an empty heartbeat frame). Truthiness gates would strand it, and the onopen flush must
+    // send the stored value verbatim rather than encoding it a second time.
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      encodeMessage: () => "",
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ ignored: true });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    expect(socket.send).toHaveBeenCalledTimes(1);
+    expect(socket.send).toHaveBeenCalledWith("");
+    connection.close();
+  });
+
   it("falls back to msgpack decode when receiving binary in json mode", async () => {
     const onResult = jest.fn();
     const client = createRealtimeClient({ config });

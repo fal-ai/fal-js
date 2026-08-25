@@ -347,7 +347,46 @@ export function wma(endpointId?: string) {
       // Published through context.data rather than an option of this extension's own: "a message
       // arrived" means the same thing in every protocol, so the kernel names it once and an
       // application offering two extensions learns one name. See RealtimeOpenOptions.onData.
-      channel.onmessage = (event) => context.data(String(event.data));
+      //
+      // Binary frames are DECODED, not stringified: a data channel delivers ArrayBuffer (or Blob,
+      // per browser) for binary sends, and String() would hand the application the literal
+      // "[object ArrayBuffer]". onData's contract is a raw string, so bytes decode as UTF-8; a
+      // Blob decodes asynchronously, which can reorder around neighboring text frames — a
+      // documented trade for not losing the payload entirely.
+      channel.onmessage = (event) => {
+        const payload: unknown = event.data;
+        if (typeof payload === "string") {
+          context.data(payload);
+          return;
+        }
+        if (payload instanceof ArrayBuffer || ArrayBuffer.isView(payload)) {
+          const bytes =
+            payload instanceof ArrayBuffer ? new Uint8Array(payload) : payload;
+          context.data(new TextDecoder().decode(bytes as Uint8Array));
+          return;
+        }
+        if (
+          typeof Blob !== "undefined" &&
+          payload instanceof Blob &&
+          typeof payload.text === "function"
+        ) {
+          void payload.text().then(
+            (text) => context.data(text),
+            () =>
+              context.diagnostic({
+                kind: "warning",
+                message:
+                  "A binary control-channel frame could not be decoded and was dropped.",
+              }),
+          );
+          return;
+        }
+        context.diagnostic({
+          kind: "warning",
+          message:
+            "A control-channel frame with an unsupported payload type was dropped.",
+        });
+      };
       const publishedStreams = new WeakSet<MediaStream>();
       pc.ontrack = (event) => {
         const streams =
@@ -589,11 +628,12 @@ export function wma(endpointId?: string) {
 /*
  * Usage — a pure output stream is the degenerate case, which is the point:
  *
- *   const stream = await fal.realtime.open(wma("fal-ai/wma-outstream"), {
+ *   const stream = fal.realtime.open(wma("fal-ai/wma-outstream"), {
  *     onMedia: (s) => { videoEl.srcObject = s },
  *     onState: (s) => { if (s === "failed") console.warn("died") },
  *   });
  *
+ * The handle returns synchronously in state "opening" (await `.ready` for the promise style).
  * No `send`, no message schema, no key handling. An interactive world model is the same
  * call plus `onData` and `send({ type: "keys", pressed, activated })`.
  */

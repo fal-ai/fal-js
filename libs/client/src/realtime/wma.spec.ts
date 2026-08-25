@@ -883,6 +883,39 @@ describe("wma", () => {
     ]);
   });
 
+  it("decodes binary control-channel frames instead of stringifying them", async () => {
+    // A data channel delivers ArrayBuffer for binary sends; String(event.data) would hand the
+    // application the literal "[object ArrayBuffer]" — silent data destruction.
+    const { channel } = install();
+    const seenData: string[] = [];
+    const context = fakeExtensionContext({
+      endpointId: "me/world",
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
+      fetch: async () =>
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+      data: (raw: string) => void seenData.push(raw),
+    });
+
+    await wma().open(context, { endpointId: "me/world" });
+
+    const bytes = new TextEncoder().encode('{"type":"binary_frame"}');
+    (channel.onmessage as (event: { data: unknown }) => void)?.({
+      data: bytes.buffer,
+    });
+    (channel.onmessage as (event: { data: unknown }) => void)?.({
+      data: bytes,
+    });
+    expect(seenData).toEqual([
+      '{"type":"binary_frame"}',
+      '{"type":"binary_frame"}',
+    ]);
+  });
+
   it("synthesises a stream when the track arrives without one", async () => {
     // Some implementations deliver `track` with an empty `streams`. Dropping the media entirely in
     // that case would be a silent black video.

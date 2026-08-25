@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TokenProvider } from "../auth";
 import { ApiError } from "../response";
-import { throttle } from "../utils";
 import { defineRealtimeExtension, type RealtimeSession } from "./extension";
 import {
   DEFAULT_THROTTLE_INTERVAL,
@@ -15,6 +14,8 @@ import {
   realtimeTokenScope,
   type WithRequestId,
 } from "./protocol";
+
+const MAX_PACED_MESSAGES = 64;
 
 const WEBSOCKET_HANDSHAKE_TIMEOUT_MS = 15_000;
 
@@ -77,8 +78,9 @@ export interface WebsocketOptions<Output = any> {
 
   /**
    * Minimum gap between sends, in milliseconds. Realtime apps react to typing and pointer movement,
-   * which produce far more input than a model can consume. Leading-edge with a trailing call, so the
-   * first input goes immediately and the last one is never the one that gets dropped.
+   * which produce far more input than a model can consume. Paced FIFO: the first input goes
+   * immediately and later ones drain in order at this rate — nothing in the middle is dropped,
+   * unlike a throttle — bounded at 64 pending with oldest-first eviction and a warning.
    */
   throttleInterval?: number;
 
@@ -291,9 +293,58 @@ export function websocket<Input = any, Output = any>(endpointId?: string) {
         if (ws.readyState !== WebSocket.OPEN) return;
         ws.send(encodeMessage(input));
       };
-      // Zero disables it, as in `connect()`, for callers whose inputs are already paced.
-      const send =
-        throttleInterval > 0 ? throttle(write, throttleInterval, true) : write;
+      // A paced FIFO rather than a leading+trailing throttle: the throttle keeps only the last
+      // pending call, so the kernel's pre-live queue flush — a synchronous burst of distinct
+      // messages — would deliver the first and last and silently drop everything between, the
+      // exact single-slot data loss connect() is criticized for. Pacing preserves every message
+      // in order at the same wire rate. Bounded like the kernel queue; overflow drops the oldest
+      // with one warning. Zero disables pacing, as in `connect()`.
+      let send: (input: Input & Partial<WithRequestId>) => void = write;
+      if (throttleInterval > 0) {
+        const pending: Array<Input & Partial<WithRequestId>> = [];
+        let lastSentAt = 0;
+        let drainTimer: ReturnType<typeof setTimeout> | undefined;
+        let warnedOverflow = false;
+        context.addCleanup(() => {
+          if (drainTimer !== undefined) clearTimeout(drainTimer);
+          pending.length = 0;
+        });
+        const drain = () => {
+          drainTimer = undefined;
+          const next = pending.shift();
+          if (next === undefined) return;
+          lastSentAt = Date.now();
+          write(next);
+          if (pending.length > 0) {
+            drainTimer = setTimeout(drain, throttleInterval);
+          }
+        };
+        send = (input) => {
+          const now = Date.now();
+          if (pending.length === 0 && now - lastSentAt >= throttleInterval) {
+            lastSentAt = now;
+            write(input);
+            return;
+          }
+          if (pending.length >= MAX_PACED_MESSAGES) {
+            pending.shift();
+            if (!warnedOverflow) {
+              warnedOverflow = true;
+              context.diagnostic({
+                kind: "warning",
+                message: `More than ${MAX_PACED_MESSAGES} messages are waiting for the send pacer; the oldest are being dropped.`,
+              });
+            }
+          }
+          pending.push(input);
+          if (drainTimer === undefined) {
+            drainTimer = setTimeout(
+              drain,
+              Math.max(0, throttleInterval - (now - lastSentAt)),
+            );
+          }
+        };
+      }
 
       return {
         send,

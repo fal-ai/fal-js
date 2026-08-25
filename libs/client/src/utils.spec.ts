@@ -16,6 +16,17 @@ describe("The utils test suite", () => {
     expect(() => ensureEndpointIdFormat(id)).toThrowError();
   });
 
+  it("should reject URLs that failed validation instead of passing them through", () => {
+    // An http:// fal URL fails isValidUrl (https-only); slipping it through as an "endpoint id"
+    // would build https://fal.run/http://… — a silently mangled 404. Reject loudly instead.
+    expect(() =>
+      ensureEndpointIdFormat("http://fal.run/fal-ai/flux"),
+    ).toThrowError(/https/);
+    expect(() =>
+      ensureEndpointIdFormat("https://evil.example/fal-ai/flux"),
+    ).toThrowError(/https/);
+  });
+
   it("should parse a current app id", () => {
     const id = "fal-ai/fast-sdxl";
     const parsed = parseEndpointId(id);

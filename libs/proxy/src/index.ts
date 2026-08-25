@@ -160,11 +160,10 @@ function getFalKey(): string | undefined {
 
 const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 
-// Request headers the proxy owns or that must not travel: credentials meant for the proxy host
-// (`authorization`, `cookie`), hop-by-hop headers the upstream fetch manages itself, and headers
-// derived from the incoming connection. Everything else passes through, so an extension header or
-// a non-JSON `accept` behaves the same through the proxy as with a direct fetch.
-const EXCLUDED_REQUEST_HEADERS = new Set([
+// Request headers that are never forwarded, even when explicitly listed in
+// `forwardRequestHeaders`: credentials addressed to the proxy host and hop-by-hop headers the
+// upstream fetch manages itself.
+const NEVER_FORWARDED_REQUEST_HEADERS = new Set([
   "authorization",
   "cookie",
   "host",
@@ -306,14 +305,25 @@ export async function handleRequest<ResponseType>(
     return behavior.respondWith(401, "Unauthorized");
   }
 
-  // Pass request headers through, minus the ones the proxy owns. A realtime extension's
-  // provider-specific header or `accept: text/event-stream` must survive the documented proxy
-  // path, or the same code silently changes protocol depending on how the client is configured.
-  // The proxy-owned values are applied after the spread, so a caller cannot override them.
+  // Forward an ALLOWLIST, never a pass-through: applications authenticate their own proxy route
+  // with custom headers (session tokens, API keys, CSRF tokens) that no denylist can enumerate,
+  // and forwarding them would leak user credentials to the upstream on every call. `x-fal-*`
+  // always travels; `accept` and `content-type` shape the request; anything else — say a realtime
+  // extension's provider-specific header — is forwarded only when the operator names it in
+  // `forwardRequestHeaders`. The proxy-owned values are applied after the spread, so a caller
+  // cannot override them.
+  const forwarded = new Set(
+    (resolvedConfig.forwardRequestHeaders ?? []).map((name) =>
+      name.toLowerCase(),
+    ),
+  );
   const headers: Record<string, HeaderValue> = {};
   Object.keys(behavior.getHeaders()).forEach((key) => {
     const name = key.toLowerCase();
-    if (!EXCLUDED_REQUEST_HEADERS.has(name)) {
+    if (NEVER_FORWARDED_REQUEST_HEADERS.has(name)) {
+      return;
+    }
+    if (name.startsWith("x-fal-") || forwarded.has(name)) {
       headers[name] = behavior.getHeader(key);
     }
   });
@@ -322,22 +332,31 @@ export async function handleRequest<ResponseType>(
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
   const accept =
     singleHeaderValue(behavior.getHeader("accept")) ?? "application/json";
-  // The incoming content-type already passes through the header loop above; a request that
-  // omitted it must stay without one, matching direct-fetch semantics for raw binary bodies —
-  // defaulting to JSON would make upstream endpoints parse valid bytes as JSON.
+  const body =
+    behavior.method?.toUpperCase() === "GET"
+      ? undefined
+      : await readRequestBody();
+  // The incoming content-type is forwarded when present. When absent, string bodies keep the
+  // historical application/json default (bare `fetch(proxy, { body: JSON.stringify(x) })` callers
+  // relied on the old rewrite, and browsers would otherwise label them text/plain) — while raw
+  // binary bodies stay label-free, matching direct-fetch semantics.
+  const incomingContentType = singleHeaderValue(
+    behavior.getHeader("content-type"),
+  );
+  const contentType =
+    incomingContentType ??
+    (typeof body === "string" ? "application/json" : undefined);
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
       ...headers,
       authorization,
       accept,
+      ...(contentType !== undefined ? { "content-type": contentType } : {}),
       "user-agent": userAgent,
       "x-fal-client-proxy": proxyUserAgent,
     } as HeadersInit,
-    body:
-      behavior.method?.toUpperCase() === "GET"
-        ? undefined
-        : await readRequestBody(),
+    body,
   });
 
   // copy headers from fal to the proxied response
