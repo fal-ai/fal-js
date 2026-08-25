@@ -56,18 +56,21 @@ export function createRouteHandler({
         getRequestBody: async () => {
           const bodyCacheKeys = Object.keys(context.req.bodyCache);
           const contentType = context.req.header("content-type") ?? "";
+          const hasByteFaithfulCache =
+            "arrayBuffer" in context.req.bodyCache ||
+            "blob" in context.req.bodyCache;
           if (
             contentType.toLowerCase().startsWith("multipart/") &&
             bodyCacheKeys.length > 0 &&
-            !("arrayBuffer" in context.req.bodyCache)
+            !hasByteFaithfulCache
           ) {
             // Hono recreates arrayBuffer() from the first cached representation. Recreating it
             // from FormData chooses a NEW multipart boundary while this proxy forwards the old
             // content-type header, so the upstream cannot parse it.
             throw new Error(
               "The fal proxy cannot forward a multipart body that Hono middleware already " +
-                "consumed without caching its original bytes. Read c.req.arrayBuffer() before " +
-                "parsing, or exclude the proxy route from that middleware.",
+                "consumed without caching its original bytes. Cache c.req.arrayBuffer() or " +
+                "c.req.blob(), or exclude the proxy route from that middleware.",
             );
           }
           if (context.req.raw.bodyUsed && bodyCacheKeys.length === 0) {

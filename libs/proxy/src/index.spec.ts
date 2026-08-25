@@ -776,6 +776,46 @@ describe("createRouteHandler (hono) body handling", () => {
     }
   });
 
+  it("preserves cached multipart bytes when middleware cached a Blob", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.blob();
+      await next();
+    });
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const form = new FormData();
+    form.append("field", "value");
+    const request = new Request("http://local.test/proxy", {
+      method: "POST",
+      headers: { "x-fal-target-url": "https://fal.run/owner/app" },
+      body: form,
+    });
+    const originalBody = new Uint8Array(await request.clone().arrayBuffer());
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      const response = await app.request(request);
+
+      expect(response.status).toBe(200);
+      expect(
+        new Uint8Array(fetchMock.mock.calls[0][1]?.body as ArrayBuffer),
+      ).toEqual(originalBody);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("rejects cached FormData whose original multipart boundary is gone", async () => {
     const { Hono } = await import("hono");
     const { createRouteHandler } = await import("./hono");
