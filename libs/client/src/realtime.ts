@@ -1499,10 +1499,12 @@ export function createRealtimeClient({
       },
       deleteProperty(_target, property) {
         if (!session) return false;
-        boundMethods.delete(property);
         if (!Reflect.deleteProperty(session, property)) {
+          // A failed deletion changed nothing — the cached binding must survive so the method
+          // keeps its identity for callers holding the previous reference.
           return false;
         }
+        boundMethods.delete(property);
         // Keep the neutral target's key set in step with the session's, or a delete after
         // `Object.preventExtensions()` would leave `ownKeys` reporting fewer keys than the
         // non-extensible target owns.

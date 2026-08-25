@@ -80,6 +80,9 @@ export function isValidUrl(url: string) {
     const hostname = parsed.hostname.toLowerCase();
     return (
       parsed.protocol === "https:" &&
+      // No explicit nonstandard port: the URL parser normalizes :443 away, so any remaining port
+      // targets a different listener — credentials must not follow a fal hostname to it.
+      parsed.port === "" &&
       (hostname === "fal.ai" ||
         hostname.endsWith(".fal.ai") ||
         hostname === "fal.run" ||

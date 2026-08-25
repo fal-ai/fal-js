@@ -63,5 +63,9 @@ describe("The utils test suite", () => {
     expect(isValidUrl("https://notfal.run/steal")).toBe(false);
     expect(isValidUrl("https://fal.run.attacker.example/steal")).toBe(false);
     expect(isValidUrl("http://fal.run/fal-ai/flux")).toBe(false);
+    // The default :443 normalizes away; any surviving explicit port is another listener and
+    // credentials must not follow a fal hostname to it.
+    expect(isValidUrl("https://fal.run:443/fal-ai/flux")).toBe(true);
+    expect(isValidUrl("https://fal.run:8443/fal-ai/flux")).toBe(false);
   });
 });

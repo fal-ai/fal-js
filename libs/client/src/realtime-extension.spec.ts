@@ -1134,6 +1134,17 @@ describe("realtime extensions", () => {
     expect(
       Object.getOwnPropertyDescriptor(session, "fixed")?.configurable,
     ).toBe(false);
+
+    // A failed deletion changes nothing: the bound method keeps its identity, so a caller holding
+    // the previous reference (say, to remove an event listener) can still match it.
+    Object.defineProperty(raw, "handler", {
+      configurable: false,
+      writable: false,
+      value: jest.fn(),
+    });
+    const before = (session as Record<string, unknown>).handler;
+    expect(Reflect.deleteProperty(session, "handler")).toBe(false);
+    expect((session as Record<string, unknown>).handler).toBe(before);
   });
 
   it("serves a caller-pinned function definition verbatim", async () => {
