@@ -8,6 +8,7 @@ import {
   responsePassthrough,
 } from "./index";
 import {
+  isJsonContentType,
   readUnconsumedRequestBody,
   readWebRequestBody,
   serializeParsedBody,
@@ -43,11 +44,9 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           const contentType = (
             request.headers["content-type"] ?? ""
           ).toLowerCase();
+          const jsonBody = isJsonContentType(contentType);
           const losslesslyParsed =
-            contentType.startsWith("application/json") ||
-            // Structured-suffix JSON types (application/ld+json, …) are UTF-8 text; decoding
-            // them as a string loses nothing.
-            /^application\/[^;\s]*\+json/.test(contentType) ||
+            jsonBody ||
             contentType.startsWith("application/x-www-form-urlencoded") ||
             contentType.startsWith("text/");
           // No content type is NOT an exemption: Next text-decodes those bodies too, and binary
@@ -64,6 +63,13 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
                 "parsing for this route (export const config = { api: { bodyParser: false } }) " +
                 "so the proxy can forward the raw request stream.",
             );
+          }
+          // Next PARSES json bodies, so a string here is a top-level JSON string VALUE, not raw
+          // JSON text — it must re-encode ("hello" → "\"hello\"") or the upstream receives
+          // invalid JSON under a JSON content type. (Express is different: its string bodies are
+          // raw text and pass through.)
+          if (jsonBody && typeof request.body === "string") {
+            return JSON.stringify(request.body);
           }
           const parsed = serializeParsedBody(
             request.body,

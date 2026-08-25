@@ -146,6 +146,83 @@ describe("lucyRealtime", () => {
     );
   });
 
+  it("closes the session when signaling closes normally after negotiation", async () => {
+    // A normal remote closure (code 1000) is not an error, but Lucy's controls ride the
+    // signaling socket — a session that cannot be steered must not keep reporting live.
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const close = jest.fn(async () => undefined);
+    const fail = jest.fn(async () => undefined);
+    const peer = {
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
+      setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      setRemoteDescription: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+      close,
+      fail,
+    });
+
+    const opening = lucyRealtime().open(context, {
+      endpointId: context.endpointId,
+      input: { prompt: "x" },
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({
+      type: "iceServers",
+      iceServers: [],
+      request_id: "ready",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    handler?.onResult({
+      type: "answer",
+      sdp: "remote-answer",
+      request_id: "answer",
+    });
+    await opening;
+
+    handler?.onClose?.({ code: 1000, reason: "server done" });
+    await Promise.resolve();
+
+    expect(close).toHaveBeenCalled();
+    expect(fail).not.toHaveBeenCalled();
+  });
+
+  it("fails negotiation when signaling closes normally before the answer", async () => {
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const fail = jest.fn(async () => undefined);
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+      fail,
+    });
+
+    const opening = lucyRealtime().open(context, {
+      endpointId: context.endpointId,
+      input: { prompt: "x" },
+    });
+    const settled = opening.catch((error) => error);
+    handler?.onClose?.({ code: 1000, reason: "gone early" });
+
+    const error = await settled;
+    expect(error).toBeInstanceOf(Error);
+    expect(String(error)).toMatch(/closed before negotiation/);
+  });
+
   it("publishes its remote stream through context.media", async () => {
     // Inbound media goes through the kernel's channel, never an option of this extension's own, so
     // that an app offering more than one protocol has one name for it rather than one per protocol.

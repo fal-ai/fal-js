@@ -292,6 +292,18 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
           void handleMessage(message as SignalingMessage).catch(fail);
         },
         onError: fail,
+        // A NORMAL remote closure of the signaling socket is not an error, but this session's
+        // controls ride on it: before the answer it means negotiation can never complete, and
+        // after it the session cannot be steered — either way "live" would be a lie.
+        onClose: () => {
+          if (!settled) {
+            fail(
+              new Error("Lucy signaling closed before negotiation completed"),
+            );
+            return;
+          }
+          void context.close();
+        },
       });
       context.addCleanup(() => {
         context.signal.removeEventListener("abort", abortNegotiation);

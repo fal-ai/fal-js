@@ -484,6 +484,38 @@ describe("createPageRouterHandler body handling", () => {
     );
   });
 
+  it("re-encodes a parsed top-level JSON string body", async () => {
+    // Next PARSES application/json, so a string body is a JSON string VALUE; forwarding it
+    // verbatim would send invalid JSON (hello instead of "hello") under a JSON content type.
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "POST",
+      body: "hello",
+      headers: {
+        "x-fal-target-url": "https://wma.fal.run/session",
+        "content-type": "application/json",
+      },
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handler(request as never, response as never);
+      expect(fetchMock.mock.calls[0][1]?.body).toBe('"hello"');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("fails loudly for untyped bodies Next decoded as text", async () => {
     // Binary posted without a content-type is text-decoded by Next's default parser too — and a
     // forwarded string would then be labeled application/json by the string default.

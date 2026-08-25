@@ -304,6 +304,14 @@ export interface RealtimeConnectionHandler<Output> {
   onError?(error: ApiError<any>): void;
 
   /**
+   * Called when the connection closes NORMALLY (code 1000) from the remote side. Abnormal
+   * closures keep reporting through `onError`. Optional and additive: consumers that treat this
+   * connection as a live session (a signaling ride-along, say) need to hear a clean remote
+   * goodbye that is not an error, or they keep reporting live over a socket that is gone.
+   */
+  onClose?(event: { code: number; reason: string }): void;
+
+  /**
    * A custom token provider function. When provided, this function will be
    * used to fetch authentication tokens instead of the default internal
    * token fetching mechanism.
@@ -372,7 +380,7 @@ type ConnectionOnChange = InterpretOnChangeFunction<
 
 type RealtimeConnectionCallback = Pick<
   RealtimeConnectionHandler<any>,
-  "onResult" | "onError" | "decodeMessage"
+  "onResult" | "onError" | "onClose" | "decodeMessage"
 >;
 
 const connectionCache = new Map<string, ConnectionStateMachine>();
@@ -724,6 +732,14 @@ export function createRealtimeClient({
                     status: event.code,
                   }),
                 );
+              } else {
+                // A NORMAL closure is not an error, but a consumer that treats this connection as
+                // a live session (Lucy's signaling ride-along) still needs to hear it — silence
+                // here would leave that session reporting live over a socket that is gone.
+                getCallbacks()?.onClose?.({
+                  code: event.code,
+                  reason: event.reason,
+                });
               }
               send({ type: "connectionClosed", code: event.code });
             };
