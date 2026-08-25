@@ -64,11 +64,11 @@ export function createRouteHandler({
         getRequestBody: async () => {
           const rawRequest = context.req.raw;
           const bodyCacheKeys = Object.keys(context.req.bodyCache);
+          const firstBodyCacheKey = bodyCacheKeys[0];
           const contentType = context.req.header("content-type") ?? "";
           const mediaType = contentType.split(";", 1)[0].trim().toLowerCase();
           const hasByteFaithfulCache =
-            "arrayBuffer" in context.req.bodyCache ||
-            "blob" in context.req.bodyCache;
+            firstBodyCacheKey === "arrayBuffer" || firstBodyCacheKey === "blob";
 
           // parseBody() can cache `{}` for media types it ignores without touching the stream.
           // Prefer the original stream whenever it is still available, regardless of cache keys.
@@ -76,6 +76,10 @@ export function createRouteHandler({
             return readWebRequestBody(rawRequest, maxRequestBodyBytes);
           }
 
+          // Hono derives every later representation from the FIRST cached one. A later
+          // arrayBuffer/blob key therefore does not establish byte fidelity if text(), json(),
+          // or formData() consumed the stream first. Only a byte representation that was itself
+          // first in the cache can contain the original request bytes.
           if (hasByteFaithfulCache) {
             return readWebRequestBody(
               {
@@ -93,7 +97,8 @@ export function createRouteHandler({
             throw new Error(
               "The fal proxy cannot forward a multipart body that Hono middleware already " +
                 "consumed without caching its original bytes. Cache c.req.arrayBuffer() or " +
-                "c.req.blob(), or exclude the proxy route from that middleware.",
+                "c.req.blob() before any decoded representation, or exclude the proxy route " +
+                "from that middleware.",
             );
           }
 
@@ -148,8 +153,8 @@ export function createRouteHandler({
           }
           throw new Error(
             `The fal proxy cannot faithfully reconstruct a cached ${mediaType || "untyped"} ` +
-              "Hono request body. Cache c.req.arrayBuffer() or c.req.blob(), or exclude the " +
-              "proxy route from body-parsing middleware.",
+              "Hono request body. Cache c.req.arrayBuffer() or c.req.blob() before any decoded " +
+              "representation, or exclude the proxy route from body-parsing middleware.",
           );
         },
         sendResponse: responsePassthrough,

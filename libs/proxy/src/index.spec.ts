@@ -889,6 +889,101 @@ describe("createRouteHandler (hono) body handling", () => {
     }
   });
 
+  it.each(["arrayBuffer", "blob"] as const)(
+    "does not trust a derived %s cache created after cached text",
+    async (derivedCacheKind) => {
+      const { Hono } = await import("hono");
+      const { createRouteHandler } = await import("./hono");
+      const app = new Hono();
+      app.use("/proxy", async (context, next) => {
+        await context.req.text();
+        const derived =
+          derivedCacheKind === "arrayBuffer"
+            ? await context.req.arrayBuffer()
+            : await context.req.blob();
+        // Current Hono versions do not retain derived representations, but retaining them is a
+        // valid cache implementation detail. Model that state to prove fidelity is determined by
+        // the first representation rather than the presence of a later byte-shaped cache key.
+        (context.req.bodyCache as Record<string, unknown>)[derivedCacheKind] =
+          Promise.resolve(derived);
+        await next();
+      });
+      app.onError((error, context) => context.text(error.message, 500));
+      app.post(
+        "/proxy",
+        createRouteHandler({
+          allowUnauthorizedRequests: false,
+          isAuthenticated: async () => true,
+          resolveFalAuth: async () => "Key secret",
+        }),
+      );
+
+      const fetchMock = jest.spyOn(global, "fetch");
+      try {
+        const response = await app.request("http://local.test/proxy", {
+          method: "POST",
+          headers: {
+            "x-fal-target-url": "https://fal.run/owner/app",
+            "content-type": "text/plain; charset=iso-8859-1",
+          },
+          body: new Uint8Array([0xe9]),
+        });
+
+        expect(response.status).toBe(500);
+        await expect(response.text()).resolves.toMatch(/iso-8859-1/);
+        expect(fetchMock).not.toHaveBeenCalled();
+      } finally {
+        fetchMock.mockRestore();
+      }
+    },
+  );
+
+  it("does not trust a derived byte cache created after cached multipart text", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.text();
+      const derived = await context.req.arrayBuffer();
+      (context.req.bodyCache as Record<string, unknown>).arrayBuffer =
+        Promise.resolve(derived);
+      await next();
+    });
+    app.onError((error, context) => context.text(error.message, 500));
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: {
+          "x-fal-target-url": "https://fal.run/owner/app",
+          "content-type": "multipart/form-data; boundary=boundary",
+        },
+        body: new Uint8Array([
+          ...new TextEncoder().encode(
+            '--boundary\r\nContent-Disposition: form-data; name="file"\r\n\r\n',
+          ),
+          0xff,
+          ...new TextEncoder().encode("\r\n--boundary--\r\n"),
+        ]),
+      });
+
+      expect(response.status).toBe(500);
+      await expect(response.text()).resolves.toMatch(/multipart.*consumed/i);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("rejects cached text for a binary media type", async () => {
     const { Hono } = await import("hono");
     const { createRouteHandler } = await import("./hono");
