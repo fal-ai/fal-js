@@ -261,6 +261,17 @@ export async function handleRequest<ResponseType>(
   let requestBodyPromise: Promise<ProxyRequestBody> | undefined;
   const readRequestBody = () =>
     (requestBodyPromise ??= behavior.getRequestBody());
+  // Authentication callbacks sometimes verify a signature over the request body. Give them the
+  // same cached reader used by policy checks and forwarding, or a one-shot adapter stream would
+  // be consumed before the proxy reaches fetch.
+  const behaviorWithCachedBody = new Proxy(behavior, {
+    get(target, property) {
+      if (property === "getRequestBody") return readRequestBody;
+      const value = Reflect.get(target, property, target) as unknown;
+      // Preserve class-based ProxyBehavior implementations whose methods use private fields.
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
   // The forwarded body stays raw bytes — decoding a multipart payload corrupts its file parts.
   // Only the WMA app-id extraction needs text, and those routes carry JSON.
   const readRequestBodyText = async (): Promise<string | undefined> => {
@@ -316,8 +327,16 @@ export async function handleRequest<ResponseType>(
 
   // Authentication FIRST, once: an unauthenticated caller learns nothing about endpoint policy,
   // and the check cannot diverge between the service and app paths.
-  const isAuthenticated =
-    (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
+  let isAuthenticated: boolean;
+  try {
+    isAuthenticated =
+      (await resolvedConfig.isAuthenticated?.(behaviorWithCachedBody)) ?? false;
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return behavior.respondWith(error.status, error.message);
+    }
+    throw error;
+  }
   if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
     return behavior.respondWith(401, "Unauthorized");
   }
@@ -381,9 +400,17 @@ export async function handleRequest<ResponseType>(
     }
   }
 
-  const authorization =
-    (await resolvedConfig.resolveFalAuth?.(behavior)) ??
-    (await behavior.resolveApiKey?.());
+  let authorization: string | undefined;
+  try {
+    authorization =
+      (await resolvedConfig.resolveFalAuth?.(behaviorWithCachedBody)) ??
+      (await behavior.resolveApiKey?.());
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return behavior.respondWith(error.status, error.message);
+    }
+    throw error;
+  }
   if (!authorization) {
     return behavior.respondWith(401, "Unauthorized");
   }

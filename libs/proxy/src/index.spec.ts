@@ -1670,6 +1670,60 @@ describe("handleRequest rejection reasons", () => {
     expect(getRequestBody).not.toHaveBeenCalled();
   });
 
+  it("shares one cached body read with authentication callbacks and fetch", async () => {
+    const requestBody = '{"prompt":"hello"}';
+    const { behavior } = behaviorFor(
+      "https://fal.run/owner/app",
+      "POST",
+      requestBody,
+    );
+    const originalBodyReader = jest
+      .fn()
+      .mockResolvedValueOnce(requestBody)
+      .mockResolvedValueOnce(undefined);
+    behavior.getRequestBody = originalBodyReader;
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async (authBehavior) => {
+          expect(await authBehavior.getRequestBody()).toBe(requestBody);
+          return true;
+        },
+        resolveFalAuth: async (authBehavior) => {
+          expect(await authBehavior.getRequestBody()).toBe(requestBody);
+          return "Key secret";
+        },
+      });
+
+      expect(originalBodyReader).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0][1]?.body).toBe(requestBody);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("returns 413 when authentication reads an oversized body", async () => {
+    const { RequestBodyTooLargeError } = await import("./utils");
+    const { behavior, responses } = behaviorFor("https://fal.run/owner/app");
+    behavior.getRequestBody = async () => {
+      throw new RequestBodyTooLargeError(1);
+    };
+
+    await handleRequest(behavior as never, {
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async (authBehavior) => {
+        await authBehavior.getRequestBody();
+        return true;
+      },
+      resolveFalAuth: async () => "Key secret",
+    });
+
+    expect(responses[0]).toMatchObject({ status: 413 });
+  });
+
   it("allows the bridge by default, without any allowlisting", async () => {
     expect(await run("https://wma.fal.run/session/heartbeat")).toEqual({
       status: 401,
