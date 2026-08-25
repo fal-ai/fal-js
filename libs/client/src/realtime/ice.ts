@@ -53,7 +53,8 @@ export async function gatherIceCandidates(
   pc: Pick<
     RTCPeerConnection,
     "iceGatheringState" | "addEventListener" | "removeEventListener"
-  >,
+  > &
+    Partial<Pick<RTCPeerConnection, "localDescription">>,
   options: IceGatheringOptions & {
     onProgress?: (result: IceGatheringResult) => void;
   } = {},
@@ -78,6 +79,20 @@ export async function gatherIceCandidates(
     ...counts,
     state,
   });
+
+  // Candidates gathered BEFORE this call live in the local description, not in future
+  // icecandidate events — a caller invoking the helper after setLocalDescription() (or after
+  // gathering completed entirely) would otherwise see zero counts, producing false no-relay
+  // diagnostics or waiting out the full timeout on an already sufficient set.
+  const sdp = pc.localDescription?.sdp;
+  if (sdp) {
+    for (const line of sdp.split(/\r?\n/)) {
+      if (line.startsWith("a=candidate:")) {
+        const type = parseIceCandidateType(line.slice(2));
+        if (type) counts[type] += 1;
+      }
+    }
+  }
 
   if (pc.iceGatheringState === "complete") {
     const done = snapshot("complete");
@@ -147,6 +162,11 @@ export async function gatherIceCandidates(
     pc.addEventListener("icegatheringstatechange", onState as EventListener);
     pc.addEventListener("icecandidate", onCandidate as EventListener);
     signal?.addEventListener("abort", onAbort, { once: true });
+    // A set seeded from the local description can already be sufficient — start the quiet period
+    // now rather than waiting for a further event that may never come.
+    if (sufficient()) {
+      quiet = setTimeout(() => finish("sufficient"), quietPeriodMs);
+    }
     // Close the race where the signal aborts between the initial check and listener registration.
     if (signal?.aborted) onAbort();
   });

@@ -93,6 +93,39 @@ describe("gatherIceCandidates", () => {
     expect(result.state).toBe("sufficient");
   });
 
+  it("seeds counts from candidates already in the local description", async () => {
+    // A caller invoking the helper after setLocalDescription() (or after gathering completed)
+    // must not see zero counts — pre-registration candidates live in the SDP, not in future
+    // icecandidate events.
+    const donePc = {
+      ...fakePc(),
+      iceGatheringState: "complete" as RTCIceGatheringState,
+      localDescription: {
+        sdp: `v=0\r\na=${line("host")}\r\na=${line("relay")}\r\n`,
+      } as RTCSessionDescription,
+    };
+    const done = await gatherIceCandidates(donePc as any, {});
+    expect(done).toEqual({ host: 1, srflx: 0, relay: 1, state: "complete" });
+
+    // Mid-gathering: a seeded, already-sufficient set settles after the quiet period without
+    // requiring any further event.
+    const midPc = {
+      ...fakePc(),
+      localDescription: {
+        sdp: `v=0\r\na=${line("host")}\r\na=${line("srflx")}\r\n`,
+      } as RTCSessionDescription,
+    };
+    const result = await gatherIceCandidates(midPc as any, {
+      quietPeriodMs: 20,
+    });
+    expect(result).toEqual({
+      host: 1,
+      srflx: 1,
+      relay: 0,
+      state: "sufficient",
+    });
+  });
+
   it("is NOT sufficient without a relay when TURN is configured", async () => {
     // The case that matters: shipping an offer with no relay candidate while TURN is configured
     // produces a connection that cannot work, and reports nothing about why.
