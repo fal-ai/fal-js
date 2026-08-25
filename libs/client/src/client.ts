@@ -96,8 +96,8 @@ export function createFalClient(userConfig: Config = {}): FalClient {
   const storage = createStorageClient({ config });
   const queue = createQueueClient({ config, storage });
   const streaming = createStreamingClient({ config, storage });
-  const realtime = createRealtimeClient({ config });
-  return {
+  const realtime = createRealtimeClient({ config, getClient: () => client });
+  const client: FalClient = {
     queue,
     realtime,
     storage,
@@ -142,4 +142,5 @@ export function createFalClient(userConfig: Config = {}): FalClient {
       return queue.result(endpointId, { requestId });
     },
   };
+  return client;
 }

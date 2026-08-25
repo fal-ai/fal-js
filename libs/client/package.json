@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/client",
   "description": "The fal.ai client for JavaScript and TypeScript",
-  "version": "1.10.1",
+  "version": "1.11.0-alpha.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -17,15 +17,44 @@
   ],
   "exports": {
     ".": "./src/index.js",
-    "./endpoints": "./src/types/endpoints.js"
+    "./endpoints": "./src/types/endpoints.js",
+    "./realtime": "./src/realtime/index.js",
+    "./realtime/extension": "./src/realtime/extension.js",
+    "./realtime/ice": "./src/realtime/ice.js",
+    "./realtime/lucy": "./src/realtime/lucy.js",
+    "./realtime/testing": "./src/realtime/testing.js",
+    "./realtime/websocket": "./src/realtime/websocket.js",
+    "./realtime/wma": "./src/realtime/wma.js"
   },
   "typesVersions": {
     "*": {
       "endpoints": [
         "src/types/endpoints.d.ts"
+      ],
+      "realtime": [
+        "src/realtime/index.d.ts"
+      ],
+      "realtime/extension": [
+        "src/realtime/extension.d.ts"
+      ],
+      "realtime/ice": [
+        "src/realtime/ice.d.ts"
+      ],
+      "realtime/lucy": [
+        "src/realtime/lucy.d.ts"
+      ],
+      "realtime/testing": [
+        "src/realtime/testing.d.ts"
+      ],
+      "realtime/websocket": [
+        "src/realtime/websocket.d.ts"
+      ],
+      "realtime/wma": [
+        "src/realtime/wma.d.ts"
       ]
     }
   },
+  "sideEffects": false,
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {

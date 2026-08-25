@@ -1,5 +1,10 @@
 import { createUrlMatcher, DEFAULT_ALLOWED_URL_PATTERNS } from "./config";
-import { getEndpoint, isAllowedEndpoint, isAllowedUrl } from "./index";
+import {
+  getEndpoint,
+  handleRequest,
+  isAllowedEndpoint,
+  isAllowedUrl,
+} from "./index";
 
 const FAL_REST_API_URL = "rest.fal.ai";
 
@@ -338,5 +343,229 @@ describe("isAllowedEndpoint", () => {
         isAllowedEndpoint("fal-ai/flux-dev/requests/abc123/status", patterns),
       ).toBe(true);
     });
+  });
+});
+
+describe("WMA service-host proxying", () => {
+  function behaviorFor(targetUrl: string, method = "POST", requestBody = "{}") {
+    const responses: Array<{ status: number; data: unknown }> = [];
+    return {
+      responses,
+      behavior: {
+        id: "test",
+        method,
+        getRequestBody: jest.fn(async () => requestBody),
+        getHeaders: () => ({}),
+        getHeader: (name: string) =>
+          name === "x-fal-target-url" ? targetUrl : undefined,
+        sendHeader: () => undefined,
+        respondWith: (status: number, data: unknown) => {
+          responses.push({ status, data });
+          return undefined as never;
+        },
+        sendResponse: async () => undefined as never,
+      },
+    };
+  }
+
+  const run = async (
+    targetUrl: string,
+    config: Record<string, unknown> = {},
+    method = "POST",
+    requestBody = "{}",
+  ) => {
+    const { behavior, responses } = behaviorFor(targetUrl, method, requestBody);
+    await handleRequest(
+      behavior as never,
+      {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => false,
+        ...config,
+      } as never,
+    );
+    return responses[0];
+  };
+
+  it("allows the known bridge routes without widening allowedUrlPatterns", async () => {
+    expect(await run("https://wma.fal.run/session/heartbeat")).toEqual({
+      status: 401,
+      data: "Unauthorized",
+    });
+    expect(
+      await run(
+        "https://wma.fal.run/session",
+        {
+          allowedUrlPatterns: ["fal.run/me/my-app/**"],
+          allowedEndpoints: ["me/my-app/**"],
+        },
+        "POST",
+        JSON.stringify({ app_id: "me/my-app/world" }),
+      ),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("rejects non-POST methods and unknown bridge routes", async () => {
+    for (const method of ["GET", "PUT", "PATCH", "DELETE"]) {
+      expect(
+        await run("https://wma.fal.run/session", {}, method),
+      ).toMatchObject({ status: 400 });
+    }
+    for (const path of [
+      "/upload",
+      "/session;x=1",
+      "/session%00",
+      "/session/v2",
+    ]) {
+      expect(await run(`https://wma.fal.run${path}`)).toMatchObject({
+        status: 400,
+      });
+    }
+  });
+
+  it("does not grant service-host treatment over HTTP", async () => {
+    expect(
+      await run("http://wma.fal.run/session", {
+        allowedUrlPatterns: ["fal.run/me/my-app/**"],
+      }),
+    ).toMatchObject({ status: 400 });
+  });
+
+  it("lets operators disable service hosts", async () => {
+    expect(
+      await run("https://wma.fal.run/session", { serviceHosts: [] }),
+    ).toMatchObject({ status: 400 });
+  });
+
+  it("enforces allowedEndpoints against /ice and /session app_id", async () => {
+    for (const path of ["ice", "session"]) {
+      expect(
+        await run(
+          `https://wma.fal.run/${path}`,
+          {
+            allowedEndpoints: ["me/my-app/**"],
+            isAuthenticated: async () => true,
+            resolveFalAuth: async () => undefined,
+          },
+          "POST",
+          JSON.stringify({ app_id: "someone/other-app" }),
+        ),
+      ).toMatchObject({ status: 400 });
+      expect(
+        await run(
+          `https://wma.fal.run/${path}`,
+          {
+            allowedEndpoints: ["me/my-app/**"],
+            isAuthenticated: async () => true,
+            resolveFalAuth: async () => undefined,
+          },
+          "POST",
+          JSON.stringify({ app_id: "me/my-app/world" }),
+        ),
+      ).toEqual({ status: 401, data: "Unauthorized" });
+    }
+  });
+
+  it("allows heartbeat without app_id under endpoint restrictions", async () => {
+    expect(
+      await run("https://wma.fal.run/session/heartbeat", {
+        allowedEndpoints: ["me/my-app/**"],
+      }),
+    ).toEqual({ status: 401, data: "Unauthorized" });
+  });
+
+  it("rejects missing, duplicate, and escaped duplicate app_id keys", async () => {
+    for (const body of [
+      "{}",
+      '{"app_id":"me/my-app","app_id":"someone/other-app"}',
+      '{"app_id":"me/my-app","app_\\u0069d":"someone/other-app"}',
+      '{"app_\\u0069d":"me/my-app","app_id":"someone/other-app"}',
+    ]) {
+      expect(
+        await run(
+          "https://wma.fal.run/session",
+          {
+            allowedEndpoints: ["me/my-app/**"],
+            isAuthenticated: async () => true,
+          },
+          "POST",
+          body,
+        ),
+      ).toMatchObject({ status: 400 });
+    }
+  });
+
+  it("applies app policy to normalized route spellings", async () => {
+    expect(
+      await run(
+        "https://wma.fal.run/%73ession//",
+        {
+          allowedEndpoints: ["me/my-app/**"],
+          isAuthenticated: async () => true,
+        },
+        "POST",
+        JSON.stringify({ app_id: "someone/other-app" }),
+      ),
+    ).toMatchObject({ status: 400 });
+  });
+
+  it("keeps allowedEndpoints enforced for normal fal.run app hosts", async () => {
+    for (const host of ["fal.run", "queue.fal.run"]) {
+      expect(
+        await run(`https://${host}/someone/other-app`, {
+          allowedEndpoints: ["me/my-app/**"],
+        }),
+      ).toMatchObject({ status: 400 });
+    }
+  });
+
+  it("reads an app-scoped body once and forwards that same value", async () => {
+    const body = JSON.stringify({ app_id: "me/my-app/world", sdp: "offer" });
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/session",
+      "POST",
+      body,
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowedEndpoints: ["me/my-app/**"],
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async (authBehavior) => {
+          expect(await authBehavior.getRequestBody()).toBe(body);
+          return true;
+        },
+        resolveFalAuth: async (authBehavior) => {
+          expect(await authBehavior.getRequestBody()).toBe(body);
+          return "Key secret";
+        },
+      });
+
+      expect(behavior.getRequestBody).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://wma.fal.run/session",
+        expect.objectContaining({ body }),
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("rejects unauthenticated app-scoped requests before reading their body", async () => {
+    const { behavior, responses } = behaviorFor(
+      "https://wma.fal.run/session",
+      "POST",
+      JSON.stringify({ app_id: "me/my-app/world" }),
+    );
+
+    await handleRequest(behavior as never, {
+      allowedEndpoints: ["me/my-app/**"],
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => false,
+    });
+
+    expect(responses[0]).toEqual({ status: 401, data: "Unauthorized" });
+    expect(behavior.getRequestBody).not.toHaveBeenCalled();
   });
 });
