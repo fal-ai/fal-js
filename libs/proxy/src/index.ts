@@ -163,12 +163,14 @@ const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 // Request headers that are never forwarded, even when explicitly listed in
 // `forwardRequestHeaders`: credentials addressed to the proxy host and hop-by-hop headers the
 // upstream fetch manages itself.
+// `content-encoding` is deliberately NOT here: it is end-to-end metadata for the raw-bytes body
+// path, and an operator who names it in `forwardRequestHeaders` is labeling compressed bytes the
+// proxy forwards unchanged. It still never travels by default.
 const NEVER_FORWARDED_REQUEST_HEADERS = new Set([
   "authorization",
   "cookie",
   "host",
   "content-length",
-  "content-encoding",
   "connection",
   "transfer-encoding",
   "keep-alive",

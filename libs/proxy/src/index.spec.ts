@@ -751,6 +751,29 @@ describe("handleRequest rejection reasons", () => {
       expect(sent["x-provider-ticket"]).toBe("abc");
       expect(sent["x-session-token"]).toBeUndefined();
       expect(sent.cookie).toBeUndefined();
+
+      // content-encoding is end-to-end metadata for the raw-bytes path: never forwarded by
+      // default, forwardable when the operator names it.
+      incoming["content-encoding"] = "gzip";
+      fetchMock.mockClear();
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["content-encoding"]).toBeUndefined();
+
+      fetchMock.mockClear();
+      await handleRequest(makeBehavior() as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+        forwardRequestHeaders: ["content-encoding"],
+      });
+      sent = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(sent["content-encoding"]).toBe("gzip");
+      delete incoming["content-encoding"];
     } finally {
       fetchMock.mockRestore();
     }
