@@ -76,25 +76,20 @@ export function serializeParsedBody(
   }
   if (typeof body === "string") {
     if (jsonDeclared) {
-      // A string under a JSON content type is ambiguous WHENEVER it parses: raw JSON text
+      // A string under a JSON content type has NO decidable provenance here: raw text
       // (express.text on a JSON route) and a parser-produced top-level string value
-      // (express.json({ strict: false })) are indistinguishable for any parseable payload —
-      // `{"role":"admin"}` could be an object's raw text or the string value "{\"role\":\"admin\"}".
-      // Only an UNPARSEABLE string is decidable (it must be a parsed value) and re-encodes.
-      // Everything else fails loudly rather than silently changing the upstream value's type.
-      // Adapters with exact parser knowledge (Next's pages router) re-encode before reaching
-      // this heuristic; Express routes should feed the proxy raw bytes (no parser or
-      // express.raw) or strict-parsed objects, both of which never land here.
-      try {
-        JSON.parse(body);
-      } catch {
-        return JSON.stringify(body);
-      }
+      // (express.json({ strict: false })) are indistinguishable whether the string parses —
+      // `{"a":1}` could be an object's raw text or the string value "{\"a\":1}" — or does not —
+      // `not json` could be a malformed raw request (which must stay an upstream error) or a
+      // legitimate parsed string value. Forwarding either guess silently rewrites the request,
+      // so every case fails loudly. Adapters that KNOW their parser (Next's pages router
+      // re-encodes parsed values itself) never reach this branch; Express routes should feed
+      // the proxy raw bytes (no parser or express.raw) or strict-parsed objects.
       throw new Error(
-        "The fal proxy cannot tell whether this JSON body is raw JSON text or a " +
-          "parser-produced top-level string — express.json({ strict: false }) makes them " +
-          "identical. Exclude the proxy route from text/lenient JSON parsing (use express.raw, " +
-          "no parser, or strict JSON objects) so the payload reaches the proxy unambiguously.",
+        "The fal proxy cannot tell whether this JSON-typed string body is raw request text or " +
+          "a parser-produced value — text/lenient JSON parsers make them indistinguishable. " +
+          "Exclude the proxy route from text and lenient JSON parsing (use express.raw, no " +
+          "parser, or strict JSON objects) so the payload reaches the proxy unambiguously.",
       );
     }
     return body;
