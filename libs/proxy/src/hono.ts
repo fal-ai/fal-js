@@ -8,7 +8,13 @@ import {
   resolveApiKeyFromEnv,
   responsePassthrough,
 } from "./index";
-import { assertUtf8ParsedBody, readWebRequestBody } from "./utils";
+import {
+  assertUtf8ParsedBody,
+  DEFAULT_MAX_REQUEST_BODY_BYTES,
+  isJsonContentType,
+  readWebRequestBody,
+  RequestBodyTooLargeError,
+} from "./utils";
 
 /**
  * @deprecated Use `Partial<ProxyConfig>` instead.
@@ -39,6 +45,8 @@ export function createRouteHandler({
   ...config
 }: FalHonoProxyOptions = {}): RouteHandler {
   const resolvedConfig = resolveProxyConfig(config);
+  const maxRequestBodyBytes =
+    resolvedConfig.maxRequestBodyBytes ?? DEFAULT_MAX_REQUEST_BODY_BYTES;
   const routeHandler: RouteHandler = async (context) => {
     const responseHeaders: Record<string, HeaderValue> = {};
     const response = await handleRequest(
@@ -54,16 +62,31 @@ export function createRouteHandler({
         getHeader: (name) => context.req.header(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),
         getRequestBody: async () => {
+          const rawRequest = context.req.raw;
           const bodyCacheKeys = Object.keys(context.req.bodyCache);
           const contentType = context.req.header("content-type") ?? "";
+          const mediaType = contentType.split(";", 1)[0].trim().toLowerCase();
           const hasByteFaithfulCache =
             "arrayBuffer" in context.req.bodyCache ||
             "blob" in context.req.bodyCache;
-          if (
-            contentType.toLowerCase().startsWith("multipart/") &&
-            bodyCacheKeys.length > 0 &&
-            !hasByteFaithfulCache
-          ) {
+
+          // parseBody() can cache `{}` for media types it ignores without touching the stream.
+          // Prefer the original stream whenever it is still available, regardless of cache keys.
+          if (!rawRequest.bodyUsed && !rawRequest.body?.locked) {
+            return readWebRequestBody(rawRequest, maxRequestBodyBytes);
+          }
+
+          if (hasByteFaithfulCache) {
+            return readWebRequestBody(
+              {
+                arrayBuffer: () => context.req.arrayBuffer(),
+                headers: rawRequest.headers,
+              },
+              maxRequestBodyBytes,
+            );
+          }
+
+          if (mediaType.startsWith("multipart/") && bodyCacheKeys.length > 0) {
             // Hono recreates arrayBuffer() from the first cached representation. Recreating it
             // from FormData chooses a NEW multipart boundary while this proxy forwards the old
             // content-type header, so the upstream cannot parse it.
@@ -73,31 +96,60 @@ export function createRouteHandler({
                 "c.req.blob(), or exclude the proxy route from that middleware.",
             );
           }
-          if (bodyCacheKeys.length > 0 && !hasByteFaithfulCache) {
-            // Hono rebuilds bytes from cached text/JSON as UTF-8. That is faithful only when the
-            // incoming parsed representation was UTF-8 too; otherwise preserving the old charset
-            // header would make the upstream decode different content.
+
+          if (
+            mediaType === "application/x-www-form-urlencoded" &&
+            "formData" in context.req.bodyCache
+          ) {
             assertUtf8ParsedBody(contentType);
+            const formData = await context.req.bodyCache.formData;
+            const params = new URLSearchParams();
+            formData.forEach((value, key) => {
+              if (typeof value !== "string") {
+                throw new Error(
+                  "The fal proxy cannot encode a file as application/x-www-form-urlencoded.",
+                );
+              }
+              params.append(key, value);
+            });
+            const body = params.toString();
+            if (
+              new TextEncoder().encode(body).byteLength > maxRequestBodyBytes
+            ) {
+              throw new RequestBodyTooLargeError(maxRequestBodyBytes);
+            }
+            return body;
           }
-          if (context.req.raw.bodyUsed && bodyCacheKeys.length === 0) {
+
+          const hasJsonCache = "json" in context.req.bodyCache;
+          const hasTextCache = "text" in context.req.bodyCache;
+          if (
+            bodyCacheKeys.length > 0 &&
+            ((hasJsonCache && isJsonContentType(contentType)) ||
+              (hasTextCache &&
+                (mediaType.startsWith("text/") ||
+                  isJsonContentType(contentType))))
+          ) {
+            assertUtf8ParsedBody(contentType);
+            return readWebRequestBody(
+              {
+                arrayBuffer: () => context.req.arrayBuffer(),
+                headers: rawRequest.headers,
+              },
+              maxRequestBodyBytes,
+            );
+          }
+
+          if (bodyCacheKeys.length === 0) {
             throw new Error(
               "The request body was consumed before the fal proxy ran without a reusable Hono " +
                 "body cache. Exclude body-consuming middleware from the proxy route.",
             );
           }
-
-          // An untouched raw request can be streamed and capped before the full allocation.
-          // If middleware used Hono's cache, its cache-aware accessor is the only replayable copy.
-          const request =
-            bodyCacheKeys.length === 0
-              ? context.req.raw
-              : {
-                  arrayBuffer: () => context.req.arrayBuffer(),
-                  headers: context.req.raw.headers,
-                };
-          return readWebRequestBody(
-            request,
-            resolvedConfig.maxRequestBodyBytes,
+          throw new Error(
+            `The fal proxy cannot faithfully reconstruct a cached ${mediaType || "untyped"} ` +
+              "Hono request body. Cache c.req.arrayBuffer() or c.req.blob(), or exclude the " +
+              "proxy route from body-parsing middleware.",
           );
         },
         sendResponse: responsePassthrough,

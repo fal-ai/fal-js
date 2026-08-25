@@ -770,6 +770,88 @@ describe("createRouteHandler (hono) body handling", () => {
     }
   });
 
+  it("uses the untouched raw stream when parseBody cached without consuming it", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.parseBody();
+      expect(context.req.raw.bodyUsed).toBe(false);
+      await next();
+    });
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const rawBody = '{  "prompt": "hello"  }';
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: {
+          "x-fal-target-url": "https://fal.run/owner/app",
+          "content-type": "application/json",
+        },
+        body: rawBody,
+      });
+
+      expect(response.status).toBe(200);
+      expect(fetchMock.mock.calls[0][1]?.body).toEqual(
+        new TextEncoder().encode(rawBody),
+      );
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("re-encodes cached URL-encoded FormData without changing its media type", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.formData();
+      await next();
+    });
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: {
+          "x-fal-target-url": "https://fal.run/owner/app",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "tag=a&tag=b",
+      });
+
+      expect(response.status).toBe(200);
+      const forwarded = fetchMock.mock.calls[0][1];
+      expect(forwarded?.body).toBe("tag=a&tag=b");
+      expect(
+        (forwarded?.headers as Record<string, string>)["content-type"],
+      ).toBe("application/x-www-form-urlencoded");
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("rejects lossy cached text with a non-UTF-8 charset", async () => {
     const { Hono } = await import("hono");
     const { createRouteHandler } = await import("./hono");
@@ -801,6 +883,43 @@ describe("createRouteHandler (hono) body handling", () => {
 
       expect(response.status).toBe(500);
       await expect(response.text()).resolves.toMatch(/iso-8859-1/);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("rejects cached text for a binary media type", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.text();
+      await next();
+    });
+    app.onError((error, context) => context.text(error.message, 500));
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: {
+          "x-fal-target-url": "https://fal.run/owner/app",
+          "content-type": "application/octet-stream",
+        },
+        body: new Uint8Array([0xff]),
+      });
+
+      expect(response.status).toBe(500);
+      await expect(response.text()).resolves.toMatch(/cannot faithfully/);
       expect(fetchMock).not.toHaveBeenCalled();
     } finally {
       fetchMock.mockRestore();
