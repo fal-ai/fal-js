@@ -49,11 +49,16 @@ export function serializeParsedBody(
     return undefined;
   }
   const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
+  // JSON by media type: application/json itself plus structured-suffix types (application/ld+json,
+  // application/hal+json, …), which carry JSON payloads under RFC 6839.
+  const isJsonContentType =
+    declared.startsWith("application/json") ||
+    /^application\/[^;\s]*\+json/.test(declared);
   if (body === null) {
     // Only `undefined` means "the parser had nothing". A parsed JSON body can legitimately BE
     // null, and treating it as absent would fall back to an already-consumed stream and forward
     // no body at all. Outside JSON, null still reads as absent.
-    return declared.startsWith("application/json") ? "null" : undefined;
+    return isJsonContentType ? "null" : undefined;
   }
   if (
     typeof body === "string" ||

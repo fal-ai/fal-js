@@ -395,6 +395,11 @@ describe("serializeParsedBody", () => {
     );
     expect(serializeParsedBody(null, "multipart/form-data")).toBeUndefined();
     expect(serializeParsedBody(null, undefined)).toBeUndefined();
+    // Structured-suffix JSON media types carry JSON payloads too (RFC 6839).
+    expect(serializeParsedBody(null, "application/ld+json")).toBe("null");
+    expect(
+      serializeParsedBody(null, "application/hal+json; charset=utf-8"),
+    ).toBe("null");
   });
 
   it("preserves repeated URL-encoded fields", async () => {

@@ -46,6 +46,9 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           const losslesslyParsed =
             contentType === "" ||
             contentType.startsWith("application/json") ||
+            // Structured-suffix JSON types (application/ld+json, …) are UTF-8 text; decoding
+            // them as a string loses nothing.
+            /^application\/[^;\s]*\+json/.test(contentType) ||
             contentType.startsWith("application/x-www-form-urlencoded") ||
             contentType.startsWith("text/");
           if (typeof request.body === "string" && !losslesslyParsed) {

@@ -1022,6 +1022,31 @@ describe("realtime extensions", () => {
     ).toBe(false);
   });
 
+  it("serves a caller-pinned function definition verbatim", async () => {
+    // Object.defineProperty with a non-configurable, non-writable function must succeed and read
+    // back the caller's exact value — the language validates the trap against the supplied
+    // descriptor with SameValue, so mirroring a bound variant would throw mid-definition.
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(extension(), { label: "pin" }).ready;
+    const fn = () => "custom";
+
+    expect(() =>
+      Object.defineProperty(session, "custom", {
+        value: fn,
+        configurable: false,
+        writable: false,
+        enumerable: true,
+      }),
+    ).not.toThrow();
+    const custom = (session as Record<string, unknown>).custom as () => string;
+    expect(custom).toBe(fn);
+    expect(custom()).toBe("custom");
+    expect(() => Object.freeze(session)).not.toThrow();
+    expect((session as Record<string, unknown>).custom).toBe(fn);
+  });
+
   it("uses the extension default when endpointId is explicitly undefined", async () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),

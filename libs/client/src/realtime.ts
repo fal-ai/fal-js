@@ -1343,23 +1343,20 @@ export function createRealtimeClient({
       );
     const handle = new Proxy(proxyTarget, {
       get(_target, property) {
-        if (property === "state") {
-          const pinned = Reflect.getOwnPropertyDescriptor(
-            proxyTarget,
-            property,
-          );
-          // A caller that froze the session pinned `state` at its frozen value; the invariant for
-          // a non-configurable, non-writable data property forbids reporting anything newer.
-          if (
-            pinned &&
-            !pinned.configurable &&
-            pinned.writable === false &&
-            "value" in pinned
-          ) {
-            return pinned.value;
-          }
-          return state;
+        // A pinned target property — non-configurable, non-writable data — MUST report its exact
+        // pinned value, whatever the property: the frozen `state` snapshot, a bound method pinned
+        // by freeze, or a caller-defined non-configurable function the defineProperty trap
+        // mirrored verbatim. The invariant forbids reporting anything else.
+        const pinned = Reflect.getOwnPropertyDescriptor(proxyTarget, property);
+        if (
+          pinned &&
+          !pinned.configurable &&
+          pinned.writable === false &&
+          "value" in pinned
+        ) {
+          return pinned.value;
         }
+        if (property === "state") return state;
         if (property === "ready") return ready;
         if (property === "close") return publicClose;
         if (!session) {
@@ -1408,6 +1405,19 @@ export function createRealtimeClient({
         // A non-configurable property must also exist on the neutral target or the Proxy would
         // violate the language's invariants. Configurable properties can remain source-only —
         // unless the target is already non-extensible, where its key set must track the session's.
+        //
+        // A PINNED definition (non-configurable, non-writable, with a value) mirrors the caller's
+        // exact value rather than the get-trap resolution: the language validates the trap's
+        // success against the descriptor the caller supplied with SameValue, so storing a bound
+        // variant would throw after both objects were already mutated. The get trap serves the
+        // pinned target value verbatim, keeping the two invariants consistent.
+        if (
+          descriptor.configurable === false &&
+          descriptor.writable === false &&
+          "value" in descriptor
+        ) {
+          return Reflect.defineProperty(proxyTarget, property, descriptor);
+        }
         return descriptor.configurable === false ||
           !Reflect.isExtensible(proxyTarget)
           ? mirrorOntoTarget(property, descriptor)
