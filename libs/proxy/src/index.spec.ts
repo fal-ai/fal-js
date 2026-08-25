@@ -584,6 +584,34 @@ describe("handleRequest rejection reasons", () => {
     }
   });
 
+  it("omits content-type when the incoming request omitted it", async () => {
+    // Fetch generates no content type for raw binary bodies; the proxy defaulting one to JSON
+    // would make upstream endpoints parse valid bytes as JSON. Present headers pass through
+    // untouched, absent ones stay absent.
+    const { behavior } = behaviorFor(
+      "https://wma.fal.run/upload",
+      "POST",
+      new Uint8Array([0xff, 0x00]),
+    );
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValue(new Response("{}"));
+    try {
+      await handleRequest(behavior as never, {
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      });
+      const sent = fetchMock.mock.calls[0][1]?.headers as Record<
+        string,
+        string
+      >;
+      expect("content-type" in sent).toBe(false);
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("extracts the WMA app id from a bytes body", async () => {
     // Adapters now hand over raw bytes; the app-id gate decodes them for parsing while the
     // forwarded body stays untouched. Auth is satisfied and no fal credential is configured, so a

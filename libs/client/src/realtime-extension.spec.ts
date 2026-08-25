@@ -199,6 +199,92 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
+  it("keeps a handle frozen during opening invariant-safe after the session arrives", async () => {
+    // Freezing the handle while "opening" locks the still-empty target; when the session arrives
+    // its descriptors must NOT surface through the locked facade — a non-extensible target cannot
+    // gain reported own properties, and violating that throws at the access site. The kernel
+    // members keep working because they are trap-served, never own properties.
+    let releaseOpen!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseOpen = resolve;
+    });
+    const gated = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { label: string }
+    >({
+      id: "test/frozen-while-opening",
+      defaultEndpoint: "test/frozen-while-opening",
+      async open() {
+        await gate;
+        return { label: "late", close: jest.fn() };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+
+    const session = client.open(gated, {});
+    expect(() => Object.freeze(session)).not.toThrow();
+    releaseOpen();
+    await session.ready;
+
+    expect(() =>
+      Object.getOwnPropertyDescriptor(session, "label"),
+    ).not.toThrow();
+    expect(Object.getOwnPropertyDescriptor(session, "label")).toBeUndefined();
+    expect(Object.keys(session)).toEqual([]);
+    expect("label" in session).toBe(false);
+    // Trap-served members still function on the locked facade.
+    expect(session.state).toBe("live");
+    await session.close();
+    expect(session.state).toBe("closed");
+  });
+
+  it("releases the signal combination when a streamed body completes", async () => {
+    // Extensions may consume response.body directly (getReader/pipeTo/iteration) instead of the
+    // convenience methods; end-of-stream must release the request's signal combination too, or
+    // repeated streaming requests accumulate bookkeeping until the session closes.
+    let observed: AbortSignal | null | undefined;
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async (_url: string, init: RequestInit = {}) => {
+          observed = init.signal;
+          return new Response("streamed-bytes");
+        }) as any,
+      }),
+    });
+    const requestLocal = new AbortController();
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/streamed-body",
+      defaultEndpoint: "test/streamed-body",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/stream", {
+          signal: requestLocal.signal,
+        });
+        const reader = response.body!.getReader();
+        const chunks: Uint8Array[] = [];
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+        expect(new TextDecoder().decode(chunks[0])).toBe("streamed-bytes");
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await session.ready;
+    await session.close();
+
+    // The combination was released at end-of-stream, so session teardown no longer aborts it.
+    expect(observed?.aborted).toBe(false);
+  });
+
   it("cancels a still-opening session through close()", async () => {
     const neverOpens = defineRealtimeExtension<
       Record<never, never>,

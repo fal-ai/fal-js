@@ -322,15 +322,15 @@ export async function handleRequest<ResponseType>(
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
   const accept =
     singleHeaderValue(behavior.getHeader("accept")) ?? "application/json";
-  const contentType =
-    singleHeaderValue(behavior.getHeader("content-type")) ?? "application/json";
+  // The incoming content-type already passes through the header loop above; a request that
+  // omitted it must stay without one, matching direct-fetch semantics for raw binary bodies —
+  // defaulting to JSON would make upstream endpoints parse valid bytes as JSON.
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
       ...headers,
       authorization,
       accept,
-      "content-type": contentType,
       "user-agent": userAgent,
       "x-fal-client-proxy": proxyUserAgent,
     } as HeadersInit,

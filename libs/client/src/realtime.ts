@@ -1110,13 +1110,15 @@ export function createRealtimeClient({
 
     // Dispose a request's signal combination once its response body has actually been consumed —
     // fetch() resolves at headers, and the signal must keep covering body reads until then. The
-    // body-reading methods are patched per instance; a caller streaming `response.body` directly
-    // keeps its combination until it aborts or the session closes, which the set above bounds.
+    // body-reading methods are patched per instance, and `body` itself is served through a
+    // monitored stream so direct consumers (getReader, pipeTo, async iteration) also release the
+    // combination at end-of-stream or cancellation.
     const disposeWhenBodyConsumed = (
       response: Response,
       dispose: () => void,
     ) => {
-      if (!response.body) {
+      const originalBody = response.body;
+      if (!originalBody) {
         dispose();
         return;
       }
@@ -1127,6 +1129,36 @@ export function createRealtimeClient({
           dispose();
         }
       };
+      // Lazy, because acquiring a reader locks the original stream and would break the patched
+      // convenience methods for callers that never touch `body` directly.
+      let monitored: ReadableStream<Uint8Array> | undefined;
+      Object.defineProperty(response, "body", {
+        configurable: true,
+        enumerable: true,
+        get: () => {
+          if (!monitored) {
+            const reader = originalBody.getReader();
+            // Covers end-of-stream, stream error, and reader-side cancellation alike.
+            void reader.closed.then(settle, settle);
+            monitored = new ReadableStream<Uint8Array>({
+              pull: async (streamController) => {
+                const { done, value } = await reader.read();
+                if (done) {
+                  streamController.close();
+                  settle();
+                  return;
+                }
+                streamController.enqueue(value);
+              },
+              cancel: async (reason) => {
+                settle();
+                await reader.cancel(reason);
+              },
+            });
+          }
+          return monitored;
+        },
+      });
       for (const method of [
         "arrayBuffer",
         "blob",
@@ -1293,6 +1325,13 @@ export function createRealtimeClient({
         return Reflect.preventExtensions(proxyTarget);
       },
       has(_target, property) {
+        // Once the target is non-extensible the language forbids reporting any property the
+        // target does not own — including the kernel names, which are trap-served rather than own
+        // properties. Freezing during "opening" locks the facade empty; the kernel members keep
+        // working through `get`, which has no such invariant for non-own properties.
+        if (!Reflect.isExtensible(proxyTarget)) {
+          return Reflect.has(proxyTarget, property);
+        }
         if (
           property === "close" ||
           property === "state" ||
@@ -1318,7 +1357,10 @@ export function createRealtimeClient({
         if (targetDescriptor && !targetDescriptor.configurable) {
           return targetDescriptor;
         }
-        if (!session) {
+        // A target locked while the facade was still empty (frozen during "opening") must not
+        // report session descriptors that arrived later: a non-extensible target cannot gain
+        // reported own properties, and violating that throws at the access site.
+        if (!session || !Reflect.isExtensible(proxyTarget)) {
           return targetDescriptor;
         }
         const descriptor = Reflect.getOwnPropertyDescriptor(session, property);
