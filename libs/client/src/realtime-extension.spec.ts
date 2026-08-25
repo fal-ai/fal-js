@@ -507,6 +507,43 @@ describe("realtime extensions", () => {
     removed.mockRestore();
   });
 
+  it("keeps the original body readable after cloning", async () => {
+    // Native clone() re-points the original's body at a fresh tee branch; the monitored getter
+    // must follow it rather than a stale pre-tee capture, or reading the original throws
+    // "ReadableStream is locked" while both branches work on a native response.
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async () => new Response('{"ok":true}')) as any,
+      }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/original-after-clone",
+      defaultEndpoint: "test/original-after-clone",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/session");
+        const clone = response.clone();
+        const reader = response.body!.getReader(); // the ORIGINAL, post-clone
+        const chunks: Uint8Array[] = [];
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+        expect(new TextDecoder().decode(chunks[0])).toBe('{"ok":true}');
+        expect(await clone.json()).toEqual({ ok: true });
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await expect(session.ready).resolves.toBeDefined();
+    await session.close();
+  });
+
   it("releases the signal combination when a cloned body is consumed", async () => {
     // clone() tees the underlying source, so fully consuming either branch means the network
     // stream finished; a caller that parses only the clone must still release the combination.

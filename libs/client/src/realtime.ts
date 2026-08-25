@@ -1147,6 +1147,22 @@ export function createRealtimeClient({
         dispose();
         return;
       }
+      // clone() tees the response internally and RE-POINTS the original's body at a fresh branch,
+      // so a stream captured before the clone is stale and locked afterwards. The prototype getter
+      // — reachable even after the instance property below shadows it — always reads the current
+      // branch, keeping the original consumable after cloning, exactly like a native response.
+      const nativeBodyGetter = (() => {
+        let proto = Object.getPrototypeOf(response) as object | null;
+        while (proto) {
+          const descriptor = Object.getOwnPropertyDescriptor(proto, "body");
+          if (descriptor?.get) return descriptor.get;
+          proto = Object.getPrototypeOf(proto);
+        }
+        return undefined;
+      })();
+      const currentNativeBody = (): ReadableStream<Uint8Array> =>
+        (nativeBodyGetter?.call(response) as ReadableStream<Uint8Array>) ??
+        originalBody;
       let disposed = false;
       const settle = () => {
         if (!disposed) {
@@ -1175,7 +1191,7 @@ export function createRealtimeClient({
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       const acquireReader = () => {
         if (!reader) {
-          reader = originalBody.getReader();
+          reader = currentNativeBody().getReader();
           // Covers end-of-stream, stream error, and reader-side cancellation alike.
           void reader.closed.then(settle, settle);
         }
@@ -1201,7 +1217,7 @@ export function createRealtimeClient({
                   settle();
                   await (reader
                     ? reader.cancel(reason)
-                    : originalBody.cancel(reason));
+                    : currentNativeBody().cancel(reason));
                 },
               },
               { highWaterMark: 0 },
