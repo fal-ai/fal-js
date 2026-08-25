@@ -75,23 +75,6 @@ export interface ProxyConfig {
   allowedEndpoints?: string[] | undefined;
 
   /**
-   * Additional request header names (lowercase, exact) to forward to the target.
-   *
-   * The proxy forwards `x-fal-*` headers plus `accept` and `content-type` by default and nothing
-   * else: applications commonly authenticate their own proxy route with custom headers
-   * (`x-api-key`, session tokens, CSRF tokens) that a pass-through would leak to the upstream on
-   * every call, and no denylist can enumerate them. A realtime extension that needs a
-   * provider-specific header through the proxy names it here — an explicit operator decision.
-   *
-   * ```js
-   * forwardRequestHeaders: ["x-provider-ticket"]
-   * ```
-   *
-   * @default []
-   */
-  forwardRequestHeaders?: string[];
-
-  /**
    * Whether to allow requests without an authorization header. Currently for backwards compatibility
    * this is set to `true` by default. In the future the behavior might change to disallow unauthorized
    * requests by default and require explicitly allowing unauthorized requests.
@@ -142,7 +125,6 @@ export async function isAuthorizationHeaderPresent(
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
   allowedUrlPatterns: DEFAULT_ALLOWED_URL_PATTERNS,
   allowedEndpoints: [],
-  forwardRequestHeaders: [],
   allowUnauthorizedRequests: true,
   isAuthenticated: isAuthorizationHeaderPresent,
   resolveFalAuth: fallbackToFalKey,

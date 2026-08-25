@@ -46,27 +46,21 @@ export interface RealtimeSession {
 export type RealtimeState = "opening" | "live" | "failed" | "closed";
 
 /**
- * What `fal.realtime.open()` returns: the extension's own session, wrapped by the kernel.
+ * What `fal.realtime.open()` returns: a small, plain handle owned by the kernel.
  *
  * Returned SYNCHRONOUSLY, in state `"opening"`, while negotiation runs eagerly behind it. The
  * caller can hold the handle, render from `state`, and call `send()` immediately — queued sends
- * are flushed in order the moment the session is live. Extension-specific members materialize
- * when the session does; before that they read as `undefined`. `ready` is for the caller that
- * wants the awaited style anyway.
+ * are flushed in order the moment the session is live. Extension-specific members live on
+ * {@link ManagedRealtimeSession.session}, which is set once negotiation completes; `ready` is
+ * for the caller that wants the awaited style.
  *
- * The wrapper is why `state` is required here and optional on {@link RealtimeSession} — an
- * extension returns whatever it likes and the kernel adds the members it alone can guarantee: a
- * `close()` that is idempotent and runs the registered cleanups, and a `state` readable at any time.
+ * Deliberately a plain object rather than a facade impersonating the extension's session: the
+ * handle's members never change shape, and the raw session — with whatever fields and methods
+ * its extension declared — is reached explicitly through `session`.
  *
  * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
  */
-export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
-  Session,
-  // `then` is omitted because the handle is deliberately never thenable — the kernel serves
-  // undefined for it at runtime so `await handle`, Promise.all(), and `ready`'s resolution treat
-  // the handle as a value; the type must not offer what the runtime hides.
-  "state" | "close" | "send" | "then"
-> &
+export type ManagedRealtimeSession<Session extends RealtimeSession> =
   (Session extends { send: (...args: infer Args) => unknown }
     ? {
         /**
@@ -79,6 +73,12 @@ export type ManagedRealtimeSession<Session extends RealtimeSession> = Omit<
       }
     : Record<never, never>) & {
     readonly state: RealtimeState;
+    /**
+     * The extension's own session: `undefined` while opening, set once negotiation completes,
+     * and left readable after close. This is where extension-specific fields and methods live —
+     * the handle itself never grows them.
+     */
+    readonly session: Session | undefined;
     /**
      * Always a promise, whatever the extension declared. The kernel substitutes its own idempotent
      * teardown for the extension's `close`, and that teardown awaits every registered cleanup — so a

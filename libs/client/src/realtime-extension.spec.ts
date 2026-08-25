@@ -39,7 +39,8 @@ describe("realtime extensions", () => {
       label: "hello",
     }).ready;
 
-    expect(session.label).toBe("hello");
+    // Extension-specific surface lives on `session`, not on the handle itself.
+    expect(session.session?.label).toBe("hello");
   });
 
   it("returns a usable handle synchronously and flushes queued sends in order", async () => {
@@ -323,47 +324,6 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
-  it("keeps a handle frozen during opening invariant-safe after the session arrives", async () => {
-    // Freezing the handle while "opening" locks the still-empty target; when the session arrives
-    // its descriptors must NOT surface through the locked facade — a non-extensible target cannot
-    // gain reported own properties, and violating that throws at the access site. The kernel
-    // members keep working because they are trap-served, never own properties.
-    let releaseOpen!: () => void;
-    const gate = new Promise<void>((resolve) => {
-      releaseOpen = resolve;
-    });
-    const gated = defineRealtimeExtension<
-      Record<never, never>,
-      RealtimeSession & { label: string }
-    >({
-      id: "test/frozen-while-opening",
-      defaultEndpoint: "test/frozen-while-opening",
-      async open() {
-        await gate;
-        return { label: "late", close: jest.fn() };
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-
-    const session = client.open(gated, {});
-    expect(() => Object.freeze(session)).not.toThrow();
-    releaseOpen();
-    await session.ready;
-
-    expect(() =>
-      Object.getOwnPropertyDescriptor(session, "label"),
-    ).not.toThrow();
-    expect(Object.getOwnPropertyDescriptor(session, "label")).toBeUndefined();
-    expect(Object.keys(session)).toEqual([]);
-    expect("label" in session).toBe(false);
-    // Trap-served members still function on the locked facade.
-    expect(session.state).toBe("live");
-    await session.close();
-    expect(session.state).toBe("closed");
-  });
-
   it("releases the signal combination when a streamed body completes", async () => {
     // Extensions may consume response.body directly (getReader/pipeTo/iteration) instead of the
     // convenience methods; end-of-stream must release the request's signal combination too, or
@@ -434,53 +394,6 @@ describe("realtime extensions", () => {
 
     const session = client.open(probe, {});
     await expect(session.ready).resolves.toBeDefined();
-    await session.close();
-  });
-
-  it("keeps the handle non-thenable when a session declares its own then", async () => {
-    // Resolving `ready` with the handle, `await handle`, and Promise.all() all probe `then`;
-    // forwarding a session's model-specific then would assimilate the handle into an unrelated
-    // promise instead of treating it as a value.
-    // A thenable can never arrive THROUGH extension.open() — promise assimilation would swallow
-    // it inside the extension's own async function. The reachable case is a session that grows a
-    // `then` after it is live; the handle must still read as a plain value.
-    const sessionThen = jest.fn();
-    const raw: RealtimeSession & Record<string, unknown> = { close: jest.fn() };
-    const thenable = defineRealtimeExtension<
-      Record<never, never>,
-      RealtimeSession
-    >({
-      id: "test/thenable-session",
-      defaultEndpoint: "test/thenable-session",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-
-    const session = client.open(thenable, {});
-    const resolved = await session.ready;
-    expect(resolved.state).toBe("live");
-
-    raw.then = sessionThen; // the model-specific facade sprouts a then
-    expect((session as { then?: unknown }).then).toBeUndefined();
-    const awaited = await session; // still a value, not an assimilation target
-    expect(awaited).toBe(session);
-    expect(sessionThen).not.toHaveBeenCalled();
-
-    // A `then` GETTER that throws must not be evaluated either: promise resolution probes the
-    // property on the very access that resolves it, so the trap short-circuits before the raw
-    // session read.
-    Object.defineProperty(raw, "then", {
-      configurable: true,
-      get() {
-        throw new Error("must never be read through the handle");
-      },
-    });
-    expect((session as { then?: unknown }).then).toBeUndefined();
-    expect(await Promise.resolve(session)).toBe(session);
     await session.close();
   });
 
@@ -808,230 +721,6 @@ describe("realtime extensions", () => {
     expect(session.state).toBe("closed");
   });
 
-  it("evaluates class session getters against the original instance", async () => {
-    class PrivateSession implements RealtimeSession {
-      #label = "private";
-
-      get label() {
-        return this.#label;
-      }
-
-      set label(value: string) {
-        this.#label = value;
-      }
-
-      send() {
-        return this.#label;
-      }
-
-      close() {
-        // Managed teardown wraps this method.
-      }
-    }
-    const classExtension = defineRealtimeExtension<
-      Record<never, never>,
-      PrivateSession
-    >({
-      id: "test/class-session",
-      defaultEndpoint: "test/class-session",
-      async open() {
-        return new PrivateSession();
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-
-    const session = await client.open(classExtension, {}).ready;
-
-    expect(session.label).toBe("private");
-    session.label = "updated";
-    expect(session.label).toBe("updated");
-    expect(session.send).toBe(session.send);
-    expect(session.send()).toBe("updated");
-  });
-
-  it("manages frozen extension sessions without violating proxy invariants", async () => {
-    const extensionClose = jest.fn();
-    const frozen = Object.freeze({
-      close: extensionClose,
-      state: "closed" as const,
-      value: 42,
-    });
-    const frozenExtension = defineRealtimeExtension<
-      Record<never, never>,
-      typeof frozen
-    >({
-      id: "test/frozen-session",
-      defaultEndpoint: "test/frozen-session",
-      async open() {
-        return frozen;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-
-    const session = await client.open(frozenExtension, {}).ready;
-
-    expect(session.value).toBe(42);
-    expect(session.state).toBe("live");
-    expect(Object.keys(session)).toEqual(["close", "state", "value"]);
-    await session.close();
-    expect(extensionClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("survives a caller freezing, sealing, or preventing extensions on the session", async () => {
-    // Object.freeze/seal/preventExtensions make the proxy target non-extensible, and from then on
-    // the language requires ownKeys to report exactly the target's own keys. Without mirroring,
-    // any of the three throws a TypeError and enumeration is broken afterwards.
-    const sessionFor = async (label: string) => {
-      const client = createRealtimeClient({
-        config: createConfig({ credentials: "test-key" }),
-      });
-      return client.open(extension(), { label }).ready;
-    };
-
-    const prevented = await sessionFor("prevented");
-    expect(() => Object.preventExtensions(prevented)).not.toThrow();
-    expect(Object.keys(prevented).sort()).toEqual(["close", "label"]);
-    expect(prevented.label).toBe("prevented");
-    expect(Object.isExtensible(prevented)).toBe(false);
-
-    const sealed = await sessionFor("sealed");
-    expect(() => Object.seal(sealed)).not.toThrow();
-    expect(Object.isSealed(sealed)).toBe(true);
-    expect(sealed.state).toBe("live");
-    await sealed.close();
-    // Sealed but still writable: state keeps reporting the live lifecycle.
-    expect(sealed.state).toBe("closed");
-
-    const frozen = await sessionFor("frozen");
-    expect(() => Object.freeze(frozen)).not.toThrow();
-    expect(Object.isFrozen(frozen)).toBe(true);
-    expect(Object.keys(frozen).sort()).toEqual(["close", "label"]);
-    expect(frozen.label).toBe("frozen");
-    // close() is the kernel's idempotent teardown even after freezing.
-    await frozen.close();
-  });
-
-  it("keeps mirrored values synchronized across preventExtensions then freeze", async () => {
-    // After preventExtensions the mirrored target properties are still configurable and writable;
-    // an assignment must update the mirror too, or a later freeze pins the stale target value
-    // while the get trap serves the session's newer one — an invariant violation that throws.
-    const raw: RealtimeSession & Record<string, unknown> = {
-      close: jest.fn(),
-      label: "before",
-    };
-    const mutable = defineRealtimeExtension<Record<never, never>, typeof raw>({
-      id: "test/mirror-sync",
-      defaultEndpoint: "test/mirror-sync",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(mutable, {}).ready;
-
-    Object.preventExtensions(session);
-    session.label = "after";
-    expect(() => Object.freeze(session)).not.toThrow();
-    expect(session.label).toBe("after");
-    expect(Object.getOwnPropertyDescriptor(session, "label")?.value).toBe(
-      "after",
-    );
-  });
-
-  it("refreshes mirrors for method mutations between preventExtensions and freeze", async () => {
-    // Bound extension methods mutate the raw session without passing the set trap. A freeze after
-    // an earlier preventExtensions must re-synchronize the mirrors, or it pins the stale target
-    // value while get serves the session's newer one — an invariant violation that throws.
-    const raw = {
-      close: jest.fn(),
-      count: 0,
-      bump() {
-        this.count += 1;
-      },
-    };
-    const mutable = defineRealtimeExtension<Record<never, never>, typeof raw>({
-      id: "test/method-mutation",
-      defaultEndpoint: "test/method-mutation",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(mutable, {}).ready;
-
-    Object.preventExtensions(session);
-    session.bump(); // mutates the raw session directly, bypassing the set trap
-    expect(() => Object.freeze(session)).not.toThrow();
-    expect(session.count).toBe(1);
-    expect(Object.getOwnPropertyDescriptor(session, "count")?.value).toBe(1);
-  });
-
-  it("purges mirrors for fields a method deleted between preventExtensions and freeze", async () => {
-    // A bound method can delete a configurable own field without passing the deleteProperty trap;
-    // the stale mirror must not keep the key enumerable or make a later freeze throw while
-    // pinning it on the now-non-extensible session.
-    const raw = {
-      close: jest.fn(),
-      transient: "here",
-      drop() {
-        delete (this as Record<string, unknown>).transient;
-      },
-    };
-    const mutable = defineRealtimeExtension<Record<never, never>, typeof raw>({
-      id: "test/method-deletion",
-      defaultEndpoint: "test/method-deletion",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(mutable, {}).ready;
-
-    Object.preventExtensions(session);
-    session.drop();
-    expect(() => Object.freeze(session)).not.toThrow();
-    expect(Object.keys(session)).not.toContain("transient");
-    expect((session as Record<string, unknown>).transient).toBeUndefined();
-  });
-
-  it("refreshes sealed writable mirrors before freezing", async () => {
-    // Sealed mirrors are non-configurable but still writable; a bound-method mutation between
-    // seal and freeze must be re-synchronized, or freeze pins the stale value and reads throw.
-    const raw = {
-      close: jest.fn(),
-      count: 0,
-      bump() {
-        this.count += 1;
-      },
-    };
-    const sealable = defineRealtimeExtension<Record<never, never>, typeof raw>({
-      id: "test/seal-mutation",
-      defaultEndpoint: "test/seal-mutation",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(sealable, {}).ready;
-
-    Object.seal(session);
-    session.bump();
-    expect(() => Object.freeze(session)).not.toThrow();
-    expect(session.count).toBe(1);
-  });
-
   it("serves the monitored body as a byte stream usable with BYOB readers", async () => {
     // Native fetch bodies are byte streams; context.fetch() promises a raw Response, so a BYOB
     // reader that works on a native body must work on the monitored one.
@@ -1074,242 +763,6 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
-  it("pins a frozen own state property at its frozen value", async () => {
-    // An extension session that owns a `state` key mirrors it onto the target when the caller
-    // freezes; a non-configurable, non-writable data property must then report that exact value.
-    const stateful = defineRealtimeExtension<
-      Record<never, never>,
-      RealtimeSession & { note: string }
-    >({
-      id: "test/stateful",
-      defaultEndpoint: "test/stateful",
-      async open() {
-        return { state: "opening", note: "kept", close: jest.fn() };
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(stateful, {}).ready;
-
-    Object.freeze(session);
-    expect(session.state).toBe("live");
-    await session.close();
-    expect(session.state).toBe("live");
-    expect(session.note).toBe("kept");
-  });
-
-  it("forwards property deletion and definition to the extension session", async () => {
-    const raw: RealtimeSession & Record<string, unknown> = {
-      close: jest.fn(),
-      removable: "old",
-    };
-    const mutableExtension = defineRealtimeExtension<
-      Record<never, never>,
-      typeof raw
-    >({
-      id: "test/mutable-session",
-      defaultEndpoint: "test/mutable-session",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(mutableExtension, {}).ready;
-
-    expect(delete session.removable).toBe(true);
-    expect("removable" in raw).toBe(false);
-    Object.defineProperty(session, "fixed", {
-      configurable: false,
-      enumerable: true,
-      value: 42,
-      writable: false,
-    });
-
-    expect(raw.fixed).toBe(42);
-    expect(session.fixed).toBe(42);
-    expect(Object.keys(session)).toContain("fixed");
-    expect(
-      Object.getOwnPropertyDescriptor(session, "fixed")?.configurable,
-    ).toBe(false);
-
-    // A failed deletion changes nothing: the bound method keeps its identity, so a caller holding
-    // the previous reference (say, to remove an event listener) can still match it.
-    Object.defineProperty(raw, "handler", {
-      configurable: false,
-      writable: false,
-      value: jest.fn(),
-    });
-    const before = (session as Record<string, unknown>).handler;
-    expect(Reflect.deleteProperty(session, "handler")).toBe(false);
-    expect((session as Record<string, unknown>).handler).toBe(before);
-  });
-
-  it("keeps prototype changes and property resolution in agreement", async () => {
-    const raw: RealtimeSession & Record<string, unknown> = {
-      close: jest.fn(),
-    };
-    const protoExtension = defineRealtimeExtension<
-      Record<never, never>,
-      typeof raw
-    >({
-      id: "test/proto-session",
-      defaultEndpoint: "test/proto-session",
-      async open() {
-        return raw;
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const opening = client.open(protoExtension, {});
-    // Pre-session there is no facade to re-parent yet — like set and defineProperty.
-    expect(() =>
-      Object.setPrototypeOf(opening, { inherited: () => "yes" }),
-    ).toThrow(TypeError);
-    const session = await opening.ready;
-
-    // Post-live, a prototype swap must be visible through BOTH getPrototypeOf and property
-    // resolution: get/has resolve inherited members via the raw session, so the session and the
-    // neutral target move together.
-    const proto = {
-      inherited() {
-        return "yes";
-      },
-    };
-    Object.setPrototypeOf(session, proto);
-    expect(Object.getPrototypeOf(session)).toBe(proto);
-    expect(Object.getPrototypeOf(raw)).toBe(proto);
-    expect("inherited" in session).toBe(true);
-    expect((session as unknown as { inherited(): string }).inherited()).toBe(
-      "yes",
-    );
-
-    // A chain that loops back through the handle must be rejected like an ordinary object's
-    // self-prototype — the language's own cycle walk stops at the exotic proxy, and accepting
-    // it would make every missing-property lookup recurse until the stack overflows.
-    expect(Reflect.setPrototypeOf(session, session)).toBe(false);
-    const cyclic = Object.create(session as object) as object;
-    expect(Reflect.setPrototypeOf(session, cyclic)).toBe(false);
-    // Neither side was mutated by the rejected attempts.
-    expect(Object.getPrototypeOf(session)).toBe(proto);
-    expect(Object.getPrototypeOf(raw)).toBe(proto);
-
-    // A prototype change applied to the RAW session (through a bound method, say) must be what
-    // the handle reports — the session is the source of truth for inheritance.
-    const rawProto = { viaRaw: true };
-    Object.setPrototypeOf(raw, rawProto);
-    expect(Object.getPrototypeOf(session)).toBe(rawProto);
-
-    // A frozen handle pins the prototype: only the no-op "change" succeeds.
-    Object.freeze(session);
-    expect(() => Object.setPrototypeOf(session, proto)).toThrow(TypeError);
-    expect(Object.setPrototypeOf(session, Object.getPrototypeOf(session))).toBe(
-      session,
-    );
-    await session.close();
-  });
-
-  it("serves a caller-pinned function definition verbatim", async () => {
-    // Object.defineProperty with a non-configurable, non-writable function must succeed and read
-    // back the caller's exact value — the language validates the trap against the supplied
-    // descriptor with SameValue, so mirroring a bound variant would throw mid-definition.
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(extension(), { label: "pin" }).ready;
-    const fn = () => "custom";
-
-    expect(() =>
-      Object.defineProperty(session, "custom", {
-        value: fn,
-        configurable: false,
-        writable: false,
-        enumerable: true,
-      }),
-    ).not.toThrow();
-    const custom = (session as Record<string, unknown>).custom as () => string;
-    expect(custom).toBe(fn);
-    expect(custom()).toBe("custom");
-
-    // Omitted flags default to false and arrive UNSET in the trap argument; a bare { value } is
-    // just as pinned as an explicit { configurable: false, writable: false }.
-    const bare = () => "bare";
-    expect(() =>
-      Object.defineProperty(session, "bare", { value: bare }),
-    ).not.toThrow();
-    expect((session as Record<string, unknown>).bare).toBe(bare);
-
-    expect(() => Object.freeze(session)).not.toThrow();
-    expect((session as Record<string, unknown>).custom).toBe(fn);
-    expect((session as Record<string, unknown>).bare).toBe(bare);
-  });
-
-  it("keeps private-field getters working after the caller seals the handle", async () => {
-    // Sealing mirrors the session's own accessors onto the target as non-configurable; their
-    // getters must keep the raw session as receiver or a private-field brand check throws.
-    class PrivateGetterSession implements RealtimeSession {
-      #value = "secret";
-      declare value: string;
-      constructor() {
-        // An OWN accessor (class-body getters live on the prototype and are never mirrored)
-        // whose getter reads a private field of its RECEIVER — the brand check is the point.
-        Object.defineProperty(this, "value", {
-          enumerable: true,
-          configurable: true,
-          get(this: PrivateGetterSession) {
-            return this.#value;
-          },
-        });
-      }
-      close() {
-        // Managed teardown wraps this method.
-      }
-    }
-    const classy = defineRealtimeExtension<
-      Record<never, never>,
-      PrivateGetterSession
-    >({
-      id: "test/private-getter",
-      defaultEndpoint: "test/private-getter",
-      async open() {
-        return new PrivateGetterSession();
-      },
-    });
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(classy, {}).ready;
-
-    expect(session.value).toBe("secret");
-    expect(() => Object.seal(session)).not.toThrow();
-    expect(session.value).toBe("secret");
-  });
-
-  it("honors pinned accessor definitions, even over kernel names", async () => {
-    // A non-configurable accessor mirrored onto the target rules the read: with no getter the
-    // language requires undefined (a setter-only pin must not throw on every access), and with
-    // one, the caller's getter wins — even over the kernel's own state.
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const session = await client.open(extension(), { label: "acc" }).ready;
-
-    Object.defineProperty(session, "state", {
-      set: () => undefined,
-      configurable: false,
-    });
-    expect(session.state).toBeUndefined();
-
-    Object.defineProperty(session, "computed", {
-      get: () => "from-getter",
-      configurable: false,
-    });
-    expect((session as Record<string, unknown>).computed).toBe("from-getter");
-  });
-
   it("uses the extension default when endpointId is explicitly undefined", async () => {
     const client = createRealtimeClient({
       config: createConfig({ credentials: "test-key" }),
@@ -1320,7 +773,7 @@ describe("realtime extensions", () => {
       label: "defaulted",
     }).ready;
 
-    expect(session.label).toBe("defaulted");
+    expect(session.session?.label).toBe("defaulted");
   });
 
   it("rejects an endpoint the extension declares it cannot open", () => {
@@ -1515,48 +968,10 @@ describe("realtime extensions", () => {
     });
     const session = await client.open(selfClosing, {}).ready;
 
-    await session.stop();
+    await session.session?.stop();
 
     expect(session.state).toBe("closed");
     expect(cleanup).toHaveBeenCalledTimes(1);
-  });
-
-  it("preserves private-field receivers for frozen sessions", async () => {
-    class FrozenPrivateSession implements RealtimeSession {
-      #label = "frozen-private";
-
-      get label() {
-        return this.#label;
-      }
-
-      readLabel() {
-        return this.#label;
-      }
-
-      close() {
-        // Managed teardown wraps this method.
-      }
-    }
-    const frozen = Object.freeze(
-      new FrozenPrivateSession(),
-    ) as FrozenPrivateSession;
-    const client = createRealtimeClient({
-      config: createConfig({ credentials: "test-key" }),
-    });
-    const frozenExtension = defineRealtimeExtension<
-      Record<never, never>,
-      FrozenPrivateSession
-    >({
-      id: "test/frozen-private",
-      defaultEndpoint: "test/frozen-private",
-      async open() {
-        return frozen;
-      },
-    });
-    const session = await client.open(frozenExtension, {}).ready;
-
-    expect(session.label).toBe("frozen-private");
-    expect(session.readLabel()).toBe("frozen-private");
   });
 
   it("does not invoke an extension when opening was already aborted", async () => {
@@ -1846,6 +1261,31 @@ describe("realtime extension context additions", () => {
 
     await expect(client.open(probe, {}).ready).rejects.toThrow(
       "requires an app endpoint id",
+    );
+  });
+
+  it("context.fetch rejects methods other than GET and POST", async () => {
+    // The smallest surface the shipped extensions need, and the one every fal proxy adapter is
+    // guaranteed to route — widening it means widening three frameworks' adapter exports.
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "secret-key" }),
+    });
+    const probe = defineRealtimeExtension<
+      Record<string, never>,
+      RealtimeSession
+    >({
+      id: "test/fetch-method",
+      defaultEndpoint: "test/fetch-method",
+      async open(context) {
+        await context.fetch("https://wma.fal.run/session", {
+          method: "DELETE",
+        });
+        return { close: jest.fn() };
+      },
+    });
+
+    await expect(client.open(probe, {}).ready).rejects.toThrow(
+      "supports GET and POST only",
     );
   });
 
@@ -2305,7 +1745,9 @@ describe("realtime extension context additions", () => {
       },
     }).ready;
     // open() resolved at all, which is the assertion: both throws were swallowed at the boundary.
-    expect((session as unknown as { reached: boolean }).reached).toBe(true);
+    expect((session.session as unknown as { reached: boolean }).reached).toBe(
+      true,
+    );
     expect(session.state).toBe("live");
   });
 

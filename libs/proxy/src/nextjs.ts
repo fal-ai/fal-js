@@ -7,12 +7,6 @@ import {
   handleRequest,
   responsePassthrough,
 } from "./index";
-import {
-  isJsonContentType,
-  readUnconsumedRequestBody,
-  readWebRequestBody,
-  serializeParsedBody,
-} from "./utils";
 
 /**
  * The default Next API route for the fal.ai client proxy.
@@ -35,51 +29,7 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-page-router",
         method: request.method || "POST",
-        getRequestBody: async () => {
-          // Next's DEFAULT bodyParser drains every request and stringifies unknown content types
-          // through UTF-8 — so a multipart or binary body reaching this adapter as a string is
-          // already corrupted (invalid sequences replaced), and the original bytes are gone.
-          // Forwarding it under an intact multipart boundary would hand the upstream garbage that
-          // parses as a valid request; failing loudly is the only honest option.
-          const contentType = (
-            request.headers["content-type"] ?? ""
-          ).toLowerCase();
-          const jsonBody = isJsonContentType(contentType);
-          const losslesslyParsed =
-            jsonBody ||
-            contentType.startsWith("application/x-www-form-urlencoded") ||
-            contentType.startsWith("text/");
-          // No content type is NOT an exemption: Next text-decodes those bodies too, and binary
-          // bytes posted without a label would be forwarded corrupted (and then labeled JSON by
-          // the string default). Only a genuinely empty body is safe to pass.
-          if (
-            typeof request.body === "string" &&
-            request.body !== "" &&
-            !losslesslyParsed
-          ) {
-            throw new Error(
-              `The fal proxy cannot forward a ${contentType || "untyped"} body that Next's default bodyParser ` +
-                "already decoded as text — the bytes are irreversibly corrupted. Disable body " +
-                "parsing for this route (export const config = { api: { bodyParser: false } }) " +
-                "so the proxy can forward the raw request stream.",
-            );
-          }
-          // Next PARSES json bodies, so a string here is a top-level JSON string VALUE, not raw
-          // JSON text — it must re-encode ("hello" → "\"hello\"") or the upstream receives
-          // invalid JSON under a JSON content type. (Express is different: its string bodies are
-          // raw text and pass through.)
-          if (jsonBody && typeof request.body === "string") {
-            return JSON.stringify(request.body);
-          }
-          const parsed = serializeParsedBody(
-            request.body,
-            request.headers["content-type"],
-          );
-          // With bodyParser disabled the body is unset and the stream unread — forward raw bytes.
-          return parsed !== undefined
-            ? parsed
-            : readUnconsumedRequestBody(request);
-        },
+        getRequestBody: async () => JSON.stringify(request.body),
         getHeaders: () => request.headers,
         getHeader: (name) => request.headers[name],
         sendHeader: (name, value) => response.setHeader(name, value),
@@ -88,12 +38,7 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           if (res.headers.get("content-type")?.includes("application/json")) {
             return response.status(res.status).json(await res.json());
           }
-          // Bytes, not text(): a forwarded accept header can make the upstream answer with a
-          // binary payload (an image, an octet-stream), and decoding it through UTF-8 corrupts
-          // it before it reaches the caller.
-          return response
-            .status(res.status)
-            .send(Buffer.from(await res.arrayBuffer()));
+          return response.status(res.status).send(await res.text());
         },
       },
       resolvedConfig,
@@ -146,7 +91,7 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
       {
         id: "nextjs-app-router",
         method: request.method,
-        getRequestBody: async () => readWebRequestBody(request),
+        getRequestBody: async () => request.text(),
         getHeaders: () => fromHeaders(request.headers),
         getHeader: (name) => request.headers.get(name),
         sendHeader: (name, value) => responseHeaders.set(name, value),
@@ -164,13 +109,6 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
     GET: handler,
     POST: handler,
     PUT: handler,
-    // The full RequestInit method surface: context.fetch() forwards whatever method the extension
-    // names, and a documented adapter answering 405 for PATCH/DELETE would make the proxy path
-    // behave differently from a direct fetch.
-    PATCH: handler,
-    DELETE: handler,
-    HEAD: handler,
-    OPTIONS: handler,
   };
 };
 
@@ -179,10 +117,6 @@ let _routeHandler: {
   GET: RouteHandler;
   POST: RouteHandler;
   PUT: RouteHandler;
-  PATCH: RouteHandler;
-  DELETE: RouteHandler;
-  HEAD: RouteHandler;
-  OPTIONS: RouteHandler;
 } | null = null;
 
 function getRouteHandler() {
@@ -204,19 +138,5 @@ export const route = {
   },
   get PUT() {
     return getRouteHandler().PUT;
-  },
-  // The same full method surface as createRouteHandler(): a proxied context.fetch() may use any
-  // RequestInit method, and the deprecated export must not answer 405 where the new one forwards.
-  get PATCH() {
-    return getRouteHandler().PATCH;
-  },
-  get DELETE() {
-    return getRouteHandler().DELETE;
-  },
-  get HEAD() {
-    return getRouteHandler().HEAD;
-  },
-  get OPTIONS() {
-    return getRouteHandler().OPTIONS;
   },
 };

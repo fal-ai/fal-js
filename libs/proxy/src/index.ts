@@ -4,8 +4,8 @@ import {
   DEFAULT_ALLOWED_URL_PATTERNS,
   type ProxyConfig,
 } from "./config";
-import type { HeaderValue, ProxyBehavior, ProxyRequestBody } from "./types";
-import { isParserProducedByteBody, singleHeaderValue } from "./utils";
+import type { HeaderValue, ProxyBehavior } from "./types";
+import { singleHeaderValue } from "./utils";
 
 export {
   createUrlMatcher,
@@ -13,11 +13,7 @@ export {
   resolveProxyConfig,
   type ProxyConfig,
 } from "./config";
-export {
-  type HeaderValue,
-  type ProxyBehavior,
-  type ProxyRequestBody,
-} from "./types";
+export { type HeaderValue, type ProxyBehavior } from "./types";
 
 export const TARGET_URL_HEADER = "x-fal-target-url";
 
@@ -55,68 +51,13 @@ function getUrlWithoutScheme(targetUrl: string): string {
 }
 
 /**
- * fal service hosts that serve no customer app, and therefore have no app id to match.
- *
- * Kept as an explicit set so adding one is a deliberate act. A host belongs here only if every path
- * on it is fal's own — `wma.fal.run` is signalling, with paths like `session` and `session/heartbeat`.
- */
-const FAL_SERVICE_HOSTS = new Set(["wma.fal.run"]);
-const WMA_APP_SCOPED_PATHS = new Set(["/ice", "/session"]);
-
-/** Is this fal's own service infrastructure, carrying no customer app? */
-function isFalServiceHost(targetUrl: string): boolean {
-  const url = new URL(targetUrl);
-  return url.protocol === "https:" && FAL_SERVICE_HOSTS.has(url.host);
-}
-
-function isWmaAppScopedRoute(targetUrl: string): boolean {
-  const url = new URL(targetUrl);
-  if (!isFalServiceHost(targetUrl)) return false;
-  let path: string;
-  try {
-    // URL.pathname keeps percent escapes intact, while the upstream router decodes them. Apply the
-    // same normalization before deciding whether the route carries app authority in its JSON body.
-    path = decodeURIComponent(url.pathname).replace(/\/{2,}/g, "/");
-  } catch {
-    // A malformed escape must not turn a potentially app-scoped service route into an exemption.
-    return true;
-  }
-  path = path.replace(/\/+$/, "") || "/";
-  return WMA_APP_SCOPED_PATHS.has(path);
-}
-
-function appIdFromRequestBody(body: string | undefined): string | undefined {
-  if (!body) return undefined;
-  try {
-    const value = JSON.parse(body) as { app_id?: unknown };
-    return typeof value.app_id === "string" ? value.app_id : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Hosts that are fal's own infrastructure rather than a customer's app.
- *
- * `allowedEndpoints` restricts WHICH OF YOUR APPS may be called, so applying it to fal's own service
- * hosts is a category error: those paths are not app identifiers and can never match an app pattern.
- *
- * `fal.ai` subdomains and the explicitly enumerated service hosts share this treatment regardless of
- * their DNS suffix. `wma.fal.run/session`, for example, is signalling infrastructure; reducing its
- * path to `"session"` and comparing it with customer app ids would reject every valid bridge call.
- *
+ * Checks if the URL is on the fal.ai domain or any of its subdomains.
  * @param targetUrl the full URL including scheme.
- * @returns true when the host is fal's own service infrastructure.
+ * @returns true if the URL is on *.fal.ai domain.
  */
-function isFalInfrastructure(targetUrl: string): boolean {
-  const { host } = new URL(targetUrl);
-  // Enumerated, NOT a suffix rule on `.fal.run`. `fal.run` and `queue.fal.run` serve customer apps,
-  // and `getEndpoint()` on those yields an app id — which is exactly what `allowedEndpoints` is for.
-  // Exempting the whole domain would leave that option restricting nothing on its main path, so the
-  // widening has to name the service hosts rather than the domain they happen to share.
-  return (
-    host === "fal.ai" || host.endsWith(".fal.ai") || isFalServiceHost(targetUrl)
-  );
+function isFalAiDomain(targetUrl: string): boolean {
+  const url = new URL(targetUrl);
+  return url.host === "fal.ai" || url.host.endsWith(".fal.ai");
 }
 
 /**
@@ -160,28 +101,6 @@ function getFalKey(): string | undefined {
 
 const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 
-// Request headers that are never forwarded, even when explicitly listed in
-// `forwardRequestHeaders`: credentials addressed to the proxy host and hop-by-hop headers the
-// upstream fetch manages itself.
-// `content-encoding` is deliberately NOT here: it is end-to-end metadata for the raw-bytes body
-// path, and an operator who names it in `forwardRequestHeaders` is labeling compressed bytes the
-// proxy forwards unchanged. It still never travels by default.
-const NEVER_FORWARDED_REQUEST_HEADERS = new Set([
-  "authorization",
-  "cookie",
-  "host",
-  "content-length",
-  "connection",
-  "transfer-encoding",
-  "keep-alive",
-  "upgrade",
-  "te",
-  "trailer",
-  "expect",
-  "accept-encoding",
-  "proxy-authorization",
-]);
-
 /**
  * A request handler that proxies the request to the fal API
  * endpoint. This is useful so client-side calls to the fal endpoint
@@ -199,12 +118,7 @@ export async function handleRequest<ResponseType>(
 ) {
   const targetUrl = singleHeaderValue(behavior.getHeader(TARGET_URL_HEADER));
   if (!targetUrl) {
-    // Names the missing header. This one is purely about request SHAPE — no configuration is being
-    // disclosed by saying so, and a caller who forgot a header should be told which.
-    return behavior.respondWith(
-      400,
-      `Invalid request: missing ${TARGET_URL_HEADER} header`,
-    );
+    return behavior.respondWith(400, "Invalid request");
   }
 
   // Check if config is already resolved (has all required fields with non-undefined values)
@@ -216,85 +130,21 @@ export async function handleRequest<ResponseType>(
   const resolvedConfig = isResolved
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
-  let requestBody: ProxyRequestBody;
-  let requestBodyRead = false;
-  const readRequestBody = async () => {
-    if (!requestBodyRead) {
-      requestBody = await behavior.getRequestBody();
-      requestBodyRead = true;
-    }
-    return requestBody;
-  };
-  // The forwarded body stays raw bytes — decoding a multipart payload corrupts its file parts.
-  // Only the WMA app-id extraction needs text, and those routes carry JSON.
-  const readRequestBodyText = async (): Promise<string | undefined> => {
-    const body = await readRequestBody();
-    if (typeof body === "string") {
-      return body;
-    }
-    if (body === undefined) {
-      return undefined;
-    }
-    return new TextDecoder().decode(body);
-  };
 
   const urlToValidate = getUrlWithoutScheme(targetUrl);
-  // fal's own SERVICE hosts skip the URL allowlist entirely, and are deliberately absent from
-  // DEFAULT_ALLOWED_URL_PATTERNS: this short-circuit runs first, so a default entry could never be
-  // the thing that admits them. Supplying `allowedUrlPatterns` REPLACES the defaults, so an entry
-  // there would only help callers who never narrow the list — and narrowing it is the careful thing
-  // to do. Anyone scoping the proxy to their two apps would lose signalling and have no way to know
-  // why, which is the failure this exists to remove.
-  //
-  // Deliberately the enumerated service set and NOT `.fal.ai`: fal.ai is not allowed by default today
-  // and this must not quietly start permitting it. Service hosts carry no customer-app authority —
-  // `wma.fal.run` only signals — so allowing them is equivalent to allowing realtime sessions at all.
-  if (
-    !isFalServiceHost(targetUrl) &&
-    !isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)
-  ) {
-    // Names the OPTION, never its contents. Which check rejected you is something a blocked caller
-    // can already infer; the configured patterns would hand them a map of what this proxy may reach.
-    return behavior.respondWith(
-      400,
-      "Invalid request: target URL is not permitted by allowedUrlPatterns",
-    );
+  if (!isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)) {
+    return behavior.respondWith(400, "Invalid request");
   }
 
-  // App-serving POST paths carry the app id in the URL. WMA's app-scoped infrastructure routes
-  // carry it in JSON instead, so both must enforce the same endpoint policy.
-  const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
-  const restrictEndpoints =
-    behavior.method?.toUpperCase() === "POST" && allowedEndpoints.length > 0;
-  const wmaAppScoped = restrictEndpoints && isWmaAppScopedRoute(targetUrl);
-  let isAuthenticated: boolean | undefined;
-  if (wmaAppScoped) {
-    isAuthenticated =
-      (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
-    if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
-      return behavior.respondWith(401, "Unauthorized");
+  // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
+  if (behavior.method?.toUpperCase() === "POST" && !isFalAiDomain(targetUrl)) {
+    const endpoint = getEndpoint(targetUrl);
+    if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
+      return behavior.respondWith(400, "Invalid request");
     }
   }
 
-  if (restrictEndpoints) {
-    const endpoint = wmaAppScoped
-      ? appIdFromRequestBody(await readRequestBodyText())
-      : isFalInfrastructure(targetUrl)
-        ? undefined
-        : getEndpoint(targetUrl);
-    if (
-      (wmaAppScoped && endpoint === undefined) ||
-      (endpoint !== undefined && !isAllowedEndpoint(endpoint, allowedEndpoints))
-    ) {
-      // The URL is allowlisted and the path is not, which is a different option and a different fix.
-      return behavior.respondWith(
-        400,
-        "Invalid request: target path is not permitted by allowedEndpoints",
-      );
-    }
-  }
-
-  isAuthenticated ??=
+  const isAuthenticated =
     (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
   if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
     return behavior.respondWith(401, "Unauthorized");
@@ -307,69 +157,30 @@ export async function handleRequest<ResponseType>(
     return behavior.respondWith(401, "Unauthorized");
   }
 
-  // Forward an ALLOWLIST, never a pass-through: applications authenticate their own proxy route
-  // with custom headers (session tokens, API keys, CSRF tokens) that no denylist can enumerate,
-  // and forwarding them would leak user credentials to the upstream on every call. `x-fal-*`
-  // always travels; `accept` and `content-type` shape the request; anything else — say a realtime
-  // extension's provider-specific header — is forwarded only when the operator names it in
-  // `forwardRequestHeaders`. The proxy-owned values are applied after the spread, so a caller
-  // cannot override them.
-  const forwarded = new Set(
-    (resolvedConfig.forwardRequestHeaders ?? []).map((name) =>
-      name.toLowerCase(),
-    ),
-  );
+  // pass over headers prefixed with x-fal-*
   const headers: Record<string, HeaderValue> = {};
   Object.keys(behavior.getHeaders()).forEach((key) => {
-    const name = key.toLowerCase();
-    if (NEVER_FORWARDED_REQUEST_HEADERS.has(name)) {
-      return;
-    }
-    if (name.startsWith("x-fal-") || forwarded.has(name)) {
-      headers[name] = behavior.getHeader(key);
+    if (key.toLowerCase().startsWith("x-fal-")) {
+      headers[key.toLowerCase()] = behavior.getHeader(key);
     }
   });
 
   const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
-  const accept =
-    singleHeaderValue(behavior.getHeader("accept")) ?? "application/json";
-  const body =
-    behavior.method?.toUpperCase() === "GET"
-      ? undefined
-      : await readRequestBody();
-  // The incoming content-type is forwarded when present. When absent, string bodies keep the
-  // historical application/json default (bare `fetch(proxy, { body: JSON.stringify(x) })` callers
-  // relied on the old rewrite, and browsers would otherwise label them text/plain) — while raw
-  // binary bodies stay label-free, matching direct-fetch semantics.
-  const incomingContentType = singleHeaderValue(
-    behavior.getHeader("content-type"),
-  );
-  const contentType =
-    incomingContentType ??
-    (typeof body === "string" ? "application/json" : undefined);
-  // An explicitly forwarded content-encoding only describes bytes read from the RAW STREAM.
-  // Parser output no longer matches it: parsers inflate compressed requests before parsing, so
-  // both a re-serialized string and a parser-produced buffer (express.raw's default inflation)
-  // are already identity-encoded, and forwarding the original label would make the upstream try
-  // to decompress plain bytes.
-  if (
-    (typeof body === "string" || isParserProducedByteBody(body)) &&
-    "content-encoding" in headers
-  ) {
-    delete headers["content-encoding"];
-  }
   const res = await fetch(targetUrl, {
     method: behavior.method,
     headers: {
       ...headers,
       authorization,
-      accept,
-      ...(contentType !== undefined ? { "content-type": contentType } : {}),
+      accept: "application/json",
+      "content-type": "application/json",
       "user-agent": userAgent,
       "x-fal-client-proxy": proxyUserAgent,
     } as HeadersInit,
-    body,
+    body:
+      behavior.method?.toUpperCase() === "GET"
+        ? undefined
+        : await behavior.getRequestBody(),
   });
 
   // copy headers from fal to the proxied response

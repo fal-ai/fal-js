@@ -1329,343 +1329,56 @@ export function createRealtimeClient({
       }
     };
 
-    // The handle exists before the session does. The neutral target starts bare and adopts the
-    // session's prototype when it arrives; every trap treats "no session yet" as "the facade has
-    // no members yet", while the kernel members — state, close, ready, and the queueing send —
-    // work from the first tick.
-    const proxyTarget = Object.create(null) as RealtimeSession;
-    const boundMethods = new Map<
-      PropertyKey,
-      { source: unknown; bound: unknown }
-    >();
-    // What the `get` trap serves for a property, shared with the traps that mirror properties
-    // onto the neutral target: once the target is non-extensible, the language requires a
-    // non-configurable, non-writable target value and the trap result to be the SAME value, so
-    // both sides must resolve through one function.
-    const resolveProperty = (property: PropertyKey, value: unknown) => {
-      if (property === "close") return publicClose;
-      if (property === "state") return state;
-      if (property === "ready") return ready;
-      // The handle must NEVER be thenable, whatever the extension's session declares: resolving
-      // `ready` with it, `await handle`, and Promise.all() all probe `then` and would assimilate
-      // the handle into an unrelated promise instead of treating it as a value. A session's own
-      // `then` stays reachable only inside the extension.
-      if (property === "then") return undefined;
-      if (typeof value !== "function") return value;
-      const cached = boundMethods.get(property);
-      if (cached?.source === value) return cached.bound;
-      // Class methods must always observe the original instance. In particular, a Proxy cannot
-      // satisfy private-field brand checks, and a frozen instance cannot have its raw `close`
-      // hook replaced. Extensions end themselves through context.close(); the session's own
-      // close method is the resource hook the kernel invokes during managed teardown.
-      const bound = value.bind(session);
-      // send is fire-and-forget by contract (the handle types it void), so a live send whose
-      // extension implementation rejects asynchronously has no call site left to observe it —
-      // consume and report the failure instead of leaking an unhandled rejection, exactly as the
-      // pre-live queue flush does. Synchronous throws still propagate to the caller.
-      const resolved =
-        property === "send"
-          ? (...args: unknown[]) => {
-              const result = (bound as (...sendArgs: unknown[]) => unknown)(
-                ...args,
-              );
-              if (
-                result &&
-                typeof (result as { then?: unknown }).then === "function"
-              ) {
-                void Promise.resolve(result).catch(() =>
-                  diagnostic({
-                    kind: "warning",
-                    message: "A message could not be delivered to the session.",
-                  }),
-                );
-              }
-              return result;
-            }
-          : bound;
-      boundMethods.set(property, { source: value, bound: resolved });
-      return resolved;
-    };
-    const mirrorOntoTarget = (
-      property: PropertyKey,
-      descriptor: PropertyDescriptor,
-    ) =>
-      Reflect.defineProperty(
-        proxyTarget,
-        property,
-        "value" in descriptor
-          ? {
-              ...descriptor,
-              value: resolveProperty(property, descriptor.value),
-            }
-          : descriptor,
+    // The handle is a PLAIN OBJECT, deliberately not a facade over the extension's session: it
+    // owns exactly the kernel members — state, ready, send, close — plus a `session` accessor
+    // through which extension-specific surface is reached once the session exists. A transparent
+    // Proxy could impersonate the session from the first tick, but the language invariants it
+    // drags in (freeze/seal mirroring, pinned descriptors, prototype cycles) cost far more
+    // machinery than the convenience is worth.
+    const send = (...args: unknown[]): void => {
+      if (!session) {
+        queuedSend(...args);
+        return;
+      }
+      const sessionSend = Reflect.get(session, "send", session) as unknown;
+      if (typeof sessionSend !== "function") {
+        diagnostic({
+          kind: "warning",
+          message:
+            "The extension session has no send(); the message was dropped.",
+        });
+        return;
+      }
+      // Fire-and-forget by contract (the handle types send as void): a synchronous throw still
+      // propagates to the caller, while an async delivery failure has no call site left to
+      // observe it and becomes a diagnostic rather than an unhandled rejection — exactly as the
+      // pre-live queue flush does.
+      const result = (sessionSend as (...sendArgs: unknown[]) => unknown).apply(
+        session,
+        args,
       );
-    const handle = new Proxy(proxyTarget, {
-      get(_target, property) {
-        // A pinned target property — non-configurable, non-writable data — MUST report its exact
-        // pinned value, whatever the property: the frozen `state` snapshot, a bound method pinned
-        // by freeze, or a caller-defined non-configurable function the defineProperty trap
-        // mirrored verbatim. The invariant forbids reporting anything else.
-        const pinned = Reflect.getOwnPropertyDescriptor(proxyTarget, property);
-        if (
-          pinned &&
-          !pinned.configurable &&
-          pinned.writable === false &&
-          "value" in pinned
-        ) {
-          return pinned.value;
-        }
-        // A pinned ACCESSOR rules the read too — even over kernel names: with no getter the
-        // language requires undefined, and with one, the getter is honored. The RECEIVER is the
-        // raw session: every target accessor also lives on the session (mirrors copy the
-        // session's own descriptor; caller definitions are forwarded to the session first), and
-        // a constructor-defined getter reading a private field would throw a brand TypeError
-        // against any other receiver.
-        if (pinned && !pinned.configurable && !("value" in pinned)) {
-          return pinned.get ? pinned.get.call(session ?? handle) : undefined;
-        }
-        if (property === "state") return state;
-        if (property === "ready") return ready;
-        if (property === "close") return publicClose;
-        // Short-circuited BEFORE the raw session read: promise resolution probes `then`, and a
-        // session declaring it as a getter that throws would otherwise be evaluated by
-        // Reflect.get on the very access that resolves `ready` — rejecting a live session.
-        if (property === "then") return undefined;
-        if (!session) {
-          // `send` queues while opening so the handle is usable immediately; the rest of the
-          // extension's facade materializes with the session.
-          return property === "send" ? queuedSend : undefined;
-        }
-        return resolveProperty(
-          property,
-          Reflect.get(session, property, session),
+      if (result && typeof (result as { then?: unknown }).then === "function") {
+        void Promise.resolve(result).catch(() =>
+          diagnostic({
+            kind: "warning",
+            message: "A message could not be delivered to the session.",
+          }),
         );
+      }
+    };
+    const handle = {
+      get state() {
+        return state;
       },
-      set(_target, property, value) {
-        if (!session) return false;
-        const updated = Reflect.set(session, property, value, session);
-        const targetDescriptor = Reflect.getOwnPropertyDescriptor(
-          proxyTarget,
-          property,
-        );
-        // EVERY mirrored writable data property tracks the session's value, not only the
-        // non-configurable ones: after Object.preventExtensions() the mirrors are still
-        // configurable, and a later Object.freeze() would otherwise pin a stale target value
-        // while the get trap serves the session's newer one — an invariant violation that throws
-        // on read. The mirrored value resolves like the get trap's (functions stay bound).
-        if (
-          updated &&
-          targetDescriptor &&
-          "value" in targetDescriptor &&
-          targetDescriptor.writable
-        ) {
-          Reflect.set(
-            proxyTarget,
-            property,
-            resolveProperty(property, value),
-            proxyTarget,
-          );
-        }
-        return updated;
+      // The extension's own session: undefined while opening, set once negotiation completes,
+      // and left readable after close so late observers see what they held rather than a hole.
+      get session() {
+        return session;
       },
-      defineProperty(_target, property, descriptor) {
-        if (!session) return false;
-        if (!Reflect.defineProperty(session, property, descriptor)) {
-          return false;
-        }
-        // A non-configurable property must also exist on the neutral target or the Proxy would
-        // violate the language's invariants. Configurable properties can remain source-only —
-        // unless the target is already non-extensible, where its key set must track the session's.
-        //
-        // A PINNED definition (non-configurable, non-writable, with a value) mirrors the caller's
-        // exact value rather than the get-trap resolution: the language validates the trap's
-        // success against the descriptor the caller supplied with SameValue, so storing a bound
-        // variant would throw after both objects were already mutated. The get trap serves the
-        // pinned target value verbatim, keeping the two invariants consistent.
-        // Omitted descriptor flags DEFAULT TO FALSE and arrive unset in the trap argument, so the
-        // pinned check is "not explicitly true" rather than "explicitly false" — a bare
-        // { value: fn } is fully pinned.
-        if (
-          descriptor.configurable !== true &&
-          descriptor.writable !== true &&
-          "value" in descriptor
-        ) {
-          return Reflect.defineProperty(proxyTarget, property, descriptor);
-        }
-        return descriptor.configurable !== true ||
-          !Reflect.isExtensible(proxyTarget)
-          ? mirrorOntoTarget(property, descriptor)
-          : true;
-      },
-      deleteProperty(_target, property) {
-        if (!session) return false;
-        if (!Reflect.deleteProperty(session, property)) {
-          // A failed deletion changed nothing — the cached binding must survive so the method
-          // keeps its identity for callers holding the previous reference.
-          return false;
-        }
-        boundMethods.delete(property);
-        // Keep the neutral target's key set in step with the session's, or a delete after
-        // `Object.preventExtensions()` would leave `ownKeys` reporting fewer keys than the
-        // non-extensible target owns.
-        return Reflect.deleteProperty(proxyTarget, property);
-      },
-      preventExtensions() {
-        // `Object.freeze()`, `Object.seal()`, and `Object.preventExtensions()` all land here
-        // first. Once the target is non-extensible the language requires `ownKeys` to report
-        // exactly the target's own keys, so mirror every session key onto the target — with the
-        // same values the `get` trap serves — and make the session non-extensible too so no new
-        // key can appear later on one side only. Freezing a handle that is still opening locks
-        // the facade empty; the kernel members keep working because they are trap-served.
-        if (session) {
-          if (!Reflect.preventExtensions(session)) {
-            return false;
-          }
-          // The prototype refreshes with the mirrors: a bound method may have re-parented the
-          // raw session without passing the setPrototypeOf trap, and locking the target with a
-          // stale prototype would leave getPrototypeOf disagreeing with inherited-property
-          // resolution forever. Only the first lock can (or needs to) move it — this trap just
-          // pinned the session's own prototype.
-          if (Reflect.isExtensible(proxyTarget)) {
-            Object.setPrototypeOf(proxyTarget, Reflect.getPrototypeOf(session));
-          }
-          // Purge mirrors whose session key is GONE: a bound method can delete a configurable
-          // field without passing the deleteProperty trap, and a stale mirror would keep the key
-          // enumerable and make a later freeze throw while pinning it on the now-non-extensible
-          // session. Only still-configurable mirrors can be removed — pinned ones cannot have
-          // lost their session twin, since pinning always reaches the session first.
-          for (const property of Reflect.ownKeys(proxyTarget)) {
-            const existing = Reflect.getOwnPropertyDescriptor(
-              proxyTarget,
-              property,
-            );
-            if (
-              existing?.configurable &&
-              !Reflect.getOwnPropertyDescriptor(session, property)
-            ) {
-              Reflect.deleteProperty(proxyTarget, property);
-            }
-          }
-          for (const property of Reflect.ownKeys(session)) {
-            // Refresh EXISTING mirrors too, not only missing ones: a bound extension method
-            // mutates the raw session without passing the set trap, so a freeze after an earlier
-            // preventExtensions would otherwise pin a stale mirrored value while get serves the
-            // session's newer one — an invariant violation that throws on read. Object.freeze
-            // re-enters this trap before it pins descriptors, which is what makes this the right
-            // moment to synchronize. Already-pinned (non-configurable) mirrors stay untouched.
-            const existing = Reflect.getOwnPropertyDescriptor(
-              proxyTarget,
-              property,
-            );
-            // Sealed mirrors are non-configurable but still WRITABLE, and redefining a
-            // non-configurable writable data property's value is legal — so a seal-then-mutate-
-            // then-freeze sequence refreshes too. Only fully pinned (non-writable) mirrors stay.
-            if (
-              !existing ||
-              existing.configurable ||
-              ("value" in existing && existing.writable === true)
-            ) {
-              const descriptor = Reflect.getOwnPropertyDescriptor(
-                session,
-                property,
-              );
-              if (descriptor) {
-                mirrorOntoTarget(property, descriptor);
-              }
-            }
-          }
-        }
-        return Reflect.preventExtensions(proxyTarget);
-      },
-      has(_target, property) {
-        // Once the target is non-extensible the language forbids reporting any property the
-        // target does not own — including the kernel names, which are trap-served rather than own
-        // properties. Freezing during "opening" locks the facade empty; the kernel members keep
-        // working through `get`, which has no such invariant for non-own properties.
-        if (!Reflect.isExtensible(proxyTarget)) {
-          return Reflect.has(proxyTarget, property);
-        }
-        if (
-          property === "close" ||
-          property === "state" ||
-          property === "ready"
-        ) {
-          return true;
-        }
-        return session ? Reflect.has(session, property) : false;
-      },
-      ownKeys() {
-        // Before the session exists — and once the target is non-extensible, when the language
-        // requires exact agreement — the neutral target is the source of truth.
-        if (!session || !Reflect.isExtensible(proxyTarget)) {
-          return Reflect.ownKeys(proxyTarget);
-        }
-        return Reflect.ownKeys(session);
-      },
-      getPrototypeOf() {
-        // The session is the source of truth for inheritance — `get` and `has` resolve
-        // inherited members through it — so the reported prototype must be the session's, or a
-        // post-attach Object.setPrototypeOf on the raw session would leave getPrototypeOf
-        // disagreeing with property resolution. A non-extensible target pins the answer by
-        // language invariant, and before the session exists the bare target is all there is.
-        if (!session || !Reflect.isExtensible(proxyTarget)) {
-          return Reflect.getPrototypeOf(proxyTarget);
-        }
-        return Reflect.getPrototypeOf(session);
-      },
-      setPrototypeOf(_target, proto) {
-        // A non-extensible target pins the prototype by language invariant: only a no-op
-        // "change" to the current prototype may report success.
-        if (!Reflect.isExtensible(proxyTarget)) {
-          return proto === Reflect.getPrototypeOf(proxyTarget);
-        }
-        // Like set/defineProperty, the facade materializes with the session — there is nothing
-        // to re-parent yet.
-        if (!session) return false;
-        // An ordinary object rejects a prototype chain that loops back to itself, but the
-        // language's cycle walk stops at the first exotic object — so re-parenting the session
-        // onto the handle would succeed and every missing-property lookup would then recurse
-        // through the proxy until the stack overflows. Re-establish the check for every
-        // identity behind the handle BEFORE mutating either side. The seen-set bounds the walk
-        // when the chain contains other exotic objects with looping prototypes.
-        const seen = new Set<object>();
-        for (
-          let ancestor: object | null = proto;
-          ancestor !== null && !seen.has(ancestor);
-          ancestor = Reflect.getPrototypeOf(ancestor)
-        ) {
-          if (
-            ancestor === handle ||
-            ancestor === proxyTarget ||
-            ancestor === (session as object)
-          ) {
-            return false;
-          }
-          seen.add(ancestor);
-        }
-        // Both sides move together: the session so `get`/`has` actually resolve the new
-        // prototype's members, the target so a later freeze pins a prototype that agrees.
-        if (!Reflect.setPrototypeOf(session, proto)) return false;
-        return Reflect.setPrototypeOf(proxyTarget, proto);
-      },
-      getOwnPropertyDescriptor(_target, property) {
-        const targetDescriptor = Reflect.getOwnPropertyDescriptor(
-          proxyTarget,
-          property,
-        );
-        if (targetDescriptor && !targetDescriptor.configurable) {
-          return targetDescriptor;
-        }
-        // A target locked while the facade was still empty (frozen during "opening") must not
-        // report session descriptors that arrived later: a non-extensible target cannot gain
-        // reported own properties, and violating that throws at the access site.
-        if (!session || !Reflect.isExtensible(proxyTarget)) {
-          return targetDescriptor;
-        }
-        const descriptor = Reflect.getOwnPropertyDescriptor(session, property);
-        return descriptor ? { ...descriptor, configurable: true } : undefined;
-      },
-    }) as RealtimeSession;
+      ready,
+      send,
+      close: publicClose,
+    } as unknown as RealtimeSession;
 
     const openTask = async (): Promise<void> => {
       try {
@@ -1726,14 +1439,23 @@ export function createRealtimeClient({
                 });
                 requestHeaders = normalized;
               }
+              // Native fetch defaults to GET; context.fetch takes RequestInit and must not
+              // surprise an extension hitting a read-only endpoint without naming a method.
+              const requestedMethod = (init.method ?? "GET").toUpperCase();
+              // GET and POST only — the smallest surface the shipped extensions need, and the
+              // one every fal proxy adapter is guaranteed to route. Widening this means widening
+              // three frameworks' adapter exports; an extension that needs more should say so.
+              if (requestedMethod !== "GET" && requestedMethod !== "POST") {
+                throw new Error(
+                  `Realtime extension fetch() supports GET and POST only (got ${requestedMethod}).`,
+                );
+              }
               const {
                 method,
                 url: targetUrl,
                 headers,
               } = await config.requestMiddleware({
-                // Native fetch defaults to GET; context.fetch takes RequestInit and must not
-                // surprise an extension hitting a read-only endpoint without naming a method.
-                method: (init.method ?? "GET").toUpperCase(),
+                method: requestedMethod,
                 url,
                 headers: requestHeaders,
               });
@@ -1837,13 +1559,9 @@ export function createRealtimeClient({
           await drainLateCleanups();
           throw controller.signal.reason ?? new Error("Realtime open aborted");
         }
-        // The extension facade appears on the handle the moment the session exists: the neutral
-        // target adopts the session's prototype (unless the caller already made the handle
-        // non-extensible), queued sends flush in order, and only then does state report "live" —
-        // so an onState("live") callback that sends immediately cannot jump the queue.
-        if (Reflect.isExtensible(proxyTarget)) {
-          Object.setPrototypeOf(proxyTarget, Object.getPrototypeOf(session));
-        }
+        // Queued sends flush in order the moment the session exists, and only then does state
+        // report "live" — so an onState("live") callback that sends immediately cannot jump the
+        // queue.
         flushQueuedSends();
         // A queued send can synchronously end the session — an extension send that calls
         // context.close(), or app code aborting the caller's signal. The state latch already

@@ -1,7 +1,6 @@
 import { type RequestHandler } from "@sveltejs/kit";
 import { ProxyConfig, resolveProxyConfig } from "./config";
 import { fromHeaders, handleRequest, resolveApiKeyFromEnv } from "./index";
-import { readWebRequestBody } from "./utils";
 
 type RequestHandlerParams = Partial<ProxyConfig> & {
   /**
@@ -37,7 +36,7 @@ export const createRequestHandler = ({
       {
         id: "svelte-app-router",
         method: request.method,
-        getRequestBody: async () => readWebRequestBody(request),
+        getRequestBody: async () => request.text(),
         getHeaders: () => fromHeaders(request.headers),
         getHeader: (name) => request.headers.get(name),
         sendHeader: (name, value) => (responseHeaders[name] = value),
@@ -59,12 +58,5 @@ export const createRequestHandler = ({
     GET: handler,
     POST: handler,
     PUT: handler,
-    // The full RequestInit method surface: context.fetch() forwards whatever method the extension
-    // names, and a documented adapter answering 405 for PATCH/DELETE would make the proxy path
-    // behave differently from a direct fetch.
-    PATCH: handler,
-    DELETE: handler,
-    HEAD: handler,
-    OPTIONS: handler,
   };
 };

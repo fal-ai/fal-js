@@ -98,10 +98,11 @@ the session is live and rejects with the failure, so `const lucy = await
 fal.realtime.open(...).ready` gives the promise-shaped call site — but no
 caller is required to hold a promise: every failure `ready` can carry also
 reaches `onError` and `onState("failed")`, and an ignored `ready` never
-becomes an unhandled rejection. Extension-specific members (like Lucy's
-`remoteStream`) materialize when the session does; the kernel members
-(`state`, `send`, `close`, `ready`) work from the first tick, and `close()`
-during `"opening"` cancels the negotiation.
+becomes an unhandled rejection. The handle is a small plain object: `state`,
+`send`, `close`, and `ready` work from the first tick, and `close()` during
+`"opening"` cancels the negotiation. Extension-specific members (like Lucy's
+`remoteStream`) live on `handle.session`, which is set once the session is
+live.
 
 Extensions are ordinary installed JavaScript, never code loaded from endpoint
 metadata. fal owns cancellation and idempotent cleanup; the extension owns its
@@ -129,10 +130,11 @@ const dragonWorld = defineRealtimeExtension<{ prompt: string }, DragonSession>({
   },
 });
 
-// The full typed facade (roar) via the awaited style:
+// The typed session surface (roar) via the awaited style:
 const world = await fal.realtime.open(dragonWorld, {
   prompt: "A storm above a ruined castle",
 }).ready;
+world.session?.roar(11);
 ```
 
 Which extension opens a session is always named at the call site. There is no
