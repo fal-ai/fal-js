@@ -1416,7 +1416,17 @@ export function createRealtimeClient({
             return false;
           }
           for (const property of Reflect.ownKeys(session)) {
-            if (!Reflect.getOwnPropertyDescriptor(proxyTarget, property)) {
+            // Refresh EXISTING mirrors too, not only missing ones: a bound extension method
+            // mutates the raw session without passing the set trap, so a freeze after an earlier
+            // preventExtensions would otherwise pin a stale mirrored value while get serves the
+            // session's newer one — an invariant violation that throws on read. Object.freeze
+            // re-enters this trap before it pins descriptors, which is what makes this the right
+            // moment to synchronize. Already-pinned (non-configurable) mirrors stay untouched.
+            const existing = Reflect.getOwnPropertyDescriptor(
+              proxyTarget,
+              property,
+            );
+            if (!existing || existing.configurable) {
               const descriptor = Reflect.getOwnPropertyDescriptor(
                 session,
                 property,

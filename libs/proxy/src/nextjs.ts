@@ -124,6 +124,12 @@ export const createRouteHandler = (config: Partial<ProxyConfig> = {}) => {
     GET: handler,
     POST: handler,
     PUT: handler,
+    // The full RequestInit method surface: context.fetch() forwards whatever method the extension
+    // names, and a documented adapter answering 405 for PATCH/DELETE would make the proxy path
+    // behave differently from a direct fetch.
+    PATCH: handler,
+    DELETE: handler,
+    HEAD: handler,
   };
 };
 

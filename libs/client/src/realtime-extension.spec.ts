@@ -825,6 +825,36 @@ describe("realtime extensions", () => {
     );
   });
 
+  it("refreshes mirrors for method mutations between preventExtensions and freeze", async () => {
+    // Bound extension methods mutate the raw session without passing the set trap. A freeze after
+    // an earlier preventExtensions must re-synchronize the mirrors, or it pins the stale target
+    // value while get serves the session's newer one — an invariant violation that throws.
+    const raw = {
+      close: jest.fn(),
+      count: 0,
+      bump() {
+        this.count += 1;
+      },
+    };
+    const mutable = defineRealtimeExtension<Record<never, never>, typeof raw>({
+      id: "test/method-mutation",
+      defaultEndpoint: "test/method-mutation",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(mutable, {}).ready;
+
+    Object.preventExtensions(session);
+    session.bump(); // mutates the raw session directly, bypassing the set trap
+    expect(() => Object.freeze(session)).not.toThrow();
+    expect(session.count).toBe(1);
+    expect(Object.getOwnPropertyDescriptor(session, "count")?.value).toBe(1);
+  });
+
   it("pins a frozen own state property at its frozen value", async () => {
     // An extension session that owns a `state` key mirrors it onto the target when the caller
     // freezes; a non-configurable, non-writable data property must then report that exact value.
