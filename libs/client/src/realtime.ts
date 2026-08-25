@@ -1311,6 +1311,16 @@ export function createRealtimeClient({
           configurable: true,
           writable: true,
           value: function patched(this: Response, ...args: unknown[]) {
+            // Native semantics: consuming the body while a reader holds it rejects. The wrapper
+            // defers locking the NATIVE stream, so without this check a held monitored reader
+            // could be bypassed by json()/text() reading the still-unlocked native body.
+            if (reader || monitored?.locked) {
+              return Promise.reject(
+                new TypeError(
+                  `Failed to execute '${method}' on 'Response': body is disturbed or locked`,
+                ),
+              );
+            }
             return (original as (...a: unknown[]) => Promise<unknown>)
               .apply(this, args)
               .finally(settle);

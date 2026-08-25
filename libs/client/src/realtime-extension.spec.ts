@@ -575,6 +575,9 @@ describe("realtime extensions", () => {
         const response = await context.fetch("https://wma.fal.run/session");
         response.body!.getReader(); // hold, without reading
         expect(() => response.clone()).toThrow(/disturbed or locked/);
+        // Body methods enforce the same native rule — a held reader cannot be bypassed.
+        await expect(response.json()).rejects.toThrow(/disturbed or locked/);
+        await expect(response.text()).rejects.toThrow(/disturbed or locked/);
         return { close: jest.fn() };
       },
     });
