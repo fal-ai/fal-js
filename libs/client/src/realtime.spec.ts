@@ -24,6 +24,7 @@ class MockWebSocket {
 
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
+  static readonly CLOSED = 3;
 
   constructor(url: string) {
     this.url = url;
@@ -104,6 +105,230 @@ describe("createRealtimeClient", () => {
     expect(socket.url).toBe(
       "wss://fal.run/123/myapp/custom/path?fal_jwt_token=mock-token",
     );
+  });
+
+  it("evicts a closed connection and ignores its pending authentication", async () => {
+    let resolveToken: (token: string) => void = () => undefined;
+    const pendingToken = new Promise<string>((resolve) => {
+      resolveToken = resolve;
+    });
+    const tokenProvider = jest.fn(() => pendingToken);
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    first.send({ prompt: "start" });
+    await Promise.resolve();
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    first.close();
+    resolveToken("too-late");
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(WebSocketMock).not.toHaveBeenCalled();
+
+    const nextTokenProvider = jest.fn().mockResolvedValue("fresh");
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider: nextTokenProvider,
+      onResult: jest.fn(),
+    });
+    second.send({ prompt: "restart" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(nextTokenProvider).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a reused connection live when an older handle closes", async () => {
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    first.close();
+    second.send({ prompt: "still live" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+    second.close();
+  });
+
+  it("prevents an older reused handle from sending into the new owner", async () => {
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    first.send({ prompt: "stale" });
+    second.send({ prompt: "current" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    expect(sockets).toHaveLength(1);
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    expect(socket.send).toHaveBeenCalledTimes(1);
+    expect(decode(socket.send.mock.calls[0][0])).toEqual({ prompt: "current" });
+    second.close();
+  });
+
+  it("lets the latest reused handle close despite a discarded older handle", async () => {
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    second.close();
+    first.send({ prompt: "must stay closed" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).not.toHaveBeenCalled();
+    expect(WebSocketMock).not.toHaveBeenCalled();
+  });
+
+  it("delivers a trailing throttled send across a same-key reuse", async () => {
+    // A same-key reuse (a React re-render re-calling connect()) is the SAME logical consumer:
+    // its pending trailing sends must survive the re-render, or every send scheduled as a
+    // trailing timeout is silently dropped under continuous typing — the leading edge fires
+    // only once per connection lifetime, so that is effectively every send after the first.
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    first.send({ prompt: "leading" }); // leading edge goes through immediately
+    first.send({ prompt: "trailing" }); // scheduled before the re-render
+
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    jest.advanceTimersByTime(25); // the trailing send fires after the reuse
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(sockets).toHaveLength(1);
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    // Both frames flow: the reuse did not orphan the pending trailing send.
+    const sent = socket.send.mock.calls.map((call: unknown[]) =>
+      decode(call[0] as Uint8Array),
+    );
+    expect(sent).toContainEqual({ prompt: "trailing" });
+    second.close();
+  });
+
+  it("drops a trailing throttled send after an explicit close", async () => {
+    // close() disposes the cache entry, and a trailing fire scheduled before it must not revive
+    // the connection or deliver through a machine the caller ended.
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const connection = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    connection.send({ prompt: "leading" });
+    connection.send({ prompt: "trailing after close" });
+    connection.close();
+    jest.advanceTimersByTime(25);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // close() lands before authentication completes: the disposed machine must not mint a
+    // socket at all, and the trailing fire must not revive it.
+    expect(sockets).toHaveLength(0);
+  });
+
+  it("drops a throttled send that was pending when the connection closed", async () => {
+    const tokenProvider = jest.fn(() => new Promise<string>(() => undefined));
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+
+    connection.send({ prompt: "starts auth" });
+    connection.send({ prompt: "must be dropped" });
+    await Promise.resolve();
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+
+    connection.close();
+    jest.advanceTimersByTime(25);
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).not.toHaveBeenCalled();
   });
 
   it("sends msgpack payloads by default", async () => {
@@ -204,6 +429,69 @@ describe("createRealtimeClient", () => {
     socket.onmessage?.({ data: JSON.stringify(result) });
     await Promise.resolve();
     expect(onResult).toHaveBeenCalledWith(result);
+  });
+
+  it("lets onClose reconnect: the idle transition lands before the callback", async () => {
+    // A consumer reacting to a clean remote goodbye by sending again must enter "connecting" —
+    // firing onClose while the machine is still "active" would strand the retry in the enqueued
+    // slot with no connection ever starting.
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connection: { send: (input: unknown) => void; close: () => void } =
+      client.connect("123-myapp", {
+        connectionKey: `test-conn-${connectionId}`,
+        clientOnly: false,
+        throttleInterval: 0,
+        tokenProvider,
+        onResult: jest.fn(),
+        onClose: () => connection.send({ prompt: "reconnect" }),
+      });
+
+    connection.send({ prompt: "first" });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(sockets).toHaveLength(1);
+    sockets[0].triggerOpen();
+    await Promise.resolve();
+
+    sockets[0].readyState = MockWebSocket.CLOSED;
+    sockets[0].onclose?.({ code: 1000, reason: "server done" });
+    // The reconnect re-authenticates (the closure expired the token) before opening a socket.
+    for (let flushes = 0; flushes < 10; flushes += 1) {
+      await Promise.resolve();
+    }
+
+    // The reconnect send moved the machine through idle into connecting: a second socket exists.
+    expect(sockets.length).toBeGreaterThanOrEqual(2);
+    connection.close();
+  });
+
+  it("delivers a falsy encoded message queued before the socket opened, without re-encoding", async () => {
+    // send() stores the ALREADY-ENCODED payload; a custom encoder can legitimately produce ""
+    // (an empty heartbeat frame). Truthiness gates would strand it, and the onopen flush must
+    // send the stored value verbatim rather than encoding it a second time.
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      encodeMessage: () => "",
+      onResult: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    connection.send({ ignored: true });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    expect(socket.send).toHaveBeenCalledTimes(1);
+    expect(socket.send).toHaveBeenCalledWith("");
+    connection.close();
   });
 
   it("falls back to msgpack decode when receiving binary in json mode", async () => {
@@ -316,6 +604,113 @@ describe("createRealtimeClient", () => {
     expect(errorArg.status).toBe(400);
   });
 
+  it("drops a decoded result that finishes after the connection closes", async () => {
+    let finishDecode!: (value: unknown) => void;
+    const decoded = new Promise((resolve) => {
+      finishDecode = resolve;
+    });
+    const onResult = jest.fn();
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      decodeMessage: () => decoded,
+      onResult,
+    });
+
+    connection.send({ prompt: "start" });
+    await Promise.resolve();
+    await Promise.resolve();
+    const socket = sockets[0];
+    socket.triggerOpen();
+    socket.onmessage?.({ data: "pending" });
+
+    connection.close();
+    finishDecode({ status: "ok", request_id: "late" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onResult).not.toHaveBeenCalled();
+  });
+
+  it("delivers a result decoded across a same-key reuse to the newest callbacks", async () => {
+    // A frame whose async decode spans a re-render belongs to the SAME logical stream — it must
+    // reach the newest render's onResult, not be silently discarded because the callbacks object
+    // identity changed mid-decode.
+    let finishDecode!: (value: unknown) => void;
+    const decoded = new Promise((resolve) => {
+      finishDecode = resolve;
+    });
+    const firstResult = jest.fn();
+    const secondResult = jest.fn();
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      decodeMessage: () => decoded,
+      onResult: firstResult,
+    });
+
+    first.send({ prompt: "start" });
+    await Promise.resolve();
+    await Promise.resolve();
+    const socket = sockets[0];
+    socket.triggerOpen();
+    socket.onmessage?.({ data: "pending" });
+
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 0,
+      decodeMessage: () => decoded,
+      onResult: secondResult,
+    });
+    finishDecode({ status: "ok", request_id: "in-flight" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(firstResult).not.toHaveBeenCalled();
+    expect(secondResult).toHaveBeenCalledWith({
+      status: "ok",
+      request_id: "in-flight",
+    });
+    second.close();
+  });
+
+  it("drops a result decoded after the connection was closed", async () => {
+    // The stale case that must STAY dropped: a frame from a machine the caller already ended.
+    let finishDecode!: (value: unknown) => void;
+    const decoded = new Promise((resolve) => {
+      finishDecode = resolve;
+    });
+    const onResult = jest.fn();
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      decodeMessage: () => decoded,
+      onResult,
+    });
+
+    connection.send({ prompt: "start" });
+    await Promise.resolve();
+    await Promise.resolve();
+    const socket = sockets[0];
+    socket.triggerOpen();
+    socket.onmessage?.({ data: "pending" });
+
+    connection.close();
+    finishDecode({ status: "ok", request_id: "stale" });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onResult).not.toHaveBeenCalled();
+  });
+
   it("uses custom tokenProvider when provided", async () => {
     const customTokenProvider = jest.fn().mockResolvedValue("custom-token");
     const client = createRealtimeClient({ config });
@@ -329,6 +724,7 @@ describe("createRealtimeClient", () => {
     });
 
     connection.send({ foo: "bar" });
+    await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
@@ -378,11 +774,75 @@ describe("createRealtimeClient", () => {
     });
 
     connection.send({ foo: "bar" });
-    await Promise.resolve();
-    await Promise.resolve();
+    for (let turn = 0; turn < 6; turn += 1) await Promise.resolve();
 
     expect(customTokenProvider).toHaveBeenCalledTimes(1);
     expect(WebSocketMock).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Token fetch failed",
+        status: 401,
+      }),
+    );
+  });
+
+  it("allows an onError callback to retry after token acquisition fails", async () => {
+    const tokenProvider = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("first token failed"))
+      .mockResolvedValueOnce("recovered-token");
+    const client = createRealtimeClient({ config });
+    const connectionRef: {
+      current?: ReturnType<typeof client.connect>;
+    } = {};
+    const onError = jest.fn(() =>
+      connectionRef.current?.send({ request_id: "attempt-2" }),
+    );
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+      onError,
+    });
+    connectionRef.current = connection;
+
+    connection.send({ request_id: "attempt-1" });
+    for (let turn = 0; turn < 6; turn += 1) await Promise.resolve();
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(tokenProvider).toHaveBeenCalledTimes(2);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("exits authInProgress even when the error callback throws", async () => {
+    const tokenProvider = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("first token failed"))
+      .mockResolvedValueOnce("recovered-token");
+    const client = createRealtimeClient({ config });
+    const connection = client.connect("123-myapp", {
+      connectionKey: `test-conn-${connectionId}`,
+      clientOnly: false,
+      throttleInterval: 0,
+      tokenProvider,
+      onResult: jest.fn(),
+      onError: () => {
+        throw new Error("render failed");
+      },
+    });
+
+    connection.send({ attempt: 1 });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    connection.send({ attempt: 2 });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(tokenProvider).toHaveBeenCalledTimes(2);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
   });
 
   it("uses default getTemporaryAuthToken when tokenProvider is not provided", async () => {

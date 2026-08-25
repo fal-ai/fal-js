@@ -1,4 +1,4 @@
-import { ensureEndpointIdFormat, parseEndpointId } from "./utils";
+import { ensureEndpointIdFormat, isValidUrl, parseEndpointId } from "./utils";
 
 describe("The utils test suite", () => {
   it("shoud match a current appOwner/appId format", () => {
@@ -14,6 +14,17 @@ describe("The utils test suite", () => {
   it("should throw on an invalid app id format", () => {
     const id = "just-an-id";
     expect(() => ensureEndpointIdFormat(id)).toThrowError();
+  });
+
+  it("should reject URLs that failed validation instead of passing them through", () => {
+    // An http:// fal URL fails isValidUrl (https-only); slipping it through as an "endpoint id"
+    // would build https://fal.run/http://… — a silently mangled 404. Reject loudly instead.
+    expect(() =>
+      ensureEndpointIdFormat("http://fal.run/fal-ai/flux"),
+    ).toThrowError(/https/);
+    expect(() =>
+      ensureEndpointIdFormat("https://evil.example/fal-ai/flux"),
+    ).toThrowError(/https/);
   });
 
   it("should parse a current app id", () => {
@@ -43,5 +54,18 @@ describe("The utils test suite", () => {
       alias: "fast-sdxl",
       namespace: "workflows",
     });
+  });
+
+  it("accepts only HTTPS URLs on actual fal domains", () => {
+    expect(isValidUrl("https://fal.run/fal-ai/flux")).toBe(true);
+    expect(isValidUrl("https://queue.fal.run/fal-ai/flux")).toBe(true);
+    expect(isValidUrl("https://api.fal.ai/models")).toBe(true);
+    expect(isValidUrl("https://notfal.run/steal")).toBe(false);
+    expect(isValidUrl("https://fal.run.attacker.example/steal")).toBe(false);
+    expect(isValidUrl("http://fal.run/fal-ai/flux")).toBe(false);
+    // The default :443 normalizes away; any surviving explicit port is another listener and
+    // credentials must not follow a fal hostname to it.
+    expect(isValidUrl("https://fal.run:443/fal-ai/flux")).toBe(true);
+    expect(isValidUrl("https://fal.run:8443/fal-ai/flux")).toBe(false);
   });
 });

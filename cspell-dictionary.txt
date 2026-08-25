@@ -1,2 +1,9 @@
+brainrot
+decart
+extensionless
+msgpack
+outstream
+pydantic
 quickstart
 runtimes
+sdxl
