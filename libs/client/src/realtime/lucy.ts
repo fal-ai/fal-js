@@ -183,9 +183,14 @@ export function lucyRealtime(config: LucyRealtimeExtensionConfig = {}) {
             iceServers ?? options.fallbackIceServers ?? DEFAULT_ICE_SERVERS,
         });
         const localStream = options.localStream;
-        if (localStream) {
-          for (const track of localStream.getTracks()) {
-            peer.addTrack(track, localStream);
+        const localTracks = localStream?.getTracks() ?? [];
+        // Track COUNT, not stream truthiness: a valid-but-empty MediaStream (created before its
+        // camera track attached) would otherwise add no tracks AND skip the receive-only
+        // transceiver, producing an offer with no video media section at all — and tracks added
+        // to the stream later never reach the peer connection.
+        if (localTracks.length > 0) {
+          for (const track of localTracks) {
+            peer.addTrack(track, localStream as MediaStream);
           }
         } else {
           peer.addTransceiver("video", { direction: "recvonly" });

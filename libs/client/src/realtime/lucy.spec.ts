@@ -146,6 +146,56 @@ describe("lucyRealtime", () => {
     );
   });
 
+  it("falls back to a receive-only transceiver for an empty local stream", async () => {
+    // A valid-but-empty MediaStream must not produce an offer with no media section: track count
+    // decides the path, not stream truthiness.
+    let handler: RealtimeConnectionHandler<Record<string, unknown>> | undefined;
+    const peer = {
+      addTrack: jest.fn(),
+      addTransceiver: jest.fn(),
+      createOffer: jest.fn().mockResolvedValue({ sdp: "local-offer" }),
+      setLocalDescription: jest.fn().mockResolvedValue(undefined),
+      setRemoteDescription: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
+      connectionState: "connecting",
+      ontrack: null,
+      onicecandidate: null,
+      onconnectionstatechange: null,
+    } as unknown as RTCPeerConnection;
+    const context = fakeExtensionContext({
+      endpointId: "decart/lucy-2-5/realtime",
+      connect: ((_endpointId: string, nextHandler: typeof handler) => {
+        handler = nextHandler;
+        return { send: jest.fn(), close: jest.fn() };
+      }) as RealtimeExtensionContext["connect"],
+    });
+
+    const opening = lucyRealtime().open(context, {
+      endpointId: context.endpointId,
+      input: { prompt: "x" },
+      localStream: { getTracks: () => [] } as unknown as MediaStream,
+      peerConnectionFactory: () => peer,
+    });
+    handler?.onResult({
+      type: "iceServers",
+      iceServers: [],
+      request_id: "ready",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    handler?.onResult({
+      type: "answer",
+      sdp: "remote-answer",
+      request_id: "answer",
+    });
+    await opening;
+
+    expect(peer.addTrack).not.toHaveBeenCalled();
+    expect(peer.addTransceiver).toHaveBeenCalledWith("video", {
+      direction: "recvonly",
+    });
+  });
+
   it("closes the session when signaling closes normally after negotiation", async () => {
     // A normal remote closure (code 1000) is not an error, but Lucy's controls ride the
     // signaling socket — a session that cannot be steered must not keep reporting live.
