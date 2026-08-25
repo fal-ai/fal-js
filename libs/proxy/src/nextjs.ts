@@ -162,6 +162,10 @@ let _routeHandler: {
   GET: RouteHandler;
   POST: RouteHandler;
   PUT: RouteHandler;
+  PATCH: RouteHandler;
+  DELETE: RouteHandler;
+  HEAD: RouteHandler;
+  OPTIONS: RouteHandler;
 } | null = null;
 
 function getRouteHandler() {
@@ -183,5 +187,19 @@ export const route = {
   },
   get PUT() {
     return getRouteHandler().PUT;
+  },
+  // The same full method surface as createRouteHandler(): a proxied context.fetch() may use any
+  // RequestInit method, and the deprecated export must not answer 405 where the new one forwards.
+  get PATCH() {
+    return getRouteHandler().PATCH;
+  },
+  get DELETE() {
+    return getRouteHandler().DELETE;
+  },
+  get HEAD() {
+    return getRouteHandler().HEAD;
+  },
+  get OPTIONS() {
+    return getRouteHandler().OPTIONS;
   },
 };

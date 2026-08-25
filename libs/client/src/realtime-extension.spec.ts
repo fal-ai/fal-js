@@ -469,6 +469,18 @@ describe("realtime extensions", () => {
     const awaited = await session; // still a value, not an assimilation target
     expect(awaited).toBe(session);
     expect(sessionThen).not.toHaveBeenCalled();
+
+    // A `then` GETTER that throws must not be evaluated either: promise resolution probes the
+    // property on the very access that resolves it, so the trap short-circuits before the raw
+    // session read.
+    Object.defineProperty(raw, "then", {
+      configurable: true,
+      get() {
+        throw new Error("must never be read through the handle");
+      },
+    });
+    expect((session as { then?: unknown }).then).toBeUndefined();
+    expect(await Promise.resolve(session)).toBe(session);
     await session.close();
   });
 

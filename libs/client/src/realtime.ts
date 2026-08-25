@@ -1359,10 +1359,13 @@ export function createRealtimeClient({
         if (property === "state") return state;
         if (property === "ready") return ready;
         if (property === "close") return publicClose;
+        // Short-circuited BEFORE the raw session read: promise resolution probes `then`, and a
+        // session declaring it as a getter that throws would otherwise be evaluated by
+        // Reflect.get on the very access that resolves `ready` — rejecting a live session.
+        if (property === "then") return undefined;
         if (!session) {
           // `send` queues while opening so the handle is usable immediately; the rest of the
-          // extension's facade materializes with the session. Note `then` also lands here as
-          // undefined, so `await open(...)` passes the handle through instead of hanging on it.
+          // extension's facade materializes with the session.
           return property === "send" ? queuedSend : undefined;
         }
         return resolveProperty(
