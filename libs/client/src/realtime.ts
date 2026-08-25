@@ -1332,14 +1332,23 @@ export function createRealtimeClient({
           proxyTarget,
           property,
         );
+        // EVERY mirrored writable data property tracks the session's value, not only the
+        // non-configurable ones: after Object.preventExtensions() the mirrors are still
+        // configurable, and a later Object.freeze() would otherwise pin a stale target value
+        // while the get trap serves the session's newer one — an invariant violation that throws
+        // on read. The mirrored value resolves like the get trap's (functions stay bound).
         if (
           updated &&
           targetDescriptor &&
-          !targetDescriptor.configurable &&
           "value" in targetDescriptor &&
           targetDescriptor.writable
         ) {
-          Reflect.set(proxyTarget, property, value, proxyTarget);
+          Reflect.set(
+            proxyTarget,
+            property,
+            resolveProperty(property, value),
+            proxyTarget,
+          );
         }
         return updated;
       },
@@ -1500,7 +1509,9 @@ export function createRealtimeClient({
                 url: targetUrl,
                 headers,
               } = await config.requestMiddleware({
-                method: (init.method ?? "POST").toUpperCase(),
+                // Native fetch defaults to GET; context.fetch takes RequestInit and must not
+                // surprise an extension hitting a read-only endpoint without naming a method.
+                method: (init.method ?? "GET").toUpperCase(),
                 url,
                 headers: requestHeaders,
               });

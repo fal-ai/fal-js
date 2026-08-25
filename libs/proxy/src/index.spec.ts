@@ -425,6 +425,14 @@ describe("serializeParsedBody", () => {
         "application/x-www-form-urlencoded",
       ),
     ).toBe("user%5Bname%5D=alice&user%5Btags%5D=a&user%5Btags%5D=b");
+    // Arrays of structured values keep their indices, or two objects collapse into one on
+    // reparse; scalar arrays stay repeated keys.
+    expect(
+      serializeParsedBody(
+        { users: [{ name: "alice" }, { name: "bob" }] },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("users%5B0%5D%5Bname%5D=alice&users%5B1%5D%5Bname%5D=bob");
   });
 });
 

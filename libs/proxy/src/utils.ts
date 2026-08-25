@@ -73,9 +73,16 @@ export function serializeParsedBody(
         return;
       }
       if (Array.isArray(value)) {
-        for (const entry of value) {
-          append(key, entry);
-        }
+        value.forEach((entry, index) => {
+          // Structured entries keep their index (`users[0][name]=alice`), or two objects would
+          // collapse into one on reparse; scalar arrays stay repeated keys (`tag=a&tag=b`),
+          // matching how the parser produced them.
+          if (entry !== null && typeof entry === "object") {
+            append(`${key}[${index}]`, entry);
+          } else {
+            append(key, entry);
+          }
+        });
         return;
       }
       if (typeof value === "object") {

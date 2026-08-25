@@ -724,6 +724,35 @@ describe("realtime extensions", () => {
     await frozen.close();
   });
 
+  it("keeps mirrored values synchronized across preventExtensions then freeze", async () => {
+    // After preventExtensions the mirrored target properties are still configurable and writable;
+    // an assignment must update the mirror too, or a later freeze pins the stale target value
+    // while the get trap serves the session's newer one — an invariant violation that throws.
+    const raw: RealtimeSession & Record<string, unknown> = {
+      close: jest.fn(),
+      label: "before",
+    };
+    const mutable = defineRealtimeExtension<Record<never, never>, typeof raw>({
+      id: "test/mirror-sync",
+      defaultEndpoint: "test/mirror-sync",
+      async open() {
+        return raw;
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const session = await client.open(mutable, {}).ready;
+
+    Object.preventExtensions(session);
+    session.label = "after";
+    expect(() => Object.freeze(session)).not.toThrow();
+    expect(session.label).toBe("after");
+    expect(Object.getOwnPropertyDescriptor(session, "label")?.value).toBe(
+      "after",
+    );
+  });
+
   it("pins a frozen own state property at its frozen value", async () => {
     // An extension session that owns a `state` key mirrors it onto the target when the caller
     // freezes; a non-configurable, non-writable data property must then report that exact value.
@@ -1361,8 +1390,10 @@ describe("realtime extension context additions", () => {
     const headers = new Headers(seen[0].init.headers);
     expect(headers.get("authorization")).toBe("Key secret-key");
     expect(headers.get("content-type")).toBe("application/json");
-    // Defaults to POST, and the abort signal is wired without the extension asking.
-    expect(seen[0].init.method).toBe("POST");
+    // Defaults to GET like native fetch, and the abort signal is wired without the extension
+    // asking. (This call carries a body only because the test reuses one shape; extensions that
+    // post name the method, as WMA does.)
+    expect(seen[0].init.method).toBe("GET");
     expect(seen[0].init.signal).toBeDefined();
   });
 
