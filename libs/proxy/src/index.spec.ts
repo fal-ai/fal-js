@@ -770,6 +770,43 @@ describe("createRouteHandler (hono) body handling", () => {
     }
   });
 
+  it("rejects lossy cached text with a non-UTF-8 charset", async () => {
+    const { Hono } = await import("hono");
+    const { createRouteHandler } = await import("./hono");
+    const app = new Hono();
+    app.use("/proxy", async (context, next) => {
+      await context.req.text();
+      await next();
+    });
+    app.onError((error, context) => context.text(error.message, 500));
+    app.post(
+      "/proxy",
+      createRouteHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      }),
+    );
+
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      const response = await app.request("http://local.test/proxy", {
+        method: "POST",
+        headers: {
+          "x-fal-target-url": "https://fal.run/owner/app",
+          "content-type": "text/plain; charset=iso-8859-1",
+        },
+        body: new Uint8Array([0xe9]),
+      });
+
+      expect(response.status).toBe(500);
+      await expect(response.text()).resolves.toMatch(/iso-8859-1/);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it("preserves cached multipart bytes when middleware cached arrayBuffer first", async () => {
     const { Hono } = await import("hono");
     const { createRouteHandler } = await import("./hono");

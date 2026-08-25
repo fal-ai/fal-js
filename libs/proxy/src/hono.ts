@@ -8,7 +8,7 @@ import {
   resolveApiKeyFromEnv,
   responsePassthrough,
 } from "./index";
-import { readWebRequestBody } from "./utils";
+import { assertUtf8ParsedBody, readWebRequestBody } from "./utils";
 
 /**
  * @deprecated Use `Partial<ProxyConfig>` instead.
@@ -72,6 +72,12 @@ export function createRouteHandler({
                 "consumed without caching its original bytes. Cache c.req.arrayBuffer() or " +
                 "c.req.blob(), or exclude the proxy route from that middleware.",
             );
+          }
+          if (bodyCacheKeys.length > 0 && !hasByteFaithfulCache) {
+            // Hono rebuilds bytes from cached text/JSON as UTF-8. That is faithful only when the
+            // incoming parsed representation was UTF-8 too; otherwise preserving the old charset
+            // header would make the upstream decode different content.
+            assertUtf8ParsedBody(contentType);
           }
           if (context.req.raw.bodyUsed && bodyCacheKeys.length === 0) {
             throw new Error(
