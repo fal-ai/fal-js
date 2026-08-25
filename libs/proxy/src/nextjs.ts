@@ -8,6 +8,7 @@ import {
   responsePassthrough,
 } from "./index";
 import {
+  assertUtf8ParsedBody,
   isJsonContentType,
   readUnconsumedRequestBody,
   readWebRequestBody,
@@ -69,6 +70,7 @@ export const createPageRouterHandler = (config: Partial<ProxyConfig> = {}) => {
           // invalid JSON under a JSON content type. (Express is different: its string bodies are
           // raw text and pass through.)
           if (jsonBody && typeof request.body === "string") {
+            assertUtf8ParsedBody(contentType);
             return JSON.stringify(request.body);
           }
           const parsed = serializeParsedBody(

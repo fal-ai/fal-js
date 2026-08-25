@@ -113,6 +113,27 @@ export function isJsonContentType(contentType: HeaderValue): boolean {
   );
 }
 
+/**
+ * Parsed strings and objects are serialized as UTF-8 by fetch. Keeping a different declared
+ * charset would make the upstream decode different bytes than the caller sent.
+ *
+ * @private
+ */
+export function assertUtf8ParsedBody(contentType: HeaderValue): void {
+  const declared = singleHeaderValue(contentType) ?? "";
+  const match = /(?:^|;)\s*charset\s*=\s*(?:"([^"]*)"|([^;\s]*))/i.exec(
+    declared,
+  );
+  const charset = (match?.[1] ?? match?.[2])?.toLowerCase();
+  if (charset && charset !== "utf-8" && charset !== "utf8") {
+    throw new Error(
+      `The fal proxy cannot faithfully re-encode a parsed ${charset} request body because ` +
+        "fetch serializes strings as UTF-8. Disable body parsing for this route so the raw " +
+        "request bytes reach the proxy.",
+    );
+  }
+}
+
 // Provenance brand for byte bodies. Body-parser middleware inflates compressed requests before
 // handing bytes to the route (express.raw's default `inflate: true`), so a parser-produced
 // Uint8Array/Buffer no longer matches the request's declared content-encoding — while bytes read
@@ -152,6 +173,13 @@ export function serializeParsedBody(
   }
   const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
   const jsonDeclared = isJsonContentType(declared);
+  if (body instanceof Uint8Array || body instanceof ArrayBuffer) {
+    // Parser output, not stream bytes: express.raw() inflated any compressed request before
+    // producing this buffer, so brand it for the content-encoding strip in handleRequest.
+    parserProducedByteBodies.add(body);
+    return body;
+  }
+  assertUtf8ParsedBody(declared);
   if (body === null) {
     // Only `undefined` means "the parser had nothing". A parsed JSON body can legitimately BE
     // null, and treating it as absent would fall back to an already-consumed stream and forward
@@ -176,12 +204,6 @@ export function serializeParsedBody(
           "parser, or strict JSON objects) so the payload reaches the proxy unambiguously.",
       );
     }
-    return body;
-  }
-  if (body instanceof Uint8Array || body instanceof ArrayBuffer) {
-    // Parser output, not stream bytes: express.raw() inflated any compressed request before
-    // producing this buffer, so brand it for the content-encoding strip in handleRequest.
-    parserProducedByteBodies.add(body);
     return body;
   }
   if (declared.startsWith("multipart/")) {

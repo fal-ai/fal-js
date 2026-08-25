@@ -504,6 +504,18 @@ describe("serializeParsedBody", () => {
       /application\/cbor/,
     );
   });
+
+  it("rejects parsed bodies whose declared charset is not UTF-8", async () => {
+    const { serializeParsedBody } = await import("./utils");
+
+    expect(() =>
+      serializeParsedBody("é", "text/plain; charset=iso-8859-1"),
+    ).toThrow(/iso-8859-1/);
+    expect(() =>
+      serializeParsedBody({ value: "é" }, 'application/json; charset="utf-16"'),
+    ).toThrow(/utf-16/);
+    expect(serializeParsedBody("é", "text/plain; charset=utf-8")).toBe("é");
+  });
 });
 
 describe("readUnconsumedRequestBody", () => {
@@ -646,6 +658,33 @@ describe("createHandler (express) body handling", () => {
     try {
       await handler(request as never, expressResponse() as never, jest.fn());
       expect(fetchMock.mock.calls[0][1]?.body).toBe('{"prompt":"hello"}');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("rejects parser-decoded text with a non-UTF-8 charset", async () => {
+    const { createHandler } = await import("./express");
+    const request = expressRequest({
+      readable: false,
+      body: "é",
+      contentType: "text/plain; charset=iso-8859-1",
+    });
+    const next = jest.fn();
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      await createHandler({
+        allowUnauthorizedRequests: false,
+        isAuthenticated: async () => true,
+        resolveFalAuth: async () => "Key secret",
+      })(request as never, expressResponse() as never, next);
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringMatching(/iso-8859-1/),
+        }),
+      );
     } finally {
       fetchMock.mockRestore();
     }
@@ -976,6 +1015,36 @@ describe("createPageRouterHandler body handling", () => {
     await expect(handler(request as never, response as never)).rejects.toThrow(
       /bodyParser: false/,
     );
+  });
+
+  it("rejects text Next decoded with a non-UTF-8 charset", async () => {
+    const { createPageRouterHandler } = await import("./nextjs");
+    const handler = createPageRouterHandler({
+      allowUnauthorizedRequests: false,
+      isAuthenticated: async () => true,
+      resolveFalAuth: async () => "Key secret",
+    });
+    const request = {
+      method: "POST",
+      body: "é",
+      headers: {
+        "x-fal-target-url": "https://fal.run/owner/app",
+        "content-type": "text/plain; charset=iso-8859-1",
+      },
+    };
+    const response = {
+      setHeader: jest.fn(),
+      status: jest.fn(() => ({ json: jest.fn(), send: jest.fn() })),
+    };
+    const fetchMock = jest.spyOn(global, "fetch");
+    try {
+      await expect(
+        handler(request as never, response as never),
+      ).rejects.toThrow(/iso-8859-1/);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
   });
 });
 
