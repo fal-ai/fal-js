@@ -70,11 +70,24 @@ export function serializeParsedBody(
     // no body at all. Outside JSON, null still reads as absent.
     return jsonDeclared ? "null" : undefined;
   }
-  if (
-    typeof body === "string" ||
-    body instanceof Uint8Array ||
-    body instanceof ArrayBuffer
-  ) {
+  if (typeof body === "string") {
+    if (jsonDeclared) {
+      // A string under a JSON content type is ambiguous: raw JSON text (express.text on a JSON
+      // route) is itself valid JSON and passes through, while a parser-produced top-level string
+      // VALUE (express.json({ strict: false })) is not — forwarding it verbatim would send
+      // invalid JSON, so it re-encodes. A parsed value that happens to read as valid JSON
+      // ("123") is indistinguishable from raw text and passes through; adapters with exact
+      // parser knowledge (Next's pages router) re-encode before reaching this heuristic.
+      try {
+        JSON.parse(body);
+        return body;
+      } catch {
+        return JSON.stringify(body);
+      }
+    }
+    return body;
+  }
+  if (body instanceof Uint8Array || body instanceof ArrayBuffer) {
     return body;
   }
   if (declared.startsWith("multipart/")) {

@@ -562,6 +562,7 @@ export function createRealtimeClient({
         decodeMessage: decodeMessageFn,
         onError: handler.onError,
         onResult: handler.onResult,
+        onClose: handler.onClose,
       };
       const handleId = Symbol(connectionKey);
       const dispose = () => {
@@ -732,16 +733,20 @@ export function createRealtimeClient({
                     status: event.code,
                   }),
                 );
-              } else {
+              }
+              send({ type: "connectionClosed", code: event.code });
+              if (event.code === WebSocketErrorCodes.NORMAL_CLOSURE) {
                 // A NORMAL closure is not an error, but a consumer that treats this connection as
                 // a live session (Lucy's signaling ride-along) still needs to hear it — silence
                 // here would leave that session reporting live over a socket that is gone.
+                // AFTER the idle transition, so a callback that synchronously send()s to
+                // reconnect enters "connecting" instead of enqueueing into a still-"active"
+                // machine that is about to move to idle without a connection.
                 getCallbacks()?.onClose?.({
                   code: event.code,
                   reason: event.reason,
                 });
               }
-              send({ type: "connectionClosed", code: event.code });
             };
             ws.onerror = () => {
               if (stateMachine.disposed) return;

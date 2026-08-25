@@ -24,6 +24,7 @@ class MockWebSocket {
 
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
+  static readonly CLOSED = 3;
 
   constructor(url: string) {
     this.url = url;
@@ -399,6 +400,41 @@ describe("createRealtimeClient", () => {
     socket.onmessage?.({ data: JSON.stringify(result) });
     await Promise.resolve();
     expect(onResult).toHaveBeenCalledWith(result);
+  });
+
+  it("lets onClose reconnect: the idle transition lands before the callback", async () => {
+    // A consumer reacting to a clean remote goodbye by sending again must enter "connecting" —
+    // firing onClose while the machine is still "active" would strand the retry in the enqueued
+    // slot with no connection ever starting.
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connection: { send: (input: unknown) => void; close: () => void } =
+      client.connect("123-myapp", {
+        connectionKey: `test-conn-${connectionId}`,
+        clientOnly: false,
+        throttleInterval: 0,
+        tokenProvider,
+        onResult: jest.fn(),
+        onClose: () => connection.send({ prompt: "reconnect" }),
+      });
+
+    connection.send({ prompt: "first" });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(sockets).toHaveLength(1);
+    sockets[0].triggerOpen();
+    await Promise.resolve();
+
+    sockets[0].readyState = MockWebSocket.CLOSED;
+    sockets[0].onclose?.({ code: 1000, reason: "server done" });
+    // The reconnect re-authenticates (the closure expired the token) before opening a socket.
+    for (let flushes = 0; flushes < 10; flushes += 1) {
+      await Promise.resolve();
+    }
+
+    // The reconnect send moved the machine through idle into connecting: a second socket exists.
+    expect(sockets.length).toBeGreaterThanOrEqual(2);
+    connection.close();
   });
 
   it("delivers a falsy encoded message queued before the socket opened, without re-encoding", async () => {

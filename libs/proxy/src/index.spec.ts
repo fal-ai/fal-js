@@ -388,6 +388,11 @@ describe("serializeParsedBody", () => {
       buffer,
     );
     expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
+    // A string under a JSON content type: raw JSON text passes through; a parser-produced
+    // top-level string value (json strict:false) re-encodes or the upstream gets invalid JSON.
+    expect(serializeParsedBody('{"a":1}', "application/json")).toBe('{"a":1}');
+    expect(serializeParsedBody("hello", "application/json")).toBe('"hello"');
+    expect(serializeParsedBody("hello", "text/plain")).toBe("hello");
     // Parsed JSON null is a real body; null under other types still reads as absent.
     expect(serializeParsedBody(null, "application/json")).toBe("null");
     expect(serializeParsedBody(null, "application/json; charset=utf-8")).toBe(
