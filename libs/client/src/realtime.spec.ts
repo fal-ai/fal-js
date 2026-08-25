@@ -239,6 +239,44 @@ describe("createRealtimeClient", () => {
     expect(WebSocketMock).not.toHaveBeenCalled();
   });
 
+  it("drops a trailing throttled send after the connection key transfers", async () => {
+    // A trailing throttled send replays the args it was scheduled with. If the connection key
+    // transfers to a newer handle before the timer fires, the stale payload must not be delivered
+    // through the new owner's machine — send()'s ownership gate ran before the transfer.
+    const tokenProvider = jest.fn().mockResolvedValue("shared-token");
+    const client = createRealtimeClient({ config });
+    const connectionKey = `test-conn-${connectionId}`;
+    const first = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    first.send({ prompt: "leading" }); // leading edge goes through immediately
+    first.send({ prompt: "stale trailing" }); // scheduled with first's handle id
+
+    const second = client.connect("123-myapp", {
+      connectionKey,
+      clientOnly: false,
+      throttleInterval: 20,
+      tokenProvider,
+      onResult: jest.fn(),
+    });
+    jest.advanceTimersByTime(25); // the trailing send fires after the transfer
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(sockets).toHaveLength(1);
+    const socket = sockets[0];
+    socket.triggerOpen();
+    await Promise.resolve();
+
+    expect(socket.send).toHaveBeenCalledTimes(1);
+    expect(decode(socket.send.mock.calls[0][0])).toEqual({ prompt: "leading" });
+    second.close();
+  });
+
   it("drops a throttled send that was pending when the connection closed", async () => {
     const tokenProvider = jest.fn(() => new Promise<string>(() => undefined));
     const client = createRealtimeClient({ config });

@@ -358,7 +358,7 @@ type ConnectionStateMachine = {
   service: Service<typeof connectionStateMachine>;
   throttledSend: (
     event: Event,
-    payload?: any,
+    senderId?: symbol,
   ) => void | Promise<void> | undefined;
   callbacks: RealtimeConnectionCallback;
   dispose: () => void;
@@ -386,8 +386,15 @@ function reuseInterpreter(
 ) {
   if (!connectionCache.has(key)) {
     const service = interpret(connectionStateMachine, onChange);
-    const guardedSend = (event: Event) => {
-      if (connectionCache.get(key) === cached && !cached.disposed) {
+    // A trailing throttled send replays the args it was scheduled with, which can be after the
+    // connection key transferred to a newer handle — the send() gate ran too early to see that.
+    // The scheduling handle's id therefore travels with the event and is re-checked at fire time.
+    const guardedSend = (event: Event, senderId?: symbol) => {
+      if (
+        connectionCache.get(key) === cached &&
+        !cached.disposed &&
+        (senderId === undefined || cached.handleId === senderId)
+      ) {
         return service.send(event);
       }
     };
@@ -769,10 +776,13 @@ export function createRealtimeClient({
           return;
         }
         // Use throttled send to avoid sending too many messages
-        stateMachine.throttledSend({
-          type: "send",
-          message: encodeMessageFn(input),
-        });
+        stateMachine.throttledSend(
+          {
+            type: "send",
+            message: encodeMessageFn(input),
+          },
+          handleId,
+        );
       };
 
       const close = () => {

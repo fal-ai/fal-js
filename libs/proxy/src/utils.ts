@@ -48,7 +48,11 @@ export function serializeParsedBody(
   if (body === undefined || body === null) {
     return undefined;
   }
-  if (typeof body === "string" || body instanceof Uint8Array) {
+  if (
+    typeof body === "string" ||
+    body instanceof Uint8Array ||
+    body instanceof ArrayBuffer
+  ) {
     return body;
   }
   const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";

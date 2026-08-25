@@ -382,6 +382,11 @@ describe("serializeParsedBody", () => {
     ).toBe("raw");
     const bytes = new Uint8Array([1, 2]);
     expect(serializeParsedBody(bytes, "multipart/form-data")).toBe(bytes);
+    // ArrayBuffer is part of ProxyRequestBody and must pass through, not stringify to "{}".
+    const buffer = new Uint8Array([3, 4]).buffer;
+    expect(serializeParsedBody(buffer, "application/octet-stream")).toBe(
+      buffer,
+    );
     expect(serializeParsedBody(undefined, "application/json")).toBeUndefined();
   });
 
