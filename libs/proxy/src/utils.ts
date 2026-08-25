@@ -73,17 +73,38 @@ export function serializeParsedBody(
   if (typeof body === "string") {
     if (jsonDeclared) {
       // A string under a JSON content type is ambiguous: raw JSON text (express.text on a JSON
-      // route) is itself valid JSON and passes through, while a parser-produced top-level string
-      // VALUE (express.json({ strict: false })) is not — forwarding it verbatim would send
-      // invalid JSON, so it re-encodes. A parsed value that happens to read as valid JSON
-      // ("123") is indistinguishable from raw text and passes through; adapters with exact
-      // parser knowledge (Next's pages router) re-encode before reaching this heuristic.
+      // route) is itself valid JSON, while a parser-produced top-level string VALUE
+      // (express.json({ strict: false })) usually is not. The cases separate cleanly except one:
+      //
+      // - invalid JSON → a parsed string value → re-encode, or the upstream gets invalid JSON;
+      // - parses to an object/array/string → raw text (strict:false would have produced the
+      //   object itself, and a parsed value re-parsing to a string means it was quoted text) →
+      //   pass through;
+      // - parses to a number/boolean/null → genuinely undecidable (raw text `123` vs parsed
+      //   value "123") → fail loudly rather than silently change the value's TYPE upstream.
+      //
+      // Adapters with exact parser knowledge (Next's pages router) re-encode before reaching
+      // this heuristic and never hit the ambiguous case.
+      let parsed: unknown;
       try {
-        JSON.parse(body);
-        return body;
+        parsed = JSON.parse(body);
       } catch {
         return JSON.stringify(body);
       }
+      if (
+        parsed === null ||
+        typeof parsed === "number" ||
+        typeof parsed === "boolean"
+      ) {
+        throw new Error(
+          `The fal proxy cannot tell whether the JSON body ${JSON.stringify(
+            body,
+          )} is raw JSON text or a parser-produced top-level string — ` +
+            "express.json({ strict: false }) makes them identical. Use strict JSON parsing or " +
+            "forward the raw body so the value's type survives.",
+        );
+      }
+      return body;
     }
     return body;
   }
