@@ -412,6 +412,8 @@ describe("serializeParsedBody", () => {
     expect(
       serializeParsedBody(null, "application/hal+json; charset=utf-8"),
     ).toBe("null");
+    // Prefix lookalikes are NOT JSON documents: json-seq is a record-separated sequence.
+    expect(serializeParsedBody(null, "application/json-seq")).toBeUndefined();
   });
 
   it("preserves repeated URL-encoded fields", async () => {

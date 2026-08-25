@@ -40,9 +40,13 @@ export async function readWebRequestBody(request: {
  */
 export function isJsonContentType(contentType: HeaderValue): boolean {
   const declared = singleHeaderValue(contentType)?.toLowerCase() ?? "";
+  // Exact media type only, parameters aside: a prefix match would also capture non-document
+  // types like application/json-seq (RFC 7464 record-separated sequences), whose payloads must
+  // not be treated as a single JSON value.
+  const mediaType = declared.split(";", 1)[0].trim();
   return (
-    declared.startsWith("application/json") ||
-    /^application\/[^;\s]*\+json/.test(declared)
+    mediaType === "application/json" ||
+    /^application\/[^\s/;]+\+json$/.test(mediaType)
   );
 }
 
