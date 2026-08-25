@@ -432,6 +432,43 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
+  it("releases the signal combination when a cloned body is consumed", async () => {
+    // clone() tees the underlying source, so fully consuming either branch means the network
+    // stream finished; a caller that parses only the clone must still release the combination.
+    let observed: AbortSignal | null | undefined;
+    const client = createRealtimeClient({
+      config: createConfig({
+        credentials: "secret-key",
+        fetch: (async (_url: string, init: RequestInit = {}) => {
+          observed = init.signal;
+          return new Response('{"ok":true}');
+        }) as any,
+      }),
+    });
+    const requestLocal = new AbortController();
+    const probe = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession
+    >({
+      id: "test/cloned-body",
+      defaultEndpoint: "test/cloned-body",
+      async open(context) {
+        const response = await context.fetch("https://wma.fal.run/session", {
+          signal: requestLocal.signal,
+        });
+        expect(await response.clone().json()).toEqual({ ok: true });
+        return { close: jest.fn() };
+      },
+    });
+
+    const session = client.open(probe, {});
+    await session.ready;
+    await session.close();
+
+    // Released at clone consumption, so teardown no longer aborts the combination.
+    expect(observed?.aborted).toBe(false);
+  });
+
   it("cancels a still-opening session through close()", async () => {
     const neverOpens = defineRealtimeExtension<
       Record<never, never>,

@@ -1142,6 +1142,19 @@ export function createRealtimeClient({
           dispose();
         }
       };
+      // Clones share the combination: clone() tees the underlying source, so fully consuming
+      // EITHER branch means the network stream finished, and the other branch replays from the
+      // buffer where the signal no longer matters. Recursive, so clones of clones participate.
+      const originalClone = response.clone.bind(response);
+      Object.defineProperty(response, "clone", {
+        configurable: true,
+        writable: true,
+        value: () => {
+          const cloned = originalClone();
+          disposeWhenBodyConsumed(cloned, settle);
+          return cloned;
+        },
+      });
       // The native reader is acquired only when the monitored stream is actually READ — merely
       // accessing `response.body` must not lock the response, or the common "inspect body, then
       // call json()" pattern would throw. highWaterMark 0 stops the wrapper from prefetching,
