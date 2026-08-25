@@ -200,6 +200,45 @@ describe("realtime extensions", () => {
     await session.close();
   });
 
+  it("reports an async delivery failure of a live send as a diagnostic", async () => {
+    // The same fire-and-forget rule after the session is live: the handle types send as void, so
+    // a rejecting extension send has no observer at the call site.
+    const failing = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { send(message: string): void }
+    >({
+      id: "test/rejecting-live-send",
+      defaultEndpoint: "test/rejecting-live-send",
+      async open() {
+        return {
+          send: (() =>
+            Promise.reject(new Error("live delivery failed"))) as unknown as (
+            message: string,
+          ) => void,
+          close: jest.fn(),
+        };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const warnings: string[] = [];
+
+    const session = client.open(failing, {
+      onDiagnostic: (event) => {
+        if (event.kind === "warning") warnings.push(event.message);
+      },
+    });
+    await session.ready;
+    session.send("live");
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    expect(warnings).toEqual([
+      "A message could not be delivered to the session.",
+    ]);
+    await session.close();
+  });
+
   it("bounds the pre-live send queue and warns once about drops", async () => {
     const delivered: unknown[] = [];
     let releaseOpen!: () => void;

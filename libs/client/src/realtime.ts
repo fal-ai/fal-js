@@ -1239,8 +1239,32 @@ export function createRealtimeClient({
       // hook replaced. Extensions end themselves through context.close(); the session's own
       // close method is the resource hook the kernel invokes during managed teardown.
       const bound = value.bind(session);
-      boundMethods.set(property, { source: value, bound });
-      return bound;
+      // send is fire-and-forget by contract (the handle types it void), so a live send whose
+      // extension implementation rejects asynchronously has no call site left to observe it —
+      // consume and report the failure instead of leaking an unhandled rejection, exactly as the
+      // pre-live queue flush does. Synchronous throws still propagate to the caller.
+      const resolved =
+        property === "send"
+          ? (...args: unknown[]) => {
+              const result = (bound as (...sendArgs: unknown[]) => unknown)(
+                ...args,
+              );
+              if (
+                result &&
+                typeof (result as { then?: unknown }).then === "function"
+              ) {
+                void Promise.resolve(result).catch(() =>
+                  diagnostic({
+                    kind: "warning",
+                    message: "A message could not be delivered to the session.",
+                  }),
+                );
+              }
+              return result;
+            }
+          : bound;
+      boundMethods.set(property, { source: value, bound: resolved });
+      return resolved;
     };
     const mirrorOntoTarget = (
       property: PropertyKey,
