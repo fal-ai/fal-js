@@ -1612,6 +1612,20 @@ export function createRealtimeClient({
           Object.setPrototypeOf(proxyTarget, Object.getPrototypeOf(session));
         }
         flushQueuedSends();
+        // A queued send can synchronously end the session — an extension send that calls
+        // context.close(), or app code aborting the caller's signal. The state latch already
+        // refuses "live" after a terminal state; ready must reject through the normal
+        // cancellation/failure path rather than resolve a session that never went live.
+        if (
+          controller.signal.aborted ||
+          state === "failed" ||
+          state === "closed"
+        ) {
+          throw (
+            controller.signal.reason ??
+            new Error("Realtime session ended while delivering queued sends")
+          );
+        }
         setState("live");
         resolveReady(handle);
       } catch (error) {

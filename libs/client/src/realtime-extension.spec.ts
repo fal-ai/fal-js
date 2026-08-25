@@ -155,6 +155,46 @@ describe("realtime extensions", () => {
     expect(errors).toHaveLength(1);
   });
 
+  it("rejects ready when a queued send closes the session during flush", async () => {
+    // A flushed send can synchronously end the session (an extension send that closes on a
+    // protocol violation, say). ready must reject as a cancellation — never resolve a session
+    // that was terminal before it could report "live", and never call onError for it.
+    let captured!: RealtimeExtensionContext;
+    let releaseOpen!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseOpen = resolve;
+    });
+    const closing = defineRealtimeExtension<
+      Record<never, never>,
+      RealtimeSession & { send(message: string): void }
+    >({
+      id: "test/closing-send",
+      defaultEndpoint: "test/closing-send",
+      async open(context) {
+        captured = context;
+        await gate;
+        return {
+          send: () => {
+            void captured.close();
+          },
+          close: jest.fn(),
+        };
+      },
+    });
+    const client = createRealtimeClient({
+      config: createConfig({ credentials: "test-key" }),
+    });
+    const errors: unknown[] = [];
+
+    const session = client.open(closing, { onError: (e) => errors.push(e) });
+    session.send("boom");
+    releaseOpen();
+
+    await expect(session.ready).rejects.toBeDefined();
+    expect(session.state).toBe("closed");
+    expect(errors).toEqual([]);
+  });
+
   it("reports an async delivery failure of a queued send as a diagnostic", async () => {
     // send() is fire-and-forget by contract; a flushed queued message whose extension send
     // rejects asynchronously must become a warning, not an unhandled rejection.

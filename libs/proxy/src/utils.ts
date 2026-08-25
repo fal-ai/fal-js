@@ -64,19 +64,34 @@ export function serializeParsedBody(
   }
   if (declared.startsWith("application/x-www-form-urlencoded")) {
     // Entry by entry rather than the URLSearchParams record constructor: parsers represent a
-    // repeated field (`tag=a&tag=b`) as an array, and the record form would stringify it into one
-    // comma-joined value, changing the request's semantics upstream.
+    // repeated field (`tag=a&tag=b`) as an array and a bracketed field (`user[name]=alice`, from
+    // extended urlencoded parsing) as a nested object. The record form would stringify those to
+    // one comma-joined value or "[object Object]", changing the request's semantics upstream.
     const params = new URLSearchParams();
+    const append = (key: string, value: unknown) => {
+      if (value === undefined || value === null) {
+        return;
+      }
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          append(key, entry);
+        }
+        return;
+      }
+      if (typeof value === "object") {
+        for (const [nestedKey, nestedValue] of Object.entries(
+          value as Record<string, unknown>,
+        )) {
+          append(`${key}[${nestedKey}]`, nestedValue);
+        }
+        return;
+      }
+      params.append(key, String(value));
+    };
     for (const [key, value] of Object.entries(
       body as Record<string, unknown>,
     )) {
-      if (Array.isArray(value)) {
-        for (const entry of value) {
-          params.append(key, String(entry));
-        }
-      } else if (value !== undefined && value !== null) {
-        params.append(key, String(value));
-      }
+      append(key, value);
     }
     return params.toString();
   }

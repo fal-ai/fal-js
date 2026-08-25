@@ -414,6 +414,18 @@ describe("serializeParsedBody", () => {
       ),
     ).toBe("keep=yes");
   });
+
+  it("re-encodes nested URL-encoded fields with bracket notation", async () => {
+    // express.urlencoded({ extended: true }) parses user[name]=alice into nested objects;
+    // stringifying those would forward user=%5Bobject+Object%5D.
+    const { serializeParsedBody } = await import("./utils");
+    expect(
+      serializeParsedBody(
+        { user: { name: "alice", tags: ["a", "b"] } },
+        "application/x-www-form-urlencoded",
+      ),
+    ).toBe("user%5Bname%5D=alice&user%5Btags%5D=a&user%5Btags%5D=b");
+  });
 });
 
 describe("readUnconsumedRequestBody", () => {
