@@ -47,6 +47,16 @@ export type RunOptions<Input> = {
    * This will be sent as the `x-fal-request-timeout` header.
    */
   readonly startTimeout?: number;
+
+  /**
+   * Tags to attribute the request's usage and cost to your own dimensions,
+   * e.g. `{ team: "design", env: "prod" }`. Keys are lowercased, and both keys
+   * and values are limited (at most 10 pairs, 1 KB in total).
+   *
+   * This will be sent as a single packed `x-fal-tags` header. Streaming and
+   * realtime requests cannot carry headers, so they cannot be tagged.
+   */
+  readonly tags?: Record<string, string>;
 };
 
 export type UrlOptions = {

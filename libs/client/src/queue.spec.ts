@@ -109,6 +109,41 @@ describe("queue.submit headers", () => {
     expect(call.headers["x-fal-request-timeout"]).toBe("60");
   });
 
+  it("includes the packed tags header when tags are provided", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi" },
+      tags: { team: "design", env: "prod" },
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-tags"]).toBe("team=design,env=prod");
+  });
+
+  it("omits the tags header when tags are not provided", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi" },
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-tags"]).toBeUndefined();
+  });
+
+  it("tags override a user-provided x-fal-tags header", async () => {
+    const queue = createQueueClient({ config, storage });
+    await queue.submit("fal-ai/fast-sdxl", {
+      input: { prompt: "hi" },
+      headers: {
+        "x-fal-tags": "team=old",
+      },
+      tags: { team: "design" },
+    });
+
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-tags"]).toBe("team=design");
+  });
+
   it("throws error when startTimeout is <= 1 second", async () => {
     const queue = createQueueClient({ config, storage });
     await expect(

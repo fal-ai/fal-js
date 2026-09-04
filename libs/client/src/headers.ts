@@ -62,3 +62,125 @@ export function buildTimeoutHeaders(timeout?: number): Record<string, string> {
     [REQUEST_TIMEOUT_HEADER]: validateTimeoutHeader(timeout),
   };
 }
+
+/**
+ * Header name for request tags.
+ */
+export const TAGS_HEADER = "x-fal-tags";
+
+/**
+ * Maximum number of tag pairs allowed in a single request.
+ */
+export const MAX_TAG_PAIRS = 10;
+
+/**
+ * Maximum length of a tag key, in characters.
+ */
+export const MAX_TAG_KEY_LENGTH = 64;
+
+/**
+ * Maximum length of a tag value, in characters.
+ */
+export const MAX_TAG_VALUE_LENGTH = 256;
+
+/**
+ * Maximum size of all key and value bytes combined, in bytes.
+ */
+export const MAX_TAGS_SIZE_BYTES = 1024;
+
+/**
+ * Tag keys are lowercased and restricted to `[a-z0-9._-]`.
+ */
+const TAG_KEY_PATTERN = /^[a-z0-9._-]+$/;
+
+/**
+ * Tag values are printable ASCII, excluding `,` (the pair separator).
+ */
+const TAG_VALUE_PATTERN = /^[\x20-\x2b\x2d-\x7e]*$/;
+
+/**
+ * Keys under this prefix are reserved for fal and cannot be set by callers.
+ */
+const RESERVED_TAG_KEY_PREFIX = "fal.";
+
+/**
+ * Validates the tags and serializes them into the packed `X-Fal-Tags` header
+ * value, i.e. a comma-separated list of `key=value` pairs. Keys are lowercased
+ * to match the canonical form the server stores; duplicates after lowercasing
+ * follow the server's last-wins rule.
+ *
+ * Throws an error if the tags don't match the limits enforced by the server.
+ *
+ * @param tags - The tag key/value pairs
+ * @returns The packed header value
+ * @throws Error if any pair is invalid or the limits are exceeded
+ */
+export function validateTagsHeader(tags: Record<string, string>): string {
+  const entries = Object.entries(tags);
+  if (entries.length > MAX_TAG_PAIRS) {
+    throw new Error(
+      `Tags must contain at most ${MAX_TAG_PAIRS} pairs, got ${entries.length}`,
+    );
+  }
+
+  const pairs = new Map<string, string>();
+  // Keys and values are ASCII-only once validated, so length is the byte size.
+  let size = 0;
+  for (const [rawKey, value] of entries) {
+    const key = rawKey.toLowerCase();
+    if (!TAG_KEY_PATTERN.test(key)) {
+      throw new Error(
+        `Tag key "${rawKey}" must match ${TAG_KEY_PATTERN} once lowercased`,
+      );
+    }
+    if (key.length > MAX_TAG_KEY_LENGTH) {
+      throw new Error(
+        `Tag key "${rawKey}" must be at most ${MAX_TAG_KEY_LENGTH} characters`,
+      );
+    }
+    if (key.startsWith(RESERVED_TAG_KEY_PREFIX)) {
+      throw new Error(
+        `Tag key "${rawKey}" uses the reserved "${RESERVED_TAG_KEY_PREFIX}" prefix`,
+      );
+    }
+    if (typeof value !== "string" || !TAG_VALUE_PATTERN.test(value)) {
+      throw new Error(
+        `Tag value for "${rawKey}" must be printable ASCII without commas`,
+      );
+    }
+    if (value.length > MAX_TAG_VALUE_LENGTH) {
+      throw new Error(
+        `Tag value for "${rawKey}" must be at most ${MAX_TAG_VALUE_LENGTH} characters`,
+      );
+    }
+    size += key.length + value.length;
+    pairs.set(key, value);
+  }
+
+  if (size > MAX_TAGS_SIZE_BYTES) {
+    throw new Error(
+      `Tags must be at most ${MAX_TAGS_SIZE_BYTES} bytes, got ${size}`,
+    );
+  }
+
+  return Array.from(pairs, ([key, value]) => `${key}=${value}`).join(",");
+}
+
+/**
+ * Creates headers object with the packed tags header if tags are provided.
+ * Returns an empty object if tags are undefined or empty.
+ *
+ * @param tags - Optional tag key/value pairs
+ * @returns Headers object with TAGS_HEADER if tags are provided
+ */
+export function buildTagsHeaders(
+  tags?: Record<string, string>,
+): Record<string, string> {
+  if (tags === undefined || Object.keys(tags).length === 0) {
+    return {};
+  }
+
+  return {
+    [TAGS_HEADER]: validateTagsHeader(tags),
+  };
+}
