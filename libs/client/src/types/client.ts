@@ -1,4 +1,7 @@
-import { EndpointTypeMap } from "./endpoints";
+// `EndpointTypeMap` is declared in the entry point rather than here so that
+// `@fal-ai/types` can extend it with `declare module "@fal-ai/client"`. The
+// import is type-only, so this cycle is erased at build time.
+import type { EndpointTypeMap } from "../index";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type EndpointType = keyof EndpointTypeMap | (string & {});

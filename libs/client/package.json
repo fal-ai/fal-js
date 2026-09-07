@@ -16,8 +16,14 @@
     "typescript"
   ],
   "exports": {
-    ".": "./src/index.js",
-    "./endpoints": "./src/types/endpoints.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./endpoints": {
+      "types": "./src/types/endpoints.d.ts",
+      "default": "./src/types/endpoints.js"
+    }
   },
   "typesVersions": {
     "*": {

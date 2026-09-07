@@ -1,4 +1,7 @@
 import { createFalClient, OutputType } from "@fal-ai/client";
+// Populates the endpoint registry, which is what makes `OutputType` below
+// resolve to this endpoint's real output type.
+import "@fal-ai/types";
 import { useMemo, useState } from "react";
 
 // @snippet:start(client.config)

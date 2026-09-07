@@ -1,3 +1,33 @@
+// This file is generated. Do not edit it manually.
+//
+// It declares the input/output types for every fal endpoint and registers them
+// with `@fal-ai/client` via module augmentation, which is what gives
+// `fal.run`, `fal.subscribe` and `fal.stream` their per-endpoint types.
+//
+// Importing this package anywhere in your project is enough to activate it:
+//
+// ```ts
+// import "@fal-ai/types";
+// ```
+
+// The import below is load-bearing: it puts "@fal-ai/client" into the program
+// so that the augmentation at the bottom of this file can resolve it. Without
+// it, the augmentation only resolves when something else in the consumer's
+// program already imports the client.
+//
+// It is aliased and re-exported because an unused `import type` is erased from
+// the generated .d.ts, which would drop the reference from the published
+// package and take this guarantee with it.
+import type { EndpointTypeMap as ClientEndpointTypeMap } from "@fal-ai/client";
+
+/**
+ * Not part of the public API. Keeps the reference to `@fal-ai/client` alive
+ * through declaration emit; see the note above.
+ *
+ * @internal
+ */
+export type _ClientEndpointTypeMap = ClientEndpointTypeMap;
+
 export type _21EditInput = {
   /**
    * The desired aspect ratio of the generated image. With `auto`, the model picks an appropriate aspect ratio for the request. Default value: `"auto"`
@@ -73061,5565 +73091,5568 @@ export type ZImageTurboTrainerV2Output = Output;
 export type ZoeOutput = HEDOutput;
 export type zonosOutput = DiaOutput;
 export type ZoomOutput = I2VOutput;
-export type EndpointTypeMap = {
-  "alibaba/happy-horse/image-to-video": {
-    input: HappyHorseImageToVideoInput;
-    output: HappyHorseImageToVideoOutput;
-  };
-  "alibaba/happy-horse/reference-to-video": {
-    input: HappyHorseReferenceToVideoInput;
-    output: HappyHorseReferenceToVideoOutput;
-  };
-  "alibaba/happy-horse/text-to-video": {
-    input: HappyHorseTextToVideoInput;
-    output: HappyHorseTextToVideoOutput;
-  };
-  "alibaba/happy-horse/v1.1/image-to-video": {
-    input: HappyHorseV11ImageToVideoInput;
-    output: HappyHorseV11ImageToVideoOutput;
-  };
-  "alibaba/happy-horse/v1.1/reference-to-video": {
-    input: HappyHorseV11ReferenceToVideoInput;
-    output: HappyHorseV11ReferenceToVideoOutput;
-  };
-  "alibaba/happy-horse/v1.1/text-to-video": {
-    input: HappyHorseV11TextToVideoInput;
-    output: HappyHorseV11TextToVideoOutput;
-  };
-  "alibaba/happy-horse/video-edit": {
-    input: HappyHorseVideoEditInput;
-    output: HappyHorseVideoEditOutput;
-  };
-  "alibaba/qwen-audio-3-tts": {
-    input: QwenAudio3TtsInput;
-    output: QwenAudio3TtsOutput;
-  };
-  "argil/avatars/audio-to-video": {
-    input: AvatarsAudioToVideoInput;
-    output: AvatarsAudioToVideoOutput;
-  };
-  "argil/avatars/text-to-video": {
-    input: AvatarsTextToVideoInput;
-    output: AvatarsTextToVideoOutput;
-  };
-  "async/tts-pro/v1.0": {
-    input: TtsProV10Input;
-    output: TtsProV10Output;
-  };
-  "bria/bria_video_eraser/erase/keypoints": {
-    input: BriaVideoEraserEraseKeypointsInput;
-    output: BriaVideoEraserEraseKeypointsOutput;
-  };
-  "bria/bria_video_eraser/erase/mask": {
-    input: BriaVideoEraserEraseMaskInput;
-    output: BriaVideoEraserEraseMaskOutput;
-  };
-  "bria/bria_video_eraser/erase/prompt": {
-    input: BriaVideoEraserErasePromptInput;
-    output: BriaVideoEraserErasePromptOutput;
-  };
-  "bria/embed-product": {
-    input: EmbedProductInput;
-    output: EmbedProductOutput;
-  };
-  "bria/extract-object": {
-    input: ExtractObjectInput;
-    output: ExtractObjectOutput;
-  };
-  "bria/fibo-bbq-preview/generate": {
-    input: FiboBbqPreviewGenerateInput;
-    output: FiboBbqPreviewGenerateOutput;
-  };
-  "bria/fibo-edit/add_object_by_text": {
-    input: FiboEditAddObjectByTextInput;
-    output: FiboEditAddObjectByTextOutput;
-  };
-  "bria/fibo-edit/blend": {
-    input: FiboEditBlendInput;
-    output: FiboEditBlendOutput;
-  };
-  "bria/fibo-edit/colorize": {
-    input: FiboEditColorizeInput;
-    output: FiboEditColorizeOutput;
-  };
-  "bria/fibo-edit/edit": {
-    input: FiboEditEditInput;
-    output: FiboEditEditOutput;
-  };
-  "bria/fibo-edit/edit/structured_instruction": {
-    input: FiboEditEditStructuredInstructionInput;
-    output: FiboEditEditStructuredInstructionOutput;
-  };
-  "bria/fibo-edit/erase_by_text": {
-    input: FiboEditEraseByTextInput;
-    output: FiboEditEraseByTextOutput;
-  };
-  "bria/fibo-edit/relight": {
-    input: FiboEditRelightInput;
-    output: FiboEditRelightOutput;
-  };
-  "bria/fibo-edit/replace_object_by_text": {
-    input: FiboEditReplaceObjectByTextInput;
-    output: FiboEditReplaceObjectByTextOutput;
-  };
-  "bria/fibo-edit/reseason": {
-    input: FiboEditReseasonInput;
-    output: FiboEditReseasonOutput;
-  };
-  "bria/fibo-edit/restore": {
-    input: FiboEditRestoreInput;
-    output: FiboEditRestoreOutput;
-  };
-  "bria/fibo-edit/restyle": {
-    input: FiboEditRestyleInput;
-    output: FiboEditRestyleOutput;
-  };
-  "bria/fibo-edit/rewrite_text": {
-    input: FiboEditRewriteTextInput;
-    output: FiboEditRewriteTextOutput;
-  };
-  "bria/fibo-edit/sketch_to_colored_image": {
-    input: FiboEditSketchToColoredImageInput;
-    output: FiboEditSketchToColoredImageOutput;
-  };
-  "bria/fibo-lite/generate": {
-    input: FiboLiteGenerateInput;
-    output: FiboLiteGenerateOutput;
-  };
-  "bria/fibo-lite/generate/structured_prompt": {
-    input: FiboLiteGenerateStructuredPromptInput;
-    output: FiboLiteGenerateStructuredPromptOutput;
-  };
-  "bria/fibo/generate": {
-    input: FiboGenerateInput;
-    output: FiboGenerateOutput;
-  };
-  "bria/fibo/generate/structured_prompt": {
-    input: FiboGenerateStructuredPromptInput;
-    output: FiboGenerateStructuredPromptOutput;
-  };
-  "bria/genfill/v2": {
-    input: GenfillV2Input;
-    output: GenfillV2Output;
-  };
-  "bria/product-dimensions": {
-    input: ProductDimensionsInput;
-    output: ProductDimensionsOutput;
-  };
-  "bria/replace-background": {
-    input: ReplaceBackgroundInput;
-    output: ReplaceBackgroundOutput;
-  };
-  "bria/upscale/creative": {
-    input: UpscaleCreativeInput;
-    output: UpscaleCreativeOutput;
-  };
-  "bria/video/background-removal": {
-    input: VideoBackgroundRemovalInput;
-    output: VideoBackgroundRemovalOutput;
-  };
-  "bria/video/background-removal/realtime": {
-    input: VideoBackgroundRemovalRealtimeInput;
-    output: VideoBackgroundRemovalRealtimeOutput;
-  };
-  "bria/video/background-removal/v3": {
-    input: VideoBackgroundRemovalV3Input;
-    output: VideoBackgroundRemovalV3Output;
-  };
-  "bria/video/erase/keypoints": {
-    input: VideoEraseKeypointsInput;
-    output: VideoEraseKeypointsOutput;
-  };
-  "bria/video/erase/mask": {
-    input: VideoEraseMaskInput;
-    output: VideoEraseMaskOutput;
-  };
-  "bria/video/erase/prompt": {
-    input: VideoErasePromptInput;
-    output: VideoErasePromptOutput;
-  };
-  "bria/video/increase-resolution": {
-    input: VideoIncreaseResolutionInput;
-    output: VideoIncreaseResolutionOutput;
-  };
-  "bytedance/lynx": {
-    input: lynxInput;
-    output: lynxOutput;
-  };
-  "bytedance/seed-audio-1.0": {
-    input: SeedAudio10Input;
-    output: SeedAudio10Output;
-  };
-  "bytedance/seedance-2.0/fast/image-to-video": {
-    input: Seedance20FastImageToVideoInput;
-    output: Seedance20FastImageToVideoOutput;
-  };
-  "bytedance/seedance-2.0/fast/reference-to-video": {
-    input: Seedance20FastReferenceToVideoInput;
-    output: Seedance20FastReferenceToVideoOutput;
-  };
-  "bytedance/seedance-2.0/fast/text-to-video": {
-    input: Seedance20FastTextToVideoInput;
-    output: Seedance20FastTextToVideoOutput;
-  };
-  "bytedance/seedance-2.0/image-to-video": {
-    input: Seedance20ImageToVideoInput;
-    output: Seedance20ImageToVideoOutput;
-  };
-  "bytedance/seedance-2.0/mini/image-to-video": {
-    input: Seedance20MiniImageToVideoInput;
-    output: Seedance20MiniImageToVideoOutput;
-  };
-  "bytedance/seedance-2.0/mini/reference-to-video": {
-    input: Seedance20MiniReferenceToVideoInput;
-    output: Seedance20MiniReferenceToVideoOutput;
-  };
-  "bytedance/seedance-2.0/mini/text-to-video": {
-    input: Seedance20MiniTextToVideoInput;
-    output: Seedance20MiniTextToVideoOutput;
-  };
-  "bytedance/seedance-2.0/reference-to-video": {
-    input: Seedance20ReferenceToVideoInput;
-    output: Seedance20ReferenceToVideoOutput;
-  };
-  "bytedance/seedance-2.0/text-to-video": {
-    input: Seedance20TextToVideoInput;
-    output: Seedance20TextToVideoOutput;
-  };
-  "bytedance/seedream/v5/lite/edit": {
-    input: SeedreamV5LiteEditInput;
-    output: SeedreamV5LiteEditOutput;
-  };
-  "bytedance/seedream/v5/lite/text-to-image": {
-    input: SeedreamV5LiteTextToImageInput;
-    output: SeedreamV5LiteTextToImageOutput;
-  };
-  "bytedance/seedream/v5/pro/edit": {
-    input: SeedreamV5ProEditInput;
-    output: SeedreamV5ProEditOutput;
-  };
-  "bytedance/seedream/v5/pro/text-to-image": {
-    input: SeedreamV5ProTextToImageInput;
-    output: SeedreamV5ProTextToImageOutput;
-  };
-  "CassetteAI/music-generator": {
-    input: MusicGeneratorInput;
-    output: MusicGeneratorOutput;
-  };
-  "cassetteai/sound-effects-generator": {
-    input: SoundEffectsGeneratorInput;
-    output: SoundEffectsGeneratorOutput;
-  };
-  "cassetteai/video-sound-effects-generator": {
-    input: VideoSoundEffectsGeneratorInput;
-    output: VideoSoundEffectsGeneratorOutput;
-  };
-  "clarityai/crystal-upscaler": {
-    input: CrystalUpscalerInput;
-    output: CrystalUpscalerOutput;
-  };
-  "clarityai/crystal-video-upscaler": {
-    input: CrystalVideoUpscalerInput;
-    output: CrystalVideoUpscalerOutput;
-  };
-  "decart/lucy-2-5/realtime": {
-    input: Lucy25RealtimeInput;
-    output: Lucy25RealtimeOutput;
-  };
-  "decart/lucy-edit/pro": {
-    input: LucyEditProInput;
-    output: LucyEditProOutput;
-  };
-  "decart/lucy-restyle": {
-    input: LucyRestyleInput;
-    output: LucyRestyleOutput;
-  };
-  "decart/lucy2-vton/realtime": {
-    input: Lucy2VtonRealtimeInput;
-    output: Lucy2VtonRealtimeOutput;
-  };
-  "fal-ai/ace-step": {
-    input: AceStepInput;
-    output: AceStepOutput;
-  };
-  "fal-ai/ace-step/audio-inpaint": {
-    input: AceStepAudioInpaintInput;
-    output: AceStepAudioInpaintOutput;
-  };
-  "fal-ai/ace-step/audio-outpaint": {
-    input: AceStepAudioOutpaintInput;
-    output: AceStepAudioOutpaintOutput;
-  };
-  "fal-ai/ace-step/audio-to-audio": {
-    input: AceStepAudioToAudioInput;
-    output: AceStepAudioToAudioOutput;
-  };
-  "fal-ai/ace-step/prompt-to-audio": {
-    input: AceStepPromptToAudioInput;
-    output: AceStepPromptToAudioOutput;
-  };
-  "fal-ai/ai-avatar/multi": {
-    input: AiAvatarMultiInput;
-    output: AiAvatarMultiOutput;
-  };
-  "fal-ai/ai-avatar/multi-text": {
-    input: AiAvatarMultiTextInput;
-    output: AiAvatarMultiTextOutput;
-  };
-  "fal-ai/ai-avatar/single-text": {
-    input: AiAvatarSingleTextInput;
-    output: AiAvatarSingleTextOutput;
-  };
-  "fal-ai/amt-interpolation": {
-    input: AmtInterpolationInput;
-    output: AmtInterpolationOutput;
-  };
-  "fal-ai/amt-interpolation/frame-interpolation": {
-    input: AmtInterpolationFrameInterpolationInput;
-    output: AmtInterpolationFrameInterpolationOutput;
-  };
-  "fal-ai/audio-understanding": {
-    input: AudioUnderstandingInput;
-    output: AudioUnderstandingOutput;
-  };
-  "fal-ai/aura-flow": {
-    input: AuraFlowInput;
-    output: AuraFlowOutput;
-  };
-  "fal-ai/aura-sr": {
-    input: AuraSrInput;
-    output: AuraSrOutput;
-  };
-  "fal-ai/auto-caption": {
-    input: AutoCaptionInput;
-    output: AutoCaptionOutput;
-  };
-  "fal-ai/bagel": {
-    input: bagelInput;
-    output: bagelOutput;
-  };
-  "fal-ai/bagel/edit": {
-    input: BagelEditInput;
-    output: BagelEditOutput;
-  };
-  "fal-ai/bagel/understand": {
-    input: BagelUnderstandInput;
-    output: BagelUnderstandOutput;
-  };
-  "fal-ai/ben/v2/image": {
-    input: BenV2ImageInput;
-    output: BenV2ImageOutput;
-  };
-  "fal-ai/ben/v2/video": {
-    input: BenV2VideoInput;
-    output: BenV2VideoOutput;
-  };
-  "fal-ai/bernini-r/edit-image": {
-    input: BerniniREditImageInput;
-    output: BerniniREditImageOutput;
-  };
-  "fal-ai/bernini-r/edit-video": {
-    input: BerniniREditVideoInput;
-    output: BerniniREditVideoOutput;
-  };
-  "fal-ai/bernini-r/reference-edit-video": {
-    input: BerniniRReferenceEditVideoInput;
-    output: BerniniRReferenceEditVideoOutput;
-  };
-  "fal-ai/bernini-r/reference-to-video": {
-    input: BerniniRReferenceToVideoInput;
-    output: BerniniRReferenceToVideoOutput;
-  };
-  "fal-ai/bernini-r/text-to-video": {
-    input: BerniniRTextToVideoInput;
-    output: BerniniRTextToVideoOutput;
-  };
-  "fal-ai/birefnet": {
-    input: birefnetInput;
-    output: birefnetOutput;
-  };
-  "fal-ai/birefnet/v2": {
-    input: BirefnetV2Input;
-    output: BirefnetV2Output;
-  };
-  "fal-ai/birefnet/v2/video": {
-    input: BirefnetV2VideoInput;
-    output: BirefnetV2VideoOutput;
-  };
-  "fal-ai/bitdance": {
-    input: bitdanceInput;
-    output: bitdanceOutput;
-  };
-  "fal-ai/boogu-image": {
-    input: BooguImageInput;
-    output: BooguImageOutput;
-  };
-  "fal-ai/boogu-image/edit": {
-    input: BooguImageEditInput;
-    output: BooguImageEditOutput;
-  };
-  "fal-ai/bria/background/remove": {
-    input: BriaBackgroundRemoveInput;
-    output: BriaBackgroundRemoveOutput;
-  };
-  "fal-ai/bria/background/replace": {
-    input: BriaBackgroundReplaceInput;
-    output: BriaBackgroundReplaceOutput;
-  };
-  "fal-ai/bria/eraser": {
-    input: BriaEraserInput;
-    output: BriaEraserOutput;
-  };
-  "fal-ai/bria/expand": {
-    input: BriaExpandInput;
-    output: BriaExpandOutput;
-  };
-  "fal-ai/bria/genfill": {
-    input: BriaGenfillInput;
-    output: BriaGenfillOutput;
-  };
-  "fal-ai/bria/product-shot": {
-    input: BriaProductShotInput;
-    output: BriaProductShotOutput;
-  };
-  "fal-ai/bria/reimagine": {
-    input: BriaReimagineInput;
-    output: BriaReimagineOutput;
-  };
-  "fal-ai/bria/text-to-image/base": {
-    input: BriaTextToImageBaseInput;
-    output: BriaTextToImageBaseOutput;
-  };
-  "fal-ai/bria/text-to-image/fast": {
-    input: BriaTextToImageFastInput;
-    output: BriaTextToImageFastOutput;
-  };
-  "fal-ai/bria/text-to-image/hd": {
-    input: BriaTextToImageHdInput;
-    output: BriaTextToImageHdOutput;
-  };
-  "fal-ai/bytedance-upscaler/upscale/video": {
-    input: BytedanceUpscalerUpscaleVideoInput;
-    output: BytedanceUpscalerUpscaleVideoOutput;
-  };
-  "fal-ai/bytedance/dreamactor/v2": {
-    input: BytedanceDreamactorV2Input;
-    output: BytedanceDreamactorV2Output;
-  };
-  "fal-ai/bytedance/omnihuman": {
-    input: BytedanceOmnihumanInput;
-    output: BytedanceOmnihumanOutput;
-  };
-  "fal-ai/bytedance/omnihuman/v1.5": {
-    input: BytedanceOmnihumanV15Input;
-    output: BytedanceOmnihumanV15Output;
-  };
-  "fal-ai/bytedance/seed-speech/tts/v2": {
-    input: BytedanceSeedSpeechTtsV2Input;
-    output: BytedanceSeedSpeechTtsV2Output;
-  };
-  "fal-ai/bytedance/seed/v2/mini": {
-    input: BytedanceSeedV2MiniInput;
-    output: BytedanceSeedV2MiniOutput;
-  };
-  "fal-ai/bytedance/seedance/v1.5/pro/image-to-video": {
-    input: BytedanceSeedanceV15ProImageToVideoInput;
-    output: BytedanceSeedanceV15ProImageToVideoOutput;
-  };
-  "fal-ai/bytedance/seedance/v1.5/pro/text-to-video": {
-    input: BytedanceSeedanceV15ProTextToVideoInput;
-    output: BytedanceSeedanceV15ProTextToVideoOutput;
-  };
-  "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video": {
-    input: BytedanceSeedanceV1ProFastImageToVideoInput;
-    output: BytedanceSeedanceV1ProFastImageToVideoOutput;
-  };
-  "fal-ai/bytedance/seedance/v1/pro/fast/text-to-video": {
-    input: BytedanceSeedanceV1ProFastTextToVideoInput;
-    output: BytedanceSeedanceV1ProFastTextToVideoOutput;
-  };
-  "fal-ai/bytedance/seedance/v1/pro/image-to-video": {
-    input: BytedanceSeedanceV1ProImageToVideoInput;
-    output: BytedanceSeedanceV1ProImageToVideoOutput;
-  };
-  "fal-ai/bytedance/seedance/v1/pro/text-to-video": {
-    input: BytedanceSeedanceV1ProTextToVideoInput;
-    output: BytedanceSeedanceV1ProTextToVideoOutput;
-  };
-  "fal-ai/bytedance/seedream/v4.5/edit": {
-    input: BytedanceSeedreamV45EditInput;
-    output: BytedanceSeedreamV45EditOutput;
-  };
-  "fal-ai/bytedance/seedream/v4.5/text-to-image": {
-    input: BytedanceSeedreamV45TextToImageInput;
-    output: BytedanceSeedreamV45TextToImageOutput;
-  };
-  "fal-ai/bytedance/seedream/v4/edit": {
-    input: BytedanceSeedreamV4EditInput;
-    output: BytedanceSeedreamV4EditOutput;
-  };
-  "fal-ai/bytedance/seedream/v4/text-to-image": {
-    input: BytedanceSeedreamV4TextToImageInput;
-    output: BytedanceSeedreamV4TextToImageOutput;
-  };
-  "fal-ai/cartoonify": {
-    input: cartoonifyInput;
-    output: cartoonifyOutput;
-  };
-  "fal-ai/cat-vton": {
-    input: CatVtonInput;
-    output: CatVtonOutput;
-  };
-  "fal-ai/ccsr": {
-    input: ccsrInput;
-    output: ccsrOutput;
-  };
-  "fal-ai/chatterbox/speech-to-speech": {
-    input: ChatterboxSpeechToSpeechInput;
-    output: ChatterboxSpeechToSpeechOutput;
-  };
-  "fal-ai/chatterbox/text-to-speech": {
-    input: ChatterboxTextToSpeechInput;
-    output: ChatterboxTextToSpeechOutput;
-  };
-  "fal-ai/chatterbox/text-to-speech/multilingual": {
-    input: ChatterboxTextToSpeechMultilingualInput;
-    output: ChatterboxTextToSpeechMultilingualOutput;
-  };
-  "fal-ai/chrono-edit": {
-    input: ChronoEditInput;
-    output: ChronoEditOutput;
-  };
-  "fal-ai/chrono-edit-lora": {
-    input: ChronoEditLoraInput;
-    output: ChronoEditLoraOutput;
-  };
-  "fal-ai/chrono-edit-lora-gallery/paintbrush": {
-    input: ChronoEditLoraGalleryPaintbrushInput;
-    output: ChronoEditLoraGalleryPaintbrushOutput;
-  };
-  "fal-ai/chrono-edit-lora-gallery/upscaler": {
-    input: ChronoEditLoraGalleryUpscalerInput;
-    output: ChronoEditLoraGalleryUpscalerOutput;
-  };
-  "fal-ai/clarity-upscaler": {
-    input: ClarityUpscalerInput;
-    output: ClarityUpscalerOutput;
-  };
-  "fal-ai/codeformer": {
-    input: codeformerInput;
-    output: codeformerOutput;
-  };
-  "fal-ai/cogvideox-5b": {
-    input: Cogvideox5bInput;
-    output: Cogvideox5bOutput;
-  };
-  "fal-ai/cogvideox-5b/image-to-video": {
-    input: Cogvideox5bImageToVideoInput;
-    output: Cogvideox5bImageToVideoOutput;
-  };
-  "fal-ai/cogvideox-5b/video-to-video": {
-    input: Cogvideox5bVideoToVideoInput;
-    output: Cogvideox5bVideoToVideoOutput;
-  };
-  "fal-ai/cogview4": {
-    input: cogview4Input;
-    output: cogview4Output;
-  };
-  "fal-ai/cohere-transcribe": {
-    input: CohereTranscribeInput;
-    output: CohereTranscribeOutput;
-  };
-  "fal-ai/control-light": {
-    input: ControlLightInput;
-    output: ControlLightOutput;
-  };
-  "fal-ai/cosmos-predict-2.5/distilled/text-to-video": {
-    input: CosmosPredict25DistilledTextToVideoInput;
-    output: CosmosPredict25DistilledTextToVideoOutput;
-  };
-  "fal-ai/cosmos-predict-2.5/image-to-video": {
-    input: CosmosPredict25ImageToVideoInput;
-    output: CosmosPredict25ImageToVideoOutput;
-  };
-  "fal-ai/cosmos-predict-2.5/text-to-video": {
-    input: CosmosPredict25TextToVideoInput;
-    output: CosmosPredict25TextToVideoOutput;
-  };
-  "fal-ai/cosmos-predict-2.5/video-to-video": {
-    input: CosmosPredict25VideoToVideoInput;
-    output: CosmosPredict25VideoToVideoOutput;
-  };
-  "fal-ai/creatify/aurora": {
-    input: CreatifyAuroraInput;
-    output: CreatifyAuroraOutput;
-  };
-  "fal-ai/creative-upscaler": {
-    input: CreativeUpscalerInput;
-    output: CreativeUpscalerOutput;
-  };
-  "fal-ai/csm-1b": {
-    input: Csm1bInput;
-    output: Csm1bOutput;
-  };
-  "fal-ai/davinci-magihuman": {
-    input: DavinciMagihumanInput;
-    output: DavinciMagihumanOutput;
-  };
-  "fal-ai/ddcolor": {
-    input: ddcolorInput;
-    output: ddcolorOutput;
-  };
-  "fal-ai/deepfilternet3": {
-    input: deepfilternet3Input;
-    output: deepfilternet3Output;
-  };
-  "fal-ai/demucs": {
-    input: demucsInput;
-    output: demucsOutput;
-  };
-  "fal-ai/depth-anything-video": {
-    input: DepthAnythingVideoInput;
-    output: DepthAnythingVideoOutput;
-  };
-  "fal-ai/dia-tts": {
-    input: DiaTtsInput;
-    output: DiaTtsOutput;
-  };
-  "fal-ai/dia-tts/voice-clone": {
-    input: DiaTtsVoiceCloneInput;
-    output: DiaTtsVoiceCloneOutput;
-  };
-  "fal-ai/diffrhythm": {
-    input: diffrhythmInput;
-    output: diffrhythmOutput;
-  };
-  "fal-ai/docres": {
-    input: docresInput;
-    output: docresOutput;
-  };
-  "fal-ai/docres/dewarp": {
-    input: DocresDewarpInput;
-    output: DocresDewarpOutput;
-  };
-  "fal-ai/drct-super-resolution": {
-    input: DrctSuperResolutionInput;
-    output: DrctSuperResolutionOutput;
-  };
-  "fal-ai/dreamomni2/edit": {
-    input: Dreamomni2EditInput;
-    output: Dreamomni2EditOutput;
-  };
-  "fal-ai/dreamshaper": {
-    input: dreamshaperInput;
-    output: dreamshaperOutput;
-  };
-  "fal-ai/dwpose": {
-    input: dwposeInput;
-    output: dwposeOutput;
-  };
-  "fal-ai/dwpose/video": {
-    input: DwposeVideoInput;
-    output: DwposeVideoOutput;
-  };
-  "fal-ai/echomimic-v3": {
-    input: EchomimicV3Input;
-    output: EchomimicV3Output;
-  };
-  "fal-ai/editto": {
-    input: edittoInput;
-    output: edittoOutput;
-  };
-  "fal-ai/elevenlabs/audio-isolation": {
-    input: ElevenlabsAudioIsolationInput;
-    output: ElevenlabsAudioIsolationOutput;
-  };
-  "fal-ai/elevenlabs/dubbing": {
-    input: ElevenlabsDubbingInput;
-    output: ElevenlabsDubbingOutput;
-  };
-  "fal-ai/elevenlabs/music": {
-    input: ElevenlabsMusicInput;
-    output: ElevenlabsMusicOutput;
-  };
-  "fal-ai/elevenlabs/sound-effects/v2": {
-    input: ElevenlabsSoundEffectsV2Input;
-    output: ElevenlabsSoundEffectsV2Output;
-  };
-  "fal-ai/elevenlabs/speech-to-text": {
-    input: ElevenlabsSpeechToTextInput;
-    output: ElevenlabsSpeechToTextOutput;
-  };
-  "fal-ai/elevenlabs/speech-to-text/scribe-v2": {
-    input: ElevenlabsSpeechToTextScribeV2Input;
-    output: ElevenlabsSpeechToTextScribeV2Output;
-  };
-  "fal-ai/elevenlabs/text-to-dialogue/eleven-v3": {
-    input: ElevenlabsTextToDialogueElevenV3Input;
-    output: ElevenlabsTextToDialogueElevenV3Output;
-  };
-  "fal-ai/elevenlabs/tts/eleven-v3": {
-    input: ElevenlabsTtsElevenV3Input;
-    output: ElevenlabsTtsElevenV3Output;
-  };
-  "fal-ai/elevenlabs/tts/multilingual-v2": {
-    input: ElevenlabsTtsMultilingualV2Input;
-    output: ElevenlabsTtsMultilingualV2Output;
-  };
-  "fal-ai/elevenlabs/tts/turbo-v2.5": {
-    input: ElevenlabsTtsTurboV25Input;
-    output: ElevenlabsTtsTurboV25Output;
-  };
-  "fal-ai/elevenlabs/voice-changer": {
-    input: ElevenlabsVoiceChangerInput;
-    output: ElevenlabsVoiceChangerOutput;
-  };
-  "fal-ai/emu-3.5-image/edit-image": {
-    input: Emu35ImageEditImageInput;
-    output: Emu35ImageEditImageOutput;
-  };
-  "fal-ai/emu-3.5-image/text-to-image": {
-    input: Emu35ImageTextToImageInput;
-    output: Emu35ImageTextToImageOutput;
-  };
-  "fal-ai/ernie-image": {
-    input: ErnieImageInput;
-    output: ErnieImageOutput;
-  };
-  "fal-ai/ernie-image-trainer": {
-    input: ErnieImageTrainerInput;
-    output: ErnieImageTrainerOutput;
-  };
-  "fal-ai/ernie-image/lora": {
-    input: ErnieImageLoraInput;
-    output: ErnieImageLoraOutput;
-  };
-  "fal-ai/ernie-image/lora/turbo": {
-    input: ErnieImageLoraTurboInput;
-    output: ErnieImageLoraTurboOutput;
-  };
-  "fal-ai/ernie-image/turbo": {
-    input: ErnieImageTurboInput;
-    output: ErnieImageTurboOutput;
-  };
-  "fal-ai/esrgan": {
-    input: esrganInput;
-    output: esrganOutput;
-  };
-  "fal-ai/evf-sam": {
-    input: EvfSamInput;
-    output: EvfSamOutput;
-  };
-  "fal-ai/f5-tts": {
-    input: F5TtsInput;
-    output: F5TtsOutput;
-  };
-  "fal-ai/fashn/tryon/v1.5": {
-    input: FashnTryonV15Input;
-    output: FashnTryonV15Output;
-  };
-  "fal-ai/fashn/tryon/v1.6": {
-    input: FashnTryonV16Input;
-    output: FashnTryonV16Output;
-  };
-  "fal-ai/fast-animatediff/text-to-video": {
-    input: FastAnimatediffTextToVideoInput;
-    output: FastAnimatediffTextToVideoOutput;
-  };
-  "fal-ai/fast-animatediff/turbo/text-to-video": {
-    input: FastAnimatediffTurboTextToVideoInput;
-    output: FastAnimatediffTurboTextToVideoOutput;
-  };
-  "fal-ai/fast-animatediff/turbo/video-to-video": {
-    input: FastAnimatediffTurboVideoToVideoInput;
-    output: FastAnimatediffTurboVideoToVideoOutput;
-  };
-  "fal-ai/fast-animatediff/video-to-video": {
-    input: FastAnimatediffVideoToVideoInput;
-    output: FastAnimatediffVideoToVideoOutput;
-  };
-  "fal-ai/fast-fooocus-sdxl/image-to-image": {
-    input: FastFooocusSdxlImageToImageInput;
-    output: FastFooocusSdxlImageToImageOutput;
-  };
-  "fal-ai/fast-lcm-diffusion": {
-    input: FastLcmDiffusionInput;
-    output: FastLcmDiffusionOutput;
-  };
-  "fal-ai/fast-lcm-diffusion/image-to-image": {
-    input: FastLcmDiffusionImageToImageInput;
-    output: FastLcmDiffusionImageToImageOutput;
-  };
-  "fal-ai/fast-lcm-diffusion/inpainting": {
-    input: FastLcmDiffusionInpaintingInput;
-    output: FastLcmDiffusionInpaintingOutput;
-  };
-  "fal-ai/fast-lightning-sdxl": {
-    input: FastLightningSdxlInput;
-    output: FastLightningSdxlOutput;
-  };
-  "fal-ai/fast-lightning-sdxl/image-to-image": {
-    input: FastLightningSdxlImageToImageInput;
-    output: FastLightningSdxlImageToImageOutput;
-  };
-  "fal-ai/fast-lightning-sdxl/inpainting": {
-    input: FastLightningSdxlInpaintingInput;
-    output: FastLightningSdxlInpaintingOutput;
-  };
-  "fal-ai/fast-sdxl": {
-    input: FastSdxlInput;
-    output: FastSdxlOutput;
-  };
-  "fal-ai/fast-sdxl-controlnet-canny": {
-    input: FastSdxlControlnetCannyInput;
-    output: FastSdxlControlnetCannyOutput;
-  };
-  "fal-ai/fast-sdxl-controlnet-canny/image-to-image": {
-    input: FastSdxlControlnetCannyImageToImageInput;
-    output: FastSdxlControlnetCannyImageToImageOutput;
-  };
-  "fal-ai/fast-sdxl-controlnet-canny/inpainting": {
-    input: FastSdxlControlnetCannyInpaintingInput;
-    output: FastSdxlControlnetCannyInpaintingOutput;
-  };
-  "fal-ai/fast-sdxl/image-to-image": {
-    input: FastSdxlImageToImageInput;
-    output: FastSdxlImageToImageOutput;
-  };
-  "fal-ai/fast-sdxl/inpainting": {
-    input: FastSdxlInpaintingInput;
-    output: FastSdxlInpaintingOutput;
-  };
-  "fal-ai/fast-svd-lcm": {
-    input: FastSvdLcmInput;
-    output: FastSvdLcmOutput;
-  };
-  "fal-ai/fast-svd-lcm/text-to-video": {
-    input: FastSvdLcmTextToVideoInput;
-    output: FastSvdLcmTextToVideoOutput;
-  };
-  "fal-ai/fast-svd/text-to-video": {
-    input: FastSvdTextToVideoInput;
-    output: FastSvdTextToVideoOutput;
-  };
-  "fal-ai/feynobg": {
-    input: feynobgInput;
-    output: feynobgOutput;
-  };
-  "fal-ai/ffmpeg-api/compose": {
-    input: FfmpegApiComposeInput;
-    output: FfmpegApiComposeOutput;
-  };
-  "fal-ai/ffmpeg-api/extract-frame": {
-    input: FfmpegApiExtractFrameInput;
-    output: FfmpegApiExtractFrameOutput;
-  };
-  "fal-ai/ffmpeg-api/images-to-video": {
-    input: FfmpegApiImagesToVideoInput;
-    output: FfmpegApiImagesToVideoOutput;
-  };
-  "fal-ai/ffmpeg-api/loudnorm": {
-    input: FfmpegApiLoudnormInput;
-    output: FfmpegApiLoudnormOutput;
-  };
-  "fal-ai/ffmpeg-api/merge-audio-video": {
-    input: FfmpegApiMergeAudioVideoInput;
-    output: FfmpegApiMergeAudioVideoOutput;
-  };
-  "fal-ai/ffmpeg-api/merge-audios": {
-    input: FfmpegApiMergeAudiosInput;
-    output: FfmpegApiMergeAudiosOutput;
-  };
-  "fal-ai/ffmpeg-api/merge-videos": {
-    input: FfmpegApiMergeVideosInput;
-    output: FfmpegApiMergeVideosOutput;
-  };
-  "fal-ai/ffmpeg-api/metadata": {
-    input: FfmpegApiMetadataInput;
-    output: FfmpegApiMetadataOutput;
-  };
-  "fal-ai/ffmpeg-api/waveform": {
-    input: FfmpegApiWaveformInput;
-    output: FfmpegApiWaveformOutput;
-  };
-  "fal-ai/film": {
-    input: filmInput;
-    output: filmOutput;
-  };
-  "fal-ai/film/video": {
-    input: FilmVideoInput;
-    output: FilmVideoOutput;
-  };
-  "fal-ai/finegrain-eraser": {
-    input: FinegrainEraserInput;
-    output: FinegrainEraserOutput;
-  };
-  "fal-ai/finegrain-eraser/bbox": {
-    input: FinegrainEraserBboxInput;
-    output: FinegrainEraserBboxOutput;
-  };
-  "fal-ai/finegrain-eraser/mask": {
-    input: FinegrainEraserMaskInput;
-    output: FinegrainEraserMaskOutput;
-  };
-  "fal-ai/firered-image-edit": {
-    input: FireredImageEditInput;
-    output: FireredImageEditOutput;
-  };
-  "fal-ai/firered-image-edit-v1.1": {
-    input: FireredImageEditV11Input;
-    output: FireredImageEditV11Output;
-  };
-  "fal-ai/flashhead": {
-    input: flashheadInput;
-    output: flashheadOutput;
-  };
-  "fal-ai/flashtalk": {
-    input: flashtalkInput;
-    output: flashtalkOutput;
-  };
-  "fal-ai/flashvsr/upscale/video": {
-    input: FlashvsrUpscaleVideoInput;
-    output: FlashvsrUpscaleVideoOutput;
-  };
-  "fal-ai/florence-2-large/caption": {
-    input: Florence2LargeCaptionInput;
-    output: Florence2LargeCaptionOutput;
-  };
-  "fal-ai/florence-2-large/caption-to-phrase-grounding": {
-    input: Florence2LargeCaptionToPhraseGroundingInput;
-    output: Florence2LargeCaptionToPhraseGroundingOutput;
-  };
-  "fal-ai/florence-2-large/dense-region-caption": {
-    input: Florence2LargeDenseRegionCaptionInput;
-    output: Florence2LargeDenseRegionCaptionOutput;
-  };
-  "fal-ai/florence-2-large/detailed-caption": {
-    input: Florence2LargeDetailedCaptionInput;
-    output: Florence2LargeDetailedCaptionOutput;
-  };
-  "fal-ai/florence-2-large/more-detailed-caption": {
-    input: Florence2LargeMoreDetailedCaptionInput;
-    output: Florence2LargeMoreDetailedCaptionOutput;
-  };
-  "fal-ai/florence-2-large/object-detection": {
-    input: Florence2LargeObjectDetectionInput;
-    output: Florence2LargeObjectDetectionOutput;
-  };
-  "fal-ai/florence-2-large/ocr": {
-    input: Florence2LargeOcrInput;
-    output: Florence2LargeOcrOutput;
-  };
-  "fal-ai/florence-2-large/ocr-with-region": {
-    input: Florence2LargeOcrWithRegionInput;
-    output: Florence2LargeOcrWithRegionOutput;
-  };
-  "fal-ai/florence-2-large/open-vocabulary-detection": {
-    input: Florence2LargeOpenVocabularyDetectionInput;
-    output: Florence2LargeOpenVocabularyDetectionOutput;
-  };
-  "fal-ai/florence-2-large/referring-expression-segmentation": {
-    input: Florence2LargeReferringExpressionSegmentationInput;
-    output: Florence2LargeReferringExpressionSegmentationOutput;
-  };
-  "fal-ai/florence-2-large/region-proposal": {
-    input: Florence2LargeRegionProposalInput;
-    output: Florence2LargeRegionProposalOutput;
-  };
-  "fal-ai/florence-2-large/region-to-category": {
-    input: Florence2LargeRegionToCategoryInput;
-    output: Florence2LargeRegionToCategoryOutput;
-  };
-  "fal-ai/florence-2-large/region-to-description": {
-    input: Florence2LargeRegionToDescriptionInput;
-    output: Florence2LargeRegionToDescriptionOutput;
-  };
-  "fal-ai/florence-2-large/region-to-segmentation": {
-    input: Florence2LargeRegionToSegmentationInput;
-    output: Florence2LargeRegionToSegmentationOutput;
-  };
-  "fal-ai/flowedit": {
-    input: floweditInput;
-    output: floweditOutput;
-  };
-  "fal-ai/flux-1/dev": {
-    input: Flux1DevInput;
-    output: Flux1DevOutput;
-  };
-  "fal-ai/flux-1/dev/image-to-image": {
-    input: Flux1DevImageToImageInput;
-    output: Flux1DevImageToImageOutput;
-  };
-  "fal-ai/flux-1/dev/redux": {
-    input: Flux1DevReduxInput;
-    output: Flux1DevReduxOutput;
-  };
-  "fal-ai/flux-1/krea": {
-    input: Flux1KreaInput;
-    output: Flux1KreaOutput;
-  };
-  "fal-ai/flux-1/krea/image-to-image": {
-    input: Flux1KreaImageToImageInput;
-    output: Flux1KreaImageToImageOutput;
-  };
-  "fal-ai/flux-1/krea/redux": {
-    input: Flux1KreaReduxInput;
-    output: Flux1KreaReduxOutput;
-  };
-  "fal-ai/flux-1/schnell": {
-    input: Flux1SchnellInput;
-    output: Flux1SchnellOutput;
-  };
-  "fal-ai/flux-1/schnell/redux": {
-    input: Flux1SchnellReduxInput;
-    output: Flux1SchnellReduxOutput;
-  };
-  "fal-ai/flux-1/srpo": {
-    input: Flux1SrpoInput;
-    output: Flux1SrpoOutput;
-  };
-  "fal-ai/flux-1/srpo/image-to-image": {
-    input: Flux1SrpoImageToImageInput;
-    output: Flux1SrpoImageToImageOutput;
-  };
-  "fal-ai/flux-2": {
-    input: Flux2Input;
-    output: Flux2Output;
-  };
-  "fal-ai/flux-2-flex": {
-    input: Flux2FlexInput;
-    output: Flux2FlexOutput;
-  };
-  "fal-ai/flux-2-flex/edit": {
-    input: Flux2FlexEditInput;
-    output: Flux2FlexEditOutput;
-  };
-  "fal-ai/flux-2-klein-9b-base-trainer": {
-    input: Flux2Klein9bBaseTrainerInput;
-    output: Flux2Klein9bBaseTrainerOutput;
-  };
-  "fal-ai/flux-2-klein-9b-base-trainer/edit": {
-    input: Flux2Klein9bBaseTrainerEditInput;
-    output: Flux2Klein9bBaseTrainerEditOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/add-background": {
-    input: Flux2LoraGalleryAddBackgroundInput;
-    output: Flux2LoraGalleryAddBackgroundOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/apartment-staging": {
-    input: Flux2LoraGalleryApartmentStagingInput;
-    output: Flux2LoraGalleryApartmentStagingOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/ballpoint-pen-sketch": {
-    input: Flux2LoraGalleryBallpointPenSketchInput;
-    output: Flux2LoraGalleryBallpointPenSketchOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/digital-comic-art": {
-    input: Flux2LoraGalleryDigitalComicArtInput;
-    output: Flux2LoraGalleryDigitalComicArtOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/face-to-full-portrait": {
-    input: Flux2LoraGalleryFaceToFullPortraitInput;
-    output: Flux2LoraGalleryFaceToFullPortraitOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/hdr-style": {
-    input: Flux2LoraGalleryHdrStyleInput;
-    output: Flux2LoraGalleryHdrStyleOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/multiple-angles": {
-    input: Flux2LoraGalleryMultipleAnglesInput;
-    output: Flux2LoraGalleryMultipleAnglesOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/realism": {
-    input: Flux2LoraGalleryRealismInput;
-    output: Flux2LoraGalleryRealismOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/satellite-view-style": {
-    input: Flux2LoraGallerySatelliteViewStyleInput;
-    output: Flux2LoraGallerySatelliteViewStyleOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/sepia-vintage": {
-    input: Flux2LoraGallerySepiaVintageInput;
-    output: Flux2LoraGallerySepiaVintageOutput;
-  };
-  "fal-ai/flux-2-lora-gallery/virtual-tryon": {
-    input: Flux2LoraGalleryVirtualTryonInput;
-    output: Flux2LoraGalleryVirtualTryonOutput;
-  };
-  "fal-ai/flux-2-max": {
-    input: Flux2MaxInput;
-    output: Flux2MaxOutput;
-  };
-  "fal-ai/flux-2-max/edit": {
-    input: Flux2MaxEditInput;
-    output: Flux2MaxEditOutput;
-  };
-  "fal-ai/flux-2-pro": {
-    input: Flux2ProInput;
-    output: Flux2ProOutput;
-  };
-  "fal-ai/flux-2-pro/edit": {
-    input: Flux2ProEditInput;
-    output: Flux2ProEditOutput;
-  };
-  "fal-ai/flux-2-pro/outpaint": {
-    input: Flux2ProOutpaintInput;
-    output: Flux2ProOutpaintOutput;
-  };
-  "fal-ai/flux-2-trainer": {
-    input: Flux2TrainerInput;
-    output: Flux2TrainerOutput;
-  };
-  "fal-ai/flux-2-trainer-v2": {
-    input: Flux2TrainerV2Input;
-    output: Flux2TrainerV2Output;
-  };
-  "fal-ai/flux-2-trainer-v2/edit": {
-    input: Flux2TrainerV2EditInput;
-    output: Flux2TrainerV2EditOutput;
-  };
-  "fal-ai/flux-2-trainer/edit": {
-    input: Flux2TrainerEditInput;
-    output: Flux2TrainerEditOutput;
-  };
-  "fal-ai/flux-2/edit": {
-    input: Flux2EditInput;
-    output: Flux2EditOutput;
-  };
-  "fal-ai/flux-2/flash": {
-    input: Flux2FlashInput;
-    output: Flux2FlashOutput;
-  };
-  "fal-ai/flux-2/flash/edit": {
-    input: Flux2FlashEditInput;
-    output: Flux2FlashEditOutput;
-  };
-  "fal-ai/flux-2/klein/4b": {
-    input: Flux2Klein4bInput;
-    output: Flux2Klein4bOutput;
-  };
-  "fal-ai/flux-2/klein/4b/base": {
-    input: Flux2Klein4bBaseInput;
-    output: Flux2Klein4bBaseOutput;
-  };
-  "fal-ai/flux-2/klein/4b/base/edit": {
-    input: Flux2Klein4bBaseEditInput;
-    output: Flux2Klein4bBaseEditOutput;
-  };
-  "fal-ai/flux-2/klein/4b/base/edit/lora": {
-    input: Flux2Klein4bBaseEditLoraInput;
-    output: Flux2Klein4bBaseEditLoraOutput;
-  };
-  "fal-ai/flux-2/klein/4b/base/lora": {
-    input: Flux2Klein4bBaseLoraInput;
-    output: Flux2Klein4bBaseLoraOutput;
-  };
-  "fal-ai/flux-2/klein/4b/edit": {
-    input: Flux2Klein4bEditInput;
-    output: Flux2Klein4bEditOutput;
-  };
-  "fal-ai/flux-2/klein/4b/edit/lora": {
-    input: Flux2Klein4bEditLoraInput;
-    output: Flux2Klein4bEditLoraOutput;
-  };
-  "fal-ai/flux-2/klein/4b/lora": {
-    input: Flux2Klein4bLoraInput;
-    output: Flux2Klein4bLoraOutput;
-  };
-  "fal-ai/flux-2/klein/9b": {
-    input: Flux2Klein9bInput;
-    output: Flux2Klein9bOutput;
-  };
-  "fal-ai/flux-2/klein/9b/base": {
-    input: Flux2Klein9bBaseInput;
-    output: Flux2Klein9bBaseOutput;
-  };
-  "fal-ai/flux-2/klein/9b/base/edit": {
-    input: Flux2Klein9bBaseEditInput;
-    output: Flux2Klein9bBaseEditOutput;
-  };
-  "fal-ai/flux-2/klein/9b/base/edit/lora": {
-    input: Flux2Klein9bBaseEditLoraInput;
-    output: Flux2Klein9bBaseEditLoraOutput;
-  };
-  "fal-ai/flux-2/klein/9b/base/lora": {
-    input: Flux2Klein9bBaseLoraInput;
-    output: Flux2Klein9bBaseLoraOutput;
-  };
-  "fal-ai/flux-2/klein/9b/edit": {
-    input: Flux2Klein9bEditInput;
-    output: Flux2Klein9bEditOutput;
-  };
-  "fal-ai/flux-2/klein/9b/edit/lora": {
-    input: Flux2Klein9bEditLoraInput;
-    output: Flux2Klein9bEditLoraOutput;
-  };
-  "fal-ai/flux-2/klein/9b/lora": {
-    input: Flux2Klein9bLoraInput;
-    output: Flux2Klein9bLoraOutput;
-  };
-  "fal-ai/flux-2/klein/realtime": {
-    input: Flux2KleinRealtimeInput;
-    output: Flux2KleinRealtimeOutput;
-  };
-  "fal-ai/flux-2/lora": {
-    input: Flux2LoraInput;
-    output: Flux2LoraOutput;
-  };
-  "fal-ai/flux-2/lora/edit": {
-    input: Flux2LoraEditInput;
-    output: Flux2LoraEditOutput;
-  };
-  "fal-ai/flux-2/turbo": {
-    input: Flux2TurboInput;
-    output: Flux2TurboOutput;
-  };
-  "fal-ai/flux-2/turbo/edit": {
-    input: Flux2TurboEditInput;
-    output: Flux2TurboEditOutput;
-  };
-  "fal-ai/flux-control-lora-canny": {
-    input: FluxControlLoraCannyInput;
-    output: FluxControlLoraCannyOutput;
-  };
-  "fal-ai/flux-control-lora-canny/image-to-image": {
-    input: FluxControlLoraCannyImageToImageInput;
-    output: FluxControlLoraCannyImageToImageOutput;
-  };
-  "fal-ai/flux-control-lora-depth": {
-    input: FluxControlLoraDepthInput;
-    output: FluxControlLoraDepthOutput;
-  };
-  "fal-ai/flux-control-lora-depth/image-to-image": {
-    input: FluxControlLoraDepthImageToImageInput;
-    output: FluxControlLoraDepthImageToImageOutput;
-  };
-  "fal-ai/flux-general": {
-    input: FluxGeneralInput;
-    output: FluxGeneralOutput;
-  };
-  "fal-ai/flux-general/differential-diffusion": {
-    input: FluxGeneralDifferentialDiffusionInput;
-    output: FluxGeneralDifferentialDiffusionOutput;
-  };
-  "fal-ai/flux-general/image-to-image": {
-    input: FluxGeneralImageToImageInput;
-    output: FluxGeneralImageToImageOutput;
-  };
-  "fal-ai/flux-general/inpainting": {
-    input: FluxGeneralInpaintingInput;
-    output: FluxGeneralInpaintingOutput;
-  };
-  "fal-ai/flux-general/rf-inversion": {
-    input: FluxGeneralRfInversionInput;
-    output: FluxGeneralRfInversionOutput;
-  };
-  "fal-ai/flux-kontext-lora": {
-    input: FluxKontextLoraInput;
-    output: FluxKontextLoraOutput;
-  };
-  "fal-ai/flux-kontext-lora/inpaint": {
-    input: FluxKontextLoraInpaintInput;
-    output: FluxKontextLoraInpaintOutput;
-  };
-  "fal-ai/flux-kontext-lora/text-to-image": {
-    input: FluxKontextLoraTextToImageInput;
-    output: FluxKontextLoraTextToImageOutput;
-  };
-  "fal-ai/flux-kontext-trainer": {
-    input: FluxKontextTrainerInput;
-    output: FluxKontextTrainerOutput;
-  };
-  "fal-ai/flux-kontext/dev": {
-    input: FluxKontextDevInput;
-    output: FluxKontextDevOutput;
-  };
-  "fal-ai/flux-krea-lora": {
-    input: FluxKreaLoraInput;
-    output: FluxKreaLoraOutput;
-  };
-  "fal-ai/flux-krea-lora/image-to-image": {
-    input: FluxKreaLoraImageToImageInput;
-    output: FluxKreaLoraImageToImageOutput;
-  };
-  "fal-ai/flux-krea-lora/inpainting": {
-    input: FluxKreaLoraInpaintingInput;
-    output: FluxKreaLoraInpaintingOutput;
-  };
-  "fal-ai/flux-krea-lora/stream": {
-    input: FluxKreaLoraStreamInput;
-    output: FluxKreaLoraStreamOutput;
-  };
-  "fal-ai/flux-lora": {
-    input: FluxLoraInput;
-    output: FluxLoraOutput;
-  };
-  "fal-ai/flux-lora-canny": {
-    input: FluxLoraCannyInput;
-    output: FluxLoraCannyOutput;
-  };
-  "fal-ai/flux-lora-depth": {
-    input: FluxLoraDepthInput;
-    output: FluxLoraDepthOutput;
-  };
-  "fal-ai/flux-lora-fast-training": {
-    input: FluxLoraFastTrainingInput;
-    output: FluxLoraFastTrainingOutput;
-  };
-  "fal-ai/flux-lora-fill": {
-    input: FluxLoraFillInput;
-    output: FluxLoraFillOutput;
-  };
-  "fal-ai/flux-lora-portrait-trainer": {
-    input: FluxLoraPortraitTrainerInput;
-    output: FluxLoraPortraitTrainerOutput;
-  };
-  "fal-ai/flux-lora/image-to-image": {
-    input: FluxLoraImageToImageInput;
-    output: FluxLoraImageToImageOutput;
-  };
-  "fal-ai/flux-lora/inpainting": {
-    input: FluxLoraInpaintingInput;
-    output: FluxLoraInpaintingOutput;
-  };
-  "fal-ai/flux-lora/stream": {
-    input: FluxLoraStreamInput;
-    output: FluxLoraStreamOutput;
-  };
-  "fal-ai/flux-pro/kontext": {
-    input: FluxProKontextInput;
-    output: FluxProKontextOutput;
-  };
-  "fal-ai/flux-pro/kontext/max": {
-    input: FluxProKontextMaxInput;
-    output: FluxProKontextMaxOutput;
-  };
-  "fal-ai/flux-pro/kontext/max/multi": {
-    input: FluxProKontextMaxMultiInput;
-    output: FluxProKontextMaxMultiOutput;
-  };
-  "fal-ai/flux-pro/kontext/max/text-to-image": {
-    input: FluxProKontextMaxTextToImageInput;
-    output: FluxProKontextMaxTextToImageOutput;
-  };
-  "fal-ai/flux-pro/kontext/multi": {
-    input: FluxProKontextMultiInput;
-    output: FluxProKontextMultiOutput;
-  };
-  "fal-ai/flux-pro/kontext/text-to-image": {
-    input: FluxProKontextTextToImageInput;
-    output: FluxProKontextTextToImageOutput;
-  };
-  "fal-ai/flux-pro/v1.1": {
-    input: FluxProV11Input;
-    output: FluxProV11Output;
-  };
-  "fal-ai/flux-pro/v1.1-ultra": {
-    input: FluxProV11UltraInput;
-    output: FluxProV11UltraOutput;
-  };
-  "fal-ai/flux-pro/v1.1-ultra-finetuned": {
-    input: FluxProV11UltraFinetunedInput;
-    output: FluxProV11UltraFinetunedOutput;
-  };
-  "fal-ai/flux-pro/v1.1-ultra/redux": {
-    input: FluxProV11UltraReduxInput;
-    output: FluxProV11UltraReduxOutput;
-  };
-  "fal-ai/flux-pro/v1.1/redux": {
-    input: FluxProV11ReduxInput;
-    output: FluxProV11ReduxOutput;
-  };
-  "fal-ai/flux-pro/v1/erase": {
-    input: FluxProV1EraseInput;
-    output: FluxProV1EraseOutput;
-  };
-  "fal-ai/flux-pro/v1/fill": {
-    input: FluxProV1FillInput;
-    output: FluxProV1FillOutput;
-  };
-  "fal-ai/flux-pro/v1/fill-finetuned": {
-    input: FluxProV1FillFinetunedInput;
-    output: FluxProV1FillFinetunedOutput;
-  };
-  "fal-ai/flux-pro/v1/vto": {
-    input: FluxProV1VtoInput;
-    output: FluxProV1VtoOutput;
-  };
-  "fal-ai/flux-pulid": {
-    input: FluxPulidInput;
-    output: FluxPulidOutput;
-  };
-  "fal-ai/flux-subject": {
-    input: FluxSubjectInput;
-    output: FluxSubjectOutput;
-  };
-  "fal-ai/flux-vision-upscaler": {
-    input: FluxVisionUpscalerInput;
-    output: FluxVisionUpscalerOutput;
-  };
-  "fal-ai/flux/dev": {
-    input: FluxDevInput;
-    output: FluxDevOutput;
-  };
-  "fal-ai/flux/dev/image-to-image": {
-    input: FluxDevImageToImageInput;
-    output: FluxDevImageToImageOutput;
-  };
-  "fal-ai/flux/dev/redux": {
-    input: FluxDevReduxInput;
-    output: FluxDevReduxOutput;
-  };
-  "fal-ai/flux/krea": {
-    input: FluxKreaInput;
-    output: FluxKreaOutput;
-  };
-  "fal-ai/flux/krea/image-to-image": {
-    input: FluxKreaImageToImageInput;
-    output: FluxKreaImageToImageOutput;
-  };
-  "fal-ai/flux/krea/redux": {
-    input: FluxKreaReduxInput;
-    output: FluxKreaReduxOutput;
-  };
-  "fal-ai/flux/schnell": {
-    input: FluxSchnellInput;
-    output: FluxSchnellOutput;
-  };
-  "fal-ai/flux/schnell/redux": {
-    input: FluxSchnellReduxInput;
-    output: FluxSchnellReduxOutput;
-  };
-  "fal-ai/flux/srpo": {
-    input: FluxSrpoInput;
-    output: FluxSrpoOutput;
-  };
-  "fal-ai/flux/srpo/image-to-image": {
-    input: FluxSrpoImageToImageInput;
-    output: FluxSrpoImageToImageOutput;
-  };
-  "fal-ai/fooocus": {
-    input: fooocusInput;
-    output: fooocusOutput;
-  };
-  "fal-ai/fooocus/image-prompt": {
-    input: FooocusImagePromptInput;
-    output: FooocusImagePromptOutput;
-  };
-  "fal-ai/fooocus/inpaint": {
-    input: FooocusInpaintInput;
-    output: FooocusInpaintOutput;
-  };
-  "fal-ai/fooocus/upscale-or-vary": {
-    input: FooocusUpscaleOrVaryInput;
-    output: FooocusUpscaleOrVaryOutput;
-  };
-  "fal-ai/framepack": {
-    input: framepackInput;
-    output: framepackOutput;
-  };
-  "fal-ai/framepack/f1": {
-    input: FramepackF1Input;
-    output: FramepackF1Output;
-  };
-  "fal-ai/framepack/flf2v": {
-    input: FramepackFlf2vInput;
-    output: FramepackFlf2vOutput;
-  };
-  "fal-ai/gemini-25-flash-image": {
-    input: Gemini25FlashImageInput;
-    output: Gemini25FlashImageOutput;
-  };
-  "fal-ai/gemini-25-flash-image/edit": {
-    input: Gemini25FlashImageEditInput;
-    output: Gemini25FlashImageEditOutput;
-  };
-  "fal-ai/gemini-3-pro-image-preview": {
-    input: Gemini3ProImagePreviewInput;
-    output: Gemini3ProImagePreviewOutput;
-  };
-  "fal-ai/gemini-3-pro-image-preview/edit": {
-    input: Gemini3ProImagePreviewEditInput;
-    output: Gemini3ProImagePreviewEditOutput;
-  };
-  "fal-ai/gemini-3.1-flash-image-preview": {
-    input: Gemini31FlashImagePreviewInput;
-    output: Gemini31FlashImagePreviewOutput;
-  };
-  "fal-ai/gemini-3.1-flash-image-preview/edit": {
-    input: Gemini31FlashImagePreviewEditInput;
-    output: Gemini31FlashImagePreviewEditOutput;
-  };
-  "fal-ai/gemini-3.1-flash-tts": {
-    input: Gemini31FlashTtsInput;
-    output: Gemini31FlashTtsOutput;
-  };
-  "fal-ai/gemini-tts": {
-    input: GeminiTtsInput;
-    output: GeminiTtsOutput;
-  };
-  "fal-ai/ghiblify": {
-    input: ghiblifyInput;
-    output: ghiblifyOutput;
-  };
-  "fal-ai/glm-image": {
-    input: GlmImageInput;
-    output: GlmImageOutput;
-  };
-  "fal-ai/glm-image/image-to-image": {
-    input: GlmImageImageToImageInput;
-    output: GlmImageImageToImageOutput;
-  };
-  "fal-ai/got-ocr/v2": {
-    input: GotOcrV2Input;
-    output: GotOcrV2Output;
-  };
-  "fal-ai/gpt-image-1-mini": {
-    input: GptImage1MiniInput;
-    output: GptImage1MiniOutput;
-  };
-  "fal-ai/gpt-image-1-mini/edit": {
-    input: GptImage1MiniEditInput;
-    output: GptImage1MiniEditOutput;
-  };
-  "fal-ai/gpt-image-1.5": {
-    input: GptImage15Input;
-    output: GptImage15Output;
-  };
-  "fal-ai/gpt-image-1.5/edit": {
-    input: GptImage15EditInput;
-    output: GptImage15EditOutput;
-  };
-  "fal-ai/gpt-image-1/edit-image": {
-    input: GptImage1EditImageInput;
-    output: GptImage1EditImageOutput;
-  };
-  "fal-ai/gpt-image-1/text-to-image": {
-    input: GptImage1TextToImageInput;
-    output: GptImage1TextToImageOutput;
-  };
-  "fal-ai/heygen/avatar3/digital-twin": {
-    input: HeygenAvatar3DigitalTwinInput;
-    output: HeygenAvatar3DigitalTwinOutput;
-  };
-  "fal-ai/heygen/avatar4/digital-twin": {
-    input: HeygenAvatar4DigitalTwinInput;
-    output: HeygenAvatar4DigitalTwinOutput;
-  };
-  "fal-ai/heygen/avatar4/image-to-video": {
-    input: HeygenAvatar4ImageToVideoInput;
-    output: HeygenAvatar4ImageToVideoOutput;
-  };
-  "fal-ai/heygen/avatar5/digital-twin": {
-    input: HeygenAvatar5DigitalTwinInput;
-    output: HeygenAvatar5DigitalTwinOutput;
-  };
-  "fal-ai/heygen/v2/translate/precision": {
-    input: HeygenV2TranslatePrecisionInput;
-    output: HeygenV2TranslatePrecisionOutput;
-  };
-  "fal-ai/heygen/v2/translate/speed": {
-    input: HeygenV2TranslateSpeedInput;
-    output: HeygenV2TranslateSpeedOutput;
-  };
-  "fal-ai/heygen/v2/video-agent": {
-    input: HeygenV2VideoAgentInput;
-    output: HeygenV2VideoAgentOutput;
-  };
-  "fal-ai/heygen/v3/lipsync/precision": {
-    input: HeygenV3LipsyncPrecisionInput;
-    output: HeygenV3LipsyncPrecisionOutput;
-  };
-  "fal-ai/heygen/v3/lipsync/speed": {
-    input: HeygenV3LipsyncSpeedInput;
-    output: HeygenV3LipsyncSpeedOutput;
-  };
-  "fal-ai/heygen/v3/video-agent": {
-    input: HeygenV3VideoAgentInput;
-    output: HeygenV3VideoAgentOutput;
-  };
-  "fal-ai/hidream-i1-dev": {
-    input: HidreamI1DevInput;
-    output: HidreamI1DevOutput;
-  };
-  "fal-ai/hidream-i1-fast": {
-    input: HidreamI1FastInput;
-    output: HidreamI1FastOutput;
-  };
-  "fal-ai/hidream-i1-full": {
-    input: HidreamI1FullInput;
-    output: HidreamI1FullOutput;
-  };
-  "fal-ai/hidream-i1-full/image-to-image": {
-    input: HidreamI1FullImageToImageInput;
-    output: HidreamI1FullImageToImageOutput;
-  };
-  "fal-ai/hidream-o1-image": {
-    input: HidreamO1ImageInput;
-    output: HidreamO1ImageOutput;
-  };
-  "fal-ai/hidream-o1-image/dev": {
-    input: HidreamO1ImageDevInput;
-    output: HidreamO1ImageDevOutput;
-  };
-  "fal-ai/hidream-o1-image/dev/edit": {
-    input: HidreamO1ImageDevEditInput;
-    output: HidreamO1ImageDevEditOutput;
-  };
-  "fal-ai/hidream-o1-image/edit": {
-    input: HidreamO1ImageEditInput;
-    output: HidreamO1ImageEditOutput;
-  };
-  "fal-ai/hunyuan_world": {
-    input: HunyuanWorldInput;
-    output: HunyuanWorldOutput;
-  };
-  "fal-ai/hunyuan_world/image-to-world": {
-    input: HunyuanWorldImageToWorldInput;
-    output: HunyuanWorldImageToWorldOutput;
-  };
-  "fal-ai/hunyuan-3d/v3.1/part": {
-    input: Hunyuan3dV31PartInput;
-    output: Hunyuan3dV31PartOutput;
-  };
-  "fal-ai/hunyuan-3d/v3.1/pro/image-to-3d": {
-    input: Hunyuan3dV31ProImageTo3dInput;
-    output: Hunyuan3dV31ProImageTo3dOutput;
-  };
-  "fal-ai/hunyuan-3d/v3.1/pro/text-to-3d": {
-    input: Hunyuan3dV31ProTextTo3dInput;
-    output: Hunyuan3dV31ProTextTo3dOutput;
-  };
-  "fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d": {
-    input: Hunyuan3dV31RapidImageTo3dInput;
-    output: Hunyuan3dV31RapidImageTo3dOutput;
-  };
-  "fal-ai/hunyuan-3d/v3.1/rapid/text-to-3d": {
-    input: Hunyuan3dV31RapidTextTo3dInput;
-    output: Hunyuan3dV31RapidTextTo3dOutput;
-  };
-  "fal-ai/hunyuan-3d/v3.1/smart-topology": {
-    input: Hunyuan3dV31SmartTopologyInput;
-    output: Hunyuan3dV31SmartTopologyOutput;
-  };
-  "fal-ai/hunyuan-image/v2.1/text-to-image": {
-    input: HunyuanImageV21TextToImageInput;
-    output: HunyuanImageV21TextToImageOutput;
-  };
-  "fal-ai/hunyuan-image/v3/instruct/edit": {
-    input: HunyuanImageV3InstructEditInput;
-    output: HunyuanImageV3InstructEditOutput;
-  };
-  "fal-ai/hunyuan-image/v3/instruct/text-to-image": {
-    input: HunyuanImageV3InstructTextToImageInput;
-    output: HunyuanImageV3InstructTextToImageOutput;
-  };
-  "fal-ai/hunyuan-image/v3/text-to-image": {
-    input: HunyuanImageV3TextToImageInput;
-    output: HunyuanImageV3TextToImageOutput;
-  };
-  "fal-ai/hunyuan-motion": {
-    input: HunyuanMotionInput;
-    output: HunyuanMotionOutput;
-  };
-  "fal-ai/hunyuan-motion/fast": {
-    input: HunyuanMotionFastInput;
-    output: HunyuanMotionFastOutput;
-  };
-  "fal-ai/hunyuan-video": {
-    input: HunyuanVideoInput;
-    output: HunyuanVideoOutput;
-  };
-  "fal-ai/hunyuan-video-foley": {
-    input: HunyuanVideoFoleyInput;
-    output: HunyuanVideoFoleyOutput;
-  };
-  "fal-ai/hunyuan-video-image-to-video": {
-    input: HunyuanVideoImageToVideoInput;
-    output: HunyuanVideoImageToVideoOutput;
-  };
-  "fal-ai/hunyuan-video-v1.5/image-to-video": {
-    input: HunyuanVideoV15ImageToVideoInput;
-    output: HunyuanVideoV15ImageToVideoOutput;
-  };
-  "fal-ai/hunyuan-video-v1.5/text-to-video": {
-    input: HunyuanVideoV15TextToVideoInput;
-    output: HunyuanVideoV15TextToVideoOutput;
-  };
-  "fal-ai/hunyuan-video/video-to-video": {
-    input: HunyuanVideoVideoToVideoInput;
-    output: HunyuanVideoVideoToVideoOutput;
-  };
-  "fal-ai/hunyuan3d-v3/image-to-3d": {
-    input: Hunyuan3dV3ImageTo3dInput;
-    output: Hunyuan3dV3ImageTo3dOutput;
-  };
-  "fal-ai/hunyuan3d-v3/sketch-to-3d": {
-    input: Hunyuan3dV3SketchTo3dInput;
-    output: Hunyuan3dV3SketchTo3dOutput;
-  };
-  "fal-ai/hunyuan3d-v3/text-to-3d": {
-    input: Hunyuan3dV3TextTo3dInput;
-    output: Hunyuan3dV3TextTo3dOutput;
-  };
-  "fal-ai/hunyuan3d/v2": {
-    input: Hunyuan3dV2Input;
-    output: Hunyuan3dV2Output;
-  };
-  "fal-ai/hunyuan3d/v2/mini": {
-    input: Hunyuan3dV2MiniInput;
-    output: Hunyuan3dV2MiniOutput;
-  };
-  "fal-ai/hunyuan3d/v2/mini/turbo": {
-    input: Hunyuan3dV2MiniTurboInput;
-    output: Hunyuan3dV2MiniTurboOutput;
-  };
-  "fal-ai/hunyuan3d/v2/multi-view": {
-    input: Hunyuan3dV2MultiViewInput;
-    output: Hunyuan3dV2MultiViewOutput;
-  };
-  "fal-ai/hunyuan3d/v2/multi-view/turbo": {
-    input: Hunyuan3dV2MultiViewTurboInput;
-    output: Hunyuan3dV2MultiViewTurboOutput;
-  };
-  "fal-ai/hunyuan3d/v2/turbo": {
-    input: Hunyuan3dV2TurboInput;
-    output: Hunyuan3dV2TurboOutput;
-  };
-  "fal-ai/hy-wu-edit": {
-    input: HyWuEditInput;
-    output: HyWuEditOutput;
-  };
-  "fal-ai/hyper3d/rodin": {
-    input: Hyper3dRodinInput;
-    output: Hyper3dRodinOutput;
-  };
-  "fal-ai/hyper3d/rodin/v2": {
-    input: Hyper3dRodinV2Input;
-    output: Hyper3dRodinV2Output;
-  };
-  "fal-ai/hyper3d/rodin/v2.5": {
-    input: Hyper3dRodinV25Input;
-    output: Hyper3dRodinV25Output;
-  };
-  "fal-ai/hyper3d/rodin/v2.5/fast": {
-    input: Hyper3dRodinV25FastInput;
-    output: Hyper3dRodinV25FastOutput;
-  };
-  "fal-ai/hyper3d/rodin/v2.5/text-to-3d": {
-    input: Hyper3dRodinV25TextTo3dInput;
-    output: Hyper3dRodinV25TextTo3dOutput;
-  };
-  "fal-ai/hyper3d/rodin/v2.5/text-to-3d/fast": {
-    input: Hyper3dRodinV25TextTo3dFastInput;
-    output: Hyper3dRodinV25TextTo3dFastOutput;
-  };
-  "fal-ai/iclight-v2": {
-    input: IclightV2Input;
-    output: IclightV2Output;
-  };
-  "fal-ai/ideogram/character": {
-    input: IdeogramCharacterInput;
-    output: IdeogramCharacterOutput;
-  };
-  "fal-ai/ideogram/character/edit": {
-    input: IdeogramCharacterEditInput;
-    output: IdeogramCharacterEditOutput;
-  };
-  "fal-ai/ideogram/character/remix": {
-    input: IdeogramCharacterRemixInput;
-    output: IdeogramCharacterRemixOutput;
-  };
-  "fal-ai/ideogram/custom-models": {
-    input: IdeogramCustomModelsInput;
-    output: IdeogramCustomModelsOutput;
-  };
-  "fal-ai/ideogram/custom-models/generate": {
-    input: IdeogramCustomModelsGenerateInput;
-    output: IdeogramCustomModelsGenerateOutput;
-  };
-  "fal-ai/ideogram/object-removal": {
-    input: IdeogramObjectRemovalInput;
-    output: IdeogramObjectRemovalOutput;
-  };
-  "fal-ai/ideogram/remove-background": {
-    input: IdeogramRemoveBackgroundInput;
-    output: IdeogramRemoveBackgroundOutput;
-  };
-  "fal-ai/ideogram/upscale": {
-    input: IdeogramUpscaleInput;
-    output: IdeogramUpscaleOutput;
-  };
-  "fal-ai/ideogram/v2": {
-    input: IdeogramV2Input;
-    output: IdeogramV2Output;
-  };
-  "fal-ai/ideogram/v2/edit": {
-    input: IdeogramV2EditInput;
-    output: IdeogramV2EditOutput;
-  };
-  "fal-ai/ideogram/v2/remix": {
-    input: IdeogramV2RemixInput;
-    output: IdeogramV2RemixOutput;
-  };
-  "fal-ai/ideogram/v2/turbo": {
-    input: IdeogramV2TurboInput;
-    output: IdeogramV2TurboOutput;
-  };
-  "fal-ai/ideogram/v2/turbo/edit": {
-    input: IdeogramV2TurboEditInput;
-    output: IdeogramV2TurboEditOutput;
-  };
-  "fal-ai/ideogram/v2/turbo/remix": {
-    input: IdeogramV2TurboRemixInput;
-    output: IdeogramV2TurboRemixOutput;
-  };
-  "fal-ai/ideogram/v2a": {
-    input: IdeogramV2aInput;
-    output: IdeogramV2aOutput;
-  };
-  "fal-ai/ideogram/v2a/remix": {
-    input: IdeogramV2aRemixInput;
-    output: IdeogramV2aRemixOutput;
-  };
-  "fal-ai/ideogram/v2a/turbo": {
-    input: IdeogramV2aTurboInput;
-    output: IdeogramV2aTurboOutput;
-  };
-  "fal-ai/ideogram/v2a/turbo/remix": {
-    input: IdeogramV2aTurboRemixInput;
-    output: IdeogramV2aTurboRemixOutput;
-  };
-  "fal-ai/ideogram/v3": {
-    input: IdeogramV3Input;
-    output: IdeogramV3Output;
-  };
-  "fal-ai/ideogram/v3/edit": {
-    input: IdeogramV3EditInput;
-    output: IdeogramV3EditOutput;
-  };
-  "fal-ai/ideogram/v3/generate-transparent": {
-    input: IdeogramV3GenerateTransparentInput;
-    output: IdeogramV3GenerateTransparentOutput;
-  };
-  "fal-ai/ideogram/v3/layerize-text": {
-    input: IdeogramV3LayerizeTextInput;
-    output: IdeogramV3LayerizeTextOutput;
-  };
-  "fal-ai/ideogram/v3/reframe": {
-    input: IdeogramV3ReframeInput;
-    output: IdeogramV3ReframeOutput;
-  };
-  "fal-ai/ideogram/v3/remix": {
-    input: IdeogramV3RemixInput;
-    output: IdeogramV3RemixOutput;
-  };
-  "fal-ai/ideogram/v3/replace-background": {
-    input: IdeogramV3ReplaceBackgroundInput;
-    output: IdeogramV3ReplaceBackgroundOutput;
-  };
-  "fal-ai/illusion-diffusion": {
-    input: IllusionDiffusionInput;
-    output: IllusionDiffusionOutput;
-  };
-  "fal-ai/image-apps-v2/age-modify": {
-    input: ImageAppsV2AgeModifyInput;
-    output: ImageAppsV2AgeModifyOutput;
-  };
-  "fal-ai/image-apps-v2/city-teleport": {
-    input: ImageAppsV2CityTeleportInput;
-    output: ImageAppsV2CityTeleportOutput;
-  };
-  "fal-ai/image-apps-v2/expression-change": {
-    input: ImageAppsV2ExpressionChangeInput;
-    output: ImageAppsV2ExpressionChangeOutput;
-  };
-  "fal-ai/image-apps-v2/hair-change": {
-    input: ImageAppsV2HairChangeInput;
-    output: ImageAppsV2HairChangeOutput;
-  };
-  "fal-ai/image-apps-v2/headshot-photo": {
-    input: ImageAppsV2HeadshotPhotoInput;
-    output: ImageAppsV2HeadshotPhotoOutput;
-  };
-  "fal-ai/image-apps-v2/makeup-application": {
-    input: ImageAppsV2MakeupApplicationInput;
-    output: ImageAppsV2MakeupApplicationOutput;
-  };
-  "fal-ai/image-apps-v2/object-removal": {
-    input: ImageAppsV2ObjectRemovalInput;
-    output: ImageAppsV2ObjectRemovalOutput;
-  };
-  "fal-ai/image-apps-v2/outpaint": {
-    input: ImageAppsV2OutpaintInput;
-    output: ImageAppsV2OutpaintOutput;
-  };
-  "fal-ai/image-apps-v2/perspective": {
-    input: ImageAppsV2PerspectiveInput;
-    output: ImageAppsV2PerspectiveOutput;
-  };
-  "fal-ai/image-apps-v2/photo-restoration": {
-    input: ImageAppsV2PhotoRestorationInput;
-    output: ImageAppsV2PhotoRestorationOutput;
-  };
-  "fal-ai/image-apps-v2/photography-effects": {
-    input: ImageAppsV2PhotographyEffectsInput;
-    output: ImageAppsV2PhotographyEffectsOutput;
-  };
-  "fal-ai/image-apps-v2/portrait-enhance": {
-    input: ImageAppsV2PortraitEnhanceInput;
-    output: ImageAppsV2PortraitEnhanceOutput;
-  };
-  "fal-ai/image-apps-v2/product-holding": {
-    input: ImageAppsV2ProductHoldingInput;
-    output: ImageAppsV2ProductHoldingOutput;
-  };
-  "fal-ai/image-apps-v2/product-photography": {
-    input: ImageAppsV2ProductPhotographyInput;
-    output: ImageAppsV2ProductPhotographyOutput;
-  };
-  "fal-ai/image-apps-v2/relighting": {
-    input: ImageAppsV2RelightingInput;
-    output: ImageAppsV2RelightingOutput;
-  };
-  "fal-ai/image-apps-v2/style-transfer": {
-    input: ImageAppsV2StyleTransferInput;
-    output: ImageAppsV2StyleTransferOutput;
-  };
-  "fal-ai/image-apps-v2/texture-transform": {
-    input: ImageAppsV2TextureTransformInput;
-    output: ImageAppsV2TextureTransformOutput;
-  };
-  "fal-ai/image-apps-v2/virtual-try-on": {
-    input: ImageAppsV2VirtualTryOnInput;
-    output: ImageAppsV2VirtualTryOnOutput;
-  };
-  "fal-ai/image-editing/age-progression": {
-    input: ImageEditingAgeProgressionInput;
-    output: ImageEditingAgeProgressionOutput;
-  };
-  "fal-ai/image-editing/baby-version": {
-    input: ImageEditingBabyVersionInput;
-    output: ImageEditingBabyVersionOutput;
-  };
-  "fal-ai/image-editing/background-change": {
-    input: ImageEditingBackgroundChangeInput;
-    output: ImageEditingBackgroundChangeOutput;
-  };
-  "fal-ai/image-editing/broccoli-haircut": {
-    input: ImageEditingBroccoliHaircutInput;
-    output: ImageEditingBroccoliHaircutOutput;
-  };
-  "fal-ai/image-editing/cartoonify": {
-    input: ImageEditingCartoonifyInput;
-    output: ImageEditingCartoonifyOutput;
-  };
-  "fal-ai/image-editing/color-correction": {
-    input: ImageEditingColorCorrectionInput;
-    output: ImageEditingColorCorrectionOutput;
-  };
-  "fal-ai/image-editing/expression-change": {
-    input: ImageEditingExpressionChangeInput;
-    output: ImageEditingExpressionChangeOutput;
-  };
-  "fal-ai/image-editing/face-enhancement": {
-    input: ImageEditingFaceEnhancementInput;
-    output: ImageEditingFaceEnhancementOutput;
-  };
-  "fal-ai/image-editing/hair-change": {
-    input: ImageEditingHairChangeInput;
-    output: ImageEditingHairChangeOutput;
-  };
-  "fal-ai/image-editing/object-removal": {
-    input: ImageEditingObjectRemovalInput;
-    output: ImageEditingObjectRemovalOutput;
-  };
-  "fal-ai/image-editing/photo-restoration": {
-    input: ImageEditingPhotoRestorationInput;
-    output: ImageEditingPhotoRestorationOutput;
-  };
-  "fal-ai/image-editing/plushie-style": {
-    input: ImageEditingPlushieStyleInput;
-    output: ImageEditingPlushieStyleOutput;
-  };
-  "fal-ai/image-editing/professional-photo": {
-    input: ImageEditingProfessionalPhotoInput;
-    output: ImageEditingProfessionalPhotoOutput;
-  };
-  "fal-ai/image-editing/realism": {
-    input: ImageEditingRealismInput;
-    output: ImageEditingRealismOutput;
-  };
-  "fal-ai/image-editing/reframe": {
-    input: ImageEditingReframeInput;
-    output: ImageEditingReframeOutput;
-  };
-  "fal-ai/image-editing/retouch": {
-    input: ImageEditingRetouchInput;
-    output: ImageEditingRetouchOutput;
-  };
-  "fal-ai/image-editing/scene-composition": {
-    input: ImageEditingSceneCompositionInput;
-    output: ImageEditingSceneCompositionOutput;
-  };
-  "fal-ai/image-editing/style-transfer": {
-    input: ImageEditingStyleTransferInput;
-    output: ImageEditingStyleTransferOutput;
-  };
-  "fal-ai/image-editing/text-removal": {
-    input: ImageEditingTextRemovalInput;
-    output: ImageEditingTextRemovalOutput;
-  };
-  "fal-ai/image-editing/time-of-day": {
-    input: ImageEditingTimeOfDayInput;
-    output: ImageEditingTimeOfDayOutput;
-  };
-  "fal-ai/image-editing/weather-effect": {
-    input: ImageEditingWeatherEffectInput;
-    output: ImageEditingWeatherEffectOutput;
-  };
-  "fal-ai/image-editing/wojak-style": {
-    input: ImageEditingWojakStyleInput;
-    output: ImageEditingWojakStyleOutput;
-  };
-  "fal-ai/image-editing/youtube-thumbnails": {
-    input: ImageEditingYoutubeThumbnailsInput;
-    output: ImageEditingYoutubeThumbnailsOutput;
-  };
-  "fal-ai/image-preprocessors/depth-anything/v2": {
-    input: ImagePreprocessorsDepthAnythingV2Input;
-    output: ImagePreprocessorsDepthAnythingV2Output;
-  };
-  "fal-ai/image-preprocessors/hed": {
-    input: ImagePreprocessorsHedInput;
-    output: ImagePreprocessorsHedOutput;
-  };
-  "fal-ai/image-preprocessors/lineart": {
-    input: ImagePreprocessorsLineartInput;
-    output: ImagePreprocessorsLineartOutput;
-  };
-  "fal-ai/image-preprocessors/midas": {
-    input: ImagePreprocessorsMidasInput;
-    output: ImagePreprocessorsMidasOutput;
-  };
-  "fal-ai/image-preprocessors/mlsd": {
-    input: ImagePreprocessorsMlsdInput;
-    output: ImagePreprocessorsMlsdOutput;
-  };
-  "fal-ai/image-preprocessors/pidi": {
-    input: ImagePreprocessorsPidiInput;
-    output: ImagePreprocessorsPidiOutput;
-  };
-  "fal-ai/image-preprocessors/sam": {
-    input: ImagePreprocessorsSamInput;
-    output: ImagePreprocessorsSamOutput;
-  };
-  "fal-ai/image-preprocessors/scribble": {
-    input: ImagePreprocessorsScribbleInput;
-    output: ImagePreprocessorsScribbleOutput;
-  };
-  "fal-ai/image-preprocessors/teed": {
-    input: ImagePreprocessorsTeedInput;
-    output: ImagePreprocessorsTeedOutput;
-  };
-  "fal-ai/image-preprocessors/zoe": {
-    input: ImagePreprocessorsZoeInput;
-    output: ImagePreprocessorsZoeOutput;
-  };
-  "fal-ai/image2pixel": {
-    input: image2pixelInput;
-    output: image2pixelOutput;
-  };
-  "fal-ai/image2svg": {
-    input: image2svgInput;
-    output: image2svgOutput;
-  };
-  "fal-ai/imageutils/depth": {
-    input: ImageutilsDepthInput;
-    output: ImageutilsDepthOutput;
-  };
-  "fal-ai/imageutils/marigold-depth": {
-    input: ImageutilsMarigoldDepthInput;
-    output: ImageutilsMarigoldDepthOutput;
-  };
-  "fal-ai/imageutils/nsfw": {
-    input: ImageutilsNsfwInput;
-    output: ImageutilsNsfwOutput;
-  };
-  "fal-ai/imageutils/rembg": {
-    input: ImageutilsRembgInput;
-    output: ImageutilsRembgOutput;
-  };
-  "fal-ai/index-tts-2/text-to-speech": {
-    input: IndexTts2TextToSpeechInput;
-    output: IndexTts2TextToSpeechOutput;
-  };
-  "fal-ai/infinitalk": {
-    input: infinitalkInput;
-    output: infinitalkOutput;
-  };
-  "fal-ai/infinitalk/single-text": {
-    input: InfinitalkSingleTextInput;
-    output: InfinitalkSingleTextOutput;
-  };
-  "fal-ai/infinitalk/video-to-video": {
-    input: InfinitalkVideoToVideoInput;
-    output: InfinitalkVideoToVideoOutput;
-  };
-  "fal-ai/infinity-star/text-to-video": {
-    input: InfinityStarTextToVideoInput;
-    output: InfinityStarTextToVideoOutput;
-  };
-  "fal-ai/inpaint": {
-    input: inpaintInput;
-    output: inpaintOutput;
-  };
-  "fal-ai/instant-character": {
-    input: InstantCharacterInput;
-    output: InstantCharacterOutput;
-  };
-  "fal-ai/inworld-tts": {
-    input: InworldTtsInput;
-    output: InworldTtsOutput;
-  };
-  "fal-ai/ip-adapter-face-id": {
-    input: IpAdapterFaceIdInput;
-    output: IpAdapterFaceIdOutput;
-  };
-  "fal-ai/janus": {
-    input: janusInput;
-    output: janusOutput;
-  };
-  "fal-ai/joyai-image-edit": {
-    input: JoyaiImageEditInput;
-    output: JoyaiImageEditOutput;
-  };
-  "fal-ai/kandinsky5-pro/image-to-video": {
-    input: Kandinsky5ProImageToVideoInput;
-    output: Kandinsky5ProImageToVideoOutput;
-  };
-  "fal-ai/kandinsky5-pro/text-to-video": {
-    input: Kandinsky5ProTextToVideoInput;
-    output: Kandinsky5ProTextToVideoOutput;
-  };
-  "fal-ai/kandinsky5/text-to-video": {
-    input: Kandinsky5TextToVideoInput;
-    output: Kandinsky5TextToVideoOutput;
-  };
-  "fal-ai/kandinsky5/text-to-video/distill": {
-    input: Kandinsky5TextToVideoDistillInput;
-    output: Kandinsky5TextToVideoDistillOutput;
-  };
-  "fal-ai/kling-image/o1": {
-    input: KlingImageO1Input;
-    output: KlingImageO1Output;
-  };
-  "fal-ai/kling-image/o3/image-to-image": {
-    input: KlingImageO3ImageToImageInput;
-    output: KlingImageO3ImageToImageOutput;
-  };
-  "fal-ai/kling-image/o3/text-to-image": {
-    input: KlingImageO3TextToImageInput;
-    output: KlingImageO3TextToImageOutput;
-  };
-  "fal-ai/kling-image/v3/image-to-image": {
-    input: KlingImageV3ImageToImageInput;
-    output: KlingImageV3ImageToImageOutput;
-  };
-  "fal-ai/kling-image/v3/text-to-image": {
-    input: KlingImageV3TextToImageInput;
-    output: KlingImageV3TextToImageOutput;
-  };
-  "fal-ai/kling-video/ai-avatar/v2/pro": {
-    input: KlingVideoAiAvatarV2ProInput;
-    output: KlingVideoAiAvatarV2ProOutput;
-  };
-  "fal-ai/kling-video/ai-avatar/v2/standard": {
-    input: KlingVideoAiAvatarV2StandardInput;
-    output: KlingVideoAiAvatarV2StandardOutput;
-  };
-  "fal-ai/kling-video/create-voice": {
-    input: KlingVideoCreateVoiceInput;
-    output: KlingVideoCreateVoiceOutput;
-  };
-  "fal-ai/kling-video/lipsync/audio-to-video": {
-    input: KlingVideoLipsyncAudioToVideoInput;
-    output: KlingVideoLipsyncAudioToVideoOutput;
-  };
-  "fal-ai/kling-video/lipsync/text-to-video": {
-    input: KlingVideoLipsyncTextToVideoInput;
-    output: KlingVideoLipsyncTextToVideoOutput;
-  };
-  "fal-ai/kling-video/o1/image-to-video": {
-    input: KlingVideoO1ImageToVideoInput;
-    output: KlingVideoO1ImageToVideoOutput;
-  };
-  "fal-ai/kling-video/o1/reference-to-video": {
-    input: KlingVideoO1ReferenceToVideoInput;
-    output: KlingVideoO1ReferenceToVideoOutput;
-  };
-  "fal-ai/kling-video/o1/standard/image-to-video": {
-    input: KlingVideoO1StandardImageToVideoInput;
-    output: KlingVideoO1StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/o1/standard/reference-to-video": {
-    input: KlingVideoO1StandardReferenceToVideoInput;
-    output: KlingVideoO1StandardReferenceToVideoOutput;
-  };
-  "fal-ai/kling-video/o1/standard/video-to-video/edit": {
-    input: KlingVideoO1StandardVideoToVideoEditInput;
-    output: KlingVideoO1StandardVideoToVideoEditOutput;
-  };
-  "fal-ai/kling-video/o1/standard/video-to-video/reference": {
-    input: KlingVideoO1StandardVideoToVideoReferenceInput;
-    output: KlingVideoO1StandardVideoToVideoReferenceOutput;
-  };
-  "fal-ai/kling-video/o1/video-to-video/edit": {
-    input: KlingVideoO1VideoToVideoEditInput;
-    output: KlingVideoO1VideoToVideoEditOutput;
-  };
-  "fal-ai/kling-video/o1/video-to-video/reference": {
-    input: KlingVideoO1VideoToVideoReferenceInput;
-    output: KlingVideoO1VideoToVideoReferenceOutput;
-  };
-  "fal-ai/kling-video/o3/4k/image-to-video": {
-    input: KlingVideoO34kImageToVideoInput;
-    output: KlingVideoO34kImageToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/4k/reference-to-video": {
-    input: KlingVideoO34kReferenceToVideoInput;
-    output: KlingVideoO34kReferenceToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/4k/text-to-video": {
-    input: KlingVideoO34kTextToVideoInput;
-    output: KlingVideoO34kTextToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/pro/image-to-video": {
-    input: KlingVideoO3ProImageToVideoInput;
-    output: KlingVideoO3ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/pro/reference-to-video": {
-    input: KlingVideoO3ProReferenceToVideoInput;
-    output: KlingVideoO3ProReferenceToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/pro/text-to-video": {
-    input: KlingVideoO3ProTextToVideoInput;
-    output: KlingVideoO3ProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/pro/video-to-video/edit": {
-    input: KlingVideoO3ProVideoToVideoEditInput;
-    output: KlingVideoO3ProVideoToVideoEditOutput;
-  };
-  "fal-ai/kling-video/o3/pro/video-to-video/reference": {
-    input: KlingVideoO3ProVideoToVideoReferenceInput;
-    output: KlingVideoO3ProVideoToVideoReferenceOutput;
-  };
-  "fal-ai/kling-video/o3/standard/image-to-video": {
-    input: KlingVideoO3StandardImageToVideoInput;
-    output: KlingVideoO3StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/standard/reference-to-video": {
-    input: KlingVideoO3StandardReferenceToVideoInput;
-    output: KlingVideoO3StandardReferenceToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/standard/text-to-video": {
-    input: KlingVideoO3StandardTextToVideoInput;
-    output: KlingVideoO3StandardTextToVideoOutput;
-  };
-  "fal-ai/kling-video/o3/standard/video-to-video/edit": {
-    input: KlingVideoO3StandardVideoToVideoEditInput;
-    output: KlingVideoO3StandardVideoToVideoEditOutput;
-  };
-  "fal-ai/kling-video/o3/standard/video-to-video/reference": {
-    input: KlingVideoO3StandardVideoToVideoReferenceInput;
-    output: KlingVideoO3StandardVideoToVideoReferenceOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/effects": {
-    input: KlingVideoV15ProEffectsInput;
-    output: KlingVideoV15ProEffectsOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/image-to-video": {
-    input: KlingVideoV15ProImageToVideoInput;
-    output: KlingVideoV15ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.5/pro/text-to-video": {
-    input: KlingVideoV15ProTextToVideoInput;
-    output: KlingVideoV15ProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.6/pro/effects": {
-    input: KlingVideoV16ProEffectsInput;
-    output: KlingVideoV16ProEffectsOutput;
-  };
-  "fal-ai/kling-video/v1.6/pro/elements": {
-    input: KlingVideoV16ProElementsInput;
-    output: KlingVideoV16ProElementsOutput;
-  };
-  "fal-ai/kling-video/v1.6/pro/image-to-video": {
-    input: KlingVideoV16ProImageToVideoInput;
-    output: KlingVideoV16ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.6/pro/text-to-video": {
-    input: KlingVideoV16ProTextToVideoInput;
-    output: KlingVideoV16ProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/effects": {
-    input: KlingVideoV16StandardEffectsInput;
-    output: KlingVideoV16StandardEffectsOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/elements": {
-    input: KlingVideoV16StandardElementsInput;
-    output: KlingVideoV16StandardElementsOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/image-to-video": {
-    input: KlingVideoV16StandardImageToVideoInput;
-    output: KlingVideoV16StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v1.6/standard/text-to-video": {
-    input: KlingVideoV16StandardTextToVideoInput;
-    output: KlingVideoV16StandardTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v1/pro/ai-avatar": {
-    input: KlingVideoV1ProAiAvatarInput;
-    output: KlingVideoV1ProAiAvatarOutput;
-  };
-  "fal-ai/kling-video/v1/standard/ai-avatar": {
-    input: KlingVideoV1StandardAiAvatarInput;
-    output: KlingVideoV1StandardAiAvatarOutput;
-  };
-  "fal-ai/kling-video/v1/standard/effects": {
-    input: KlingVideoV1StandardEffectsInput;
-    output: KlingVideoV1StandardEffectsOutput;
-  };
-  "fal-ai/kling-video/v1/standard/image-to-video": {
-    input: KlingVideoV1StandardImageToVideoInput;
-    output: KlingVideoV1StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v1/standard/text-to-video": {
-    input: KlingVideoV1StandardTextToVideoInput;
-    output: KlingVideoV1StandardTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v1/tts": {
-    input: KlingVideoV1TtsInput;
-    output: KlingVideoV1TtsOutput;
-  };
-  "fal-ai/kling-video/v2.1/master/image-to-video": {
-    input: KlingVideoV21MasterImageToVideoInput;
-    output: KlingVideoV21MasterImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.1/master/text-to-video": {
-    input: KlingVideoV21MasterTextToVideoInput;
-    output: KlingVideoV21MasterTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.1/pro/image-to-video": {
-    input: KlingVideoV21ProImageToVideoInput;
-    output: KlingVideoV21ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.1/standard/image-to-video": {
-    input: KlingVideoV21StandardImageToVideoInput;
-    output: KlingVideoV21StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.5-turbo/pro/image-to-video": {
-    input: KlingVideoV25TurboProImageToVideoInput;
-    output: KlingVideoV25TurboProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.5-turbo/pro/text-to-video": {
-    input: KlingVideoV25TurboProTextToVideoInput;
-    output: KlingVideoV25TurboProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.5-turbo/standard/image-to-video": {
-    input: KlingVideoV25TurboStandardImageToVideoInput;
-    output: KlingVideoV25TurboStandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.6/pro/image-to-video": {
-    input: KlingVideoV26ProImageToVideoInput;
-    output: KlingVideoV26ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.6/pro/motion-control": {
-    input: KlingVideoV26ProMotionControlInput;
-    output: KlingVideoV26ProMotionControlOutput;
-  };
-  "fal-ai/kling-video/v2.6/pro/text-to-video": {
-    input: KlingVideoV26ProTextToVideoInput;
-    output: KlingVideoV26ProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v2.6/standard/motion-control": {
-    input: KlingVideoV26StandardMotionControlInput;
-    output: KlingVideoV26StandardMotionControlOutput;
-  };
-  "fal-ai/kling-video/v2/master/image-to-video": {
-    input: KlingVideoV2MasterImageToVideoInput;
-    output: KlingVideoV2MasterImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v2/master/text-to-video": {
-    input: KlingVideoV2MasterTextToVideoInput;
-    output: KlingVideoV2MasterTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/4k/image-to-video": {
-    input: KlingVideoV34kImageToVideoInput;
-    output: KlingVideoV34kImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/4k/text-to-video": {
-    input: KlingVideoV34kTextToVideoInput;
-    output: KlingVideoV34kTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/pro/image-to-video": {
-    input: KlingVideoV3ProImageToVideoInput;
-    output: KlingVideoV3ProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/pro/motion-control": {
-    input: KlingVideoV3ProMotionControlInput;
-    output: KlingVideoV3ProMotionControlOutput;
-  };
-  "fal-ai/kling-video/v3/pro/text-to-video": {
-    input: KlingVideoV3ProTextToVideoInput;
-    output: KlingVideoV3ProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/standard/image-to-video": {
-    input: KlingVideoV3StandardImageToVideoInput;
-    output: KlingVideoV3StandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/standard/motion-control": {
-    input: KlingVideoV3StandardMotionControlInput;
-    output: KlingVideoV3StandardMotionControlOutput;
-  };
-  "fal-ai/kling-video/v3/standard/text-to-video": {
-    input: KlingVideoV3StandardTextToVideoInput;
-    output: KlingVideoV3StandardTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/turbo/pro/image-to-video": {
-    input: KlingVideoV3TurboProImageToVideoInput;
-    output: KlingVideoV3TurboProImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/turbo/pro/text-to-video": {
-    input: KlingVideoV3TurboProTextToVideoInput;
-    output: KlingVideoV3TurboProTextToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/turbo/standard/image-to-video": {
-    input: KlingVideoV3TurboStandardImageToVideoInput;
-    output: KlingVideoV3TurboStandardImageToVideoOutput;
-  };
-  "fal-ai/kling-video/v3/turbo/standard/text-to-video": {
-    input: KlingVideoV3TurboStandardTextToVideoInput;
-    output: KlingVideoV3TurboStandardTextToVideoOutput;
-  };
-  "fal-ai/kling-video/video-to-audio": {
-    input: KlingVideoVideoToAudioInput;
-    output: KlingVideoVideoToAudioOutput;
-  };
-  "fal-ai/kling/v1-5/kolors-virtual-try-on": {
-    input: KlingV15KolorsVirtualTryOnInput;
-    output: KlingV15KolorsVirtualTryOnOutput;
-  };
-  "fal-ai/kokoro/american-english": {
-    input: KokoroAmericanEnglishInput;
-    output: KokoroAmericanEnglishOutput;
-  };
-  "fal-ai/kokoro/brazilian-portuguese": {
-    input: KokoroBrazilianPortugueseInput;
-    output: KokoroBrazilianPortugueseOutput;
-  };
-  "fal-ai/kokoro/british-english": {
-    input: KokoroBritishEnglishInput;
-    output: KokoroBritishEnglishOutput;
-  };
-  "fal-ai/kokoro/french": {
-    input: KokoroFrenchInput;
-    output: KokoroFrenchOutput;
-  };
-  "fal-ai/kokoro/hindi": {
-    input: KokoroHindiInput;
-    output: KokoroHindiOutput;
-  };
-  "fal-ai/kokoro/italian": {
-    input: KokoroItalianInput;
-    output: KokoroItalianOutput;
-  };
-  "fal-ai/kokoro/japanese": {
-    input: KokoroJapaneseInput;
-    output: KokoroJapaneseOutput;
-  };
-  "fal-ai/kokoro/mandarin-chinese": {
-    input: KokoroMandarinChineseInput;
-    output: KokoroMandarinChineseOutput;
-  };
-  "fal-ai/kokoro/spanish": {
-    input: KokoroSpanishInput;
-    output: KokoroSpanishOutput;
-  };
-  "fal-ai/kolors": {
-    input: kolorsInput;
-    output: kolorsOutput;
-  };
-  "fal-ai/kolors/image-to-image": {
-    input: KolorsImageToImageInput;
-    output: KolorsImageToImageOutput;
-  };
-  "fal-ai/krea-2-trainer": {
-    input: Krea2TrainerInput;
-    output: Krea2TrainerOutput;
-  };
-  "fal-ai/krea-2/turbo": {
-    input: Krea2TurboInput;
-    output: Krea2TurboOutput;
-  };
-  "fal-ai/krea-2/turbo/lora": {
-    input: Krea2TurboLoraInput;
-    output: Krea2TurboLoraOutput;
-  };
-  "fal-ai/krea-2/turbo/style": {
-    input: Krea2TurboStyleInput;
-    output: Krea2TurboStyleOutput;
-  };
-  "fal-ai/krea-wan-14b/text-to-video": {
-    input: KreaWan14bTextToVideoInput;
-    output: KreaWan14bTextToVideoOutput;
-  };
-  "fal-ai/krea-wan-14b/video-to-video": {
-    input: KreaWan14bVideoToVideoInput;
-    output: KreaWan14bVideoToVideoOutput;
-  };
-  "fal-ai/latentsync": {
-    input: latentsyncInput;
-    output: latentsyncOutput;
-  };
-  "fal-ai/lcm-sd15-i2i": {
-    input: LcmSd15I2iInput;
-    output: LcmSd15I2iOutput;
-  };
-  "fal-ai/leffa/pose-transfer": {
-    input: LeffaPoseTransferInput;
-    output: LeffaPoseTransferOutput;
-  };
-  "fal-ai/leffa/virtual-tryon": {
-    input: LeffaVirtualTryonInput;
-    output: LeffaVirtualTryonOutput;
-  };
-  "fal-ai/lightx/recamera": {
-    input: LightxRecameraInput;
-    output: LightxRecameraOutput;
-  };
-  "fal-ai/lightx/relight": {
-    input: LightxRelightInput;
-    output: LightxRelightOutput;
-  };
-  "fal-ai/live-portrait": {
-    input: LivePortraitInput;
-    output: LivePortraitOutput;
-  };
-  "fal-ai/live-portrait/image": {
-    input: LivePortraitImageInput;
-    output: LivePortraitImageOutput;
-  };
-  "fal-ai/llava-next": {
-    input: LlavaNextInput;
-    output: LlavaNextOutput;
-  };
-  "fal-ai/longcat-image": {
-    input: LongcatImageInput;
-    output: LongcatImageOutput;
-  };
-  "fal-ai/longcat-image/edit": {
-    input: LongcatImageEditInput;
-    output: LongcatImageEditOutput;
-  };
-  "fal-ai/longcat-single-avatar/audio-to-video": {
-    input: LongcatSingleAvatarAudioToVideoInput;
-    output: LongcatSingleAvatarAudioToVideoOutput;
-  };
-  "fal-ai/longcat-single-avatar/image-audio-to-video": {
-    input: LongcatSingleAvatarImageAudioToVideoInput;
-    output: LongcatSingleAvatarImageAudioToVideoOutput;
-  };
-  "fal-ai/longcat-video/distilled/image-to-video/480p": {
-    input: LongcatVideoDistilledImageToVideo480pInput;
-    output: LongcatVideoDistilledImageToVideo480pOutput;
-  };
-  "fal-ai/longcat-video/distilled/image-to-video/720p": {
-    input: LongcatVideoDistilledImageToVideo720pInput;
-    output: LongcatVideoDistilledImageToVideo720pOutput;
-  };
-  "fal-ai/longcat-video/distilled/text-to-video/480p": {
-    input: LongcatVideoDistilledTextToVideo480pInput;
-    output: LongcatVideoDistilledTextToVideo480pOutput;
-  };
-  "fal-ai/longcat-video/distilled/text-to-video/720p": {
-    input: LongcatVideoDistilledTextToVideo720pInput;
-    output: LongcatVideoDistilledTextToVideo720pOutput;
-  };
-  "fal-ai/longcat-video/image-to-video/480p": {
-    input: LongcatVideoImageToVideo480pInput;
-    output: LongcatVideoImageToVideo480pOutput;
-  };
-  "fal-ai/longcat-video/image-to-video/720p": {
-    input: LongcatVideoImageToVideo720pInput;
-    output: LongcatVideoImageToVideo720pOutput;
-  };
-  "fal-ai/longcat-video/text-to-video/480p": {
-    input: LongcatVideoTextToVideo480pInput;
-    output: LongcatVideoTextToVideo480pOutput;
-  };
-  "fal-ai/longcat-video/text-to-video/720p": {
-    input: LongcatVideoTextToVideo720pInput;
-    output: LongcatVideoTextToVideo720pOutput;
-  };
-  "fal-ai/lora": {
-    input: loraInput;
-    output: loraOutput;
-  };
-  "fal-ai/lora/image-to-image": {
-    input: LoraImageToImageInput;
-    output: LoraImageToImageOutput;
-  };
-  "fal-ai/lora/inpaint": {
-    input: LoraInpaintInput;
-    output: LoraInpaintOutput;
-  };
-  "fal-ai/ltx-2-19b/audio-to-video": {
-    input: Ltx219bAudioToVideoInput;
-    output: Ltx219bAudioToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/audio-to-video/lora": {
-    input: Ltx219bAudioToVideoLoraInput;
-    output: Ltx219bAudioToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/audio-to-video": {
-    input: Ltx219bDistilledAudioToVideoInput;
-    output: Ltx219bDistilledAudioToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/audio-to-video/lora": {
-    input: Ltx219bDistilledAudioToVideoLoraInput;
-    output: Ltx219bDistilledAudioToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/extend-video": {
-    input: Ltx219bDistilledExtendVideoInput;
-    output: Ltx219bDistilledExtendVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/extend-video/lora": {
-    input: Ltx219bDistilledExtendVideoLoraInput;
-    output: Ltx219bDistilledExtendVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/image-to-video": {
-    input: Ltx219bDistilledImageToVideoInput;
-    output: Ltx219bDistilledImageToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/image-to-video/lora": {
-    input: Ltx219bDistilledImageToVideoLoraInput;
-    output: Ltx219bDistilledImageToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/text-to-video": {
-    input: Ltx219bDistilledTextToVideoInput;
-    output: Ltx219bDistilledTextToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/text-to-video/lora": {
-    input: Ltx219bDistilledTextToVideoLoraInput;
-    output: Ltx219bDistilledTextToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/video-to-video": {
-    input: Ltx219bDistilledVideoToVideoInput;
-    output: Ltx219bDistilledVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/distilled/video-to-video/lora": {
-    input: Ltx219bDistilledVideoToVideoLoraInput;
-    output: Ltx219bDistilledVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/extend-video": {
-    input: Ltx219bExtendVideoInput;
-    output: Ltx219bExtendVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/extend-video/lora": {
-    input: Ltx219bExtendVideoLoraInput;
-    output: Ltx219bExtendVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/image-to-video": {
-    input: Ltx219bImageToVideoInput;
-    output: Ltx219bImageToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/image-to-video/lora": {
-    input: Ltx219bImageToVideoLoraInput;
-    output: Ltx219bImageToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/text-to-video": {
-    input: Ltx219bTextToVideoInput;
-    output: Ltx219bTextToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/text-to-video/lora": {
-    input: Ltx219bTextToVideoLoraInput;
-    output: Ltx219bTextToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2-19b/video-to-video": {
-    input: Ltx219bVideoToVideoInput;
-    output: Ltx219bVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2-19b/video-to-video/lora": {
-    input: Ltx219bVideoToVideoLoraInput;
-    output: Ltx219bVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/audio-to-video": {
-    input: Ltx2322bAudioToVideoInput;
-    output: Ltx2322bAudioToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/audio-to-video/lora": {
-    input: Ltx2322bAudioToVideoLoraInput;
-    output: Ltx2322bAudioToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/audio-to-video": {
-    input: Ltx2322bDistilledAudioToVideoInput;
-    output: Ltx2322bDistilledAudioToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/audio-to-video/lora": {
-    input: Ltx2322bDistilledAudioToVideoLoraInput;
-    output: Ltx2322bDistilledAudioToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/image-to-video": {
-    input: Ltx2322bDistilledImageToVideoInput;
-    output: Ltx2322bDistilledImageToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/image-to-video/lora": {
-    input: Ltx2322bDistilledImageToVideoLoraInput;
-    output: Ltx2322bDistilledImageToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/reference-video-to-video": {
-    input: Ltx2322bDistilledReferenceVideoToVideoInput;
-    output: Ltx2322bDistilledReferenceVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/reference-video-to-video/lora": {
-    input: Ltx2322bDistilledReferenceVideoToVideoLoraInput;
-    output: Ltx2322bDistilledReferenceVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/text-to-video": {
-    input: Ltx2322bDistilledTextToVideoInput;
-    output: Ltx2322bDistilledTextToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/text-to-video/lora": {
-    input: Ltx2322bDistilledTextToVideoLoraInput;
-    output: Ltx2322bDistilledTextToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/video-to-video": {
-    input: Ltx2322bDistilledVideoToVideoInput;
-    output: Ltx2322bDistilledVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/distilled/video-to-video/lora": {
-    input: Ltx2322bDistilledVideoToVideoLoraInput;
-    output: Ltx2322bDistilledVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/extend-video": {
-    input: Ltx2322bExtendVideoInput;
-    output: Ltx2322bExtendVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/extend-video/lora": {
-    input: Ltx2322bExtendVideoLoraInput;
-    output: Ltx2322bExtendVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/image-to-video": {
-    input: Ltx2322bImageToVideoInput;
-    output: Ltx2322bImageToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/image-to-video/lora": {
-    input: Ltx2322bImageToVideoLoraInput;
-    output: Ltx2322bImageToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/reference-video-to-video": {
-    input: Ltx2322bReferenceVideoToVideoInput;
-    output: Ltx2322bReferenceVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/reference-video-to-video/lora": {
-    input: Ltx2322bReferenceVideoToVideoLoraInput;
-    output: Ltx2322bReferenceVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/text-to-video": {
-    input: Ltx2322bTextToVideoInput;
-    output: Ltx2322bTextToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/text-to-video/lora": {
-    input: Ltx2322bTextToVideoLoraInput;
-    output: Ltx2322bTextToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-22b/video-to-video": {
-    input: Ltx2322bVideoToVideoInput;
-    output: Ltx2322bVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-22b/video-to-video/lora": {
-    input: Ltx2322bVideoToVideoLoraInput;
-    output: Ltx2322bVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/audio-to-video": {
-    input: Ltx23QualityAudioToVideoInput;
-    output: Ltx23QualityAudioToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-quality/audio-to-video/lora": {
-    input: Ltx23QualityAudioToVideoLoraInput;
-    output: Ltx23QualityAudioToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/clean-plate": {
-    input: Ltx23QualityCleanPlateInput;
-    output: Ltx23QualityCleanPlateOutput;
-  };
-  "fal-ai/ltx-2.3-quality/colorization": {
-    input: Ltx23QualityColorizationInput;
-    output: Ltx23QualityColorizationOutput;
-  };
-  "fal-ai/ltx-2.3-quality/cross-eyed": {
-    input: Ltx23QualityCrossEyedInput;
-    output: Ltx23QualityCrossEyedOutput;
-  };
-  "fal-ai/ltx-2.3-quality/day-to-night": {
-    input: Ltx23QualityDayToNightInput;
-    output: Ltx23QualityDayToNightOutput;
-  };
-  "fal-ai/ltx-2.3-quality/deblur": {
-    input: Ltx23QualityDeblurInput;
-    output: Ltx23QualityDeblurOutput;
-  };
-  "fal-ai/ltx-2.3-quality/decompression": {
-    input: Ltx23QualityDecompressionInput;
-    output: Ltx23QualityDecompressionOutput;
-  };
-  "fal-ai/ltx-2.3-quality/extend-video": {
-    input: Ltx23QualityExtendVideoInput;
-    output: Ltx23QualityExtendVideoOutput;
-  };
-  "fal-ai/ltx-2.3-quality/extend-video/lora": {
-    input: Ltx23QualityExtendVideoLoraInput;
-    output: Ltx23QualityExtendVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/hdr": {
-    input: Ltx23QualityHdrInput;
-    output: Ltx23QualityHdrOutput;
-  };
-  "fal-ai/ltx-2.3-quality/hdr/lora": {
-    input: Ltx23QualityHdrLoraInput;
-    output: Ltx23QualityHdrLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/image-to-video": {
-    input: Ltx23QualityImageToVideoInput;
-    output: Ltx23QualityImageToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-quality/image-to-video/lora": {
-    input: Ltx23QualityImageToVideoLoraInput;
-    output: Ltx23QualityImageToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/ingredient": {
-    input: Ltx23QualityIngredientInput;
-    output: Ltx23QualityIngredientOutput;
-  };
-  "fal-ai/ltx-2.3-quality/inpaint": {
-    input: Ltx23QualityInpaintInput;
-    output: Ltx23QualityInpaintOutput;
-  };
-  "fal-ai/ltx-2.3-quality/inpaint/lora": {
-    input: Ltx23QualityInpaintLoraInput;
-    output: Ltx23QualityInpaintLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/instant-shave": {
-    input: Ltx23QualityInstantShaveInput;
-    output: Ltx23QualityInstantShaveOutput;
-  };
-  "fal-ai/ltx-2.3-quality/outpaint": {
-    input: Ltx23QualityOutpaintInput;
-    output: Ltx23QualityOutpaintOutput;
-  };
-  "fal-ai/ltx-2.3-quality/outpaint/lora": {
-    input: Ltx23QualityOutpaintLoraInput;
-    output: Ltx23QualityOutpaintLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/reference-video-to-video": {
-    input: Ltx23QualityReferenceVideoToVideoInput;
-    output: Ltx23QualityReferenceVideoToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-quality/reference-video-to-video/lora": {
-    input: Ltx23QualityReferenceVideoToVideoLoraInput;
-    output: Ltx23QualityReferenceVideoToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/render-to-real": {
-    input: Ltx23QualityRenderToRealInput;
-    output: Ltx23QualityRenderToRealOutput;
-  };
-  "fal-ai/ltx-2.3-quality/text-to-audio": {
-    input: Ltx23QualityTextToAudioInput;
-    output: Ltx23QualityTextToAudioOutput;
-  };
-  "fal-ai/ltx-2.3-quality/text-to-audio/lora": {
-    input: Ltx23QualityTextToAudioLoraInput;
-    output: Ltx23QualityTextToAudioLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/text-to-video": {
-    input: Ltx23QualityTextToVideoInput;
-    output: Ltx23QualityTextToVideoOutput;
-  };
-  "fal-ai/ltx-2.3-quality/text-to-video/lora": {
-    input: Ltx23QualityTextToVideoLoraInput;
-    output: Ltx23QualityTextToVideoLoraOutput;
-  };
-  "fal-ai/ltx-2.3-quality/water-simulation": {
-    input: Ltx23QualityWaterSimulationInput;
-    output: Ltx23QualityWaterSimulationOutput;
-  };
-  "fal-ai/ltx-2.3/audio-to-video": {
-    input: Ltx23AudioToVideoInput;
-    output: Ltx23AudioToVideoOutput;
-  };
-  "fal-ai/ltx-2.3/extend-video": {
-    input: Ltx23ExtendVideoInput;
-    output: Ltx23ExtendVideoOutput;
-  };
-  "fal-ai/ltx-2.3/image-to-video": {
-    input: Ltx23ImageToVideoInput;
-    output: Ltx23ImageToVideoOutput;
-  };
-  "fal-ai/ltx-2.3/image-to-video/fast": {
-    input: Ltx23ImageToVideoFastInput;
-    output: Ltx23ImageToVideoFastOutput;
-  };
-  "fal-ai/ltx-2.3/reframe": {
-    input: Ltx23ReframeInput;
-    output: Ltx23ReframeOutput;
-  };
-  "fal-ai/ltx-2.3/retake-video": {
-    input: Ltx23RetakeVideoInput;
-    output: Ltx23RetakeVideoOutput;
-  };
-  "fal-ai/ltx-2.3/text-to-video": {
-    input: Ltx23TextToVideoInput;
-    output: Ltx23TextToVideoOutput;
-  };
-  "fal-ai/ltx-2.3/text-to-video/fast": {
-    input: Ltx23TextToVideoFastInput;
-    output: Ltx23TextToVideoFastOutput;
-  };
-  "fal-ai/ltx-video": {
-    input: LtxVideoInput;
-    output: LtxVideoOutput;
-  };
-  "fal-ai/ltx-video-13b-distilled": {
-    input: LtxVideo13bDistilledInput;
-    output: LtxVideo13bDistilledOutput;
-  };
-  "fal-ai/ltx-video-13b-distilled/extend": {
-    input: LtxVideo13bDistilledExtendInput;
-    output: LtxVideo13bDistilledExtendOutput;
-  };
-  "fal-ai/ltx-video-13b-distilled/image-to-video": {
-    input: LtxVideo13bDistilledImageToVideoInput;
-    output: LtxVideo13bDistilledImageToVideoOutput;
-  };
-  "fal-ai/ltx-video-13b-distilled/multiconditioning": {
-    input: LtxVideo13bDistilledMulticonditioningInput;
-    output: LtxVideo13bDistilledMulticonditioningOutput;
-  };
-  "fal-ai/ltx-video-v095": {
-    input: LtxVideoV095Input;
-    output: LtxVideoV095Output;
-  };
-  "fal-ai/ltx-video-v095/extend": {
-    input: LtxVideoV095ExtendInput;
-    output: LtxVideoV095ExtendOutput;
-  };
-  "fal-ai/ltx-video-v095/multiconditioning": {
-    input: LtxVideoV095MulticonditioningInput;
-    output: LtxVideoV095MulticonditioningOutput;
-  };
-  "fal-ai/ltx-video/image-to-video": {
-    input: LtxVideoImageToVideoInput;
-    output: LtxVideoImageToVideoOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/a2a": {
-    input: Ltx23TrainerV2A2aInput;
-    output: Ltx23TrainerV2A2aOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/a2v": {
-    input: Ltx23TrainerV2A2vInput;
-    output: Ltx23TrainerV2A2vOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/audio-extend-prefix": {
-    input: Ltx23TrainerV2AudioExtendPrefixInput;
-    output: Ltx23TrainerV2AudioExtendPrefixOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/audio-extend-suffix": {
-    input: Ltx23TrainerV2AudioExtendSuffixInput;
-    output: Ltx23TrainerV2AudioExtendSuffixOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/audio-inpaint": {
-    input: Ltx23TrainerV2AudioInpaintInput;
-    output: Ltx23TrainerV2AudioInpaintOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/av2av": {
-    input: Ltx23TrainerV2Av2avInput;
-    output: Ltx23TrainerV2Av2avOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/av2av-masked": {
-    input: Ltx23TrainerV2Av2avMaskedInput;
-    output: Ltx23TrainerV2Av2avMaskedOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/extend-prefix": {
-    input: Ltx23TrainerV2ExtendPrefixInput;
-    output: Ltx23TrainerV2ExtendPrefixOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/extend-suffix": {
-    input: Ltx23TrainerV2ExtendSuffixInput;
-    output: Ltx23TrainerV2ExtendSuffixOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/i2v": {
-    input: Ltx23TrainerV2I2vInput;
-    output: Ltx23TrainerV2I2vOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/ic-lora/a2a": {
-    input: Ltx23TrainerV2IcLoraA2aInput;
-    output: Ltx23TrainerV2IcLoraA2aOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/ic-lora/av2av": {
-    input: Ltx23TrainerV2IcLoraAv2avInput;
-    output: Ltx23TrainerV2IcLoraAv2avOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/ic-lora/av2av-masked": {
-    input: Ltx23TrainerV2IcLoraAv2avMaskedInput;
-    output: Ltx23TrainerV2IcLoraAv2avMaskedOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/ic-lora/v2v": {
-    input: Ltx23TrainerV2IcLoraV2vInput;
-    output: Ltx23TrainerV2IcLoraV2vOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/ic-lora/v2v-masked": {
-    input: Ltx23TrainerV2IcLoraV2vMaskedInput;
-    output: Ltx23TrainerV2IcLoraV2vMaskedOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/inpaint": {
-    input: Ltx23TrainerV2InpaintInput;
-    output: Ltx23TrainerV2InpaintOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/interpolate": {
-    input: Ltx23TrainerV2InterpolateInput;
-    output: Ltx23TrainerV2InterpolateOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/outpaint": {
-    input: Ltx23TrainerV2OutpaintInput;
-    output: Ltx23TrainerV2OutpaintOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/t2a": {
-    input: Ltx23TrainerV2T2aInput;
-    output: Ltx23TrainerV2T2aOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/t2v": {
-    input: Ltx23TrainerV2T2vInput;
-    output: Ltx23TrainerV2T2vOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/v2a": {
-    input: Ltx23TrainerV2V2aInput;
-    output: Ltx23TrainerV2V2aOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/v2v": {
-    input: Ltx23TrainerV2V2vInput;
-    output: Ltx23TrainerV2V2vOutput;
-  };
-  "fal-ai/ltx23-trainer-v2/v2v-masked": {
-    input: Ltx23TrainerV2V2vMaskedInput;
-    output: Ltx23TrainerV2V2vMaskedOutput;
-  };
-  "fal-ai/ltx23-v2v-trainer": {
-    input: Ltx23V2vTrainerInput;
-    output: Ltx23V2vTrainerOutput;
-  };
-  "fal-ai/ltx23-video-trainer": {
-    input: Ltx23VideoTrainerInput;
-    output: Ltx23VideoTrainerOutput;
-  };
-  "fal-ai/ltxv-13b-098-distilled": {
-    input: Ltxv13b098DistilledInput;
-    output: Ltxv13b098DistilledOutput;
-  };
-  "fal-ai/ltxv-13b-098-distilled/extend": {
-    input: Ltxv13b098DistilledExtendInput;
-    output: Ltxv13b098DistilledExtendOutput;
-  };
-  "fal-ai/ltxv-13b-098-distilled/image-to-video": {
-    input: Ltxv13b098DistilledImageToVideoInput;
-    output: Ltxv13b098DistilledImageToVideoOutput;
-  };
-  "fal-ai/ltxv-13b-098-distilled/multiconditioning": {
-    input: Ltxv13b098DistilledMulticonditioningInput;
-    output: Ltxv13b098DistilledMulticonditioningOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2": {
-    input: LumaDreamMachineRay2Input;
-    output: LumaDreamMachineRay2Output;
-  };
-  "fal-ai/luma-dream-machine/ray-2-flash": {
-    input: LumaDreamMachineRay2FlashInput;
-    output: LumaDreamMachineRay2FlashOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2-flash/image-to-video": {
-    input: LumaDreamMachineRay2FlashImageToVideoInput;
-    output: LumaDreamMachineRay2FlashImageToVideoOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2-flash/modify": {
-    input: LumaDreamMachineRay2FlashModifyInput;
-    output: LumaDreamMachineRay2FlashModifyOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2-flash/reframe": {
-    input: LumaDreamMachineRay2FlashReframeInput;
-    output: LumaDreamMachineRay2FlashReframeOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2/image-to-video": {
-    input: LumaDreamMachineRay2ImageToVideoInput;
-    output: LumaDreamMachineRay2ImageToVideoOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2/modify": {
-    input: LumaDreamMachineRay2ModifyInput;
-    output: LumaDreamMachineRay2ModifyOutput;
-  };
-  "fal-ai/luma-dream-machine/ray-2/reframe": {
-    input: LumaDreamMachineRay2ReframeInput;
-    output: LumaDreamMachineRay2ReframeOutput;
-  };
-  "fal-ai/luma-photon": {
-    input: LumaPhotonInput;
-    output: LumaPhotonOutput;
-  };
-  "fal-ai/luma-photon/flash": {
-    input: LumaPhotonFlashInput;
-    output: LumaPhotonFlashOutput;
-  };
-  "fal-ai/luma-photon/flash/modify": {
-    input: LumaPhotonFlashModifyInput;
-    output: LumaPhotonFlashModifyOutput;
-  };
-  "fal-ai/luma-photon/flash/reframe": {
-    input: LumaPhotonFlashReframeInput;
-    output: LumaPhotonFlashReframeOutput;
-  };
-  "fal-ai/luma-photon/modify": {
-    input: LumaPhotonModifyInput;
-    output: LumaPhotonModifyOutput;
-  };
-  "fal-ai/luma-photon/reframe": {
-    input: LumaPhotonReframeInput;
-    output: LumaPhotonReframeOutput;
-  };
-  "fal-ai/lumina-image/v2": {
-    input: LuminaImageV2Input;
-    output: LuminaImageV2Output;
-  };
-  "fal-ai/lyria2": {
-    input: lyria2Input;
-    output: lyria2Output;
-  };
-  "fal-ai/lyria3": {
-    input: lyria3Input;
-    output: lyria3Output;
-  };
-  "fal-ai/lyria3/pro": {
-    input: Lyria3ProInput;
-    output: Lyria3ProOutput;
-  };
-  "fal-ai/magi-distilled": {
-    input: MagiDistilledInput;
-    output: MagiDistilledOutput;
-  };
-  "fal-ai/magi-distilled/extend-video": {
-    input: MagiDistilledExtendVideoInput;
-    output: MagiDistilledExtendVideoOutput;
-  };
-  "fal-ai/magi-distilled/image-to-video": {
-    input: MagiDistilledImageToVideoInput;
-    output: MagiDistilledImageToVideoOutput;
-  };
-  "fal-ai/marlin": {
-    input: marlinInput;
-    output: marlinOutput;
-  };
-  "fal-ai/marlin/find": {
-    input: MarlinFindInput;
-    output: MarlinFindOutput;
-  };
-  "fal-ai/maya": {
-    input: mayaInput;
-    output: mayaOutput;
-  };
-  "fal-ai/maya/batch": {
-    input: MayaBatchInput;
-    output: MayaBatchOutput;
-  };
-  "fal-ai/meshy/rigging": {
-    input: MeshyRiggingInput;
-    output: MeshyRiggingOutput;
-  };
-  "fal-ai/meshy/rigging/multi-animation": {
-    input: MeshyRiggingMultiAnimationInput;
-    output: MeshyRiggingMultiAnimationOutput;
-  };
-  "fal-ai/meshy/v5/multi-image-to-3d": {
-    input: MeshyV5MultiImageTo3dInput;
-    output: MeshyV5MultiImageTo3dOutput;
-  };
-  "fal-ai/meshy/v5/remesh": {
-    input: MeshyV5RemeshInput;
-    output: MeshyV5RemeshOutput;
-  };
-  "fal-ai/meshy/v5/retexture": {
-    input: MeshyV5RetextureInput;
-    output: MeshyV5RetextureOutput;
-  };
-  "fal-ai/meshy/v6-preview/image-to-3d": {
-    input: MeshyV6PreviewImageTo3dInput;
-    output: MeshyV6PreviewImageTo3dOutput;
-  };
-  "fal-ai/meshy/v6-preview/text-to-3d": {
-    input: MeshyV6PreviewTextTo3dInput;
-    output: MeshyV6PreviewTextTo3dOutput;
-  };
-  "fal-ai/meshy/v6/image-to-3d": {
-    input: MeshyV6ImageTo3dInput;
-    output: MeshyV6ImageTo3dOutput;
-  };
-  "fal-ai/meshy/v6/multi-image-to-3d": {
-    input: MeshyV6MultiImageTo3dInput;
-    output: MeshyV6MultiImageTo3dOutput;
-  };
-  "fal-ai/meshy/v6/text-to-3d": {
-    input: MeshyV6TextTo3dInput;
-    output: MeshyV6TextTo3dOutput;
-  };
-  "fal-ai/minimax-music": {
-    input: MinimaxMusicInput;
-    output: MinimaxMusicOutput;
-  };
-  "fal-ai/minimax-music/v1.5": {
-    input: MinimaxMusicV15Input;
-    output: MinimaxMusicV15Output;
-  };
-  "fal-ai/minimax-music/v2": {
-    input: MinimaxMusicV2Input;
-    output: MinimaxMusicV2Output;
-  };
-  "fal-ai/minimax-music/v2.5": {
-    input: MinimaxMusicV25Input;
-    output: MinimaxMusicV25Output;
-  };
-  "fal-ai/minimax-music/v2.6": {
-    input: MinimaxMusicV26Input;
-    output: MinimaxMusicV26Output;
-  };
-  "fal-ai/minimax/hailuo-02-fast/image-to-video": {
-    input: MinimaxHailuo02FastImageToVideoInput;
-    output: MinimaxHailuo02FastImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-02/pro/image-to-video": {
-    input: MinimaxHailuo02ProImageToVideoInput;
-    output: MinimaxHailuo02ProImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-02/pro/text-to-video": {
-    input: MinimaxHailuo02ProTextToVideoInput;
-    output: MinimaxHailuo02ProTextToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-02/standard/image-to-video": {
-    input: MinimaxHailuo02StandardImageToVideoInput;
-    output: MinimaxHailuo02StandardImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-02/standard/text-to-video": {
-    input: MinimaxHailuo02StandardTextToVideoInput;
-    output: MinimaxHailuo02StandardTextToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-2.3-fast/pro/image-to-video": {
-    input: MinimaxHailuo23FastProImageToVideoInput;
-    output: MinimaxHailuo23FastProImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video": {
-    input: MinimaxHailuo23FastStandardImageToVideoInput;
-    output: MinimaxHailuo23FastStandardImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-2.3/pro/image-to-video": {
-    input: MinimaxHailuo23ProImageToVideoInput;
-    output: MinimaxHailuo23ProImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-2.3/pro/text-to-video": {
-    input: MinimaxHailuo23ProTextToVideoInput;
-    output: MinimaxHailuo23ProTextToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-2.3/standard/image-to-video": {
-    input: MinimaxHailuo23StandardImageToVideoInput;
-    output: MinimaxHailuo23StandardImageToVideoOutput;
-  };
-  "fal-ai/minimax/hailuo-2.3/standard/text-to-video": {
-    input: MinimaxHailuo23StandardTextToVideoInput;
-    output: MinimaxHailuo23StandardTextToVideoOutput;
-  };
-  "fal-ai/minimax/image-01": {
-    input: MinimaxImage01Input;
-    output: MinimaxImage01Output;
-  };
-  "fal-ai/minimax/image-01/subject-reference": {
-    input: MinimaxImage01SubjectReferenceInput;
-    output: MinimaxImage01SubjectReferenceOutput;
-  };
-  "fal-ai/minimax/preview/speech-2.5-hd": {
-    input: MinimaxPreviewSpeech25HdInput;
-    output: MinimaxPreviewSpeech25HdOutput;
-  };
-  "fal-ai/minimax/preview/speech-2.5-turbo": {
-    input: MinimaxPreviewSpeech25TurboInput;
-    output: MinimaxPreviewSpeech25TurboOutput;
-  };
-  "fal-ai/minimax/speech-02-hd": {
-    input: MinimaxSpeech02HdInput;
-    output: MinimaxSpeech02HdOutput;
-  };
-  "fal-ai/minimax/speech-02-turbo": {
-    input: MinimaxSpeech02TurboInput;
-    output: MinimaxSpeech02TurboOutput;
-  };
-  "fal-ai/minimax/speech-2.6-hd": {
-    input: MinimaxSpeech26HdInput;
-    output: MinimaxSpeech26HdOutput;
-  };
-  "fal-ai/minimax/speech-2.6-turbo": {
-    input: MinimaxSpeech26TurboInput;
-    output: MinimaxSpeech26TurboOutput;
-  };
-  "fal-ai/minimax/speech-2.8-hd": {
-    input: MinimaxSpeech28HdInput;
-    output: MinimaxSpeech28HdOutput;
-  };
-  "fal-ai/minimax/speech-2.8-turbo": {
-    input: MinimaxSpeech28TurboInput;
-    output: MinimaxSpeech28TurboOutput;
-  };
-  "fal-ai/minimax/video-01": {
-    input: MinimaxVideo01Input;
-    output: MinimaxVideo01Output;
-  };
-  "fal-ai/minimax/video-01-director": {
-    input: MinimaxVideo01DirectorInput;
-    output: MinimaxVideo01DirectorOutput;
-  };
-  "fal-ai/minimax/video-01-director/image-to-video": {
-    input: MinimaxVideo01DirectorImageToVideoInput;
-    output: MinimaxVideo01DirectorImageToVideoOutput;
-  };
-  "fal-ai/minimax/video-01-live": {
-    input: MinimaxVideo01LiveInput;
-    output: MinimaxVideo01LiveOutput;
-  };
-  "fal-ai/minimax/video-01-live/image-to-video": {
-    input: MinimaxVideo01LiveImageToVideoInput;
-    output: MinimaxVideo01LiveImageToVideoOutput;
-  };
-  "fal-ai/minimax/video-01-subject-reference": {
-    input: MinimaxVideo01SubjectReferenceInput;
-    output: MinimaxVideo01SubjectReferenceOutput;
-  };
-  "fal-ai/minimax/video-01/image-to-video": {
-    input: MinimaxVideo01ImageToVideoInput;
-    output: MinimaxVideo01ImageToVideoOutput;
-  };
-  "fal-ai/minimax/voice-clone": {
-    input: MinimaxVoiceCloneInput;
-    output: MinimaxVoiceCloneOutput;
-  };
-  "fal-ai/minimax/voice-design": {
-    input: MinimaxVoiceDesignInput;
-    output: MinimaxVoiceDesignOutput;
-  };
-  "fal-ai/mmaudio-v2": {
-    input: MmaudioV2Input;
-    output: MmaudioV2Output;
-  };
-  "fal-ai/mmaudio-v2/text-to-audio": {
-    input: MmaudioV2TextToAudioInput;
-    output: MmaudioV2TextToAudioOutput;
-  };
-  "fal-ai/moondream-next": {
-    input: MoondreamNextInput;
-    output: MoondreamNextOutput;
-  };
-  "fal-ai/moondream-next/batch": {
-    input: MoondreamNextBatchInput;
-    output: MoondreamNextBatchOutput;
-  };
-  "fal-ai/moondream-next/detection": {
-    input: MoondreamNextDetectionInput;
-    output: MoondreamNextDetectionOutput;
-  };
-  "fal-ai/moondream/batched": {
-    input: MoondreamBatchedInput;
-    output: MoondreamBatchedOutput;
-  };
-  "fal-ai/moondream2": {
-    input: moondream2Input;
-    output: moondream2Output;
-  };
-  "fal-ai/moondream2/object-detection": {
-    input: Moondream2ObjectDetectionInput;
-    output: Moondream2ObjectDetectionOutput;
-  };
-  "fal-ai/moondream2/point-object-detection": {
-    input: Moondream2PointObjectDetectionInput;
-    output: Moondream2PointObjectDetectionOutput;
-  };
-  "fal-ai/moondream2/visual-query": {
-    input: Moondream2VisualQueryInput;
-    output: Moondream2VisualQueryOutput;
-  };
-  "fal-ai/moondream3-preview/caption": {
-    input: Moondream3PreviewCaptionInput;
-    output: Moondream3PreviewCaptionOutput;
-  };
-  "fal-ai/moondream3-preview/detect": {
-    input: Moondream3PreviewDetectInput;
-    output: Moondream3PreviewDetectOutput;
-  };
-  "fal-ai/moondream3-preview/point": {
-    input: Moondream3PreviewPointInput;
-    output: Moondream3PreviewPointOutput;
-  };
-  "fal-ai/moondream3-preview/query": {
-    input: Moondream3PreviewQueryInput;
-    output: Moondream3PreviewQueryOutput;
-  };
-  "fal-ai/moondream3-preview/segment": {
-    input: Moondream3PreviewSegmentInput;
-    output: Moondream3PreviewSegmentOutput;
-  };
-  "fal-ai/musetalk": {
-    input: musetalkInput;
-    output: musetalkOutput;
-  };
-  "fal-ai/nafnet/deblur": {
-    input: NafnetDeblurInput;
-    output: NafnetDeblurOutput;
-  };
-  "fal-ai/nafnet/denoise": {
-    input: NafnetDenoiseInput;
-    output: NafnetDenoiseOutput;
-  };
-  "fal-ai/nano-banana": {
-    input: NanoBananaInput;
-    output: NanoBananaOutput;
-  };
-  "fal-ai/nano-banana-2": {
-    input: NanoBanana2Input;
-    output: NanoBanana2Output;
-  };
-  "fal-ai/nano-banana-2/edit": {
-    input: NanoBanana2EditInput;
-    output: NanoBanana2EditOutput;
-  };
-  "fal-ai/nano-banana-pro": {
-    input: NanoBananaProInput;
-    output: NanoBananaProOutput;
-  };
-  "fal-ai/nano-banana-pro/edit": {
-    input: NanoBananaProEditInput;
-    output: NanoBananaProEditOutput;
-  };
-  "fal-ai/nano-banana/edit": {
-    input: NanoBananaEditInput;
-    output: NanoBananaEditOutput;
-  };
-  "fal-ai/nemotron-diffusion-vlm": {
-    input: NemotronDiffusionVlmInput;
-    output: NemotronDiffusionVlmOutput;
-  };
-  "fal-ai/nucleus-image": {
-    input: NucleusImageInput;
-    output: NucleusImageOutput;
-  };
-  "fal-ai/object-removal": {
-    input: ObjectRemovalInput;
-    output: ObjectRemovalOutput;
-  };
-  "fal-ai/object-removal/bbox": {
-    input: ObjectRemovalBboxInput;
-    output: ObjectRemovalBboxOutput;
-  };
-  "fal-ai/object-removal/mask": {
-    input: ObjectRemovalMaskInput;
-    output: ObjectRemovalMaskOutput;
-  };
-  "fal-ai/omni-zero": {
-    input: OmniZeroInput;
-    output: OmniZeroOutput;
-  };
-  "fal-ai/omnigen-v1": {
-    input: OmnigenV1Input;
-    output: OmnigenV1Output;
-  };
-  "fal-ai/omnigen-v2": {
-    input: OmnigenV2Input;
-    output: OmnigenV2Output;
-  };
-  "fal-ai/omnilottie": {
-    input: omnilottieInput;
-    output: omnilottieOutput;
-  };
-  "fal-ai/omnilottie/image-to-lottie": {
-    input: OmnilottieImageToLottieInput;
-    output: OmnilottieImageToLottieOutput;
-  };
-  "fal-ai/omnilottie/video-to-lottie": {
-    input: OmnilottieVideoToLottieInput;
-    output: OmnilottieVideoToLottieOutput;
-  };
-  "fal-ai/one-to-all-animation/1.3b": {
-    input: OneToAllAnimation13bInput;
-    output: OneToAllAnimation13bOutput;
-  };
-  "fal-ai/one-to-all-animation/14b": {
-    input: OneToAllAnimation14bInput;
-    output: OneToAllAnimation14bOutput;
-  };
-  "fal-ai/orpheus-tts": {
-    input: OrpheusTtsInput;
-    output: OrpheusTtsOutput;
-  };
-  "fal-ai/ovi": {
-    input: oviInput;
-    output: oviOutput;
-  };
-  "fal-ai/ovi/image-to-video": {
-    input: OviImageToVideoInput;
-    output: OviImageToVideoOutput;
-  };
-  "fal-ai/ovis-image": {
-    input: OvisImageInput;
-    output: OvisImageOutput;
-  };
-  "fal-ai/pasd": {
-    input: pasdInput;
-    output: pasdOutput;
-  };
-  "fal-ai/patina": {
-    input: patinaInput;
-    output: patinaOutput;
-  };
-  "fal-ai/patina/material": {
-    input: PatinaMaterialInput;
-    output: PatinaMaterialOutput;
-  };
-  "fal-ai/patina/material/extract": {
-    input: PatinaMaterialExtractInput;
-    output: PatinaMaterialExtractOutput;
-  };
-  "fal-ai/personaplex": {
-    input: personaplexInput;
-    output: personaplexOutput;
-  };
-  "fal-ai/personaplex/realtime": {
-    input: PersonaplexRealtimeInput;
-    output: PersonaplexRealtimeOutput;
-  };
-  "fal-ai/phota": {
-    input: photaInput;
-    output: photaOutput;
-  };
-  "fal-ai/phota/create-profile": {
-    input: PhotaCreateProfileInput;
-    output: PhotaCreateProfileOutput;
-  };
-  "fal-ai/phota/edit": {
-    input: PhotaEditInput;
-    output: PhotaEditOutput;
-  };
-  "fal-ai/phota/enhance": {
-    input: PhotaEnhanceInput;
-    output: PhotaEnhanceOutput;
-  };
-  "fal-ai/photomaker": {
-    input: photomakerInput;
-    output: photomakerOutput;
-  };
-  "fal-ai/pika/v2.1/image-to-video": {
-    input: PikaV21ImageToVideoInput;
-    output: PikaV21ImageToVideoOutput;
-  };
-  "fal-ai/pika/v2.1/text-to-video": {
-    input: PikaV21TextToVideoInput;
-    output: PikaV21TextToVideoOutput;
-  };
-  "fal-ai/pika/v2.2/image-to-video": {
-    input: PikaV22ImageToVideoInput;
-    output: PikaV22ImageToVideoOutput;
-  };
-  "fal-ai/pika/v2.2/pikaframes": {
-    input: PikaV22PikaframesInput;
-    output: PikaV22PikaframesOutput;
-  };
-  "fal-ai/pika/v2.2/pikascenes": {
-    input: PikaV22PikascenesInput;
-    output: PikaV22PikascenesOutput;
-  };
-  "fal-ai/pika/v2.2/text-to-video": {
-    input: PikaV22TextToVideoInput;
-    output: PikaV22TextToVideoOutput;
-  };
-  "fal-ai/pika/v2/turbo/image-to-video": {
-    input: PikaV2TurboImageToVideoInput;
-    output: PikaV2TurboImageToVideoOutput;
-  };
-  "fal-ai/pika/v2/turbo/text-to-video": {
-    input: PikaV2TurboTextToVideoInput;
-    output: PikaV2TurboTextToVideoOutput;
-  };
-  "fal-ai/pixal3d": {
-    input: pixal3dInput;
-    output: pixal3dOutput;
-  };
-  "fal-ai/pixart-sigma": {
-    input: PixartSigmaInput;
-    output: PixartSigmaOutput;
-  };
-  "fal-ai/pixverse/c1/image-to-video": {
-    input: PixverseC1ImageToVideoInput;
-    output: PixverseC1ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/c1/reference-to-video": {
-    input: PixverseC1ReferenceToVideoInput;
-    output: PixverseC1ReferenceToVideoOutput;
-  };
-  "fal-ai/pixverse/c1/text-to-video": {
-    input: PixverseC1TextToVideoInput;
-    output: PixverseC1TextToVideoOutput;
-  };
-  "fal-ai/pixverse/c1/transition": {
-    input: PixverseC1TransitionInput;
-    output: PixverseC1TransitionOutput;
-  };
-  "fal-ai/pixverse/extend": {
-    input: PixverseExtendInput;
-    output: PixverseExtendOutput;
-  };
-  "fal-ai/pixverse/extend/fast": {
-    input: PixverseExtendFastInput;
-    output: PixverseExtendFastOutput;
-  };
-  "fal-ai/pixverse/lipsync": {
-    input: PixverseLipsyncInput;
-    output: PixverseLipsyncOutput;
-  };
-  "fal-ai/pixverse/sound-effects": {
-    input: PixverseSoundEffectsInput;
-    output: PixverseSoundEffectsOutput;
-  };
-  "fal-ai/pixverse/swap": {
-    input: PixverseSwapInput;
-    output: PixverseSwapOutput;
-  };
-  "fal-ai/pixverse/v3.5/effects": {
-    input: PixverseV35EffectsInput;
-    output: PixverseV35EffectsOutput;
-  };
-  "fal-ai/pixverse/v3.5/image-to-video": {
-    input: PixverseV35ImageToVideoInput;
-    output: PixverseV35ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v3.5/image-to-video/fast": {
-    input: PixverseV35ImageToVideoFastInput;
-    output: PixverseV35ImageToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v3.5/text-to-video": {
-    input: PixverseV35TextToVideoInput;
-    output: PixverseV35TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v3.5/text-to-video/fast": {
-    input: PixverseV35TextToVideoFastInput;
-    output: PixverseV35TextToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v3.5/transition": {
-    input: PixverseV35TransitionInput;
-    output: PixverseV35TransitionOutput;
-  };
-  "fal-ai/pixverse/v4.5/effects": {
-    input: PixverseV45EffectsInput;
-    output: PixverseV45EffectsOutput;
-  };
-  "fal-ai/pixverse/v4.5/image-to-video": {
-    input: PixverseV45ImageToVideoInput;
-    output: PixverseV45ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v4.5/image-to-video/fast": {
-    input: PixverseV45ImageToVideoFastInput;
-    output: PixverseV45ImageToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v4.5/text-to-video": {
-    input: PixverseV45TextToVideoInput;
-    output: PixverseV45TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v4.5/text-to-video/fast": {
-    input: PixverseV45TextToVideoFastInput;
-    output: PixverseV45TextToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v4.5/transition": {
-    input: PixverseV45TransitionInput;
-    output: PixverseV45TransitionOutput;
-  };
-  "fal-ai/pixverse/v4/effects": {
-    input: PixverseV4EffectsInput;
-    output: PixverseV4EffectsOutput;
-  };
-  "fal-ai/pixverse/v4/image-to-video": {
-    input: PixverseV4ImageToVideoInput;
-    output: PixverseV4ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v4/image-to-video/fast": {
-    input: PixverseV4ImageToVideoFastInput;
-    output: PixverseV4ImageToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v4/text-to-video": {
-    input: PixverseV4TextToVideoInput;
-    output: PixverseV4TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v4/text-to-video/fast": {
-    input: PixverseV4TextToVideoFastInput;
-    output: PixverseV4TextToVideoFastOutput;
-  };
-  "fal-ai/pixverse/v5.5/effects": {
-    input: PixverseV55EffectsInput;
-    output: PixverseV55EffectsOutput;
-  };
-  "fal-ai/pixverse/v5.5/image-to-video": {
-    input: PixverseV55ImageToVideoInput;
-    output: PixverseV55ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v5.5/text-to-video": {
-    input: PixverseV55TextToVideoInput;
-    output: PixverseV55TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v5.5/transition": {
-    input: PixverseV55TransitionInput;
-    output: PixverseV55TransitionOutput;
-  };
-  "fal-ai/pixverse/v5.6/image-to-video": {
-    input: PixverseV56ImageToVideoInput;
-    output: PixverseV56ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v5.6/text-to-video": {
-    input: PixverseV56TextToVideoInput;
-    output: PixverseV56TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v5.6/transition": {
-    input: PixverseV56TransitionInput;
-    output: PixverseV56TransitionOutput;
-  };
-  "fal-ai/pixverse/v5/effects": {
-    input: PixverseV5EffectsInput;
-    output: PixverseV5EffectsOutput;
-  };
-  "fal-ai/pixverse/v5/image-to-video": {
-    input: PixverseV5ImageToVideoInput;
-    output: PixverseV5ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v5/text-to-video": {
-    input: PixverseV5TextToVideoInput;
-    output: PixverseV5TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v5/transition": {
-    input: PixverseV5TransitionInput;
-    output: PixverseV5TransitionOutput;
-  };
-  "fal-ai/pixverse/v6/extend": {
-    input: PixverseV6ExtendInput;
-    output: PixverseV6ExtendOutput;
-  };
-  "fal-ai/pixverse/v6/image-to-video": {
-    input: PixverseV6ImageToVideoInput;
-    output: PixverseV6ImageToVideoOutput;
-  };
-  "fal-ai/pixverse/v6/text-to-video": {
-    input: PixverseV6TextToVideoInput;
-    output: PixverseV6TextToVideoOutput;
-  };
-  "fal-ai/pixverse/v6/transition": {
-    input: PixverseV6TransitionInput;
-    output: PixverseV6TransitionOutput;
-  };
-  "fal-ai/playground-v25": {
-    input: PlaygroundV25Input;
-    output: PlaygroundV25Output;
-  };
-  "fal-ai/playground-v25/image-to-image": {
-    input: PlaygroundV25ImageToImageInput;
-    output: PlaygroundV25ImageToImageOutput;
-  };
-  "fal-ai/playground-v25/inpainting": {
-    input: PlaygroundV25InpaintingInput;
-    output: PlaygroundV25InpaintingOutput;
-  };
-  "fal-ai/pony-v7": {
-    input: PonyV7Input;
-    output: PonyV7Output;
-  };
-  "fal-ai/post-processing": {
-    input: PostProcessingInput;
-    output: PostProcessingOutput;
-  };
-  "fal-ai/post-processing/blur": {
-    input: PostProcessingBlurInput;
-    output: PostProcessingBlurOutput;
-  };
-  "fal-ai/post-processing/chromatic-aberration": {
-    input: PostProcessingChromaticAberrationInput;
-    output: PostProcessingChromaticAberrationOutput;
-  };
-  "fal-ai/post-processing/color-correction": {
-    input: PostProcessingColorCorrectionInput;
-    output: PostProcessingColorCorrectionOutput;
-  };
-  "fal-ai/post-processing/color-tint": {
-    input: PostProcessingColorTintInput;
-    output: PostProcessingColorTintOutput;
-  };
-  "fal-ai/post-processing/desaturate": {
-    input: PostProcessingDesaturateInput;
-    output: PostProcessingDesaturateOutput;
-  };
-  "fal-ai/post-processing/dissolve": {
-    input: PostProcessingDissolveInput;
-    output: PostProcessingDissolveOutput;
-  };
-  "fal-ai/post-processing/dodge-burn": {
-    input: PostProcessingDodgeBurnInput;
-    output: PostProcessingDodgeBurnOutput;
-  };
-  "fal-ai/post-processing/grain": {
-    input: PostProcessingGrainInput;
-    output: PostProcessingGrainOutput;
-  };
-  "fal-ai/post-processing/parabolize": {
-    input: PostProcessingParabolizeInput;
-    output: PostProcessingParabolizeOutput;
-  };
-  "fal-ai/post-processing/sharpen": {
-    input: PostProcessingSharpenInput;
-    output: PostProcessingSharpenOutput;
-  };
-  "fal-ai/post-processing/solarize": {
-    input: PostProcessingSolarizeInput;
-    output: PostProcessingSolarizeOutput;
-  };
-  "fal-ai/post-processing/vignette": {
-    input: PostProcessingVignetteInput;
-    output: PostProcessingVignetteOutput;
-  };
-  "fal-ai/pulid": {
-    input: pulidInput;
-    output: pulidOutput;
-  };
-  "fal-ai/qwen-3-tts/clone-voice/0.6b": {
-    input: Qwen3TtsCloneVoice06bInput;
-    output: Qwen3TtsCloneVoice06bOutput;
-  };
-  "fal-ai/qwen-3-tts/clone-voice/1.7b": {
-    input: Qwen3TtsCloneVoice17bInput;
-    output: Qwen3TtsCloneVoice17bOutput;
-  };
-  "fal-ai/qwen-3-tts/text-to-speech/0.6b": {
-    input: Qwen3TtsTextToSpeech06bInput;
-    output: Qwen3TtsTextToSpeech06bOutput;
-  };
-  "fal-ai/qwen-3-tts/text-to-speech/1.7b": {
-    input: Qwen3TtsTextToSpeech17bInput;
-    output: Qwen3TtsTextToSpeech17bOutput;
-  };
-  "fal-ai/qwen-3-tts/voice-design/1.7b": {
-    input: Qwen3TtsVoiceDesign17bInput;
-    output: Qwen3TtsVoiceDesign17bOutput;
-  };
-  "fal-ai/qwen-image": {
-    input: QwenImageInput;
-    output: QwenImageOutput;
-  };
-  "fal-ai/qwen-image-2/edit": {
-    input: QwenImage2EditInput;
-    output: QwenImage2EditOutput;
-  };
-  "fal-ai/qwen-image-2/pro/edit": {
-    input: QwenImage2ProEditInput;
-    output: QwenImage2ProEditOutput;
-  };
-  "fal-ai/qwen-image-2/pro/text-to-image": {
-    input: QwenImage2ProTextToImageInput;
-    output: QwenImage2ProTextToImageOutput;
-  };
-  "fal-ai/qwen-image-2/text-to-image": {
-    input: QwenImage2TextToImageInput;
-    output: QwenImage2TextToImageOutput;
-  };
-  "fal-ai/qwen-image-2512": {
-    input: QwenImage2512Input;
-    output: QwenImage2512Output;
-  };
-  "fal-ai/qwen-image-2512-trainer": {
-    input: QwenImage2512TrainerInput;
-    output: QwenImage2512TrainerOutput;
-  };
-  "fal-ai/qwen-image-2512/lora": {
-    input: QwenImage2512LoraInput;
-    output: QwenImage2512LoraOutput;
-  };
-  "fal-ai/qwen-image-edit": {
-    input: QwenImageEditInput;
-    output: QwenImageEditOutput;
-  };
-  "fal-ai/qwen-image-edit-2509": {
-    input: QwenImageEdit2509Input;
-    output: QwenImageEdit2509Output;
-  };
-  "fal-ai/qwen-image-edit-2509-lora": {
-    input: QwenImageEdit2509LoraInput;
-    output: QwenImageEdit2509LoraOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/add-background": {
-    input: QwenImageEdit2509LoraGalleryAddBackgroundInput;
-    output: QwenImageEdit2509LoraGalleryAddBackgroundOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/face-to-full-portrait": {
-    input: QwenImageEdit2509LoraGalleryFaceToFullPortraitInput;
-    output: QwenImageEdit2509LoraGalleryFaceToFullPortraitOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/group-photo": {
-    input: QwenImageEdit2509LoraGalleryGroupPhotoInput;
-    output: QwenImageEdit2509LoraGalleryGroupPhotoOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/integrate-product": {
-    input: QwenImageEdit2509LoraGalleryIntegrateProductInput;
-    output: QwenImageEdit2509LoraGalleryIntegrateProductOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/lighting-restoration": {
-    input: QwenImageEdit2509LoraGalleryLightingRestorationInput;
-    output: QwenImageEdit2509LoraGalleryLightingRestorationOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/multiple-angles": {
-    input: QwenImageEdit2509LoraGalleryMultipleAnglesInput;
-    output: QwenImageEdit2509LoraGalleryMultipleAnglesOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/next-scene": {
-    input: QwenImageEdit2509LoraGalleryNextSceneInput;
-    output: QwenImageEdit2509LoraGalleryNextSceneOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/remove-element": {
-    input: QwenImageEdit2509LoraGalleryRemoveElementInput;
-    output: QwenImageEdit2509LoraGalleryRemoveElementOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/remove-lighting": {
-    input: QwenImageEdit2509LoraGalleryRemoveLightingInput;
-    output: QwenImageEdit2509LoraGalleryRemoveLightingOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-lora-gallery/shirt-design": {
-    input: QwenImageEdit2509LoraGalleryShirtDesignInput;
-    output: QwenImageEdit2509LoraGalleryShirtDesignOutput;
-  };
-  "fal-ai/qwen-image-edit-2509-trainer": {
-    input: QwenImageEdit2509TrainerInput;
-    output: QwenImageEdit2509TrainerOutput;
-  };
-  "fal-ai/qwen-image-edit-2511": {
-    input: QwenImageEdit2511Input;
-    output: QwenImageEdit2511Output;
-  };
-  "fal-ai/qwen-image-edit-2511-multiple-angles": {
-    input: QwenImageEdit2511MultipleAnglesInput;
-    output: QwenImageEdit2511MultipleAnglesOutput;
-  };
-  "fal-ai/qwen-image-edit-2511/lora": {
-    input: QwenImageEdit2511LoraInput;
-    output: QwenImageEdit2511LoraOutput;
-  };
-  "fal-ai/qwen-image-edit-lora": {
-    input: QwenImageEditLoraInput;
-    output: QwenImageEditLoraOutput;
-  };
-  "fal-ai/qwen-image-edit-plus": {
-    input: QwenImageEditPlusInput;
-    output: QwenImageEditPlusOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora": {
-    input: QwenImageEditPlusLoraInput;
-    output: QwenImageEditPlusLoraOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/add-background": {
-    input: QwenImageEditPlusLoraGalleryAddBackgroundInput;
-    output: QwenImageEditPlusLoraGalleryAddBackgroundOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/face-to-full-portrait": {
-    input: QwenImageEditPlusLoraGalleryFaceToFullPortraitInput;
-    output: QwenImageEditPlusLoraGalleryFaceToFullPortraitOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/group-photo": {
-    input: QwenImageEditPlusLoraGalleryGroupPhotoInput;
-    output: QwenImageEditPlusLoraGalleryGroupPhotoOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/integrate-product": {
-    input: QwenImageEditPlusLoraGalleryIntegrateProductInput;
-    output: QwenImageEditPlusLoraGalleryIntegrateProductOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/lighting-restoration": {
-    input: QwenImageEditPlusLoraGalleryLightingRestorationInput;
-    output: QwenImageEditPlusLoraGalleryLightingRestorationOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/multiple-angles": {
-    input: QwenImageEditPlusLoraGalleryMultipleAnglesInput;
-    output: QwenImageEditPlusLoraGalleryMultipleAnglesOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/next-scene": {
-    input: QwenImageEditPlusLoraGalleryNextSceneInput;
-    output: QwenImageEditPlusLoraGalleryNextSceneOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/remove-element": {
-    input: QwenImageEditPlusLoraGalleryRemoveElementInput;
-    output: QwenImageEditPlusLoraGalleryRemoveElementOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/remove-lighting": {
-    input: QwenImageEditPlusLoraGalleryRemoveLightingInput;
-    output: QwenImageEditPlusLoraGalleryRemoveLightingOutput;
-  };
-  "fal-ai/qwen-image-edit-plus-lora-gallery/shirt-design": {
-    input: QwenImageEditPlusLoraGalleryShirtDesignInput;
-    output: QwenImageEditPlusLoraGalleryShirtDesignOutput;
-  };
-  "fal-ai/qwen-image-edit/image-to-image": {
-    input: QwenImageEditImageToImageInput;
-    output: QwenImageEditImageToImageOutput;
-  };
-  "fal-ai/qwen-image-edit/inpaint": {
-    input: QwenImageEditInpaintInput;
-    output: QwenImageEditInpaintOutput;
-  };
-  "fal-ai/qwen-image-layered": {
-    input: QwenImageLayeredInput;
-    output: QwenImageLayeredOutput;
-  };
-  "fal-ai/qwen-image-layered/lora": {
-    input: QwenImageLayeredLoraInput;
-    output: QwenImageLayeredLoraOutput;
-  };
-  "fal-ai/qwen-image-max/edit": {
-    input: QwenImageMaxEditInput;
-    output: QwenImageMaxEditOutput;
-  };
-  "fal-ai/qwen-image-max/text-to-image": {
-    input: QwenImageMaxTextToImageInput;
-    output: QwenImageMaxTextToImageOutput;
-  };
-  "fal-ai/qwen-image/image-to-image": {
-    input: QwenImageImageToImageInput;
-    output: QwenImageImageToImageOutput;
-  };
-  "fal-ai/realistic-vision": {
-    input: RealisticVisionInput;
-    output: RealisticVisionOutput;
-  };
-  "fal-ai/reconviagen-0.5": {
-    input: Reconviagen05Input;
-    output: Reconviagen05Output;
-  };
-  "fal-ai/recraft-20b": {
-    input: Recraft20bInput;
-    output: Recraft20bOutput;
-  };
-  "fal-ai/recraft/upscale/creative": {
-    input: RecraftUpscaleCreativeInput;
-    output: RecraftUpscaleCreativeOutput;
-  };
-  "fal-ai/recraft/upscale/crisp": {
-    input: RecraftUpscaleCrispInput;
-    output: RecraftUpscaleCrispOutput;
-  };
-  "fal-ai/recraft/v3/create-style": {
-    input: RecraftV3CreateStyleInput;
-    output: RecraftV3CreateStyleOutput;
-  };
-  "fal-ai/recraft/v3/image-to-image": {
-    input: RecraftV3ImageToImageInput;
-    output: RecraftV3ImageToImageOutput;
-  };
-  "fal-ai/recraft/v3/text-to-image": {
-    input: RecraftV3TextToImageInput;
-    output: RecraftV3TextToImageOutput;
-  };
-  "fal-ai/recraft/v4.1/pro/text-to-image": {
-    input: RecraftV41ProTextToImageInput;
-    output: RecraftV41ProTextToImageOutput;
-  };
-  "fal-ai/recraft/v4.1/pro/text-to-vector": {
-    input: RecraftV41ProTextToVectorInput;
-    output: RecraftV41ProTextToVectorOutput;
-  };
-  "fal-ai/recraft/v4.1/text-to-image": {
-    input: RecraftV41TextToImageInput;
-    output: RecraftV41TextToImageOutput;
-  };
-  "fal-ai/recraft/v4.1/text-to-vector": {
-    input: RecraftV41TextToVectorInput;
-    output: RecraftV41TextToVectorOutput;
-  };
-  "fal-ai/recraft/v4.1/utility/pro/text-to-image": {
-    input: RecraftV41UtilityProTextToImageInput;
-    output: RecraftV41UtilityProTextToImageOutput;
-  };
-  "fal-ai/recraft/v4.1/utility/text-to-image": {
-    input: RecraftV41UtilityTextToImageInput;
-    output: RecraftV41UtilityTextToImageOutput;
-  };
-  "fal-ai/recraft/v4/pro/text-to-image": {
-    input: RecraftV4ProTextToImageInput;
-    output: RecraftV4ProTextToImageOutput;
-  };
-  "fal-ai/recraft/v4/pro/text-to-vector": {
-    input: RecraftV4ProTextToVectorInput;
-    output: RecraftV4ProTextToVectorOutput;
-  };
-  "fal-ai/recraft/v4/text-to-image": {
-    input: RecraftV4TextToImageInput;
-    output: RecraftV4TextToImageOutput;
-  };
-  "fal-ai/recraft/v4/text-to-vector": {
-    input: RecraftV4TextToVectorInput;
-    output: RecraftV4TextToVectorOutput;
-  };
-  "fal-ai/recraft/vectorize": {
-    input: RecraftVectorizeInput;
-    output: RecraftVectorizeOutput;
-  };
-  "fal-ai/retoucher": {
-    input: retoucherInput;
-    output: retoucherOutput;
-  };
-  "fal-ai/rife": {
-    input: rifeInput;
-    output: rifeOutput;
-  };
-  "fal-ai/rife/video": {
-    input: RifeVideoInput;
-    output: RifeVideoOutput;
-  };
-  "fal-ai/sa2va/4b/image": {
-    input: Sa2va4bImageInput;
-    output: Sa2va4bImageOutput;
-  };
-  "fal-ai/sa2va/4b/video": {
-    input: Sa2va4bVideoInput;
-    output: Sa2va4bVideoOutput;
-  };
-  "fal-ai/sa2va/8b/image": {
-    input: Sa2va8bImageInput;
-    output: Sa2va8bImageOutput;
-  };
-  "fal-ai/sa2va/8b/video": {
-    input: Sa2va8bVideoInput;
-    output: Sa2va8bVideoOutput;
-  };
-  "fal-ai/sadtalker": {
-    input: sadtalkerInput;
-    output: sadtalkerOutput;
-  };
-  "fal-ai/sadtalker/reference": {
-    input: SadtalkerReferenceInput;
-    output: SadtalkerReferenceOutput;
-  };
-  "fal-ai/sam-3-1/image": {
-    input: Sam31ImageInput;
-    output: Sam31ImageOutput;
-  };
-  "fal-ai/sam-3-1/image-rle": {
-    input: Sam31ImageRleInput;
-    output: Sam31ImageRleOutput;
-  };
-  "fal-ai/sam-3-1/video": {
-    input: Sam31VideoInput;
-    output: Sam31VideoOutput;
-  };
-  "fal-ai/sam-3-1/video-rle": {
-    input: Sam31VideoRleInput;
-    output: Sam31VideoRleOutput;
-  };
-  "fal-ai/sam-3/3d-align": {
-    input: Sam33dAlignInput;
-    output: Sam33dAlignOutput;
-  };
-  "fal-ai/sam-3/3d-body": {
-    input: Sam33dBodyInput;
-    output: Sam33dBodyOutput;
-  };
-  "fal-ai/sam-3/3d-objects": {
-    input: Sam33dObjectsInput;
-    output: Sam33dObjectsOutput;
-  };
-  "fal-ai/sam-3/image": {
-    input: Sam3ImageInput;
-    output: Sam3ImageOutput;
-  };
-  "fal-ai/sam-3/image-rle": {
-    input: Sam3ImageRleInput;
-    output: Sam3ImageRleOutput;
-  };
-  "fal-ai/sam-3/image/embed": {
-    input: Sam3ImageEmbedInput;
-    output: Sam3ImageEmbedOutput;
-  };
-  "fal-ai/sam-3/video": {
-    input: Sam3VideoInput;
-    output: Sam3VideoOutput;
-  };
-  "fal-ai/sam-3/video-rle": {
-    input: Sam3VideoRleInput;
-    output: Sam3VideoRleOutput;
-  };
-  "fal-ai/sam-audio/separate": {
-    input: SamAudioSeparateInput;
-    output: SamAudioSeparateOutput;
-  };
-  "fal-ai/sam-audio/span-separate": {
-    input: SamAudioSpanSeparateInput;
-    output: SamAudioSpanSeparateOutput;
-  };
-  "fal-ai/sam-audio/visual-separate": {
-    input: SamAudioVisualSeparateInput;
-    output: SamAudioVisualSeparateOutput;
-  };
-  "fal-ai/sam2/auto-segment": {
-    input: Sam2AutoSegmentInput;
-    output: Sam2AutoSegmentOutput;
-  };
-  "fal-ai/sam2/image": {
-    input: Sam2ImageInput;
-    output: Sam2ImageOutput;
-  };
-  "fal-ai/sam2/video": {
-    input: Sam2VideoInput;
-    output: Sam2VideoOutput;
-  };
-  "fal-ai/sana": {
-    input: sanaInput;
-    output: sanaOutput;
-  };
-  "fal-ai/sana/sprint": {
-    input: SanaSprintInput;
-    output: SanaSprintOutput;
-  };
-  "fal-ai/sana/v1.5/1.6b": {
-    input: SanaV1516bInput;
-    output: SanaV1516bOutput;
-  };
-  "fal-ai/sana/v1.5/4.8b": {
-    input: SanaV1548bInput;
-    output: SanaV1548bOutput;
-  };
-  "fal-ai/scail-2": {
-    input: Scail2Input;
-    output: Scail2Output;
-  };
-  "fal-ai/scene-finder": {
-    input: SceneFinderInput;
-    output: SceneFinderOutput;
-  };
-  "fal-ai/sdxl-controlnet-union": {
-    input: SdxlControlnetUnionInput;
-    output: SdxlControlnetUnionOutput;
-  };
-  "fal-ai/sdxl-controlnet-union/image-to-image": {
-    input: SdxlControlnetUnionImageToImageInput;
-    output: SdxlControlnetUnionImageToImageOutput;
-  };
-  "fal-ai/sdxl-controlnet-union/inpainting": {
-    input: SdxlControlnetUnionInpaintingInput;
-    output: SdxlControlnetUnionInpaintingOutput;
-  };
-  "fal-ai/seedvr/upscale/image": {
-    input: SeedvrUpscaleImageInput;
-    output: SeedvrUpscaleImageOutput;
-  };
-  "fal-ai/seedvr/upscale/image/seamless": {
-    input: SeedvrUpscaleImageSeamlessInput;
-    output: SeedvrUpscaleImageSeamlessOutput;
-  };
-  "fal-ai/seedvr/upscale/video": {
-    input: SeedvrUpscaleVideoInput;
-    output: SeedvrUpscaleVideoOutput;
-  };
-  "fal-ai/sensenova-u1-infographic": {
-    input: SensenovaU1InfographicInput;
-    output: SensenovaU1InfographicOutput;
-  };
-  "fal-ai/silero-vad": {
-    input: SileroVadInput;
-    output: SileroVadOutput;
-  };
-  "fal-ai/smart-resize": {
-    input: SmartResizeInput;
-    output: SmartResizeOutput;
-  };
-  "fal-ai/smart-turn": {
-    input: SmartTurnInput;
-    output: SmartTurnOutput;
-  };
-  "fal-ai/speech-to-text": {
-    input: SpeechToTextInput;
-    output: SpeechToTextOutput;
-  };
-  "fal-ai/speech-to-text/turbo": {
-    input: SpeechToTextTurboInput;
-    output: SpeechToTextTurboOutput;
-  };
-  "fal-ai/stable-audio": {
-    input: StableAudioInput;
-    output: StableAudioOutput;
-  };
-  "fal-ai/stable-audio-25/audio-to-audio": {
-    input: StableAudio25AudioToAudioInput;
-    output: StableAudio25AudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-25/inpaint": {
-    input: StableAudio25InpaintInput;
-    output: StableAudio25InpaintOutput;
-  };
-  "fal-ai/stable-audio-25/text-to-audio": {
-    input: StableAudio25TextToAudioInput;
-    output: StableAudio25TextToAudioOutput;
-  };
-  "fal-ai/stable-audio-3-trainer": {
-    input: StableAudio3TrainerInput;
-    output: StableAudio3TrainerOutput;
-  };
-  "fal-ai/stable-audio-3/medium/audio-inpainting": {
-    input: StableAudio3MediumAudioInpaintingInput;
-    output: StableAudio3MediumAudioInpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/medium/audio-outpainting": {
-    input: StableAudio3MediumAudioOutpaintingInput;
-    output: StableAudio3MediumAudioOutpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/medium/audio-to-audio": {
-    input: StableAudio3MediumAudioToAudioInput;
-    output: StableAudio3MediumAudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/medium/base/audio-inpainting": {
-    input: StableAudio3MediumBaseAudioInpaintingInput;
-    output: StableAudio3MediumBaseAudioInpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/medium/base/audio-outpainting": {
-    input: StableAudio3MediumBaseAudioOutpaintingInput;
-    output: StableAudio3MediumBaseAudioOutpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/medium/base/audio-to-audio": {
-    input: StableAudio3MediumBaseAudioToAudioInput;
-    output: StableAudio3MediumBaseAudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/medium/base/text-to-audio": {
-    input: StableAudio3MediumBaseTextToAudioInput;
-    output: StableAudio3MediumBaseTextToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/medium/text-to-audio": {
-    input: StableAudio3MediumTextToAudioInput;
-    output: StableAudio3MediumTextToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/audio-inpainting": {
-    input: StableAudio3SmallMusicAudioInpaintingInput;
-    output: StableAudio3SmallMusicAudioInpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/audio-outpainting": {
-    input: StableAudio3SmallMusicAudioOutpaintingInput;
-    output: StableAudio3SmallMusicAudioOutpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/audio-to-audio": {
-    input: StableAudio3SmallMusicAudioToAudioInput;
-    output: StableAudio3SmallMusicAudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/base/audio-inpainting": {
-    input: StableAudio3SmallMusicBaseAudioInpaintingInput;
-    output: StableAudio3SmallMusicBaseAudioInpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/base/audio-outpainting": {
-    input: StableAudio3SmallMusicBaseAudioOutpaintingInput;
-    output: StableAudio3SmallMusicBaseAudioOutpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/base/audio-to-audio": {
-    input: StableAudio3SmallMusicBaseAudioToAudioInput;
-    output: StableAudio3SmallMusicBaseAudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/base/text-to-audio": {
-    input: StableAudio3SmallMusicBaseTextToAudioInput;
-    output: StableAudio3SmallMusicBaseTextToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/music/text-to-audio": {
-    input: StableAudio3SmallMusicTextToAudioInput;
-    output: StableAudio3SmallMusicTextToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/audio-inpainting": {
-    input: StableAudio3SmallSfxAudioInpaintingInput;
-    output: StableAudio3SmallSfxAudioInpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/audio-outpainting": {
-    input: StableAudio3SmallSfxAudioOutpaintingInput;
-    output: StableAudio3SmallSfxAudioOutpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/audio-to-audio": {
-    input: StableAudio3SmallSfxAudioToAudioInput;
-    output: StableAudio3SmallSfxAudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/base/audio-inpainting": {
-    input: StableAudio3SmallSfxBaseAudioInpaintingInput;
-    output: StableAudio3SmallSfxBaseAudioInpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/base/audio-outpainting": {
-    input: StableAudio3SmallSfxBaseAudioOutpaintingInput;
-    output: StableAudio3SmallSfxBaseAudioOutpaintingOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/base/audio-to-audio": {
-    input: StableAudio3SmallSfxBaseAudioToAudioInput;
-    output: StableAudio3SmallSfxBaseAudioToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/base/text-to-audio": {
-    input: StableAudio3SmallSfxBaseTextToAudioInput;
-    output: StableAudio3SmallSfxBaseTextToAudioOutput;
-  };
-  "fal-ai/stable-audio-3/small/sfx/text-to-audio": {
-    input: StableAudio3SmallSfxTextToAudioInput;
-    output: StableAudio3SmallSfxTextToAudioOutput;
-  };
-  "fal-ai/stable-cascade": {
-    input: StableCascadeInput;
-    output: StableCascadeOutput;
-  };
-  "fal-ai/stable-cascade/sote-diffusion": {
-    input: StableCascadeSoteDiffusionInput;
-    output: StableCascadeSoteDiffusionOutput;
-  };
-  "fal-ai/stable-diffusion-v15": {
-    input: StableDiffusionV15Input;
-    output: StableDiffusionV15Output;
-  };
-  "fal-ai/stable-diffusion-v3-medium": {
-    input: StableDiffusionV3MediumInput;
-    output: StableDiffusionV3MediumOutput;
-  };
-  "fal-ai/stable-diffusion-v3-medium/image-to-image": {
-    input: StableDiffusionV3MediumImageToImageInput;
-    output: StableDiffusionV3MediumImageToImageOutput;
-  };
-  "fal-ai/stable-diffusion-v35-large": {
-    input: StableDiffusionV35LargeInput;
-    output: StableDiffusionV35LargeOutput;
-  };
-  "fal-ai/stable-diffusion-v35-medium": {
-    input: StableDiffusionV35MediumInput;
-    output: StableDiffusionV35MediumOutput;
-  };
-  "fal-ai/stable-video": {
-    input: StableVideoInput;
-    output: StableVideoOutput;
-  };
-  "fal-ai/stepx-edit2": {
-    input: StepxEdit2Input;
-    output: StepxEdit2Output;
-  };
-  "fal-ai/sync-lipsync": {
-    input: SyncLipsyncInput;
-    output: SyncLipsyncOutput;
-  };
-  "fal-ai/sync-lipsync/react-1": {
-    input: SyncLipsyncReact1Input;
-    output: SyncLipsyncReact1Output;
-  };
-  "fal-ai/sync-lipsync/v2": {
-    input: SyncLipsyncV2Input;
-    output: SyncLipsyncV2Output;
-  };
-  "fal-ai/sync-lipsync/v2/pro": {
-    input: SyncLipsyncV2ProInput;
-    output: SyncLipsyncV2ProOutput;
-  };
-  "fal-ai/sync-lipsync/v3": {
-    input: SyncLipsyncV3Input;
-    output: SyncLipsyncV3Output;
-  };
-  "fal-ai/sync-lipsync/v3/image-to-video": {
-    input: SyncLipsyncV3ImageToVideoInput;
-    output: SyncLipsyncV3ImageToVideoOutput;
-  };
-  "fal-ai/t2v-turbo": {
-    input: T2vTurboInput;
-    output: T2vTurboOutput;
-  };
-  "fal-ai/tada/1b/text-to-speech": {
-    input: Tada1bTextToSpeechInput;
-    output: Tada1bTextToSpeechOutput;
-  };
-  "fal-ai/tada/3b/text-to-speech": {
-    input: Tada3bTextToSpeechInput;
-    output: Tada3bTextToSpeechOutput;
-  };
-  "fal-ai/telestyle-v2": {
-    input: TelestyleV2Input;
-    output: TelestyleV2Output;
-  };
-  "fal-ai/thinksound": {
-    input: thinksoundInput;
-    output: thinksoundOutput;
-  };
-  "fal-ai/thinksound/audio": {
-    input: ThinksoundAudioInput;
-    output: ThinksoundAudioOutput;
-  };
-  "fal-ai/topaz/upscale/image": {
-    input: TopazUpscaleImageInput;
-    output: TopazUpscaleImageOutput;
-  };
-  "fal-ai/topaz/upscale/video": {
-    input: TopazUpscaleVideoInput;
-    output: TopazUpscaleVideoOutput;
-  };
-  "fal-ai/trellis": {
-    input: trellisInput;
-    output: trellisOutput;
-  };
-  "fal-ai/trellis-2": {
-    input: Trellis2Input;
-    output: Trellis2Output;
-  };
-  "fal-ai/trellis-2-lora": {
-    input: Trellis2LoraInput;
-    output: Trellis2LoraOutput;
-  };
-  "fal-ai/trellis-2-lora-trainer": {
-    input: Trellis2LoraTrainerInput;
-    output: Trellis2LoraTrainerOutput;
-  };
-  "fal-ai/trellis-2/retexture": {
-    input: Trellis2RetextureInput;
-    output: Trellis2RetextureOutput;
-  };
-  "fal-ai/trellis/multi": {
-    input: TrellisMultiInput;
-    output: TrellisMultiOutput;
-  };
-  "fal-ai/triposr": {
-    input: triposrInput;
-    output: triposrOutput;
-  };
-  "fal-ai/turbo-flux-trainer": {
-    input: TurboFluxTrainerInput;
-    output: TurboFluxTrainerOutput;
-  };
-  "fal-ai/uno": {
-    input: unoInput;
-    output: unoOutput;
-  };
-  "fal-ai/uso": {
-    input: usoInput;
-    output: usoOutput;
-  };
-  "fal-ai/vecglypher": {
-    input: vecglypherInput;
-    output: vecglypherOutput;
-  };
-  "fal-ai/vecglypher/image-to-svg": {
-    input: VecglypherImageToSvgInput;
-    output: VecglypherImageToSvgOutput;
-  };
-  "fal-ai/veo3.1": {
-    input: Veo31Input;
-    output: Veo31Output;
-  };
-  "fal-ai/veo3.1/extend-video": {
-    input: Veo31ExtendVideoInput;
-    output: Veo31ExtendVideoOutput;
-  };
-  "fal-ai/veo3.1/fast": {
-    input: Veo31FastInput;
-    output: Veo31FastOutput;
-  };
-  "fal-ai/veo3.1/fast/extend-video": {
-    input: Veo31FastExtendVideoInput;
-    output: Veo31FastExtendVideoOutput;
-  };
-  "fal-ai/veo3.1/fast/first-last-frame-to-video": {
-    input: Veo31FastFirstLastFrameToVideoInput;
-    output: Veo31FastFirstLastFrameToVideoOutput;
-  };
-  "fal-ai/veo3.1/fast/image-to-video": {
-    input: Veo31FastImageToVideoInput;
-    output: Veo31FastImageToVideoOutput;
-  };
-  "fal-ai/veo3.1/first-last-frame-to-video": {
-    input: Veo31FirstLastFrameToVideoInput;
-    output: Veo31FirstLastFrameToVideoOutput;
-  };
-  "fal-ai/veo3.1/image-to-video": {
-    input: Veo31ImageToVideoInput;
-    output: Veo31ImageToVideoOutput;
-  };
-  "fal-ai/veo3.1/lite": {
-    input: Veo31LiteInput;
-    output: Veo31LiteOutput;
-  };
-  "fal-ai/veo3.1/lite/first-last-frame-to-video": {
-    input: Veo31LiteFirstLastFrameToVideoInput;
-    output: Veo31LiteFirstLastFrameToVideoOutput;
-  };
-  "fal-ai/veo3.1/lite/image-to-video": {
-    input: Veo31LiteImageToVideoInput;
-    output: Veo31LiteImageToVideoOutput;
-  };
-  "fal-ai/veo3.1/reference-to-video": {
-    input: Veo31ReferenceToVideoInput;
-    output: Veo31ReferenceToVideoOutput;
-  };
-  "fal-ai/vibevoice": {
-    input: vibevoiceInput;
-    output: vibevoiceOutput;
-  };
-  "fal-ai/vibevoice/0.5b": {
-    input: Vibevoice05bInput;
-    output: Vibevoice05bOutput;
-  };
-  "fal-ai/vibevoice/7b": {
-    input: Vibevoice7bInput;
-    output: Vibevoice7bOutput;
-  };
-  "fal-ai/video-prompt-generator": {
-    input: VideoPromptGeneratorInput;
-    output: VideoPromptGeneratorOutput;
-  };
-  "fal-ai/video-understanding": {
-    input: VideoUnderstandingInput;
-    output: VideoUnderstandingOutput;
-  };
-  "fal-ai/video-upscaler": {
-    input: VideoUpscalerInput;
-    output: VideoUpscalerOutput;
-  };
-  "fal-ai/vidu/image-to-video": {
-    input: ViduImageToVideoInput;
-    output: ViduImageToVideoOutput;
-  };
-  "fal-ai/vidu/q1/image-to-video": {
-    input: ViduQ1ImageToVideoInput;
-    output: ViduQ1ImageToVideoOutput;
-  };
-  "fal-ai/vidu/q1/reference-to-video": {
-    input: ViduQ1ReferenceToVideoInput;
-    output: ViduQ1ReferenceToVideoOutput;
-  };
-  "fal-ai/vidu/q1/start-end-to-video": {
-    input: ViduQ1StartEndToVideoInput;
-    output: ViduQ1StartEndToVideoOutput;
-  };
-  "fal-ai/vidu/q1/text-to-video": {
-    input: ViduQ1TextToVideoInput;
-    output: ViduQ1TextToVideoOutput;
-  };
-  "fal-ai/vidu/q2/image-to-video/pro": {
-    input: ViduQ2ImageToVideoProInput;
-    output: ViduQ2ImageToVideoProOutput;
-  };
-  "fal-ai/vidu/q2/image-to-video/turbo": {
-    input: ViduQ2ImageToVideoTurboInput;
-    output: ViduQ2ImageToVideoTurboOutput;
-  };
-  "fal-ai/vidu/q2/reference-to-image": {
-    input: ViduQ2ReferenceToImageInput;
-    output: ViduQ2ReferenceToImageOutput;
-  };
-  "fal-ai/vidu/q2/reference-to-video/pro": {
-    input: ViduQ2ReferenceToVideoProInput;
-    output: ViduQ2ReferenceToVideoProOutput;
-  };
-  "fal-ai/vidu/q2/text-to-image": {
-    input: ViduQ2TextToImageInput;
-    output: ViduQ2TextToImageOutput;
-  };
-  "fal-ai/vidu/q2/text-to-video": {
-    input: ViduQ2TextToVideoInput;
-    output: ViduQ2TextToVideoOutput;
-  };
-  "fal-ai/vidu/q2/video-extension/pro": {
-    input: ViduQ2VideoExtensionProInput;
-    output: ViduQ2VideoExtensionProOutput;
-  };
-  "fal-ai/vidu/q3/image-to-video": {
-    input: ViduQ3ImageToVideoInput;
-    output: ViduQ3ImageToVideoOutput;
-  };
-  "fal-ai/vidu/q3/image-to-video/turbo": {
-    input: ViduQ3ImageToVideoTurboInput;
-    output: ViduQ3ImageToVideoTurboOutput;
-  };
-  "fal-ai/vidu/q3/reference-to-video/mix": {
-    input: ViduQ3ReferenceToVideoMixInput;
-    output: ViduQ3ReferenceToVideoMixOutput;
-  };
-  "fal-ai/vidu/q3/text-to-video": {
-    input: ViduQ3TextToVideoInput;
-    output: ViduQ3TextToVideoOutput;
-  };
-  "fal-ai/vidu/q3/text-to-video/turbo": {
-    input: ViduQ3TextToVideoTurboInput;
-    output: ViduQ3TextToVideoTurboOutput;
-  };
-  "fal-ai/vidu/reference-to-image": {
-    input: ViduReferenceToImageInput;
-    output: ViduReferenceToImageOutput;
-  };
-  "fal-ai/vidu/reference-to-video": {
-    input: ViduReferenceToVideoInput;
-    output: ViduReferenceToVideoOutput;
-  };
-  "fal-ai/vidu/start-end-to-video": {
-    input: ViduStartEndToVideoInput;
-    output: ViduStartEndToVideoOutput;
-  };
-  "fal-ai/vidu/template-to-video": {
-    input: ViduTemplateToVideoInput;
-    output: ViduTemplateToVideoOutput;
-  };
-  "fal-ai/void-video-inpainting": {
-    input: VoidVideoInpaintingInput;
-    output: VoidVideoInpaintingOutput;
-  };
-  "fal-ai/wan-22-image-trainer": {
-    input: Wan22ImageTrainerInput;
-    output: Wan22ImageTrainerOutput;
-  };
-  "fal-ai/wan-22-trainer/i2v-a14b": {
-    input: Wan22TrainerI2vA14bInput;
-    output: Wan22TrainerI2vA14bOutput;
-  };
-  "fal-ai/wan-22-trainer/t2v-a14b": {
-    input: Wan22TrainerT2vA14bInput;
-    output: Wan22TrainerT2vA14bOutput;
-  };
-  "fal-ai/wan-22-vace-fun-a14b/depth": {
-    input: Wan22VaceFunA14bDepthInput;
-    output: Wan22VaceFunA14bDepthOutput;
-  };
-  "fal-ai/wan-22-vace-fun-a14b/inpainting": {
-    input: Wan22VaceFunA14bInpaintingInput;
-    output: Wan22VaceFunA14bInpaintingOutput;
-  };
-  "fal-ai/wan-22-vace-fun-a14b/outpainting": {
-    input: Wan22VaceFunA14bOutpaintingInput;
-    output: Wan22VaceFunA14bOutpaintingOutput;
-  };
-  "fal-ai/wan-22-vace-fun-a14b/reframe": {
-    input: Wan22VaceFunA14bReframeInput;
-    output: Wan22VaceFunA14bReframeOutput;
-  };
-  "fal-ai/wan-25-preview/image-to-image": {
-    input: Wan25PreviewImageToImageInput;
-    output: Wan25PreviewImageToImageOutput;
-  };
-  "fal-ai/wan-25-preview/image-to-video": {
-    input: Wan25PreviewImageToVideoInput;
-    output: Wan25PreviewImageToVideoOutput;
-  };
-  "fal-ai/wan-25-preview/text-to-image": {
-    input: Wan25PreviewTextToImageInput;
-    output: Wan25PreviewTextToImageOutput;
-  };
-  "fal-ai/wan-25-preview/text-to-video": {
-    input: Wan25PreviewTextToVideoInput;
-    output: Wan25PreviewTextToVideoOutput;
-  };
-  "fal-ai/wan-effects": {
-    input: WanEffectsInput;
-    output: WanEffectsOutput;
-  };
-  "fal-ai/wan-flf2v": {
-    input: WanFlf2vInput;
-    output: WanFlf2vOutput;
-  };
-  "fal-ai/wan-i2v": {
-    input: WanI2vInput;
-    output: WanI2vOutput;
-  };
-  "fal-ai/wan-i2v-lora": {
-    input: WanI2vLoraInput;
-    output: WanI2vLoraOutput;
-  };
-  "fal-ai/wan-motion": {
-    input: WanMotionInput;
-    output: WanMotionOutput;
-  };
-  "fal-ai/wan-pro/image-to-video": {
-    input: WanProImageToVideoInput;
-    output: WanProImageToVideoOutput;
-  };
-  "fal-ai/wan-pro/text-to-video": {
-    input: WanProTextToVideoInput;
-    output: WanProTextToVideoOutput;
-  };
-  "fal-ai/wan-t2v": {
-    input: WanT2vInput;
-    output: WanT2vOutput;
-  };
-  "fal-ai/wan-t2v-lora": {
-    input: WanT2vLoraInput;
-    output: WanT2vLoraOutput;
-  };
-  "fal-ai/wan-trainer/i2v-720p": {
-    input: WanTrainerI2v720pInput;
-    output: WanTrainerI2v720pOutput;
-  };
-  "fal-ai/wan-trainer/t2v": {
-    input: WanTrainerT2vInput;
-    output: WanTrainerT2vOutput;
-  };
-  "fal-ai/wan-trainer/t2v-14b": {
-    input: WanTrainerT2v14bInput;
-    output: WanTrainerT2v14bOutput;
-  };
-  "fal-ai/wan-vace-14b": {
-    input: WanVace14bInput;
-    output: WanVace14bOutput;
-  };
-  "fal-ai/wan-vace-14b/depth": {
-    input: WanVace14bDepthInput;
-    output: WanVace14bDepthOutput;
-  };
-  "fal-ai/wan-vace-14b/inpainting": {
-    input: WanVace14bInpaintingInput;
-    output: WanVace14bInpaintingOutput;
-  };
-  "fal-ai/wan-vace-14b/outpainting": {
-    input: WanVace14bOutpaintingInput;
-    output: WanVace14bOutpaintingOutput;
-  };
-  "fal-ai/wan-vace-14b/pose": {
-    input: WanVace14bPoseInput;
-    output: WanVace14bPoseOutput;
-  };
-  "fal-ai/wan-vace-14b/reframe": {
-    input: WanVace14bReframeInput;
-    output: WanVace14bReframeOutput;
-  };
-  "fal-ai/wan-vace-apps/long-reframe": {
-    input: WanVaceAppsLongReframeInput;
-    output: WanVaceAppsLongReframeOutput;
-  };
-  "fal-ai/wan-vace-apps/video-edit": {
-    input: WanVaceAppsVideoEditInput;
-    output: WanVaceAppsVideoEditOutput;
-  };
-  "fal-ai/wan/v2.2-14b/animate/move": {
-    input: WanV2214bAnimateMoveInput;
-    output: WanV2214bAnimateMoveOutput;
-  };
-  "fal-ai/wan/v2.2-14b/animate/replace": {
-    input: WanV2214bAnimateReplaceInput;
-    output: WanV2214bAnimateReplaceOutput;
-  };
-  "fal-ai/wan/v2.2-14b/speech-to-video": {
-    input: WanV2214bSpeechToVideoInput;
-    output: WanV2214bSpeechToVideoOutput;
-  };
-  "fal-ai/wan/v2.2-5b/image-to-video": {
-    input: WanV225bImageToVideoInput;
-    output: WanV225bImageToVideoOutput;
-  };
-  "fal-ai/wan/v2.2-5b/text-to-image": {
-    input: WanV225bTextToImageInput;
-    output: WanV225bTextToImageOutput;
-  };
-  "fal-ai/wan/v2.2-5b/text-to-video": {
-    input: WanV225bTextToVideoInput;
-    output: WanV225bTextToVideoOutput;
-  };
-  "fal-ai/wan/v2.2-5b/text-to-video/distill": {
-    input: WanV225bTextToVideoDistillInput;
-    output: WanV225bTextToVideoDistillOutput;
-  };
-  "fal-ai/wan/v2.2-5b/text-to-video/fast-wan": {
-    input: WanV225bTextToVideoFastWanInput;
-    output: WanV225bTextToVideoFastWanOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/image-to-image": {
-    input: WanV22A14bImageToImageInput;
-    output: WanV22A14bImageToImageOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/image-to-video/lora": {
-    input: WanV22A14bImageToVideoLoraInput;
-    output: WanV22A14bImageToVideoLoraOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/image-to-video/turbo": {
-    input: WanV22A14bImageToVideoTurboInput;
-    output: WanV22A14bImageToVideoTurboOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/text-to-image": {
-    input: WanV22A14bTextToImageInput;
-    output: WanV22A14bTextToImageOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/text-to-image/lora": {
-    input: WanV22A14bTextToImageLoraInput;
-    output: WanV22A14bTextToImageLoraOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/text-to-video": {
-    input: WanV22A14bTextToVideoInput;
-    output: WanV22A14bTextToVideoOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/text-to-video/lora": {
-    input: WanV22A14bTextToVideoLoraInput;
-    output: WanV22A14bTextToVideoLoraOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/text-to-video/turbo": {
-    input: WanV22A14bTextToVideoTurboInput;
-    output: WanV22A14bTextToVideoTurboOutput;
-  };
-  "fal-ai/wan/v2.2-a14b/video-to-video": {
-    input: WanV22A14bVideoToVideoInput;
-    output: WanV22A14bVideoToVideoOutput;
-  };
-  "fal-ai/wan/v2.7/edit": {
-    input: WanV27EditInput;
-    output: WanV27EditOutput;
-  };
-  "fal-ai/wan/v2.7/edit-video": {
-    input: WanV27EditVideoInput;
-    output: WanV27EditVideoOutput;
-  };
-  "fal-ai/wan/v2.7/image-to-video": {
-    input: WanV27ImageToVideoInput;
-    output: WanV27ImageToVideoOutput;
-  };
-  "fal-ai/wan/v2.7/pro/edit": {
-    input: WanV27ProEditInput;
-    output: WanV27ProEditOutput;
-  };
-  "fal-ai/wan/v2.7/pro/text-to-image": {
-    input: WanV27ProTextToImageInput;
-    output: WanV27ProTextToImageOutput;
-  };
-  "fal-ai/wan/v2.7/reference-to-video": {
-    input: WanV27ReferenceToVideoInput;
-    output: WanV27ReferenceToVideoOutput;
-  };
-  "fal-ai/wan/v2.7/text-to-image": {
-    input: WanV27TextToImageInput;
-    output: WanV27TextToImageOutput;
-  };
-  "fal-ai/wan/v2.7/text-to-video": {
-    input: WanV27TextToVideoInput;
-    output: WanV27TextToVideoOutput;
-  };
-  "fal-ai/wizper": {
-    input: wizperInput;
-    output: wizperOutput;
-  };
-  "fal-ai/workflow-utilities/audio-compressor": {
-    input: WorkflowUtilitiesAudioCompressorInput;
-    output: WorkflowUtilitiesAudioCompressorOutput;
-  };
-  "fal-ai/workflow-utilities/auto-subtitle": {
-    input: WorkflowUtilitiesAutoSubtitleInput;
-    output: WorkflowUtilitiesAutoSubtitleOutput;
-  };
-  "fal-ai/workflow-utilities/blend-video": {
-    input: WorkflowUtilitiesBlendVideoInput;
-    output: WorkflowUtilitiesBlendVideoOutput;
-  };
-  "fal-ai/workflow-utilities/extract-nth-frame": {
-    input: WorkflowUtilitiesExtractNthFrameInput;
-    output: WorkflowUtilitiesExtractNthFrameOutput;
-  };
-  "fal-ai/workflow-utilities/impulse-response": {
-    input: WorkflowUtilitiesImpulseResponseInput;
-    output: WorkflowUtilitiesImpulseResponseOutput;
-  };
-  "fal-ai/workflow-utilities/interleave-video": {
-    input: WorkflowUtilitiesInterleaveVideoInput;
-    output: WorkflowUtilitiesInterleaveVideoOutput;
-  };
-  "fal-ai/workflow-utilities/pick-image-by-index": {
-    input: WorkflowUtilitiesPickImageByIndexInput;
-    output: WorkflowUtilitiesPickImageByIndexOutput;
-  };
-  "fal-ai/workflow-utilities/reverse-video": {
-    input: WorkflowUtilitiesReverseVideoInput;
-    output: WorkflowUtilitiesReverseVideoOutput;
-  };
-  "fal-ai/workflow-utilities/scale-video": {
-    input: WorkflowUtilitiesScaleVideoInput;
-    output: WorkflowUtilitiesScaleVideoOutput;
-  };
-  "fal-ai/workflow-utilities/trim-video": {
-    input: WorkflowUtilitiesTrimVideoInput;
-    output: WorkflowUtilitiesTrimVideoOutput;
-  };
-  "fal-ai/x-ailab/nsfw": {
-    input: XAilabNsfwInput;
-    output: XAilabNsfwOutput;
-  };
-  "fal-ai/z-image-trainer": {
-    input: ZImageTrainerInput;
-    output: ZImageTrainerOutput;
-  };
-  "fal-ai/z-image-turbo-trainer-v2": {
-    input: ZImageTurboTrainerV2Input;
-    output: ZImageTurboTrainerV2Output;
-  };
-  "fal-ai/z-image/base": {
-    input: ZImageBaseInput;
-    output: ZImageBaseOutput;
-  };
-  "fal-ai/z-image/base/lora": {
-    input: ZImageBaseLoraInput;
-    output: ZImageBaseLoraOutput;
-  };
-  "fal-ai/z-image/turbo": {
-    input: ZImageTurboInput;
-    output: ZImageTurboOutput;
-  };
-  "fal-ai/z-image/turbo/controlnet": {
-    input: ZImageTurboControlnetInput;
-    output: ZImageTurboControlnetOutput;
-  };
-  "fal-ai/z-image/turbo/controlnet/lora": {
-    input: ZImageTurboControlnetLoraInput;
-    output: ZImageTurboControlnetLoraOutput;
-  };
-  "fal-ai/z-image/turbo/image-to-image": {
-    input: ZImageTurboImageToImageInput;
-    output: ZImageTurboImageToImageOutput;
-  };
-  "fal-ai/z-image/turbo/image-to-image/lora": {
-    input: ZImageTurboImageToImageLoraInput;
-    output: ZImageTurboImageToImageLoraOutput;
-  };
-  "fal-ai/z-image/turbo/inpaint": {
-    input: ZImageTurboInpaintInput;
-    output: ZImageTurboInpaintOutput;
-  };
-  "fal-ai/z-image/turbo/inpaint/lora": {
-    input: ZImageTurboInpaintLoraInput;
-    output: ZImageTurboInpaintLoraOutput;
-  };
-  "fal-ai/z-image/turbo/lora": {
-    input: ZImageTurboLoraInput;
-    output: ZImageTurboLoraOutput;
-  };
-  "fal-ai/z-image/turbo/tiling": {
-    input: ZImageTurboTilingInput;
-    output: ZImageTurboTilingOutput;
-  };
-  "fal-ai/z-image/turbo/tiling/lora": {
-    input: ZImageTurboTilingLoraInput;
-    output: ZImageTurboTilingLoraOutput;
-  };
-  "fal-ai/zonos": {
-    input: zonosInput;
-    output: zonosOutput;
-  };
-  "fal-ai/zonos2": {
-    input: zonos2Input;
-    output: zonos2Output;
-  };
-  "google/gemini-omni-flash": {
-    input: GeminiOmniFlashInput;
-    output: GeminiOmniFlashOutput;
-  };
-  "google/gemini-omni-flash/edit": {
-    input: GeminiOmniFlashEditInput;
-    output: GeminiOmniFlashEditOutput;
-  };
-  "google/gemini-omni-flash/image-to-video": {
-    input: GeminiOmniFlashImageToVideoInput;
-    output: GeminiOmniFlashImageToVideoOutput;
-  };
-  "google/gemini-omni-flash/reference-to-video": {
-    input: GeminiOmniFlashReferenceToVideoInput;
-    output: GeminiOmniFlashReferenceToVideoOutput;
-  };
-  "google/nano-banana-2-lite": {
-    input: NanoBanana2LiteInput;
-    output: NanoBanana2LiteOutput;
-  };
-  "google/nano-banana-lite": {
-    input: NanoBananaLiteInput;
-    output: NanoBananaLiteOutput;
-  };
-  "google/nano-banana-lite/edit": {
-    input: NanoBananaLiteEditInput;
-    output: NanoBananaLiteEditOutput;
-  };
-  "ideogram/v4": {
-    input: v4Input;
-    output: v4Output;
-  };
-  "ideogram/v4/fast": {
-    input: V4FastInput;
-    output: V4FastOutput;
-  };
-  "ideogram/v4/image-to-image": {
-    input: V4ImageToImageInput;
-    output: V4ImageToImageOutput;
-  };
-  "ideogram/v4/image-to-image/lora": {
-    input: V4ImageToImageLoraInput;
-    output: V4ImageToImageLoraOutput;
-  };
-  "ideogram/v4/instant": {
-    input: V4InstantInput;
-    output: V4InstantOutput;
-  };
-  "ideogram/v4/lora": {
-    input: V4LoraInput;
-    output: V4LoraOutput;
-  };
-  "ideogram/v4/tiling": {
-    input: V4TilingInput;
-    output: V4TilingOutput;
-  };
-  "ideogram/v4/tiling/lora": {
-    input: V4TilingLoraInput;
-    output: V4TilingLoraOutput;
-  };
-  "ideogram/v4/trainer": {
-    input: V4TrainerInput;
-    output: V4TrainerOutput;
-  };
-  "imagineart/imagineart-1.5-preview/text-to-image": {
-    input: Imagineart15PreviewTextToImageInput;
-    output: Imagineart15PreviewTextToImageOutput;
-  };
-  "imagineart/imagineart-1.5-pro-preview/text-to-image": {
-    input: Imagineart15ProPreviewTextToImageInput;
-    output: Imagineart15ProPreviewTextToImageOutput;
-  };
-  "imagineart/imagineart-2.0-edit-preview/image-to-image": {
-    input: Imagineart20EditPreviewImageToImageInput;
-    output: Imagineart20EditPreviewImageToImageOutput;
-  };
-  "imagineart/imagineart-2.0-preview/text-to-image": {
-    input: Imagineart20PreviewTextToImageInput;
-    output: Imagineart20PreviewTextToImageOutput;
-  };
-  "krea/v2/large/text-to-image": {
-    input: V2LargeTextToImageInput;
-    output: V2LargeTextToImageOutput;
-  };
-  "krea/v2/medium/text-to-image": {
-    input: V2MediumTextToImageInput;
-    output: V2MediumTextToImageOutput;
-  };
-  "krea/v2/medium/turbo/text-to-image": {
-    input: V2MediumTurboTextToImageInput;
-    output: V2MediumTurboTextToImageOutput;
-  };
-  "luma/agent/ray/v3.2/image-to-video": {
-    input: AgentRayV32ImageToVideoInput;
-    output: AgentRayV32ImageToVideoOutput;
-  };
-  "luma/agent/ray/v3.2/reframe": {
-    input: AgentRayV32ReframeInput;
-    output: AgentRayV32ReframeOutput;
-  };
-  "luma/agent/ray/v3.2/text-to-video": {
-    input: AgentRayV32TextToVideoInput;
-    output: AgentRayV32TextToVideoOutput;
-  };
-  "luma/agent/ray/v3.2/video-to-video": {
-    input: AgentRayV32VideoToVideoInput;
-    output: AgentRayV32VideoToVideoOutput;
-  };
-  "luma/agent/uni-1/v1/edit": {
-    input: AgentUni1V1EditInput;
-    output: AgentUni1V1EditOutput;
-  };
-  "luma/agent/uni-1/v1/max": {
-    input: AgentUni1V1MaxInput;
-    output: AgentUni1V1MaxOutput;
-  };
-  "luma/agent/uni-1/v1/max/edit": {
-    input: AgentUni1V1MaxEditInput;
-    output: AgentUni1V1MaxEditOutput;
-  };
-  "luma/agent/uni-1/v1/text-to-image": {
-    input: AgentUni1V1TextToImageInput;
-    output: AgentUni1V1TextToImageOutput;
-  };
-  "microsoft/mai-image-2.5": {
-    input: MaiImage25Input;
-    output: MaiImage25Output;
-  };
-  "microsoft/mai-image-2.5-pro": {
-    input: MaiImage25ProInput;
-    output: MaiImage25ProOutput;
-  };
-  "microsoft/mai-image-2.5-pro/edit": {
-    input: MaiImage25ProEditInput;
-    output: MaiImage25ProEditOutput;
-  };
-  "microsoft/mai-image-2.5/edit": {
-    input: MaiImage25EditInput;
-    output: MaiImage25EditOutput;
-  };
-  "minimax/h3/image-to-video": {
-    input: H3ImageToVideoInput;
-    output: H3ImageToVideoOutput;
-  };
-  "minimax/h3/reference-to-video": {
-    input: H3ReferenceToVideoInput;
-    output: H3ReferenceToVideoOutput;
-  };
-  "minimax/h3/text-to-video": {
-    input: H3TextToVideoInput;
-    output: H3TextToVideoOutput;
-  };
-  "mirelo-ai/sfx-v1.5/video-to-audio": {
-    input: SfxV15VideoToAudioInput;
-    output: SfxV15VideoToAudioOutput;
-  };
-  "mirelo-ai/sfx-v1.5/video-to-video": {
-    input: SfxV15VideoToVideoInput;
-    output: SfxV15VideoToVideoOutput;
-  };
-  "mirelo-ai/sfx-v1/video-to-audio": {
-    input: SfxV1VideoToAudioInput;
-    output: SfxV1VideoToAudioOutput;
-  };
-  "mirelo-ai/sfx-v1/video-to-video": {
-    input: SfxV1VideoToVideoInput;
-    output: SfxV1VideoToVideoOutput;
-  };
-  "mirelo-ai/sfx1.6/extend-audio": {
-    input: Sfx16ExtendAudioInput;
-    output: Sfx16ExtendAudioOutput;
-  };
-  "mirelo-ai/sfx1.6/inpaint-audio": {
-    input: Sfx16InpaintAudioInput;
-    output: Sfx16InpaintAudioOutput;
-  };
-  "mirelo-ai/sfx1.6/text-to-audio": {
-    input: Sfx16TextToAudioInput;
-    output: Sfx16TextToAudioOutput;
-  };
-  "mirelo-ai/sfx1.6/video-to-video": {
-    input: Sfx16VideoToVideoInput;
-    output: Sfx16VideoToVideoOutput;
-  };
-  "moonvalley/marey/i2v": {
-    input: MareyI2vInput;
-    output: MareyI2vOutput;
-  };
-  "moonvalley/marey/motion-transfer": {
-    input: MareyMotionTransferInput;
-    output: MareyMotionTransferOutput;
-  };
-  "moonvalley/marey/pose-transfer": {
-    input: MareyPoseTransferInput;
-    output: MareyPoseTransferOutput;
-  };
-  "moonvalley/marey/t2v": {
-    input: MareyT2vInput;
-    output: MareyT2vOutput;
-  };
-  "nvidia/cosmos-3-super/image-to-video": {
-    input: Cosmos3SuperImageToVideoInput;
-    output: Cosmos3SuperImageToVideoOutput;
-  };
-  "nvidia/cosmos-3-super/text-to-image": {
-    input: Cosmos3SuperTextToImageInput;
-    output: Cosmos3SuperTextToImageOutput;
-  };
-  "nvidia/nemotron-3-nano-omni": {
-    input: Nemotron3NanoOmniInput;
-    output: Nemotron3NanoOmniOutput;
-  };
-  "nvidia/nemotron-3-nano-omni/audio": {
-    input: Nemotron3NanoOmniAudioInput;
-    output: Nemotron3NanoOmniAudioOutput;
-  };
-  "nvidia/nemotron-3-nano-omni/video": {
-    input: Nemotron3NanoOmniVideoInput;
-    output: Nemotron3NanoOmniVideoOutput;
-  };
-  "nvidia/nemotron-3-nano-omni/vision": {
-    input: Nemotron3NanoOmniVisionInput;
-    output: Nemotron3NanoOmniVisionOutput;
-  };
-  "nvidia/nemotron-asr-multilingual/asr": {
-    input: NemotronAsrMultilingualAsrInput;
-    output: NemotronAsrMultilingualAsrOutput;
-  };
-  "openai/gpt-image-2": {
-    input: GptImage2Input;
-    output: GptImage2Output;
-  };
-  "openai/gpt-image-2/edit": {
-    input: GptImage2EditInput;
-    output: GptImage2EditOutput;
-  };
-  "openrouter/router": {
-    input: routerInput;
-    output: routerOutput;
-  };
-  "openrouter/router/audio": {
-    input: RouterAudioInput;
-    output: RouterAudioOutput;
-  };
-  "openrouter/router/enterprise": {
-    input: RouterEnterpriseInput;
-    output: RouterEnterpriseOutput;
-  };
-  "openrouter/router/openai/v1/chat/completions": {
-    input: RouterOpenaiV1ChatCompletionsInput;
-    output: RouterOpenaiV1ChatCompletionsOutput;
-  };
-  "openrouter/router/openai/v1/embeddings": {
-    input: RouterOpenaiV1EmbeddingsInput;
-    output: RouterOpenaiV1EmbeddingsOutput;
-  };
-  "openrouter/router/openai/v1/responses": {
-    input: RouterOpenaiV1ResponsesInput;
-    output: RouterOpenaiV1ResponsesOutput;
-  };
-  "openrouter/router/video": {
-    input: RouterVideoInput;
-    output: RouterVideoOutput;
-  };
-  "openrouter/router/video/enterprise": {
-    input: RouterVideoEnterpriseInput;
-    output: RouterVideoEnterpriseOutput;
-  };
-  "openrouter/router/vision": {
-    input: RouterVisionInput;
-    output: RouterVisionOutput;
-  };
-  "perceptron/isaac-01": {
-    input: Isaac01Input;
-    output: Isaac01Output;
-  };
-  "pixelcut/background-removal": {
-    input: BackgroundRemovalInput;
-    output: BackgroundRemovalOutput;
-  };
-  "pixelcut/product-photo": {
-    input: ProductPhotoInput;
-    output: ProductPhotoOutput;
-  };
-  "pixelcut/video-background-removal": {
-    input: VideoBackgroundRemovalInput;
-    output: VideoBackgroundRemovalOutput;
-  };
-  "resemble-ai/chatterboxhd/speech-to-speech": {
-    input: ChatterboxhdSpeechToSpeechInput;
-    output: ChatterboxhdSpeechToSpeechOutput;
-  };
-  "resemble-ai/chatterboxhd/text-to-speech": {
-    input: ChatterboxhdTextToSpeechInput;
-    output: ChatterboxhdTextToSpeechOutput;
-  };
-  "reve/2.1/edit": {
-    input: _21EditInput;
-    output: _21EditOutput;
-  };
-  "reve/2.1/remix": {
-    input: _21RemixInput;
-    output: _21RemixOutput;
-  };
-  "reve/2.1/text-to-image": {
-    input: _21TextToImageInput;
-    output: _21TextToImageOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux-lora": {
-    input: JuggernautFluxLoraInput;
-    output: JuggernautFluxLoraOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux-lora/inpainting": {
-    input: JuggernautFluxLoraInpaintingInput;
-    output: JuggernautFluxLoraInpaintingOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/base": {
-    input: JuggernautFluxBaseInput;
-    output: JuggernautFluxBaseOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/base/image-to-image": {
-    input: JuggernautFluxBaseImageToImageInput;
-    output: JuggernautFluxBaseImageToImageOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/lightning": {
-    input: JuggernautFluxLightningInput;
-    output: JuggernautFluxLightningOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/pro": {
-    input: JuggernautFluxProInput;
-    output: JuggernautFluxProOutput;
-  };
-  "rundiffusion-fal/juggernaut-flux/pro/image-to-image": {
-    input: JuggernautFluxProImageToImageInput;
-    output: JuggernautFluxProImageToImageOutput;
-  };
-  "rundiffusion-fal/rundiffusion-photo-flux": {
-    input: RundiffusionPhotoFluxInput;
-    output: RundiffusionPhotoFluxOutput;
-  };
-  "smoretalk-ai/rembg-enhance": {
-    input: RembgEnhanceInput;
-    output: RembgEnhanceOutput;
-  };
-  "sonilo/v1.1/text-to-music": {
-    input: V11TextToMusicInput;
-    output: V11TextToMusicOutput;
-  };
-  "sonilo/v1.1/text-to-sound-effects": {
-    input: V11TextToSoundEffectsInput;
-    output: V11TextToSoundEffectsOutput;
-  };
-  "sonilo/v1.1/video-to-music": {
-    input: V11VideoToMusicInput;
-    output: V11VideoToMusicOutput;
-  };
-  "sonilo/v1.1/video-to-sound-effects": {
-    input: V11VideoToSoundEffectsInput;
-    output: V11VideoToSoundEffectsOutput;
-  };
-  "sonilo/v1.1/video-to-video-music": {
-    input: V11VideoToVideoMusicInput;
-    output: V11VideoToVideoMusicOutput;
-  };
-  "sonilo/v1.1/video-to-video-sound-effects": {
-    input: V11VideoToVideoSoundEffectsInput;
-    output: V11VideoToVideoSoundEffectsOutput;
-  };
-  "tripo3d/h3.1/image-to-3d": {
-    input: H31ImageTo3dInput;
-    output: H31ImageTo3dOutput;
-  };
-  "tripo3d/h3.1/multiview-to-3d": {
-    input: H31MultiviewTo3dInput;
-    output: H31MultiviewTo3dOutput;
-  };
-  "tripo3d/h3.1/text-to-3d": {
-    input: H31TextTo3dInput;
-    output: H31TextTo3dOutput;
-  };
-  "tripo3d/p1/image-to-3d": {
-    input: P1ImageTo3dInput;
-    output: P1ImageTo3dOutput;
-  };
-  "tripo3d/p1/text-to-3d": {
-    input: P1TextTo3dInput;
-    output: P1TextTo3dOutput;
-  };
-  "tripo3d/tripo/v2.5/image-to-3d": {
-    input: TripoV25ImageTo3dInput;
-    output: TripoV25ImageTo3dOutput;
-  };
-  "tripo3d/tripo/v2.5/multiview-to-3d": {
-    input: TripoV25MultiviewTo3dInput;
-    output: TripoV25MultiviewTo3dOutput;
-  };
-  "tripo3d/triposplat": {
-    input: triposplatInput;
-    output: triposplatOutput;
-  };
-  "veed/avatars/audio-to-video": {
-    input: AvatarsAudioToVideoInput;
-    output: AvatarsAudioToVideoOutput;
-  };
-  "veed/avatars/text-to-video": {
-    input: AvatarsTextToVideoInput;
-    output: AvatarsTextToVideoOutput;
-  };
-  "veed/fabric-1.0": {
-    input: Fabric10Input;
-    output: Fabric10Output;
-  };
-  "veed/fabric-1.0/fast": {
-    input: Fabric10FastInput;
-    output: Fabric10FastOutput;
-  };
-  "veed/fabric-1.0/text": {
-    input: Fabric10TextInput;
-    output: Fabric10TextOutput;
-  };
-  "veed/lipsync": {
-    input: lipsyncInput;
-    output: lipsyncOutput;
-  };
-  "veed/lipsync/v2": {
-    input: LipsyncV2Input;
-    output: LipsyncV2Output;
-  };
-  "veed/subtitles": {
-    input: subtitlesInput;
-    output: subtitlesOutput;
-  };
-  "veed/video-background-removal": {
-    input: VideoBackgroundRemovalInput;
-    output: VideoBackgroundRemovalOutput;
-  };
-  "veed/video-background-removal/fast": {
-    input: VideoBackgroundRemovalFastInput;
-    output: VideoBackgroundRemovalFastOutput;
-  };
-  "veed/video-background-removal/green-screen": {
-    input: VideoBackgroundRemovalGreenScreenInput;
-    output: VideoBackgroundRemovalGreenScreenOutput;
-  };
-  "wan/v2.6/image-to-image": {
-    input: V26ImageToImageInput;
-    output: V26ImageToImageOutput;
-  };
-  "wan/v2.6/image-to-video": {
-    input: V26ImageToVideoInput;
-    output: V26ImageToVideoOutput;
-  };
-  "wan/v2.6/image-to-video/flash": {
-    input: V26ImageToVideoFlashInput;
-    output: V26ImageToVideoFlashOutput;
-  };
-  "wan/v2.6/reference-to-video": {
-    input: V26ReferenceToVideoInput;
-    output: V26ReferenceToVideoOutput;
-  };
-  "wan/v2.6/reference-to-video/flash": {
-    input: V26ReferenceToVideoFlashInput;
-    output: V26ReferenceToVideoFlashOutput;
-  };
-  "wan/v2.6/text-to-image": {
-    input: V26TextToImageInput;
-    output: V26TextToImageOutput;
-  };
-  "xai/grok-imagine-image": {
-    input: GrokImagineImageInput;
-    output: GrokImagineImageOutput;
-  };
-  "xai/grok-imagine-image/edit": {
-    input: GrokImagineImageEditInput;
-    output: GrokImagineImageEditOutput;
-  };
-  "xai/grok-imagine-image/quality/edit": {
-    input: GrokImagineImageQualityEditInput;
-    output: GrokImagineImageQualityEditOutput;
-  };
-  "xai/grok-imagine-image/quality/text-to-image": {
-    input: GrokImagineImageQualityTextToImageInput;
-    output: GrokImagineImageQualityTextToImageOutput;
-  };
-  "xai/grok-imagine-video/edit-video": {
-    input: GrokImagineVideoEditVideoInput;
-    output: GrokImagineVideoEditVideoOutput;
-  };
-  "xai/grok-imagine-video/extend-video": {
-    input: GrokImagineVideoExtendVideoInput;
-    output: GrokImagineVideoExtendVideoOutput;
-  };
-  "xai/grok-imagine-video/image-to-video": {
-    input: GrokImagineVideoImageToVideoInput;
-    output: GrokImagineVideoImageToVideoOutput;
-  };
-  "xai/grok-imagine-video/reference-to-video": {
-    input: GrokImagineVideoReferenceToVideoInput;
-    output: GrokImagineVideoReferenceToVideoOutput;
-  };
-  "xai/grok-imagine-video/text-to-video": {
-    input: GrokImagineVideoTextToVideoInput;
-    output: GrokImagineVideoTextToVideoOutput;
-  };
-  "xai/grok-imagine-video/v1.5/image-to-video": {
-    input: GrokImagineVideoV15ImageToVideoInput;
-    output: GrokImagineVideoV15ImageToVideoOutput;
-  };
-  "xai/tts/v1": {
-    input: TtsV1Input;
-    output: TtsV1Output;
-  };
-};
+
+declare module "@fal-ai/client" {
+  interface EndpointTypeMap {
+    "alibaba/happy-horse/image-to-video": {
+      input: HappyHorseImageToVideoInput;
+      output: HappyHorseImageToVideoOutput;
+    };
+    "alibaba/happy-horse/reference-to-video": {
+      input: HappyHorseReferenceToVideoInput;
+      output: HappyHorseReferenceToVideoOutput;
+    };
+    "alibaba/happy-horse/text-to-video": {
+      input: HappyHorseTextToVideoInput;
+      output: HappyHorseTextToVideoOutput;
+    };
+    "alibaba/happy-horse/v1.1/image-to-video": {
+      input: HappyHorseV11ImageToVideoInput;
+      output: HappyHorseV11ImageToVideoOutput;
+    };
+    "alibaba/happy-horse/v1.1/reference-to-video": {
+      input: HappyHorseV11ReferenceToVideoInput;
+      output: HappyHorseV11ReferenceToVideoOutput;
+    };
+    "alibaba/happy-horse/v1.1/text-to-video": {
+      input: HappyHorseV11TextToVideoInput;
+      output: HappyHorseV11TextToVideoOutput;
+    };
+    "alibaba/happy-horse/video-edit": {
+      input: HappyHorseVideoEditInput;
+      output: HappyHorseVideoEditOutput;
+    };
+    "alibaba/qwen-audio-3-tts": {
+      input: QwenAudio3TtsInput;
+      output: QwenAudio3TtsOutput;
+    };
+    "argil/avatars/audio-to-video": {
+      input: AvatarsAudioToVideoInput;
+      output: AvatarsAudioToVideoOutput;
+    };
+    "argil/avatars/text-to-video": {
+      input: AvatarsTextToVideoInput;
+      output: AvatarsTextToVideoOutput;
+    };
+    "async/tts-pro/v1.0": {
+      input: TtsProV10Input;
+      output: TtsProV10Output;
+    };
+    "bria/bria_video_eraser/erase/keypoints": {
+      input: BriaVideoEraserEraseKeypointsInput;
+      output: BriaVideoEraserEraseKeypointsOutput;
+    };
+    "bria/bria_video_eraser/erase/mask": {
+      input: BriaVideoEraserEraseMaskInput;
+      output: BriaVideoEraserEraseMaskOutput;
+    };
+    "bria/bria_video_eraser/erase/prompt": {
+      input: BriaVideoEraserErasePromptInput;
+      output: BriaVideoEraserErasePromptOutput;
+    };
+    "bria/embed-product": {
+      input: EmbedProductInput;
+      output: EmbedProductOutput;
+    };
+    "bria/extract-object": {
+      input: ExtractObjectInput;
+      output: ExtractObjectOutput;
+    };
+    "bria/fibo-bbq-preview/generate": {
+      input: FiboBbqPreviewGenerateInput;
+      output: FiboBbqPreviewGenerateOutput;
+    };
+    "bria/fibo-edit/add_object_by_text": {
+      input: FiboEditAddObjectByTextInput;
+      output: FiboEditAddObjectByTextOutput;
+    };
+    "bria/fibo-edit/blend": {
+      input: FiboEditBlendInput;
+      output: FiboEditBlendOutput;
+    };
+    "bria/fibo-edit/colorize": {
+      input: FiboEditColorizeInput;
+      output: FiboEditColorizeOutput;
+    };
+    "bria/fibo-edit/edit": {
+      input: FiboEditEditInput;
+      output: FiboEditEditOutput;
+    };
+    "bria/fibo-edit/edit/structured_instruction": {
+      input: FiboEditEditStructuredInstructionInput;
+      output: FiboEditEditStructuredInstructionOutput;
+    };
+    "bria/fibo-edit/erase_by_text": {
+      input: FiboEditEraseByTextInput;
+      output: FiboEditEraseByTextOutput;
+    };
+    "bria/fibo-edit/relight": {
+      input: FiboEditRelightInput;
+      output: FiboEditRelightOutput;
+    };
+    "bria/fibo-edit/replace_object_by_text": {
+      input: FiboEditReplaceObjectByTextInput;
+      output: FiboEditReplaceObjectByTextOutput;
+    };
+    "bria/fibo-edit/reseason": {
+      input: FiboEditReseasonInput;
+      output: FiboEditReseasonOutput;
+    };
+    "bria/fibo-edit/restore": {
+      input: FiboEditRestoreInput;
+      output: FiboEditRestoreOutput;
+    };
+    "bria/fibo-edit/restyle": {
+      input: FiboEditRestyleInput;
+      output: FiboEditRestyleOutput;
+    };
+    "bria/fibo-edit/rewrite_text": {
+      input: FiboEditRewriteTextInput;
+      output: FiboEditRewriteTextOutput;
+    };
+    "bria/fibo-edit/sketch_to_colored_image": {
+      input: FiboEditSketchToColoredImageInput;
+      output: FiboEditSketchToColoredImageOutput;
+    };
+    "bria/fibo-lite/generate": {
+      input: FiboLiteGenerateInput;
+      output: FiboLiteGenerateOutput;
+    };
+    "bria/fibo-lite/generate/structured_prompt": {
+      input: FiboLiteGenerateStructuredPromptInput;
+      output: FiboLiteGenerateStructuredPromptOutput;
+    };
+    "bria/fibo/generate": {
+      input: FiboGenerateInput;
+      output: FiboGenerateOutput;
+    };
+    "bria/fibo/generate/structured_prompt": {
+      input: FiboGenerateStructuredPromptInput;
+      output: FiboGenerateStructuredPromptOutput;
+    };
+    "bria/genfill/v2": {
+      input: GenfillV2Input;
+      output: GenfillV2Output;
+    };
+    "bria/product-dimensions": {
+      input: ProductDimensionsInput;
+      output: ProductDimensionsOutput;
+    };
+    "bria/replace-background": {
+      input: ReplaceBackgroundInput;
+      output: ReplaceBackgroundOutput;
+    };
+    "bria/upscale/creative": {
+      input: UpscaleCreativeInput;
+      output: UpscaleCreativeOutput;
+    };
+    "bria/video/background-removal": {
+      input: VideoBackgroundRemovalInput;
+      output: VideoBackgroundRemovalOutput;
+    };
+    "bria/video/background-removal/realtime": {
+      input: VideoBackgroundRemovalRealtimeInput;
+      output: VideoBackgroundRemovalRealtimeOutput;
+    };
+    "bria/video/background-removal/v3": {
+      input: VideoBackgroundRemovalV3Input;
+      output: VideoBackgroundRemovalV3Output;
+    };
+    "bria/video/erase/keypoints": {
+      input: VideoEraseKeypointsInput;
+      output: VideoEraseKeypointsOutput;
+    };
+    "bria/video/erase/mask": {
+      input: VideoEraseMaskInput;
+      output: VideoEraseMaskOutput;
+    };
+    "bria/video/erase/prompt": {
+      input: VideoErasePromptInput;
+      output: VideoErasePromptOutput;
+    };
+    "bria/video/increase-resolution": {
+      input: VideoIncreaseResolutionInput;
+      output: VideoIncreaseResolutionOutput;
+    };
+    "bytedance/lynx": {
+      input: lynxInput;
+      output: lynxOutput;
+    };
+    "bytedance/seed-audio-1.0": {
+      input: SeedAudio10Input;
+      output: SeedAudio10Output;
+    };
+    "bytedance/seedance-2.0/fast/image-to-video": {
+      input: Seedance20FastImageToVideoInput;
+      output: Seedance20FastImageToVideoOutput;
+    };
+    "bytedance/seedance-2.0/fast/reference-to-video": {
+      input: Seedance20FastReferenceToVideoInput;
+      output: Seedance20FastReferenceToVideoOutput;
+    };
+    "bytedance/seedance-2.0/fast/text-to-video": {
+      input: Seedance20FastTextToVideoInput;
+      output: Seedance20FastTextToVideoOutput;
+    };
+    "bytedance/seedance-2.0/image-to-video": {
+      input: Seedance20ImageToVideoInput;
+      output: Seedance20ImageToVideoOutput;
+    };
+    "bytedance/seedance-2.0/mini/image-to-video": {
+      input: Seedance20MiniImageToVideoInput;
+      output: Seedance20MiniImageToVideoOutput;
+    };
+    "bytedance/seedance-2.0/mini/reference-to-video": {
+      input: Seedance20MiniReferenceToVideoInput;
+      output: Seedance20MiniReferenceToVideoOutput;
+    };
+    "bytedance/seedance-2.0/mini/text-to-video": {
+      input: Seedance20MiniTextToVideoInput;
+      output: Seedance20MiniTextToVideoOutput;
+    };
+    "bytedance/seedance-2.0/reference-to-video": {
+      input: Seedance20ReferenceToVideoInput;
+      output: Seedance20ReferenceToVideoOutput;
+    };
+    "bytedance/seedance-2.0/text-to-video": {
+      input: Seedance20TextToVideoInput;
+      output: Seedance20TextToVideoOutput;
+    };
+    "bytedance/seedream/v5/lite/edit": {
+      input: SeedreamV5LiteEditInput;
+      output: SeedreamV5LiteEditOutput;
+    };
+    "bytedance/seedream/v5/lite/text-to-image": {
+      input: SeedreamV5LiteTextToImageInput;
+      output: SeedreamV5LiteTextToImageOutput;
+    };
+    "bytedance/seedream/v5/pro/edit": {
+      input: SeedreamV5ProEditInput;
+      output: SeedreamV5ProEditOutput;
+    };
+    "bytedance/seedream/v5/pro/text-to-image": {
+      input: SeedreamV5ProTextToImageInput;
+      output: SeedreamV5ProTextToImageOutput;
+    };
+    "CassetteAI/music-generator": {
+      input: MusicGeneratorInput;
+      output: MusicGeneratorOutput;
+    };
+    "cassetteai/sound-effects-generator": {
+      input: SoundEffectsGeneratorInput;
+      output: SoundEffectsGeneratorOutput;
+    };
+    "cassetteai/video-sound-effects-generator": {
+      input: VideoSoundEffectsGeneratorInput;
+      output: VideoSoundEffectsGeneratorOutput;
+    };
+    "clarityai/crystal-upscaler": {
+      input: CrystalUpscalerInput;
+      output: CrystalUpscalerOutput;
+    };
+    "clarityai/crystal-video-upscaler": {
+      input: CrystalVideoUpscalerInput;
+      output: CrystalVideoUpscalerOutput;
+    };
+    "decart/lucy-2-5/realtime": {
+      input: Lucy25RealtimeInput;
+      output: Lucy25RealtimeOutput;
+    };
+    "decart/lucy-edit/pro": {
+      input: LucyEditProInput;
+      output: LucyEditProOutput;
+    };
+    "decart/lucy-restyle": {
+      input: LucyRestyleInput;
+      output: LucyRestyleOutput;
+    };
+    "decart/lucy2-vton/realtime": {
+      input: Lucy2VtonRealtimeInput;
+      output: Lucy2VtonRealtimeOutput;
+    };
+    "fal-ai/ace-step": {
+      input: AceStepInput;
+      output: AceStepOutput;
+    };
+    "fal-ai/ace-step/audio-inpaint": {
+      input: AceStepAudioInpaintInput;
+      output: AceStepAudioInpaintOutput;
+    };
+    "fal-ai/ace-step/audio-outpaint": {
+      input: AceStepAudioOutpaintInput;
+      output: AceStepAudioOutpaintOutput;
+    };
+    "fal-ai/ace-step/audio-to-audio": {
+      input: AceStepAudioToAudioInput;
+      output: AceStepAudioToAudioOutput;
+    };
+    "fal-ai/ace-step/prompt-to-audio": {
+      input: AceStepPromptToAudioInput;
+      output: AceStepPromptToAudioOutput;
+    };
+    "fal-ai/ai-avatar/multi": {
+      input: AiAvatarMultiInput;
+      output: AiAvatarMultiOutput;
+    };
+    "fal-ai/ai-avatar/multi-text": {
+      input: AiAvatarMultiTextInput;
+      output: AiAvatarMultiTextOutput;
+    };
+    "fal-ai/ai-avatar/single-text": {
+      input: AiAvatarSingleTextInput;
+      output: AiAvatarSingleTextOutput;
+    };
+    "fal-ai/amt-interpolation": {
+      input: AmtInterpolationInput;
+      output: AmtInterpolationOutput;
+    };
+    "fal-ai/amt-interpolation/frame-interpolation": {
+      input: AmtInterpolationFrameInterpolationInput;
+      output: AmtInterpolationFrameInterpolationOutput;
+    };
+    "fal-ai/audio-understanding": {
+      input: AudioUnderstandingInput;
+      output: AudioUnderstandingOutput;
+    };
+    "fal-ai/aura-flow": {
+      input: AuraFlowInput;
+      output: AuraFlowOutput;
+    };
+    "fal-ai/aura-sr": {
+      input: AuraSrInput;
+      output: AuraSrOutput;
+    };
+    "fal-ai/auto-caption": {
+      input: AutoCaptionInput;
+      output: AutoCaptionOutput;
+    };
+    "fal-ai/bagel": {
+      input: bagelInput;
+      output: bagelOutput;
+    };
+    "fal-ai/bagel/edit": {
+      input: BagelEditInput;
+      output: BagelEditOutput;
+    };
+    "fal-ai/bagel/understand": {
+      input: BagelUnderstandInput;
+      output: BagelUnderstandOutput;
+    };
+    "fal-ai/ben/v2/image": {
+      input: BenV2ImageInput;
+      output: BenV2ImageOutput;
+    };
+    "fal-ai/ben/v2/video": {
+      input: BenV2VideoInput;
+      output: BenV2VideoOutput;
+    };
+    "fal-ai/bernini-r/edit-image": {
+      input: BerniniREditImageInput;
+      output: BerniniREditImageOutput;
+    };
+    "fal-ai/bernini-r/edit-video": {
+      input: BerniniREditVideoInput;
+      output: BerniniREditVideoOutput;
+    };
+    "fal-ai/bernini-r/reference-edit-video": {
+      input: BerniniRReferenceEditVideoInput;
+      output: BerniniRReferenceEditVideoOutput;
+    };
+    "fal-ai/bernini-r/reference-to-video": {
+      input: BerniniRReferenceToVideoInput;
+      output: BerniniRReferenceToVideoOutput;
+    };
+    "fal-ai/bernini-r/text-to-video": {
+      input: BerniniRTextToVideoInput;
+      output: BerniniRTextToVideoOutput;
+    };
+    "fal-ai/birefnet": {
+      input: birefnetInput;
+      output: birefnetOutput;
+    };
+    "fal-ai/birefnet/v2": {
+      input: BirefnetV2Input;
+      output: BirefnetV2Output;
+    };
+    "fal-ai/birefnet/v2/video": {
+      input: BirefnetV2VideoInput;
+      output: BirefnetV2VideoOutput;
+    };
+    "fal-ai/bitdance": {
+      input: bitdanceInput;
+      output: bitdanceOutput;
+    };
+    "fal-ai/boogu-image": {
+      input: BooguImageInput;
+      output: BooguImageOutput;
+    };
+    "fal-ai/boogu-image/edit": {
+      input: BooguImageEditInput;
+      output: BooguImageEditOutput;
+    };
+    "fal-ai/bria/background/remove": {
+      input: BriaBackgroundRemoveInput;
+      output: BriaBackgroundRemoveOutput;
+    };
+    "fal-ai/bria/background/replace": {
+      input: BriaBackgroundReplaceInput;
+      output: BriaBackgroundReplaceOutput;
+    };
+    "fal-ai/bria/eraser": {
+      input: BriaEraserInput;
+      output: BriaEraserOutput;
+    };
+    "fal-ai/bria/expand": {
+      input: BriaExpandInput;
+      output: BriaExpandOutput;
+    };
+    "fal-ai/bria/genfill": {
+      input: BriaGenfillInput;
+      output: BriaGenfillOutput;
+    };
+    "fal-ai/bria/product-shot": {
+      input: BriaProductShotInput;
+      output: BriaProductShotOutput;
+    };
+    "fal-ai/bria/reimagine": {
+      input: BriaReimagineInput;
+      output: BriaReimagineOutput;
+    };
+    "fal-ai/bria/text-to-image/base": {
+      input: BriaTextToImageBaseInput;
+      output: BriaTextToImageBaseOutput;
+    };
+    "fal-ai/bria/text-to-image/fast": {
+      input: BriaTextToImageFastInput;
+      output: BriaTextToImageFastOutput;
+    };
+    "fal-ai/bria/text-to-image/hd": {
+      input: BriaTextToImageHdInput;
+      output: BriaTextToImageHdOutput;
+    };
+    "fal-ai/bytedance-upscaler/upscale/video": {
+      input: BytedanceUpscalerUpscaleVideoInput;
+      output: BytedanceUpscalerUpscaleVideoOutput;
+    };
+    "fal-ai/bytedance/dreamactor/v2": {
+      input: BytedanceDreamactorV2Input;
+      output: BytedanceDreamactorV2Output;
+    };
+    "fal-ai/bytedance/omnihuman": {
+      input: BytedanceOmnihumanInput;
+      output: BytedanceOmnihumanOutput;
+    };
+    "fal-ai/bytedance/omnihuman/v1.5": {
+      input: BytedanceOmnihumanV15Input;
+      output: BytedanceOmnihumanV15Output;
+    };
+    "fal-ai/bytedance/seed-speech/tts/v2": {
+      input: BytedanceSeedSpeechTtsV2Input;
+      output: BytedanceSeedSpeechTtsV2Output;
+    };
+    "fal-ai/bytedance/seed/v2/mini": {
+      input: BytedanceSeedV2MiniInput;
+      output: BytedanceSeedV2MiniOutput;
+    };
+    "fal-ai/bytedance/seedance/v1.5/pro/image-to-video": {
+      input: BytedanceSeedanceV15ProImageToVideoInput;
+      output: BytedanceSeedanceV15ProImageToVideoOutput;
+    };
+    "fal-ai/bytedance/seedance/v1.5/pro/text-to-video": {
+      input: BytedanceSeedanceV15ProTextToVideoInput;
+      output: BytedanceSeedanceV15ProTextToVideoOutput;
+    };
+    "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video": {
+      input: BytedanceSeedanceV1ProFastImageToVideoInput;
+      output: BytedanceSeedanceV1ProFastImageToVideoOutput;
+    };
+    "fal-ai/bytedance/seedance/v1/pro/fast/text-to-video": {
+      input: BytedanceSeedanceV1ProFastTextToVideoInput;
+      output: BytedanceSeedanceV1ProFastTextToVideoOutput;
+    };
+    "fal-ai/bytedance/seedance/v1/pro/image-to-video": {
+      input: BytedanceSeedanceV1ProImageToVideoInput;
+      output: BytedanceSeedanceV1ProImageToVideoOutput;
+    };
+    "fal-ai/bytedance/seedance/v1/pro/text-to-video": {
+      input: BytedanceSeedanceV1ProTextToVideoInput;
+      output: BytedanceSeedanceV1ProTextToVideoOutput;
+    };
+    "fal-ai/bytedance/seedream/v4.5/edit": {
+      input: BytedanceSeedreamV45EditInput;
+      output: BytedanceSeedreamV45EditOutput;
+    };
+    "fal-ai/bytedance/seedream/v4.5/text-to-image": {
+      input: BytedanceSeedreamV45TextToImageInput;
+      output: BytedanceSeedreamV45TextToImageOutput;
+    };
+    "fal-ai/bytedance/seedream/v4/edit": {
+      input: BytedanceSeedreamV4EditInput;
+      output: BytedanceSeedreamV4EditOutput;
+    };
+    "fal-ai/bytedance/seedream/v4/text-to-image": {
+      input: BytedanceSeedreamV4TextToImageInput;
+      output: BytedanceSeedreamV4TextToImageOutput;
+    };
+    "fal-ai/cartoonify": {
+      input: cartoonifyInput;
+      output: cartoonifyOutput;
+    };
+    "fal-ai/cat-vton": {
+      input: CatVtonInput;
+      output: CatVtonOutput;
+    };
+    "fal-ai/ccsr": {
+      input: ccsrInput;
+      output: ccsrOutput;
+    };
+    "fal-ai/chatterbox/speech-to-speech": {
+      input: ChatterboxSpeechToSpeechInput;
+      output: ChatterboxSpeechToSpeechOutput;
+    };
+    "fal-ai/chatterbox/text-to-speech": {
+      input: ChatterboxTextToSpeechInput;
+      output: ChatterboxTextToSpeechOutput;
+    };
+    "fal-ai/chatterbox/text-to-speech/multilingual": {
+      input: ChatterboxTextToSpeechMultilingualInput;
+      output: ChatterboxTextToSpeechMultilingualOutput;
+    };
+    "fal-ai/chrono-edit": {
+      input: ChronoEditInput;
+      output: ChronoEditOutput;
+    };
+    "fal-ai/chrono-edit-lora": {
+      input: ChronoEditLoraInput;
+      output: ChronoEditLoraOutput;
+    };
+    "fal-ai/chrono-edit-lora-gallery/paintbrush": {
+      input: ChronoEditLoraGalleryPaintbrushInput;
+      output: ChronoEditLoraGalleryPaintbrushOutput;
+    };
+    "fal-ai/chrono-edit-lora-gallery/upscaler": {
+      input: ChronoEditLoraGalleryUpscalerInput;
+      output: ChronoEditLoraGalleryUpscalerOutput;
+    };
+    "fal-ai/clarity-upscaler": {
+      input: ClarityUpscalerInput;
+      output: ClarityUpscalerOutput;
+    };
+    "fal-ai/codeformer": {
+      input: codeformerInput;
+      output: codeformerOutput;
+    };
+    "fal-ai/cogvideox-5b": {
+      input: Cogvideox5bInput;
+      output: Cogvideox5bOutput;
+    };
+    "fal-ai/cogvideox-5b/image-to-video": {
+      input: Cogvideox5bImageToVideoInput;
+      output: Cogvideox5bImageToVideoOutput;
+    };
+    "fal-ai/cogvideox-5b/video-to-video": {
+      input: Cogvideox5bVideoToVideoInput;
+      output: Cogvideox5bVideoToVideoOutput;
+    };
+    "fal-ai/cogview4": {
+      input: cogview4Input;
+      output: cogview4Output;
+    };
+    "fal-ai/cohere-transcribe": {
+      input: CohereTranscribeInput;
+      output: CohereTranscribeOutput;
+    };
+    "fal-ai/control-light": {
+      input: ControlLightInput;
+      output: ControlLightOutput;
+    };
+    "fal-ai/cosmos-predict-2.5/distilled/text-to-video": {
+      input: CosmosPredict25DistilledTextToVideoInput;
+      output: CosmosPredict25DistilledTextToVideoOutput;
+    };
+    "fal-ai/cosmos-predict-2.5/image-to-video": {
+      input: CosmosPredict25ImageToVideoInput;
+      output: CosmosPredict25ImageToVideoOutput;
+    };
+    "fal-ai/cosmos-predict-2.5/text-to-video": {
+      input: CosmosPredict25TextToVideoInput;
+      output: CosmosPredict25TextToVideoOutput;
+    };
+    "fal-ai/cosmos-predict-2.5/video-to-video": {
+      input: CosmosPredict25VideoToVideoInput;
+      output: CosmosPredict25VideoToVideoOutput;
+    };
+    "fal-ai/creatify/aurora": {
+      input: CreatifyAuroraInput;
+      output: CreatifyAuroraOutput;
+    };
+    "fal-ai/creative-upscaler": {
+      input: CreativeUpscalerInput;
+      output: CreativeUpscalerOutput;
+    };
+    "fal-ai/csm-1b": {
+      input: Csm1bInput;
+      output: Csm1bOutput;
+    };
+    "fal-ai/davinci-magihuman": {
+      input: DavinciMagihumanInput;
+      output: DavinciMagihumanOutput;
+    };
+    "fal-ai/ddcolor": {
+      input: ddcolorInput;
+      output: ddcolorOutput;
+    };
+    "fal-ai/deepfilternet3": {
+      input: deepfilternet3Input;
+      output: deepfilternet3Output;
+    };
+    "fal-ai/demucs": {
+      input: demucsInput;
+      output: demucsOutput;
+    };
+    "fal-ai/depth-anything-video": {
+      input: DepthAnythingVideoInput;
+      output: DepthAnythingVideoOutput;
+    };
+    "fal-ai/dia-tts": {
+      input: DiaTtsInput;
+      output: DiaTtsOutput;
+    };
+    "fal-ai/dia-tts/voice-clone": {
+      input: DiaTtsVoiceCloneInput;
+      output: DiaTtsVoiceCloneOutput;
+    };
+    "fal-ai/diffrhythm": {
+      input: diffrhythmInput;
+      output: diffrhythmOutput;
+    };
+    "fal-ai/docres": {
+      input: docresInput;
+      output: docresOutput;
+    };
+    "fal-ai/docres/dewarp": {
+      input: DocresDewarpInput;
+      output: DocresDewarpOutput;
+    };
+    "fal-ai/drct-super-resolution": {
+      input: DrctSuperResolutionInput;
+      output: DrctSuperResolutionOutput;
+    };
+    "fal-ai/dreamomni2/edit": {
+      input: Dreamomni2EditInput;
+      output: Dreamomni2EditOutput;
+    };
+    "fal-ai/dreamshaper": {
+      input: dreamshaperInput;
+      output: dreamshaperOutput;
+    };
+    "fal-ai/dwpose": {
+      input: dwposeInput;
+      output: dwposeOutput;
+    };
+    "fal-ai/dwpose/video": {
+      input: DwposeVideoInput;
+      output: DwposeVideoOutput;
+    };
+    "fal-ai/echomimic-v3": {
+      input: EchomimicV3Input;
+      output: EchomimicV3Output;
+    };
+    "fal-ai/editto": {
+      input: edittoInput;
+      output: edittoOutput;
+    };
+    "fal-ai/elevenlabs/audio-isolation": {
+      input: ElevenlabsAudioIsolationInput;
+      output: ElevenlabsAudioIsolationOutput;
+    };
+    "fal-ai/elevenlabs/dubbing": {
+      input: ElevenlabsDubbingInput;
+      output: ElevenlabsDubbingOutput;
+    };
+    "fal-ai/elevenlabs/music": {
+      input: ElevenlabsMusicInput;
+      output: ElevenlabsMusicOutput;
+    };
+    "fal-ai/elevenlabs/sound-effects/v2": {
+      input: ElevenlabsSoundEffectsV2Input;
+      output: ElevenlabsSoundEffectsV2Output;
+    };
+    "fal-ai/elevenlabs/speech-to-text": {
+      input: ElevenlabsSpeechToTextInput;
+      output: ElevenlabsSpeechToTextOutput;
+    };
+    "fal-ai/elevenlabs/speech-to-text/scribe-v2": {
+      input: ElevenlabsSpeechToTextScribeV2Input;
+      output: ElevenlabsSpeechToTextScribeV2Output;
+    };
+    "fal-ai/elevenlabs/text-to-dialogue/eleven-v3": {
+      input: ElevenlabsTextToDialogueElevenV3Input;
+      output: ElevenlabsTextToDialogueElevenV3Output;
+    };
+    "fal-ai/elevenlabs/tts/eleven-v3": {
+      input: ElevenlabsTtsElevenV3Input;
+      output: ElevenlabsTtsElevenV3Output;
+    };
+    "fal-ai/elevenlabs/tts/multilingual-v2": {
+      input: ElevenlabsTtsMultilingualV2Input;
+      output: ElevenlabsTtsMultilingualV2Output;
+    };
+    "fal-ai/elevenlabs/tts/turbo-v2.5": {
+      input: ElevenlabsTtsTurboV25Input;
+      output: ElevenlabsTtsTurboV25Output;
+    };
+    "fal-ai/elevenlabs/voice-changer": {
+      input: ElevenlabsVoiceChangerInput;
+      output: ElevenlabsVoiceChangerOutput;
+    };
+    "fal-ai/emu-3.5-image/edit-image": {
+      input: Emu35ImageEditImageInput;
+      output: Emu35ImageEditImageOutput;
+    };
+    "fal-ai/emu-3.5-image/text-to-image": {
+      input: Emu35ImageTextToImageInput;
+      output: Emu35ImageTextToImageOutput;
+    };
+    "fal-ai/ernie-image": {
+      input: ErnieImageInput;
+      output: ErnieImageOutput;
+    };
+    "fal-ai/ernie-image-trainer": {
+      input: ErnieImageTrainerInput;
+      output: ErnieImageTrainerOutput;
+    };
+    "fal-ai/ernie-image/lora": {
+      input: ErnieImageLoraInput;
+      output: ErnieImageLoraOutput;
+    };
+    "fal-ai/ernie-image/lora/turbo": {
+      input: ErnieImageLoraTurboInput;
+      output: ErnieImageLoraTurboOutput;
+    };
+    "fal-ai/ernie-image/turbo": {
+      input: ErnieImageTurboInput;
+      output: ErnieImageTurboOutput;
+    };
+    "fal-ai/esrgan": {
+      input: esrganInput;
+      output: esrganOutput;
+    };
+    "fal-ai/evf-sam": {
+      input: EvfSamInput;
+      output: EvfSamOutput;
+    };
+    "fal-ai/f5-tts": {
+      input: F5TtsInput;
+      output: F5TtsOutput;
+    };
+    "fal-ai/fashn/tryon/v1.5": {
+      input: FashnTryonV15Input;
+      output: FashnTryonV15Output;
+    };
+    "fal-ai/fashn/tryon/v1.6": {
+      input: FashnTryonV16Input;
+      output: FashnTryonV16Output;
+    };
+    "fal-ai/fast-animatediff/text-to-video": {
+      input: FastAnimatediffTextToVideoInput;
+      output: FastAnimatediffTextToVideoOutput;
+    };
+    "fal-ai/fast-animatediff/turbo/text-to-video": {
+      input: FastAnimatediffTurboTextToVideoInput;
+      output: FastAnimatediffTurboTextToVideoOutput;
+    };
+    "fal-ai/fast-animatediff/turbo/video-to-video": {
+      input: FastAnimatediffTurboVideoToVideoInput;
+      output: FastAnimatediffTurboVideoToVideoOutput;
+    };
+    "fal-ai/fast-animatediff/video-to-video": {
+      input: FastAnimatediffVideoToVideoInput;
+      output: FastAnimatediffVideoToVideoOutput;
+    };
+    "fal-ai/fast-fooocus-sdxl/image-to-image": {
+      input: FastFooocusSdxlImageToImageInput;
+      output: FastFooocusSdxlImageToImageOutput;
+    };
+    "fal-ai/fast-lcm-diffusion": {
+      input: FastLcmDiffusionInput;
+      output: FastLcmDiffusionOutput;
+    };
+    "fal-ai/fast-lcm-diffusion/image-to-image": {
+      input: FastLcmDiffusionImageToImageInput;
+      output: FastLcmDiffusionImageToImageOutput;
+    };
+    "fal-ai/fast-lcm-diffusion/inpainting": {
+      input: FastLcmDiffusionInpaintingInput;
+      output: FastLcmDiffusionInpaintingOutput;
+    };
+    "fal-ai/fast-lightning-sdxl": {
+      input: FastLightningSdxlInput;
+      output: FastLightningSdxlOutput;
+    };
+    "fal-ai/fast-lightning-sdxl/image-to-image": {
+      input: FastLightningSdxlImageToImageInput;
+      output: FastLightningSdxlImageToImageOutput;
+    };
+    "fal-ai/fast-lightning-sdxl/inpainting": {
+      input: FastLightningSdxlInpaintingInput;
+      output: FastLightningSdxlInpaintingOutput;
+    };
+    "fal-ai/fast-sdxl": {
+      input: FastSdxlInput;
+      output: FastSdxlOutput;
+    };
+    "fal-ai/fast-sdxl-controlnet-canny": {
+      input: FastSdxlControlnetCannyInput;
+      output: FastSdxlControlnetCannyOutput;
+    };
+    "fal-ai/fast-sdxl-controlnet-canny/image-to-image": {
+      input: FastSdxlControlnetCannyImageToImageInput;
+      output: FastSdxlControlnetCannyImageToImageOutput;
+    };
+    "fal-ai/fast-sdxl-controlnet-canny/inpainting": {
+      input: FastSdxlControlnetCannyInpaintingInput;
+      output: FastSdxlControlnetCannyInpaintingOutput;
+    };
+    "fal-ai/fast-sdxl/image-to-image": {
+      input: FastSdxlImageToImageInput;
+      output: FastSdxlImageToImageOutput;
+    };
+    "fal-ai/fast-sdxl/inpainting": {
+      input: FastSdxlInpaintingInput;
+      output: FastSdxlInpaintingOutput;
+    };
+    "fal-ai/fast-svd-lcm": {
+      input: FastSvdLcmInput;
+      output: FastSvdLcmOutput;
+    };
+    "fal-ai/fast-svd-lcm/text-to-video": {
+      input: FastSvdLcmTextToVideoInput;
+      output: FastSvdLcmTextToVideoOutput;
+    };
+    "fal-ai/fast-svd/text-to-video": {
+      input: FastSvdTextToVideoInput;
+      output: FastSvdTextToVideoOutput;
+    };
+    "fal-ai/feynobg": {
+      input: feynobgInput;
+      output: feynobgOutput;
+    };
+    "fal-ai/ffmpeg-api/compose": {
+      input: FfmpegApiComposeInput;
+      output: FfmpegApiComposeOutput;
+    };
+    "fal-ai/ffmpeg-api/extract-frame": {
+      input: FfmpegApiExtractFrameInput;
+      output: FfmpegApiExtractFrameOutput;
+    };
+    "fal-ai/ffmpeg-api/images-to-video": {
+      input: FfmpegApiImagesToVideoInput;
+      output: FfmpegApiImagesToVideoOutput;
+    };
+    "fal-ai/ffmpeg-api/loudnorm": {
+      input: FfmpegApiLoudnormInput;
+      output: FfmpegApiLoudnormOutput;
+    };
+    "fal-ai/ffmpeg-api/merge-audio-video": {
+      input: FfmpegApiMergeAudioVideoInput;
+      output: FfmpegApiMergeAudioVideoOutput;
+    };
+    "fal-ai/ffmpeg-api/merge-audios": {
+      input: FfmpegApiMergeAudiosInput;
+      output: FfmpegApiMergeAudiosOutput;
+    };
+    "fal-ai/ffmpeg-api/merge-videos": {
+      input: FfmpegApiMergeVideosInput;
+      output: FfmpegApiMergeVideosOutput;
+    };
+    "fal-ai/ffmpeg-api/metadata": {
+      input: FfmpegApiMetadataInput;
+      output: FfmpegApiMetadataOutput;
+    };
+    "fal-ai/ffmpeg-api/waveform": {
+      input: FfmpegApiWaveformInput;
+      output: FfmpegApiWaveformOutput;
+    };
+    "fal-ai/film": {
+      input: filmInput;
+      output: filmOutput;
+    };
+    "fal-ai/film/video": {
+      input: FilmVideoInput;
+      output: FilmVideoOutput;
+    };
+    "fal-ai/finegrain-eraser": {
+      input: FinegrainEraserInput;
+      output: FinegrainEraserOutput;
+    };
+    "fal-ai/finegrain-eraser/bbox": {
+      input: FinegrainEraserBboxInput;
+      output: FinegrainEraserBboxOutput;
+    };
+    "fal-ai/finegrain-eraser/mask": {
+      input: FinegrainEraserMaskInput;
+      output: FinegrainEraserMaskOutput;
+    };
+    "fal-ai/firered-image-edit": {
+      input: FireredImageEditInput;
+      output: FireredImageEditOutput;
+    };
+    "fal-ai/firered-image-edit-v1.1": {
+      input: FireredImageEditV11Input;
+      output: FireredImageEditV11Output;
+    };
+    "fal-ai/flashhead": {
+      input: flashheadInput;
+      output: flashheadOutput;
+    };
+    "fal-ai/flashtalk": {
+      input: flashtalkInput;
+      output: flashtalkOutput;
+    };
+    "fal-ai/flashvsr/upscale/video": {
+      input: FlashvsrUpscaleVideoInput;
+      output: FlashvsrUpscaleVideoOutput;
+    };
+    "fal-ai/florence-2-large/caption": {
+      input: Florence2LargeCaptionInput;
+      output: Florence2LargeCaptionOutput;
+    };
+    "fal-ai/florence-2-large/caption-to-phrase-grounding": {
+      input: Florence2LargeCaptionToPhraseGroundingInput;
+      output: Florence2LargeCaptionToPhraseGroundingOutput;
+    };
+    "fal-ai/florence-2-large/dense-region-caption": {
+      input: Florence2LargeDenseRegionCaptionInput;
+      output: Florence2LargeDenseRegionCaptionOutput;
+    };
+    "fal-ai/florence-2-large/detailed-caption": {
+      input: Florence2LargeDetailedCaptionInput;
+      output: Florence2LargeDetailedCaptionOutput;
+    };
+    "fal-ai/florence-2-large/more-detailed-caption": {
+      input: Florence2LargeMoreDetailedCaptionInput;
+      output: Florence2LargeMoreDetailedCaptionOutput;
+    };
+    "fal-ai/florence-2-large/object-detection": {
+      input: Florence2LargeObjectDetectionInput;
+      output: Florence2LargeObjectDetectionOutput;
+    };
+    "fal-ai/florence-2-large/ocr": {
+      input: Florence2LargeOcrInput;
+      output: Florence2LargeOcrOutput;
+    };
+    "fal-ai/florence-2-large/ocr-with-region": {
+      input: Florence2LargeOcrWithRegionInput;
+      output: Florence2LargeOcrWithRegionOutput;
+    };
+    "fal-ai/florence-2-large/open-vocabulary-detection": {
+      input: Florence2LargeOpenVocabularyDetectionInput;
+      output: Florence2LargeOpenVocabularyDetectionOutput;
+    };
+    "fal-ai/florence-2-large/referring-expression-segmentation": {
+      input: Florence2LargeReferringExpressionSegmentationInput;
+      output: Florence2LargeReferringExpressionSegmentationOutput;
+    };
+    "fal-ai/florence-2-large/region-proposal": {
+      input: Florence2LargeRegionProposalInput;
+      output: Florence2LargeRegionProposalOutput;
+    };
+    "fal-ai/florence-2-large/region-to-category": {
+      input: Florence2LargeRegionToCategoryInput;
+      output: Florence2LargeRegionToCategoryOutput;
+    };
+    "fal-ai/florence-2-large/region-to-description": {
+      input: Florence2LargeRegionToDescriptionInput;
+      output: Florence2LargeRegionToDescriptionOutput;
+    };
+    "fal-ai/florence-2-large/region-to-segmentation": {
+      input: Florence2LargeRegionToSegmentationInput;
+      output: Florence2LargeRegionToSegmentationOutput;
+    };
+    "fal-ai/flowedit": {
+      input: floweditInput;
+      output: floweditOutput;
+    };
+    "fal-ai/flux-1/dev": {
+      input: Flux1DevInput;
+      output: Flux1DevOutput;
+    };
+    "fal-ai/flux-1/dev/image-to-image": {
+      input: Flux1DevImageToImageInput;
+      output: Flux1DevImageToImageOutput;
+    };
+    "fal-ai/flux-1/dev/redux": {
+      input: Flux1DevReduxInput;
+      output: Flux1DevReduxOutput;
+    };
+    "fal-ai/flux-1/krea": {
+      input: Flux1KreaInput;
+      output: Flux1KreaOutput;
+    };
+    "fal-ai/flux-1/krea/image-to-image": {
+      input: Flux1KreaImageToImageInput;
+      output: Flux1KreaImageToImageOutput;
+    };
+    "fal-ai/flux-1/krea/redux": {
+      input: Flux1KreaReduxInput;
+      output: Flux1KreaReduxOutput;
+    };
+    "fal-ai/flux-1/schnell": {
+      input: Flux1SchnellInput;
+      output: Flux1SchnellOutput;
+    };
+    "fal-ai/flux-1/schnell/redux": {
+      input: Flux1SchnellReduxInput;
+      output: Flux1SchnellReduxOutput;
+    };
+    "fal-ai/flux-1/srpo": {
+      input: Flux1SrpoInput;
+      output: Flux1SrpoOutput;
+    };
+    "fal-ai/flux-1/srpo/image-to-image": {
+      input: Flux1SrpoImageToImageInput;
+      output: Flux1SrpoImageToImageOutput;
+    };
+    "fal-ai/flux-2": {
+      input: Flux2Input;
+      output: Flux2Output;
+    };
+    "fal-ai/flux-2-flex": {
+      input: Flux2FlexInput;
+      output: Flux2FlexOutput;
+    };
+    "fal-ai/flux-2-flex/edit": {
+      input: Flux2FlexEditInput;
+      output: Flux2FlexEditOutput;
+    };
+    "fal-ai/flux-2-klein-9b-base-trainer": {
+      input: Flux2Klein9bBaseTrainerInput;
+      output: Flux2Klein9bBaseTrainerOutput;
+    };
+    "fal-ai/flux-2-klein-9b-base-trainer/edit": {
+      input: Flux2Klein9bBaseTrainerEditInput;
+      output: Flux2Klein9bBaseTrainerEditOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/add-background": {
+      input: Flux2LoraGalleryAddBackgroundInput;
+      output: Flux2LoraGalleryAddBackgroundOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/apartment-staging": {
+      input: Flux2LoraGalleryApartmentStagingInput;
+      output: Flux2LoraGalleryApartmentStagingOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/ballpoint-pen-sketch": {
+      input: Flux2LoraGalleryBallpointPenSketchInput;
+      output: Flux2LoraGalleryBallpointPenSketchOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/digital-comic-art": {
+      input: Flux2LoraGalleryDigitalComicArtInput;
+      output: Flux2LoraGalleryDigitalComicArtOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/face-to-full-portrait": {
+      input: Flux2LoraGalleryFaceToFullPortraitInput;
+      output: Flux2LoraGalleryFaceToFullPortraitOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/hdr-style": {
+      input: Flux2LoraGalleryHdrStyleInput;
+      output: Flux2LoraGalleryHdrStyleOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/multiple-angles": {
+      input: Flux2LoraGalleryMultipleAnglesInput;
+      output: Flux2LoraGalleryMultipleAnglesOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/realism": {
+      input: Flux2LoraGalleryRealismInput;
+      output: Flux2LoraGalleryRealismOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/satellite-view-style": {
+      input: Flux2LoraGallerySatelliteViewStyleInput;
+      output: Flux2LoraGallerySatelliteViewStyleOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/sepia-vintage": {
+      input: Flux2LoraGallerySepiaVintageInput;
+      output: Flux2LoraGallerySepiaVintageOutput;
+    };
+    "fal-ai/flux-2-lora-gallery/virtual-tryon": {
+      input: Flux2LoraGalleryVirtualTryonInput;
+      output: Flux2LoraGalleryVirtualTryonOutput;
+    };
+    "fal-ai/flux-2-max": {
+      input: Flux2MaxInput;
+      output: Flux2MaxOutput;
+    };
+    "fal-ai/flux-2-max/edit": {
+      input: Flux2MaxEditInput;
+      output: Flux2MaxEditOutput;
+    };
+    "fal-ai/flux-2-pro": {
+      input: Flux2ProInput;
+      output: Flux2ProOutput;
+    };
+    "fal-ai/flux-2-pro/edit": {
+      input: Flux2ProEditInput;
+      output: Flux2ProEditOutput;
+    };
+    "fal-ai/flux-2-pro/outpaint": {
+      input: Flux2ProOutpaintInput;
+      output: Flux2ProOutpaintOutput;
+    };
+    "fal-ai/flux-2-trainer": {
+      input: Flux2TrainerInput;
+      output: Flux2TrainerOutput;
+    };
+    "fal-ai/flux-2-trainer-v2": {
+      input: Flux2TrainerV2Input;
+      output: Flux2TrainerV2Output;
+    };
+    "fal-ai/flux-2-trainer-v2/edit": {
+      input: Flux2TrainerV2EditInput;
+      output: Flux2TrainerV2EditOutput;
+    };
+    "fal-ai/flux-2-trainer/edit": {
+      input: Flux2TrainerEditInput;
+      output: Flux2TrainerEditOutput;
+    };
+    "fal-ai/flux-2/edit": {
+      input: Flux2EditInput;
+      output: Flux2EditOutput;
+    };
+    "fal-ai/flux-2/flash": {
+      input: Flux2FlashInput;
+      output: Flux2FlashOutput;
+    };
+    "fal-ai/flux-2/flash/edit": {
+      input: Flux2FlashEditInput;
+      output: Flux2FlashEditOutput;
+    };
+    "fal-ai/flux-2/klein/4b": {
+      input: Flux2Klein4bInput;
+      output: Flux2Klein4bOutput;
+    };
+    "fal-ai/flux-2/klein/4b/base": {
+      input: Flux2Klein4bBaseInput;
+      output: Flux2Klein4bBaseOutput;
+    };
+    "fal-ai/flux-2/klein/4b/base/edit": {
+      input: Flux2Klein4bBaseEditInput;
+      output: Flux2Klein4bBaseEditOutput;
+    };
+    "fal-ai/flux-2/klein/4b/base/edit/lora": {
+      input: Flux2Klein4bBaseEditLoraInput;
+      output: Flux2Klein4bBaseEditLoraOutput;
+    };
+    "fal-ai/flux-2/klein/4b/base/lora": {
+      input: Flux2Klein4bBaseLoraInput;
+      output: Flux2Klein4bBaseLoraOutput;
+    };
+    "fal-ai/flux-2/klein/4b/edit": {
+      input: Flux2Klein4bEditInput;
+      output: Flux2Klein4bEditOutput;
+    };
+    "fal-ai/flux-2/klein/4b/edit/lora": {
+      input: Flux2Klein4bEditLoraInput;
+      output: Flux2Klein4bEditLoraOutput;
+    };
+    "fal-ai/flux-2/klein/4b/lora": {
+      input: Flux2Klein4bLoraInput;
+      output: Flux2Klein4bLoraOutput;
+    };
+    "fal-ai/flux-2/klein/9b": {
+      input: Flux2Klein9bInput;
+      output: Flux2Klein9bOutput;
+    };
+    "fal-ai/flux-2/klein/9b/base": {
+      input: Flux2Klein9bBaseInput;
+      output: Flux2Klein9bBaseOutput;
+    };
+    "fal-ai/flux-2/klein/9b/base/edit": {
+      input: Flux2Klein9bBaseEditInput;
+      output: Flux2Klein9bBaseEditOutput;
+    };
+    "fal-ai/flux-2/klein/9b/base/edit/lora": {
+      input: Flux2Klein9bBaseEditLoraInput;
+      output: Flux2Klein9bBaseEditLoraOutput;
+    };
+    "fal-ai/flux-2/klein/9b/base/lora": {
+      input: Flux2Klein9bBaseLoraInput;
+      output: Flux2Klein9bBaseLoraOutput;
+    };
+    "fal-ai/flux-2/klein/9b/edit": {
+      input: Flux2Klein9bEditInput;
+      output: Flux2Klein9bEditOutput;
+    };
+    "fal-ai/flux-2/klein/9b/edit/lora": {
+      input: Flux2Klein9bEditLoraInput;
+      output: Flux2Klein9bEditLoraOutput;
+    };
+    "fal-ai/flux-2/klein/9b/lora": {
+      input: Flux2Klein9bLoraInput;
+      output: Flux2Klein9bLoraOutput;
+    };
+    "fal-ai/flux-2/klein/realtime": {
+      input: Flux2KleinRealtimeInput;
+      output: Flux2KleinRealtimeOutput;
+    };
+    "fal-ai/flux-2/lora": {
+      input: Flux2LoraInput;
+      output: Flux2LoraOutput;
+    };
+    "fal-ai/flux-2/lora/edit": {
+      input: Flux2LoraEditInput;
+      output: Flux2LoraEditOutput;
+    };
+    "fal-ai/flux-2/turbo": {
+      input: Flux2TurboInput;
+      output: Flux2TurboOutput;
+    };
+    "fal-ai/flux-2/turbo/edit": {
+      input: Flux2TurboEditInput;
+      output: Flux2TurboEditOutput;
+    };
+    "fal-ai/flux-control-lora-canny": {
+      input: FluxControlLoraCannyInput;
+      output: FluxControlLoraCannyOutput;
+    };
+    "fal-ai/flux-control-lora-canny/image-to-image": {
+      input: FluxControlLoraCannyImageToImageInput;
+      output: FluxControlLoraCannyImageToImageOutput;
+    };
+    "fal-ai/flux-control-lora-depth": {
+      input: FluxControlLoraDepthInput;
+      output: FluxControlLoraDepthOutput;
+    };
+    "fal-ai/flux-control-lora-depth/image-to-image": {
+      input: FluxControlLoraDepthImageToImageInput;
+      output: FluxControlLoraDepthImageToImageOutput;
+    };
+    "fal-ai/flux-general": {
+      input: FluxGeneralInput;
+      output: FluxGeneralOutput;
+    };
+    "fal-ai/flux-general/differential-diffusion": {
+      input: FluxGeneralDifferentialDiffusionInput;
+      output: FluxGeneralDifferentialDiffusionOutput;
+    };
+    "fal-ai/flux-general/image-to-image": {
+      input: FluxGeneralImageToImageInput;
+      output: FluxGeneralImageToImageOutput;
+    };
+    "fal-ai/flux-general/inpainting": {
+      input: FluxGeneralInpaintingInput;
+      output: FluxGeneralInpaintingOutput;
+    };
+    "fal-ai/flux-general/rf-inversion": {
+      input: FluxGeneralRfInversionInput;
+      output: FluxGeneralRfInversionOutput;
+    };
+    "fal-ai/flux-kontext-lora": {
+      input: FluxKontextLoraInput;
+      output: FluxKontextLoraOutput;
+    };
+    "fal-ai/flux-kontext-lora/inpaint": {
+      input: FluxKontextLoraInpaintInput;
+      output: FluxKontextLoraInpaintOutput;
+    };
+    "fal-ai/flux-kontext-lora/text-to-image": {
+      input: FluxKontextLoraTextToImageInput;
+      output: FluxKontextLoraTextToImageOutput;
+    };
+    "fal-ai/flux-kontext-trainer": {
+      input: FluxKontextTrainerInput;
+      output: FluxKontextTrainerOutput;
+    };
+    "fal-ai/flux-kontext/dev": {
+      input: FluxKontextDevInput;
+      output: FluxKontextDevOutput;
+    };
+    "fal-ai/flux-krea-lora": {
+      input: FluxKreaLoraInput;
+      output: FluxKreaLoraOutput;
+    };
+    "fal-ai/flux-krea-lora/image-to-image": {
+      input: FluxKreaLoraImageToImageInput;
+      output: FluxKreaLoraImageToImageOutput;
+    };
+    "fal-ai/flux-krea-lora/inpainting": {
+      input: FluxKreaLoraInpaintingInput;
+      output: FluxKreaLoraInpaintingOutput;
+    };
+    "fal-ai/flux-krea-lora/stream": {
+      input: FluxKreaLoraStreamInput;
+      output: FluxKreaLoraStreamOutput;
+    };
+    "fal-ai/flux-lora": {
+      input: FluxLoraInput;
+      output: FluxLoraOutput;
+    };
+    "fal-ai/flux-lora-canny": {
+      input: FluxLoraCannyInput;
+      output: FluxLoraCannyOutput;
+    };
+    "fal-ai/flux-lora-depth": {
+      input: FluxLoraDepthInput;
+      output: FluxLoraDepthOutput;
+    };
+    "fal-ai/flux-lora-fast-training": {
+      input: FluxLoraFastTrainingInput;
+      output: FluxLoraFastTrainingOutput;
+    };
+    "fal-ai/flux-lora-fill": {
+      input: FluxLoraFillInput;
+      output: FluxLoraFillOutput;
+    };
+    "fal-ai/flux-lora-portrait-trainer": {
+      input: FluxLoraPortraitTrainerInput;
+      output: FluxLoraPortraitTrainerOutput;
+    };
+    "fal-ai/flux-lora/image-to-image": {
+      input: FluxLoraImageToImageInput;
+      output: FluxLoraImageToImageOutput;
+    };
+    "fal-ai/flux-lora/inpainting": {
+      input: FluxLoraInpaintingInput;
+      output: FluxLoraInpaintingOutput;
+    };
+    "fal-ai/flux-lora/stream": {
+      input: FluxLoraStreamInput;
+      output: FluxLoraStreamOutput;
+    };
+    "fal-ai/flux-pro/kontext": {
+      input: FluxProKontextInput;
+      output: FluxProKontextOutput;
+    };
+    "fal-ai/flux-pro/kontext/max": {
+      input: FluxProKontextMaxInput;
+      output: FluxProKontextMaxOutput;
+    };
+    "fal-ai/flux-pro/kontext/max/multi": {
+      input: FluxProKontextMaxMultiInput;
+      output: FluxProKontextMaxMultiOutput;
+    };
+    "fal-ai/flux-pro/kontext/max/text-to-image": {
+      input: FluxProKontextMaxTextToImageInput;
+      output: FluxProKontextMaxTextToImageOutput;
+    };
+    "fal-ai/flux-pro/kontext/multi": {
+      input: FluxProKontextMultiInput;
+      output: FluxProKontextMultiOutput;
+    };
+    "fal-ai/flux-pro/kontext/text-to-image": {
+      input: FluxProKontextTextToImageInput;
+      output: FluxProKontextTextToImageOutput;
+    };
+    "fal-ai/flux-pro/v1.1": {
+      input: FluxProV11Input;
+      output: FluxProV11Output;
+    };
+    "fal-ai/flux-pro/v1.1-ultra": {
+      input: FluxProV11UltraInput;
+      output: FluxProV11UltraOutput;
+    };
+    "fal-ai/flux-pro/v1.1-ultra-finetuned": {
+      input: FluxProV11UltraFinetunedInput;
+      output: FluxProV11UltraFinetunedOutput;
+    };
+    "fal-ai/flux-pro/v1.1-ultra/redux": {
+      input: FluxProV11UltraReduxInput;
+      output: FluxProV11UltraReduxOutput;
+    };
+    "fal-ai/flux-pro/v1.1/redux": {
+      input: FluxProV11ReduxInput;
+      output: FluxProV11ReduxOutput;
+    };
+    "fal-ai/flux-pro/v1/erase": {
+      input: FluxProV1EraseInput;
+      output: FluxProV1EraseOutput;
+    };
+    "fal-ai/flux-pro/v1/fill": {
+      input: FluxProV1FillInput;
+      output: FluxProV1FillOutput;
+    };
+    "fal-ai/flux-pro/v1/fill-finetuned": {
+      input: FluxProV1FillFinetunedInput;
+      output: FluxProV1FillFinetunedOutput;
+    };
+    "fal-ai/flux-pro/v1/vto": {
+      input: FluxProV1VtoInput;
+      output: FluxProV1VtoOutput;
+    };
+    "fal-ai/flux-pulid": {
+      input: FluxPulidInput;
+      output: FluxPulidOutput;
+    };
+    "fal-ai/flux-subject": {
+      input: FluxSubjectInput;
+      output: FluxSubjectOutput;
+    };
+    "fal-ai/flux-vision-upscaler": {
+      input: FluxVisionUpscalerInput;
+      output: FluxVisionUpscalerOutput;
+    };
+    "fal-ai/flux/dev": {
+      input: FluxDevInput;
+      output: FluxDevOutput;
+    };
+    "fal-ai/flux/dev/image-to-image": {
+      input: FluxDevImageToImageInput;
+      output: FluxDevImageToImageOutput;
+    };
+    "fal-ai/flux/dev/redux": {
+      input: FluxDevReduxInput;
+      output: FluxDevReduxOutput;
+    };
+    "fal-ai/flux/krea": {
+      input: FluxKreaInput;
+      output: FluxKreaOutput;
+    };
+    "fal-ai/flux/krea/image-to-image": {
+      input: FluxKreaImageToImageInput;
+      output: FluxKreaImageToImageOutput;
+    };
+    "fal-ai/flux/krea/redux": {
+      input: FluxKreaReduxInput;
+      output: FluxKreaReduxOutput;
+    };
+    "fal-ai/flux/schnell": {
+      input: FluxSchnellInput;
+      output: FluxSchnellOutput;
+    };
+    "fal-ai/flux/schnell/redux": {
+      input: FluxSchnellReduxInput;
+      output: FluxSchnellReduxOutput;
+    };
+    "fal-ai/flux/srpo": {
+      input: FluxSrpoInput;
+      output: FluxSrpoOutput;
+    };
+    "fal-ai/flux/srpo/image-to-image": {
+      input: FluxSrpoImageToImageInput;
+      output: FluxSrpoImageToImageOutput;
+    };
+    "fal-ai/fooocus": {
+      input: fooocusInput;
+      output: fooocusOutput;
+    };
+    "fal-ai/fooocus/image-prompt": {
+      input: FooocusImagePromptInput;
+      output: FooocusImagePromptOutput;
+    };
+    "fal-ai/fooocus/inpaint": {
+      input: FooocusInpaintInput;
+      output: FooocusInpaintOutput;
+    };
+    "fal-ai/fooocus/upscale-or-vary": {
+      input: FooocusUpscaleOrVaryInput;
+      output: FooocusUpscaleOrVaryOutput;
+    };
+    "fal-ai/framepack": {
+      input: framepackInput;
+      output: framepackOutput;
+    };
+    "fal-ai/framepack/f1": {
+      input: FramepackF1Input;
+      output: FramepackF1Output;
+    };
+    "fal-ai/framepack/flf2v": {
+      input: FramepackFlf2vInput;
+      output: FramepackFlf2vOutput;
+    };
+    "fal-ai/gemini-25-flash-image": {
+      input: Gemini25FlashImageInput;
+      output: Gemini25FlashImageOutput;
+    };
+    "fal-ai/gemini-25-flash-image/edit": {
+      input: Gemini25FlashImageEditInput;
+      output: Gemini25FlashImageEditOutput;
+    };
+    "fal-ai/gemini-3-pro-image-preview": {
+      input: Gemini3ProImagePreviewInput;
+      output: Gemini3ProImagePreviewOutput;
+    };
+    "fal-ai/gemini-3-pro-image-preview/edit": {
+      input: Gemini3ProImagePreviewEditInput;
+      output: Gemini3ProImagePreviewEditOutput;
+    };
+    "fal-ai/gemini-3.1-flash-image-preview": {
+      input: Gemini31FlashImagePreviewInput;
+      output: Gemini31FlashImagePreviewOutput;
+    };
+    "fal-ai/gemini-3.1-flash-image-preview/edit": {
+      input: Gemini31FlashImagePreviewEditInput;
+      output: Gemini31FlashImagePreviewEditOutput;
+    };
+    "fal-ai/gemini-3.1-flash-tts": {
+      input: Gemini31FlashTtsInput;
+      output: Gemini31FlashTtsOutput;
+    };
+    "fal-ai/gemini-tts": {
+      input: GeminiTtsInput;
+      output: GeminiTtsOutput;
+    };
+    "fal-ai/ghiblify": {
+      input: ghiblifyInput;
+      output: ghiblifyOutput;
+    };
+    "fal-ai/glm-image": {
+      input: GlmImageInput;
+      output: GlmImageOutput;
+    };
+    "fal-ai/glm-image/image-to-image": {
+      input: GlmImageImageToImageInput;
+      output: GlmImageImageToImageOutput;
+    };
+    "fal-ai/got-ocr/v2": {
+      input: GotOcrV2Input;
+      output: GotOcrV2Output;
+    };
+    "fal-ai/gpt-image-1-mini": {
+      input: GptImage1MiniInput;
+      output: GptImage1MiniOutput;
+    };
+    "fal-ai/gpt-image-1-mini/edit": {
+      input: GptImage1MiniEditInput;
+      output: GptImage1MiniEditOutput;
+    };
+    "fal-ai/gpt-image-1.5": {
+      input: GptImage15Input;
+      output: GptImage15Output;
+    };
+    "fal-ai/gpt-image-1.5/edit": {
+      input: GptImage15EditInput;
+      output: GptImage15EditOutput;
+    };
+    "fal-ai/gpt-image-1/edit-image": {
+      input: GptImage1EditImageInput;
+      output: GptImage1EditImageOutput;
+    };
+    "fal-ai/gpt-image-1/text-to-image": {
+      input: GptImage1TextToImageInput;
+      output: GptImage1TextToImageOutput;
+    };
+    "fal-ai/heygen/avatar3/digital-twin": {
+      input: HeygenAvatar3DigitalTwinInput;
+      output: HeygenAvatar3DigitalTwinOutput;
+    };
+    "fal-ai/heygen/avatar4/digital-twin": {
+      input: HeygenAvatar4DigitalTwinInput;
+      output: HeygenAvatar4DigitalTwinOutput;
+    };
+    "fal-ai/heygen/avatar4/image-to-video": {
+      input: HeygenAvatar4ImageToVideoInput;
+      output: HeygenAvatar4ImageToVideoOutput;
+    };
+    "fal-ai/heygen/avatar5/digital-twin": {
+      input: HeygenAvatar5DigitalTwinInput;
+      output: HeygenAvatar5DigitalTwinOutput;
+    };
+    "fal-ai/heygen/v2/translate/precision": {
+      input: HeygenV2TranslatePrecisionInput;
+      output: HeygenV2TranslatePrecisionOutput;
+    };
+    "fal-ai/heygen/v2/translate/speed": {
+      input: HeygenV2TranslateSpeedInput;
+      output: HeygenV2TranslateSpeedOutput;
+    };
+    "fal-ai/heygen/v2/video-agent": {
+      input: HeygenV2VideoAgentInput;
+      output: HeygenV2VideoAgentOutput;
+    };
+    "fal-ai/heygen/v3/lipsync/precision": {
+      input: HeygenV3LipsyncPrecisionInput;
+      output: HeygenV3LipsyncPrecisionOutput;
+    };
+    "fal-ai/heygen/v3/lipsync/speed": {
+      input: HeygenV3LipsyncSpeedInput;
+      output: HeygenV3LipsyncSpeedOutput;
+    };
+    "fal-ai/heygen/v3/video-agent": {
+      input: HeygenV3VideoAgentInput;
+      output: HeygenV3VideoAgentOutput;
+    };
+    "fal-ai/hidream-i1-dev": {
+      input: HidreamI1DevInput;
+      output: HidreamI1DevOutput;
+    };
+    "fal-ai/hidream-i1-fast": {
+      input: HidreamI1FastInput;
+      output: HidreamI1FastOutput;
+    };
+    "fal-ai/hidream-i1-full": {
+      input: HidreamI1FullInput;
+      output: HidreamI1FullOutput;
+    };
+    "fal-ai/hidream-i1-full/image-to-image": {
+      input: HidreamI1FullImageToImageInput;
+      output: HidreamI1FullImageToImageOutput;
+    };
+    "fal-ai/hidream-o1-image": {
+      input: HidreamO1ImageInput;
+      output: HidreamO1ImageOutput;
+    };
+    "fal-ai/hidream-o1-image/dev": {
+      input: HidreamO1ImageDevInput;
+      output: HidreamO1ImageDevOutput;
+    };
+    "fal-ai/hidream-o1-image/dev/edit": {
+      input: HidreamO1ImageDevEditInput;
+      output: HidreamO1ImageDevEditOutput;
+    };
+    "fal-ai/hidream-o1-image/edit": {
+      input: HidreamO1ImageEditInput;
+      output: HidreamO1ImageEditOutput;
+    };
+    "fal-ai/hunyuan_world": {
+      input: HunyuanWorldInput;
+      output: HunyuanWorldOutput;
+    };
+    "fal-ai/hunyuan_world/image-to-world": {
+      input: HunyuanWorldImageToWorldInput;
+      output: HunyuanWorldImageToWorldOutput;
+    };
+    "fal-ai/hunyuan-3d/v3.1/part": {
+      input: Hunyuan3dV31PartInput;
+      output: Hunyuan3dV31PartOutput;
+    };
+    "fal-ai/hunyuan-3d/v3.1/pro/image-to-3d": {
+      input: Hunyuan3dV31ProImageTo3dInput;
+      output: Hunyuan3dV31ProImageTo3dOutput;
+    };
+    "fal-ai/hunyuan-3d/v3.1/pro/text-to-3d": {
+      input: Hunyuan3dV31ProTextTo3dInput;
+      output: Hunyuan3dV31ProTextTo3dOutput;
+    };
+    "fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d": {
+      input: Hunyuan3dV31RapidImageTo3dInput;
+      output: Hunyuan3dV31RapidImageTo3dOutput;
+    };
+    "fal-ai/hunyuan-3d/v3.1/rapid/text-to-3d": {
+      input: Hunyuan3dV31RapidTextTo3dInput;
+      output: Hunyuan3dV31RapidTextTo3dOutput;
+    };
+    "fal-ai/hunyuan-3d/v3.1/smart-topology": {
+      input: Hunyuan3dV31SmartTopologyInput;
+      output: Hunyuan3dV31SmartTopologyOutput;
+    };
+    "fal-ai/hunyuan-image/v2.1/text-to-image": {
+      input: HunyuanImageV21TextToImageInput;
+      output: HunyuanImageV21TextToImageOutput;
+    };
+    "fal-ai/hunyuan-image/v3/instruct/edit": {
+      input: HunyuanImageV3InstructEditInput;
+      output: HunyuanImageV3InstructEditOutput;
+    };
+    "fal-ai/hunyuan-image/v3/instruct/text-to-image": {
+      input: HunyuanImageV3InstructTextToImageInput;
+      output: HunyuanImageV3InstructTextToImageOutput;
+    };
+    "fal-ai/hunyuan-image/v3/text-to-image": {
+      input: HunyuanImageV3TextToImageInput;
+      output: HunyuanImageV3TextToImageOutput;
+    };
+    "fal-ai/hunyuan-motion": {
+      input: HunyuanMotionInput;
+      output: HunyuanMotionOutput;
+    };
+    "fal-ai/hunyuan-motion/fast": {
+      input: HunyuanMotionFastInput;
+      output: HunyuanMotionFastOutput;
+    };
+    "fal-ai/hunyuan-video": {
+      input: HunyuanVideoInput;
+      output: HunyuanVideoOutput;
+    };
+    "fal-ai/hunyuan-video-foley": {
+      input: HunyuanVideoFoleyInput;
+      output: HunyuanVideoFoleyOutput;
+    };
+    "fal-ai/hunyuan-video-image-to-video": {
+      input: HunyuanVideoImageToVideoInput;
+      output: HunyuanVideoImageToVideoOutput;
+    };
+    "fal-ai/hunyuan-video-v1.5/image-to-video": {
+      input: HunyuanVideoV15ImageToVideoInput;
+      output: HunyuanVideoV15ImageToVideoOutput;
+    };
+    "fal-ai/hunyuan-video-v1.5/text-to-video": {
+      input: HunyuanVideoV15TextToVideoInput;
+      output: HunyuanVideoV15TextToVideoOutput;
+    };
+    "fal-ai/hunyuan-video/video-to-video": {
+      input: HunyuanVideoVideoToVideoInput;
+      output: HunyuanVideoVideoToVideoOutput;
+    };
+    "fal-ai/hunyuan3d-v3/image-to-3d": {
+      input: Hunyuan3dV3ImageTo3dInput;
+      output: Hunyuan3dV3ImageTo3dOutput;
+    };
+    "fal-ai/hunyuan3d-v3/sketch-to-3d": {
+      input: Hunyuan3dV3SketchTo3dInput;
+      output: Hunyuan3dV3SketchTo3dOutput;
+    };
+    "fal-ai/hunyuan3d-v3/text-to-3d": {
+      input: Hunyuan3dV3TextTo3dInput;
+      output: Hunyuan3dV3TextTo3dOutput;
+    };
+    "fal-ai/hunyuan3d/v2": {
+      input: Hunyuan3dV2Input;
+      output: Hunyuan3dV2Output;
+    };
+    "fal-ai/hunyuan3d/v2/mini": {
+      input: Hunyuan3dV2MiniInput;
+      output: Hunyuan3dV2MiniOutput;
+    };
+    "fal-ai/hunyuan3d/v2/mini/turbo": {
+      input: Hunyuan3dV2MiniTurboInput;
+      output: Hunyuan3dV2MiniTurboOutput;
+    };
+    "fal-ai/hunyuan3d/v2/multi-view": {
+      input: Hunyuan3dV2MultiViewInput;
+      output: Hunyuan3dV2MultiViewOutput;
+    };
+    "fal-ai/hunyuan3d/v2/multi-view/turbo": {
+      input: Hunyuan3dV2MultiViewTurboInput;
+      output: Hunyuan3dV2MultiViewTurboOutput;
+    };
+    "fal-ai/hunyuan3d/v2/turbo": {
+      input: Hunyuan3dV2TurboInput;
+      output: Hunyuan3dV2TurboOutput;
+    };
+    "fal-ai/hy-wu-edit": {
+      input: HyWuEditInput;
+      output: HyWuEditOutput;
+    };
+    "fal-ai/hyper3d/rodin": {
+      input: Hyper3dRodinInput;
+      output: Hyper3dRodinOutput;
+    };
+    "fal-ai/hyper3d/rodin/v2": {
+      input: Hyper3dRodinV2Input;
+      output: Hyper3dRodinV2Output;
+    };
+    "fal-ai/hyper3d/rodin/v2.5": {
+      input: Hyper3dRodinV25Input;
+      output: Hyper3dRodinV25Output;
+    };
+    "fal-ai/hyper3d/rodin/v2.5/fast": {
+      input: Hyper3dRodinV25FastInput;
+      output: Hyper3dRodinV25FastOutput;
+    };
+    "fal-ai/hyper3d/rodin/v2.5/text-to-3d": {
+      input: Hyper3dRodinV25TextTo3dInput;
+      output: Hyper3dRodinV25TextTo3dOutput;
+    };
+    "fal-ai/hyper3d/rodin/v2.5/text-to-3d/fast": {
+      input: Hyper3dRodinV25TextTo3dFastInput;
+      output: Hyper3dRodinV25TextTo3dFastOutput;
+    };
+    "fal-ai/iclight-v2": {
+      input: IclightV2Input;
+      output: IclightV2Output;
+    };
+    "fal-ai/ideogram/character": {
+      input: IdeogramCharacterInput;
+      output: IdeogramCharacterOutput;
+    };
+    "fal-ai/ideogram/character/edit": {
+      input: IdeogramCharacterEditInput;
+      output: IdeogramCharacterEditOutput;
+    };
+    "fal-ai/ideogram/character/remix": {
+      input: IdeogramCharacterRemixInput;
+      output: IdeogramCharacterRemixOutput;
+    };
+    "fal-ai/ideogram/custom-models": {
+      input: IdeogramCustomModelsInput;
+      output: IdeogramCustomModelsOutput;
+    };
+    "fal-ai/ideogram/custom-models/generate": {
+      input: IdeogramCustomModelsGenerateInput;
+      output: IdeogramCustomModelsGenerateOutput;
+    };
+    "fal-ai/ideogram/object-removal": {
+      input: IdeogramObjectRemovalInput;
+      output: IdeogramObjectRemovalOutput;
+    };
+    "fal-ai/ideogram/remove-background": {
+      input: IdeogramRemoveBackgroundInput;
+      output: IdeogramRemoveBackgroundOutput;
+    };
+    "fal-ai/ideogram/upscale": {
+      input: IdeogramUpscaleInput;
+      output: IdeogramUpscaleOutput;
+    };
+    "fal-ai/ideogram/v2": {
+      input: IdeogramV2Input;
+      output: IdeogramV2Output;
+    };
+    "fal-ai/ideogram/v2/edit": {
+      input: IdeogramV2EditInput;
+      output: IdeogramV2EditOutput;
+    };
+    "fal-ai/ideogram/v2/remix": {
+      input: IdeogramV2RemixInput;
+      output: IdeogramV2RemixOutput;
+    };
+    "fal-ai/ideogram/v2/turbo": {
+      input: IdeogramV2TurboInput;
+      output: IdeogramV2TurboOutput;
+    };
+    "fal-ai/ideogram/v2/turbo/edit": {
+      input: IdeogramV2TurboEditInput;
+      output: IdeogramV2TurboEditOutput;
+    };
+    "fal-ai/ideogram/v2/turbo/remix": {
+      input: IdeogramV2TurboRemixInput;
+      output: IdeogramV2TurboRemixOutput;
+    };
+    "fal-ai/ideogram/v2a": {
+      input: IdeogramV2aInput;
+      output: IdeogramV2aOutput;
+    };
+    "fal-ai/ideogram/v2a/remix": {
+      input: IdeogramV2aRemixInput;
+      output: IdeogramV2aRemixOutput;
+    };
+    "fal-ai/ideogram/v2a/turbo": {
+      input: IdeogramV2aTurboInput;
+      output: IdeogramV2aTurboOutput;
+    };
+    "fal-ai/ideogram/v2a/turbo/remix": {
+      input: IdeogramV2aTurboRemixInput;
+      output: IdeogramV2aTurboRemixOutput;
+    };
+    "fal-ai/ideogram/v3": {
+      input: IdeogramV3Input;
+      output: IdeogramV3Output;
+    };
+    "fal-ai/ideogram/v3/edit": {
+      input: IdeogramV3EditInput;
+      output: IdeogramV3EditOutput;
+    };
+    "fal-ai/ideogram/v3/generate-transparent": {
+      input: IdeogramV3GenerateTransparentInput;
+      output: IdeogramV3GenerateTransparentOutput;
+    };
+    "fal-ai/ideogram/v3/layerize-text": {
+      input: IdeogramV3LayerizeTextInput;
+      output: IdeogramV3LayerizeTextOutput;
+    };
+    "fal-ai/ideogram/v3/reframe": {
+      input: IdeogramV3ReframeInput;
+      output: IdeogramV3ReframeOutput;
+    };
+    "fal-ai/ideogram/v3/remix": {
+      input: IdeogramV3RemixInput;
+      output: IdeogramV3RemixOutput;
+    };
+    "fal-ai/ideogram/v3/replace-background": {
+      input: IdeogramV3ReplaceBackgroundInput;
+      output: IdeogramV3ReplaceBackgroundOutput;
+    };
+    "fal-ai/illusion-diffusion": {
+      input: IllusionDiffusionInput;
+      output: IllusionDiffusionOutput;
+    };
+    "fal-ai/image-apps-v2/age-modify": {
+      input: ImageAppsV2AgeModifyInput;
+      output: ImageAppsV2AgeModifyOutput;
+    };
+    "fal-ai/image-apps-v2/city-teleport": {
+      input: ImageAppsV2CityTeleportInput;
+      output: ImageAppsV2CityTeleportOutput;
+    };
+    "fal-ai/image-apps-v2/expression-change": {
+      input: ImageAppsV2ExpressionChangeInput;
+      output: ImageAppsV2ExpressionChangeOutput;
+    };
+    "fal-ai/image-apps-v2/hair-change": {
+      input: ImageAppsV2HairChangeInput;
+      output: ImageAppsV2HairChangeOutput;
+    };
+    "fal-ai/image-apps-v2/headshot-photo": {
+      input: ImageAppsV2HeadshotPhotoInput;
+      output: ImageAppsV2HeadshotPhotoOutput;
+    };
+    "fal-ai/image-apps-v2/makeup-application": {
+      input: ImageAppsV2MakeupApplicationInput;
+      output: ImageAppsV2MakeupApplicationOutput;
+    };
+    "fal-ai/image-apps-v2/object-removal": {
+      input: ImageAppsV2ObjectRemovalInput;
+      output: ImageAppsV2ObjectRemovalOutput;
+    };
+    "fal-ai/image-apps-v2/outpaint": {
+      input: ImageAppsV2OutpaintInput;
+      output: ImageAppsV2OutpaintOutput;
+    };
+    "fal-ai/image-apps-v2/perspective": {
+      input: ImageAppsV2PerspectiveInput;
+      output: ImageAppsV2PerspectiveOutput;
+    };
+    "fal-ai/image-apps-v2/photo-restoration": {
+      input: ImageAppsV2PhotoRestorationInput;
+      output: ImageAppsV2PhotoRestorationOutput;
+    };
+    "fal-ai/image-apps-v2/photography-effects": {
+      input: ImageAppsV2PhotographyEffectsInput;
+      output: ImageAppsV2PhotographyEffectsOutput;
+    };
+    "fal-ai/image-apps-v2/portrait-enhance": {
+      input: ImageAppsV2PortraitEnhanceInput;
+      output: ImageAppsV2PortraitEnhanceOutput;
+    };
+    "fal-ai/image-apps-v2/product-holding": {
+      input: ImageAppsV2ProductHoldingInput;
+      output: ImageAppsV2ProductHoldingOutput;
+    };
+    "fal-ai/image-apps-v2/product-photography": {
+      input: ImageAppsV2ProductPhotographyInput;
+      output: ImageAppsV2ProductPhotographyOutput;
+    };
+    "fal-ai/image-apps-v2/relighting": {
+      input: ImageAppsV2RelightingInput;
+      output: ImageAppsV2RelightingOutput;
+    };
+    "fal-ai/image-apps-v2/style-transfer": {
+      input: ImageAppsV2StyleTransferInput;
+      output: ImageAppsV2StyleTransferOutput;
+    };
+    "fal-ai/image-apps-v2/texture-transform": {
+      input: ImageAppsV2TextureTransformInput;
+      output: ImageAppsV2TextureTransformOutput;
+    };
+    "fal-ai/image-apps-v2/virtual-try-on": {
+      input: ImageAppsV2VirtualTryOnInput;
+      output: ImageAppsV2VirtualTryOnOutput;
+    };
+    "fal-ai/image-editing/age-progression": {
+      input: ImageEditingAgeProgressionInput;
+      output: ImageEditingAgeProgressionOutput;
+    };
+    "fal-ai/image-editing/baby-version": {
+      input: ImageEditingBabyVersionInput;
+      output: ImageEditingBabyVersionOutput;
+    };
+    "fal-ai/image-editing/background-change": {
+      input: ImageEditingBackgroundChangeInput;
+      output: ImageEditingBackgroundChangeOutput;
+    };
+    "fal-ai/image-editing/broccoli-haircut": {
+      input: ImageEditingBroccoliHaircutInput;
+      output: ImageEditingBroccoliHaircutOutput;
+    };
+    "fal-ai/image-editing/cartoonify": {
+      input: ImageEditingCartoonifyInput;
+      output: ImageEditingCartoonifyOutput;
+    };
+    "fal-ai/image-editing/color-correction": {
+      input: ImageEditingColorCorrectionInput;
+      output: ImageEditingColorCorrectionOutput;
+    };
+    "fal-ai/image-editing/expression-change": {
+      input: ImageEditingExpressionChangeInput;
+      output: ImageEditingExpressionChangeOutput;
+    };
+    "fal-ai/image-editing/face-enhancement": {
+      input: ImageEditingFaceEnhancementInput;
+      output: ImageEditingFaceEnhancementOutput;
+    };
+    "fal-ai/image-editing/hair-change": {
+      input: ImageEditingHairChangeInput;
+      output: ImageEditingHairChangeOutput;
+    };
+    "fal-ai/image-editing/object-removal": {
+      input: ImageEditingObjectRemovalInput;
+      output: ImageEditingObjectRemovalOutput;
+    };
+    "fal-ai/image-editing/photo-restoration": {
+      input: ImageEditingPhotoRestorationInput;
+      output: ImageEditingPhotoRestorationOutput;
+    };
+    "fal-ai/image-editing/plushie-style": {
+      input: ImageEditingPlushieStyleInput;
+      output: ImageEditingPlushieStyleOutput;
+    };
+    "fal-ai/image-editing/professional-photo": {
+      input: ImageEditingProfessionalPhotoInput;
+      output: ImageEditingProfessionalPhotoOutput;
+    };
+    "fal-ai/image-editing/realism": {
+      input: ImageEditingRealismInput;
+      output: ImageEditingRealismOutput;
+    };
+    "fal-ai/image-editing/reframe": {
+      input: ImageEditingReframeInput;
+      output: ImageEditingReframeOutput;
+    };
+    "fal-ai/image-editing/retouch": {
+      input: ImageEditingRetouchInput;
+      output: ImageEditingRetouchOutput;
+    };
+    "fal-ai/image-editing/scene-composition": {
+      input: ImageEditingSceneCompositionInput;
+      output: ImageEditingSceneCompositionOutput;
+    };
+    "fal-ai/image-editing/style-transfer": {
+      input: ImageEditingStyleTransferInput;
+      output: ImageEditingStyleTransferOutput;
+    };
+    "fal-ai/image-editing/text-removal": {
+      input: ImageEditingTextRemovalInput;
+      output: ImageEditingTextRemovalOutput;
+    };
+    "fal-ai/image-editing/time-of-day": {
+      input: ImageEditingTimeOfDayInput;
+      output: ImageEditingTimeOfDayOutput;
+    };
+    "fal-ai/image-editing/weather-effect": {
+      input: ImageEditingWeatherEffectInput;
+      output: ImageEditingWeatherEffectOutput;
+    };
+    "fal-ai/image-editing/wojak-style": {
+      input: ImageEditingWojakStyleInput;
+      output: ImageEditingWojakStyleOutput;
+    };
+    "fal-ai/image-editing/youtube-thumbnails": {
+      input: ImageEditingYoutubeThumbnailsInput;
+      output: ImageEditingYoutubeThumbnailsOutput;
+    };
+    "fal-ai/image-preprocessors/depth-anything/v2": {
+      input: ImagePreprocessorsDepthAnythingV2Input;
+      output: ImagePreprocessorsDepthAnythingV2Output;
+    };
+    "fal-ai/image-preprocessors/hed": {
+      input: ImagePreprocessorsHedInput;
+      output: ImagePreprocessorsHedOutput;
+    };
+    "fal-ai/image-preprocessors/lineart": {
+      input: ImagePreprocessorsLineartInput;
+      output: ImagePreprocessorsLineartOutput;
+    };
+    "fal-ai/image-preprocessors/midas": {
+      input: ImagePreprocessorsMidasInput;
+      output: ImagePreprocessorsMidasOutput;
+    };
+    "fal-ai/image-preprocessors/mlsd": {
+      input: ImagePreprocessorsMlsdInput;
+      output: ImagePreprocessorsMlsdOutput;
+    };
+    "fal-ai/image-preprocessors/pidi": {
+      input: ImagePreprocessorsPidiInput;
+      output: ImagePreprocessorsPidiOutput;
+    };
+    "fal-ai/image-preprocessors/sam": {
+      input: ImagePreprocessorsSamInput;
+      output: ImagePreprocessorsSamOutput;
+    };
+    "fal-ai/image-preprocessors/scribble": {
+      input: ImagePreprocessorsScribbleInput;
+      output: ImagePreprocessorsScribbleOutput;
+    };
+    "fal-ai/image-preprocessors/teed": {
+      input: ImagePreprocessorsTeedInput;
+      output: ImagePreprocessorsTeedOutput;
+    };
+    "fal-ai/image-preprocessors/zoe": {
+      input: ImagePreprocessorsZoeInput;
+      output: ImagePreprocessorsZoeOutput;
+    };
+    "fal-ai/image2pixel": {
+      input: image2pixelInput;
+      output: image2pixelOutput;
+    };
+    "fal-ai/image2svg": {
+      input: image2svgInput;
+      output: image2svgOutput;
+    };
+    "fal-ai/imageutils/depth": {
+      input: ImageutilsDepthInput;
+      output: ImageutilsDepthOutput;
+    };
+    "fal-ai/imageutils/marigold-depth": {
+      input: ImageutilsMarigoldDepthInput;
+      output: ImageutilsMarigoldDepthOutput;
+    };
+    "fal-ai/imageutils/nsfw": {
+      input: ImageutilsNsfwInput;
+      output: ImageutilsNsfwOutput;
+    };
+    "fal-ai/imageutils/rembg": {
+      input: ImageutilsRembgInput;
+      output: ImageutilsRembgOutput;
+    };
+    "fal-ai/index-tts-2/text-to-speech": {
+      input: IndexTts2TextToSpeechInput;
+      output: IndexTts2TextToSpeechOutput;
+    };
+    "fal-ai/infinitalk": {
+      input: infinitalkInput;
+      output: infinitalkOutput;
+    };
+    "fal-ai/infinitalk/single-text": {
+      input: InfinitalkSingleTextInput;
+      output: InfinitalkSingleTextOutput;
+    };
+    "fal-ai/infinitalk/video-to-video": {
+      input: InfinitalkVideoToVideoInput;
+      output: InfinitalkVideoToVideoOutput;
+    };
+    "fal-ai/infinity-star/text-to-video": {
+      input: InfinityStarTextToVideoInput;
+      output: InfinityStarTextToVideoOutput;
+    };
+    "fal-ai/inpaint": {
+      input: inpaintInput;
+      output: inpaintOutput;
+    };
+    "fal-ai/instant-character": {
+      input: InstantCharacterInput;
+      output: InstantCharacterOutput;
+    };
+    "fal-ai/inworld-tts": {
+      input: InworldTtsInput;
+      output: InworldTtsOutput;
+    };
+    "fal-ai/ip-adapter-face-id": {
+      input: IpAdapterFaceIdInput;
+      output: IpAdapterFaceIdOutput;
+    };
+    "fal-ai/janus": {
+      input: janusInput;
+      output: janusOutput;
+    };
+    "fal-ai/joyai-image-edit": {
+      input: JoyaiImageEditInput;
+      output: JoyaiImageEditOutput;
+    };
+    "fal-ai/kandinsky5-pro/image-to-video": {
+      input: Kandinsky5ProImageToVideoInput;
+      output: Kandinsky5ProImageToVideoOutput;
+    };
+    "fal-ai/kandinsky5-pro/text-to-video": {
+      input: Kandinsky5ProTextToVideoInput;
+      output: Kandinsky5ProTextToVideoOutput;
+    };
+    "fal-ai/kandinsky5/text-to-video": {
+      input: Kandinsky5TextToVideoInput;
+      output: Kandinsky5TextToVideoOutput;
+    };
+    "fal-ai/kandinsky5/text-to-video/distill": {
+      input: Kandinsky5TextToVideoDistillInput;
+      output: Kandinsky5TextToVideoDistillOutput;
+    };
+    "fal-ai/kling-image/o1": {
+      input: KlingImageO1Input;
+      output: KlingImageO1Output;
+    };
+    "fal-ai/kling-image/o3/image-to-image": {
+      input: KlingImageO3ImageToImageInput;
+      output: KlingImageO3ImageToImageOutput;
+    };
+    "fal-ai/kling-image/o3/text-to-image": {
+      input: KlingImageO3TextToImageInput;
+      output: KlingImageO3TextToImageOutput;
+    };
+    "fal-ai/kling-image/v3/image-to-image": {
+      input: KlingImageV3ImageToImageInput;
+      output: KlingImageV3ImageToImageOutput;
+    };
+    "fal-ai/kling-image/v3/text-to-image": {
+      input: KlingImageV3TextToImageInput;
+      output: KlingImageV3TextToImageOutput;
+    };
+    "fal-ai/kling-video/ai-avatar/v2/pro": {
+      input: KlingVideoAiAvatarV2ProInput;
+      output: KlingVideoAiAvatarV2ProOutput;
+    };
+    "fal-ai/kling-video/ai-avatar/v2/standard": {
+      input: KlingVideoAiAvatarV2StandardInput;
+      output: KlingVideoAiAvatarV2StandardOutput;
+    };
+    "fal-ai/kling-video/create-voice": {
+      input: KlingVideoCreateVoiceInput;
+      output: KlingVideoCreateVoiceOutput;
+    };
+    "fal-ai/kling-video/lipsync/audio-to-video": {
+      input: KlingVideoLipsyncAudioToVideoInput;
+      output: KlingVideoLipsyncAudioToVideoOutput;
+    };
+    "fal-ai/kling-video/lipsync/text-to-video": {
+      input: KlingVideoLipsyncTextToVideoInput;
+      output: KlingVideoLipsyncTextToVideoOutput;
+    };
+    "fal-ai/kling-video/o1/image-to-video": {
+      input: KlingVideoO1ImageToVideoInput;
+      output: KlingVideoO1ImageToVideoOutput;
+    };
+    "fal-ai/kling-video/o1/reference-to-video": {
+      input: KlingVideoO1ReferenceToVideoInput;
+      output: KlingVideoO1ReferenceToVideoOutput;
+    };
+    "fal-ai/kling-video/o1/standard/image-to-video": {
+      input: KlingVideoO1StandardImageToVideoInput;
+      output: KlingVideoO1StandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/o1/standard/reference-to-video": {
+      input: KlingVideoO1StandardReferenceToVideoInput;
+      output: KlingVideoO1StandardReferenceToVideoOutput;
+    };
+    "fal-ai/kling-video/o1/standard/video-to-video/edit": {
+      input: KlingVideoO1StandardVideoToVideoEditInput;
+      output: KlingVideoO1StandardVideoToVideoEditOutput;
+    };
+    "fal-ai/kling-video/o1/standard/video-to-video/reference": {
+      input: KlingVideoO1StandardVideoToVideoReferenceInput;
+      output: KlingVideoO1StandardVideoToVideoReferenceOutput;
+    };
+    "fal-ai/kling-video/o1/video-to-video/edit": {
+      input: KlingVideoO1VideoToVideoEditInput;
+      output: KlingVideoO1VideoToVideoEditOutput;
+    };
+    "fal-ai/kling-video/o1/video-to-video/reference": {
+      input: KlingVideoO1VideoToVideoReferenceInput;
+      output: KlingVideoO1VideoToVideoReferenceOutput;
+    };
+    "fal-ai/kling-video/o3/4k/image-to-video": {
+      input: KlingVideoO34kImageToVideoInput;
+      output: KlingVideoO34kImageToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/4k/reference-to-video": {
+      input: KlingVideoO34kReferenceToVideoInput;
+      output: KlingVideoO34kReferenceToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/4k/text-to-video": {
+      input: KlingVideoO34kTextToVideoInput;
+      output: KlingVideoO34kTextToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/pro/image-to-video": {
+      input: KlingVideoO3ProImageToVideoInput;
+      output: KlingVideoO3ProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/pro/reference-to-video": {
+      input: KlingVideoO3ProReferenceToVideoInput;
+      output: KlingVideoO3ProReferenceToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/pro/text-to-video": {
+      input: KlingVideoO3ProTextToVideoInput;
+      output: KlingVideoO3ProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/pro/video-to-video/edit": {
+      input: KlingVideoO3ProVideoToVideoEditInput;
+      output: KlingVideoO3ProVideoToVideoEditOutput;
+    };
+    "fal-ai/kling-video/o3/pro/video-to-video/reference": {
+      input: KlingVideoO3ProVideoToVideoReferenceInput;
+      output: KlingVideoO3ProVideoToVideoReferenceOutput;
+    };
+    "fal-ai/kling-video/o3/standard/image-to-video": {
+      input: KlingVideoO3StandardImageToVideoInput;
+      output: KlingVideoO3StandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/standard/reference-to-video": {
+      input: KlingVideoO3StandardReferenceToVideoInput;
+      output: KlingVideoO3StandardReferenceToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/standard/text-to-video": {
+      input: KlingVideoO3StandardTextToVideoInput;
+      output: KlingVideoO3StandardTextToVideoOutput;
+    };
+    "fal-ai/kling-video/o3/standard/video-to-video/edit": {
+      input: KlingVideoO3StandardVideoToVideoEditInput;
+      output: KlingVideoO3StandardVideoToVideoEditOutput;
+    };
+    "fal-ai/kling-video/o3/standard/video-to-video/reference": {
+      input: KlingVideoO3StandardVideoToVideoReferenceInput;
+      output: KlingVideoO3StandardVideoToVideoReferenceOutput;
+    };
+    "fal-ai/kling-video/v1.5/pro/effects": {
+      input: KlingVideoV15ProEffectsInput;
+      output: KlingVideoV15ProEffectsOutput;
+    };
+    "fal-ai/kling-video/v1.5/pro/image-to-video": {
+      input: KlingVideoV15ProImageToVideoInput;
+      output: KlingVideoV15ProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v1.5/pro/text-to-video": {
+      input: KlingVideoV15ProTextToVideoInput;
+      output: KlingVideoV15ProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v1.6/pro/effects": {
+      input: KlingVideoV16ProEffectsInput;
+      output: KlingVideoV16ProEffectsOutput;
+    };
+    "fal-ai/kling-video/v1.6/pro/elements": {
+      input: KlingVideoV16ProElementsInput;
+      output: KlingVideoV16ProElementsOutput;
+    };
+    "fal-ai/kling-video/v1.6/pro/image-to-video": {
+      input: KlingVideoV16ProImageToVideoInput;
+      output: KlingVideoV16ProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v1.6/pro/text-to-video": {
+      input: KlingVideoV16ProTextToVideoInput;
+      output: KlingVideoV16ProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v1.6/standard/effects": {
+      input: KlingVideoV16StandardEffectsInput;
+      output: KlingVideoV16StandardEffectsOutput;
+    };
+    "fal-ai/kling-video/v1.6/standard/elements": {
+      input: KlingVideoV16StandardElementsInput;
+      output: KlingVideoV16StandardElementsOutput;
+    };
+    "fal-ai/kling-video/v1.6/standard/image-to-video": {
+      input: KlingVideoV16StandardImageToVideoInput;
+      output: KlingVideoV16StandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v1.6/standard/text-to-video": {
+      input: KlingVideoV16StandardTextToVideoInput;
+      output: KlingVideoV16StandardTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v1/pro/ai-avatar": {
+      input: KlingVideoV1ProAiAvatarInput;
+      output: KlingVideoV1ProAiAvatarOutput;
+    };
+    "fal-ai/kling-video/v1/standard/ai-avatar": {
+      input: KlingVideoV1StandardAiAvatarInput;
+      output: KlingVideoV1StandardAiAvatarOutput;
+    };
+    "fal-ai/kling-video/v1/standard/effects": {
+      input: KlingVideoV1StandardEffectsInput;
+      output: KlingVideoV1StandardEffectsOutput;
+    };
+    "fal-ai/kling-video/v1/standard/image-to-video": {
+      input: KlingVideoV1StandardImageToVideoInput;
+      output: KlingVideoV1StandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v1/standard/text-to-video": {
+      input: KlingVideoV1StandardTextToVideoInput;
+      output: KlingVideoV1StandardTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v1/tts": {
+      input: KlingVideoV1TtsInput;
+      output: KlingVideoV1TtsOutput;
+    };
+    "fal-ai/kling-video/v2.1/master/image-to-video": {
+      input: KlingVideoV21MasterImageToVideoInput;
+      output: KlingVideoV21MasterImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.1/master/text-to-video": {
+      input: KlingVideoV21MasterTextToVideoInput;
+      output: KlingVideoV21MasterTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.1/pro/image-to-video": {
+      input: KlingVideoV21ProImageToVideoInput;
+      output: KlingVideoV21ProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.1/standard/image-to-video": {
+      input: KlingVideoV21StandardImageToVideoInput;
+      output: KlingVideoV21StandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.5-turbo/pro/image-to-video": {
+      input: KlingVideoV25TurboProImageToVideoInput;
+      output: KlingVideoV25TurboProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.5-turbo/pro/text-to-video": {
+      input: KlingVideoV25TurboProTextToVideoInput;
+      output: KlingVideoV25TurboProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.5-turbo/standard/image-to-video": {
+      input: KlingVideoV25TurboStandardImageToVideoInput;
+      output: KlingVideoV25TurboStandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.6/pro/image-to-video": {
+      input: KlingVideoV26ProImageToVideoInput;
+      output: KlingVideoV26ProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.6/pro/motion-control": {
+      input: KlingVideoV26ProMotionControlInput;
+      output: KlingVideoV26ProMotionControlOutput;
+    };
+    "fal-ai/kling-video/v2.6/pro/text-to-video": {
+      input: KlingVideoV26ProTextToVideoInput;
+      output: KlingVideoV26ProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v2.6/standard/motion-control": {
+      input: KlingVideoV26StandardMotionControlInput;
+      output: KlingVideoV26StandardMotionControlOutput;
+    };
+    "fal-ai/kling-video/v2/master/image-to-video": {
+      input: KlingVideoV2MasterImageToVideoInput;
+      output: KlingVideoV2MasterImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v2/master/text-to-video": {
+      input: KlingVideoV2MasterTextToVideoInput;
+      output: KlingVideoV2MasterTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/4k/image-to-video": {
+      input: KlingVideoV34kImageToVideoInput;
+      output: KlingVideoV34kImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/4k/text-to-video": {
+      input: KlingVideoV34kTextToVideoInput;
+      output: KlingVideoV34kTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/pro/image-to-video": {
+      input: KlingVideoV3ProImageToVideoInput;
+      output: KlingVideoV3ProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/pro/motion-control": {
+      input: KlingVideoV3ProMotionControlInput;
+      output: KlingVideoV3ProMotionControlOutput;
+    };
+    "fal-ai/kling-video/v3/pro/text-to-video": {
+      input: KlingVideoV3ProTextToVideoInput;
+      output: KlingVideoV3ProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/standard/image-to-video": {
+      input: KlingVideoV3StandardImageToVideoInput;
+      output: KlingVideoV3StandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/standard/motion-control": {
+      input: KlingVideoV3StandardMotionControlInput;
+      output: KlingVideoV3StandardMotionControlOutput;
+    };
+    "fal-ai/kling-video/v3/standard/text-to-video": {
+      input: KlingVideoV3StandardTextToVideoInput;
+      output: KlingVideoV3StandardTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/turbo/pro/image-to-video": {
+      input: KlingVideoV3TurboProImageToVideoInput;
+      output: KlingVideoV3TurboProImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/turbo/pro/text-to-video": {
+      input: KlingVideoV3TurboProTextToVideoInput;
+      output: KlingVideoV3TurboProTextToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/turbo/standard/image-to-video": {
+      input: KlingVideoV3TurboStandardImageToVideoInput;
+      output: KlingVideoV3TurboStandardImageToVideoOutput;
+    };
+    "fal-ai/kling-video/v3/turbo/standard/text-to-video": {
+      input: KlingVideoV3TurboStandardTextToVideoInput;
+      output: KlingVideoV3TurboStandardTextToVideoOutput;
+    };
+    "fal-ai/kling-video/video-to-audio": {
+      input: KlingVideoVideoToAudioInput;
+      output: KlingVideoVideoToAudioOutput;
+    };
+    "fal-ai/kling/v1-5/kolors-virtual-try-on": {
+      input: KlingV15KolorsVirtualTryOnInput;
+      output: KlingV15KolorsVirtualTryOnOutput;
+    };
+    "fal-ai/kokoro/american-english": {
+      input: KokoroAmericanEnglishInput;
+      output: KokoroAmericanEnglishOutput;
+    };
+    "fal-ai/kokoro/brazilian-portuguese": {
+      input: KokoroBrazilianPortugueseInput;
+      output: KokoroBrazilianPortugueseOutput;
+    };
+    "fal-ai/kokoro/british-english": {
+      input: KokoroBritishEnglishInput;
+      output: KokoroBritishEnglishOutput;
+    };
+    "fal-ai/kokoro/french": {
+      input: KokoroFrenchInput;
+      output: KokoroFrenchOutput;
+    };
+    "fal-ai/kokoro/hindi": {
+      input: KokoroHindiInput;
+      output: KokoroHindiOutput;
+    };
+    "fal-ai/kokoro/italian": {
+      input: KokoroItalianInput;
+      output: KokoroItalianOutput;
+    };
+    "fal-ai/kokoro/japanese": {
+      input: KokoroJapaneseInput;
+      output: KokoroJapaneseOutput;
+    };
+    "fal-ai/kokoro/mandarin-chinese": {
+      input: KokoroMandarinChineseInput;
+      output: KokoroMandarinChineseOutput;
+    };
+    "fal-ai/kokoro/spanish": {
+      input: KokoroSpanishInput;
+      output: KokoroSpanishOutput;
+    };
+    "fal-ai/kolors": {
+      input: kolorsInput;
+      output: kolorsOutput;
+    };
+    "fal-ai/kolors/image-to-image": {
+      input: KolorsImageToImageInput;
+      output: KolorsImageToImageOutput;
+    };
+    "fal-ai/krea-2-trainer": {
+      input: Krea2TrainerInput;
+      output: Krea2TrainerOutput;
+    };
+    "fal-ai/krea-2/turbo": {
+      input: Krea2TurboInput;
+      output: Krea2TurboOutput;
+    };
+    "fal-ai/krea-2/turbo/lora": {
+      input: Krea2TurboLoraInput;
+      output: Krea2TurboLoraOutput;
+    };
+    "fal-ai/krea-2/turbo/style": {
+      input: Krea2TurboStyleInput;
+      output: Krea2TurboStyleOutput;
+    };
+    "fal-ai/krea-wan-14b/text-to-video": {
+      input: KreaWan14bTextToVideoInput;
+      output: KreaWan14bTextToVideoOutput;
+    };
+    "fal-ai/krea-wan-14b/video-to-video": {
+      input: KreaWan14bVideoToVideoInput;
+      output: KreaWan14bVideoToVideoOutput;
+    };
+    "fal-ai/latentsync": {
+      input: latentsyncInput;
+      output: latentsyncOutput;
+    };
+    "fal-ai/lcm-sd15-i2i": {
+      input: LcmSd15I2iInput;
+      output: LcmSd15I2iOutput;
+    };
+    "fal-ai/leffa/pose-transfer": {
+      input: LeffaPoseTransferInput;
+      output: LeffaPoseTransferOutput;
+    };
+    "fal-ai/leffa/virtual-tryon": {
+      input: LeffaVirtualTryonInput;
+      output: LeffaVirtualTryonOutput;
+    };
+    "fal-ai/lightx/recamera": {
+      input: LightxRecameraInput;
+      output: LightxRecameraOutput;
+    };
+    "fal-ai/lightx/relight": {
+      input: LightxRelightInput;
+      output: LightxRelightOutput;
+    };
+    "fal-ai/live-portrait": {
+      input: LivePortraitInput;
+      output: LivePortraitOutput;
+    };
+    "fal-ai/live-portrait/image": {
+      input: LivePortraitImageInput;
+      output: LivePortraitImageOutput;
+    };
+    "fal-ai/llava-next": {
+      input: LlavaNextInput;
+      output: LlavaNextOutput;
+    };
+    "fal-ai/longcat-image": {
+      input: LongcatImageInput;
+      output: LongcatImageOutput;
+    };
+    "fal-ai/longcat-image/edit": {
+      input: LongcatImageEditInput;
+      output: LongcatImageEditOutput;
+    };
+    "fal-ai/longcat-single-avatar/audio-to-video": {
+      input: LongcatSingleAvatarAudioToVideoInput;
+      output: LongcatSingleAvatarAudioToVideoOutput;
+    };
+    "fal-ai/longcat-single-avatar/image-audio-to-video": {
+      input: LongcatSingleAvatarImageAudioToVideoInput;
+      output: LongcatSingleAvatarImageAudioToVideoOutput;
+    };
+    "fal-ai/longcat-video/distilled/image-to-video/480p": {
+      input: LongcatVideoDistilledImageToVideo480pInput;
+      output: LongcatVideoDistilledImageToVideo480pOutput;
+    };
+    "fal-ai/longcat-video/distilled/image-to-video/720p": {
+      input: LongcatVideoDistilledImageToVideo720pInput;
+      output: LongcatVideoDistilledImageToVideo720pOutput;
+    };
+    "fal-ai/longcat-video/distilled/text-to-video/480p": {
+      input: LongcatVideoDistilledTextToVideo480pInput;
+      output: LongcatVideoDistilledTextToVideo480pOutput;
+    };
+    "fal-ai/longcat-video/distilled/text-to-video/720p": {
+      input: LongcatVideoDistilledTextToVideo720pInput;
+      output: LongcatVideoDistilledTextToVideo720pOutput;
+    };
+    "fal-ai/longcat-video/image-to-video/480p": {
+      input: LongcatVideoImageToVideo480pInput;
+      output: LongcatVideoImageToVideo480pOutput;
+    };
+    "fal-ai/longcat-video/image-to-video/720p": {
+      input: LongcatVideoImageToVideo720pInput;
+      output: LongcatVideoImageToVideo720pOutput;
+    };
+    "fal-ai/longcat-video/text-to-video/480p": {
+      input: LongcatVideoTextToVideo480pInput;
+      output: LongcatVideoTextToVideo480pOutput;
+    };
+    "fal-ai/longcat-video/text-to-video/720p": {
+      input: LongcatVideoTextToVideo720pInput;
+      output: LongcatVideoTextToVideo720pOutput;
+    };
+    "fal-ai/lora": {
+      input: loraInput;
+      output: loraOutput;
+    };
+    "fal-ai/lora/image-to-image": {
+      input: LoraImageToImageInput;
+      output: LoraImageToImageOutput;
+    };
+    "fal-ai/lora/inpaint": {
+      input: LoraInpaintInput;
+      output: LoraInpaintOutput;
+    };
+    "fal-ai/ltx-2-19b/audio-to-video": {
+      input: Ltx219bAudioToVideoInput;
+      output: Ltx219bAudioToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/audio-to-video/lora": {
+      input: Ltx219bAudioToVideoLoraInput;
+      output: Ltx219bAudioToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/audio-to-video": {
+      input: Ltx219bDistilledAudioToVideoInput;
+      output: Ltx219bDistilledAudioToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/audio-to-video/lora": {
+      input: Ltx219bDistilledAudioToVideoLoraInput;
+      output: Ltx219bDistilledAudioToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/extend-video": {
+      input: Ltx219bDistilledExtendVideoInput;
+      output: Ltx219bDistilledExtendVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/extend-video/lora": {
+      input: Ltx219bDistilledExtendVideoLoraInput;
+      output: Ltx219bDistilledExtendVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/image-to-video": {
+      input: Ltx219bDistilledImageToVideoInput;
+      output: Ltx219bDistilledImageToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/image-to-video/lora": {
+      input: Ltx219bDistilledImageToVideoLoraInput;
+      output: Ltx219bDistilledImageToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/text-to-video": {
+      input: Ltx219bDistilledTextToVideoInput;
+      output: Ltx219bDistilledTextToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/text-to-video/lora": {
+      input: Ltx219bDistilledTextToVideoLoraInput;
+      output: Ltx219bDistilledTextToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/video-to-video": {
+      input: Ltx219bDistilledVideoToVideoInput;
+      output: Ltx219bDistilledVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/distilled/video-to-video/lora": {
+      input: Ltx219bDistilledVideoToVideoLoraInput;
+      output: Ltx219bDistilledVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/extend-video": {
+      input: Ltx219bExtendVideoInput;
+      output: Ltx219bExtendVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/extend-video/lora": {
+      input: Ltx219bExtendVideoLoraInput;
+      output: Ltx219bExtendVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/image-to-video": {
+      input: Ltx219bImageToVideoInput;
+      output: Ltx219bImageToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/image-to-video/lora": {
+      input: Ltx219bImageToVideoLoraInput;
+      output: Ltx219bImageToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/text-to-video": {
+      input: Ltx219bTextToVideoInput;
+      output: Ltx219bTextToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/text-to-video/lora": {
+      input: Ltx219bTextToVideoLoraInput;
+      output: Ltx219bTextToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2-19b/video-to-video": {
+      input: Ltx219bVideoToVideoInput;
+      output: Ltx219bVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2-19b/video-to-video/lora": {
+      input: Ltx219bVideoToVideoLoraInput;
+      output: Ltx219bVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/audio-to-video": {
+      input: Ltx2322bAudioToVideoInput;
+      output: Ltx2322bAudioToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/audio-to-video/lora": {
+      input: Ltx2322bAudioToVideoLoraInput;
+      output: Ltx2322bAudioToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/audio-to-video": {
+      input: Ltx2322bDistilledAudioToVideoInput;
+      output: Ltx2322bDistilledAudioToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/audio-to-video/lora": {
+      input: Ltx2322bDistilledAudioToVideoLoraInput;
+      output: Ltx2322bDistilledAudioToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/image-to-video": {
+      input: Ltx2322bDistilledImageToVideoInput;
+      output: Ltx2322bDistilledImageToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/image-to-video/lora": {
+      input: Ltx2322bDistilledImageToVideoLoraInput;
+      output: Ltx2322bDistilledImageToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/reference-video-to-video": {
+      input: Ltx2322bDistilledReferenceVideoToVideoInput;
+      output: Ltx2322bDistilledReferenceVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/reference-video-to-video/lora": {
+      input: Ltx2322bDistilledReferenceVideoToVideoLoraInput;
+      output: Ltx2322bDistilledReferenceVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/text-to-video": {
+      input: Ltx2322bDistilledTextToVideoInput;
+      output: Ltx2322bDistilledTextToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/text-to-video/lora": {
+      input: Ltx2322bDistilledTextToVideoLoraInput;
+      output: Ltx2322bDistilledTextToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/video-to-video": {
+      input: Ltx2322bDistilledVideoToVideoInput;
+      output: Ltx2322bDistilledVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/distilled/video-to-video/lora": {
+      input: Ltx2322bDistilledVideoToVideoLoraInput;
+      output: Ltx2322bDistilledVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/extend-video": {
+      input: Ltx2322bExtendVideoInput;
+      output: Ltx2322bExtendVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/extend-video/lora": {
+      input: Ltx2322bExtendVideoLoraInput;
+      output: Ltx2322bExtendVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/image-to-video": {
+      input: Ltx2322bImageToVideoInput;
+      output: Ltx2322bImageToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/image-to-video/lora": {
+      input: Ltx2322bImageToVideoLoraInput;
+      output: Ltx2322bImageToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/reference-video-to-video": {
+      input: Ltx2322bReferenceVideoToVideoInput;
+      output: Ltx2322bReferenceVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/reference-video-to-video/lora": {
+      input: Ltx2322bReferenceVideoToVideoLoraInput;
+      output: Ltx2322bReferenceVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/text-to-video": {
+      input: Ltx2322bTextToVideoInput;
+      output: Ltx2322bTextToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/text-to-video/lora": {
+      input: Ltx2322bTextToVideoLoraInput;
+      output: Ltx2322bTextToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-22b/video-to-video": {
+      input: Ltx2322bVideoToVideoInput;
+      output: Ltx2322bVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-22b/video-to-video/lora": {
+      input: Ltx2322bVideoToVideoLoraInput;
+      output: Ltx2322bVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/audio-to-video": {
+      input: Ltx23QualityAudioToVideoInput;
+      output: Ltx23QualityAudioToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-quality/audio-to-video/lora": {
+      input: Ltx23QualityAudioToVideoLoraInput;
+      output: Ltx23QualityAudioToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/clean-plate": {
+      input: Ltx23QualityCleanPlateInput;
+      output: Ltx23QualityCleanPlateOutput;
+    };
+    "fal-ai/ltx-2.3-quality/colorization": {
+      input: Ltx23QualityColorizationInput;
+      output: Ltx23QualityColorizationOutput;
+    };
+    "fal-ai/ltx-2.3-quality/cross-eyed": {
+      input: Ltx23QualityCrossEyedInput;
+      output: Ltx23QualityCrossEyedOutput;
+    };
+    "fal-ai/ltx-2.3-quality/day-to-night": {
+      input: Ltx23QualityDayToNightInput;
+      output: Ltx23QualityDayToNightOutput;
+    };
+    "fal-ai/ltx-2.3-quality/deblur": {
+      input: Ltx23QualityDeblurInput;
+      output: Ltx23QualityDeblurOutput;
+    };
+    "fal-ai/ltx-2.3-quality/decompression": {
+      input: Ltx23QualityDecompressionInput;
+      output: Ltx23QualityDecompressionOutput;
+    };
+    "fal-ai/ltx-2.3-quality/extend-video": {
+      input: Ltx23QualityExtendVideoInput;
+      output: Ltx23QualityExtendVideoOutput;
+    };
+    "fal-ai/ltx-2.3-quality/extend-video/lora": {
+      input: Ltx23QualityExtendVideoLoraInput;
+      output: Ltx23QualityExtendVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/hdr": {
+      input: Ltx23QualityHdrInput;
+      output: Ltx23QualityHdrOutput;
+    };
+    "fal-ai/ltx-2.3-quality/hdr/lora": {
+      input: Ltx23QualityHdrLoraInput;
+      output: Ltx23QualityHdrLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/image-to-video": {
+      input: Ltx23QualityImageToVideoInput;
+      output: Ltx23QualityImageToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-quality/image-to-video/lora": {
+      input: Ltx23QualityImageToVideoLoraInput;
+      output: Ltx23QualityImageToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/ingredient": {
+      input: Ltx23QualityIngredientInput;
+      output: Ltx23QualityIngredientOutput;
+    };
+    "fal-ai/ltx-2.3-quality/inpaint": {
+      input: Ltx23QualityInpaintInput;
+      output: Ltx23QualityInpaintOutput;
+    };
+    "fal-ai/ltx-2.3-quality/inpaint/lora": {
+      input: Ltx23QualityInpaintLoraInput;
+      output: Ltx23QualityInpaintLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/instant-shave": {
+      input: Ltx23QualityInstantShaveInput;
+      output: Ltx23QualityInstantShaveOutput;
+    };
+    "fal-ai/ltx-2.3-quality/outpaint": {
+      input: Ltx23QualityOutpaintInput;
+      output: Ltx23QualityOutpaintOutput;
+    };
+    "fal-ai/ltx-2.3-quality/outpaint/lora": {
+      input: Ltx23QualityOutpaintLoraInput;
+      output: Ltx23QualityOutpaintLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/reference-video-to-video": {
+      input: Ltx23QualityReferenceVideoToVideoInput;
+      output: Ltx23QualityReferenceVideoToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-quality/reference-video-to-video/lora": {
+      input: Ltx23QualityReferenceVideoToVideoLoraInput;
+      output: Ltx23QualityReferenceVideoToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/render-to-real": {
+      input: Ltx23QualityRenderToRealInput;
+      output: Ltx23QualityRenderToRealOutput;
+    };
+    "fal-ai/ltx-2.3-quality/text-to-audio": {
+      input: Ltx23QualityTextToAudioInput;
+      output: Ltx23QualityTextToAudioOutput;
+    };
+    "fal-ai/ltx-2.3-quality/text-to-audio/lora": {
+      input: Ltx23QualityTextToAudioLoraInput;
+      output: Ltx23QualityTextToAudioLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/text-to-video": {
+      input: Ltx23QualityTextToVideoInput;
+      output: Ltx23QualityTextToVideoOutput;
+    };
+    "fal-ai/ltx-2.3-quality/text-to-video/lora": {
+      input: Ltx23QualityTextToVideoLoraInput;
+      output: Ltx23QualityTextToVideoLoraOutput;
+    };
+    "fal-ai/ltx-2.3-quality/water-simulation": {
+      input: Ltx23QualityWaterSimulationInput;
+      output: Ltx23QualityWaterSimulationOutput;
+    };
+    "fal-ai/ltx-2.3/audio-to-video": {
+      input: Ltx23AudioToVideoInput;
+      output: Ltx23AudioToVideoOutput;
+    };
+    "fal-ai/ltx-2.3/extend-video": {
+      input: Ltx23ExtendVideoInput;
+      output: Ltx23ExtendVideoOutput;
+    };
+    "fal-ai/ltx-2.3/image-to-video": {
+      input: Ltx23ImageToVideoInput;
+      output: Ltx23ImageToVideoOutput;
+    };
+    "fal-ai/ltx-2.3/image-to-video/fast": {
+      input: Ltx23ImageToVideoFastInput;
+      output: Ltx23ImageToVideoFastOutput;
+    };
+    "fal-ai/ltx-2.3/reframe": {
+      input: Ltx23ReframeInput;
+      output: Ltx23ReframeOutput;
+    };
+    "fal-ai/ltx-2.3/retake-video": {
+      input: Ltx23RetakeVideoInput;
+      output: Ltx23RetakeVideoOutput;
+    };
+    "fal-ai/ltx-2.3/text-to-video": {
+      input: Ltx23TextToVideoInput;
+      output: Ltx23TextToVideoOutput;
+    };
+    "fal-ai/ltx-2.3/text-to-video/fast": {
+      input: Ltx23TextToVideoFastInput;
+      output: Ltx23TextToVideoFastOutput;
+    };
+    "fal-ai/ltx-video": {
+      input: LtxVideoInput;
+      output: LtxVideoOutput;
+    };
+    "fal-ai/ltx-video-13b-distilled": {
+      input: LtxVideo13bDistilledInput;
+      output: LtxVideo13bDistilledOutput;
+    };
+    "fal-ai/ltx-video-13b-distilled/extend": {
+      input: LtxVideo13bDistilledExtendInput;
+      output: LtxVideo13bDistilledExtendOutput;
+    };
+    "fal-ai/ltx-video-13b-distilled/image-to-video": {
+      input: LtxVideo13bDistilledImageToVideoInput;
+      output: LtxVideo13bDistilledImageToVideoOutput;
+    };
+    "fal-ai/ltx-video-13b-distilled/multiconditioning": {
+      input: LtxVideo13bDistilledMulticonditioningInput;
+      output: LtxVideo13bDistilledMulticonditioningOutput;
+    };
+    "fal-ai/ltx-video-v095": {
+      input: LtxVideoV095Input;
+      output: LtxVideoV095Output;
+    };
+    "fal-ai/ltx-video-v095/extend": {
+      input: LtxVideoV095ExtendInput;
+      output: LtxVideoV095ExtendOutput;
+    };
+    "fal-ai/ltx-video-v095/multiconditioning": {
+      input: LtxVideoV095MulticonditioningInput;
+      output: LtxVideoV095MulticonditioningOutput;
+    };
+    "fal-ai/ltx-video/image-to-video": {
+      input: LtxVideoImageToVideoInput;
+      output: LtxVideoImageToVideoOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/a2a": {
+      input: Ltx23TrainerV2A2aInput;
+      output: Ltx23TrainerV2A2aOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/a2v": {
+      input: Ltx23TrainerV2A2vInput;
+      output: Ltx23TrainerV2A2vOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/audio-extend-prefix": {
+      input: Ltx23TrainerV2AudioExtendPrefixInput;
+      output: Ltx23TrainerV2AudioExtendPrefixOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/audio-extend-suffix": {
+      input: Ltx23TrainerV2AudioExtendSuffixInput;
+      output: Ltx23TrainerV2AudioExtendSuffixOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/audio-inpaint": {
+      input: Ltx23TrainerV2AudioInpaintInput;
+      output: Ltx23TrainerV2AudioInpaintOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/av2av": {
+      input: Ltx23TrainerV2Av2avInput;
+      output: Ltx23TrainerV2Av2avOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/av2av-masked": {
+      input: Ltx23TrainerV2Av2avMaskedInput;
+      output: Ltx23TrainerV2Av2avMaskedOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/extend-prefix": {
+      input: Ltx23TrainerV2ExtendPrefixInput;
+      output: Ltx23TrainerV2ExtendPrefixOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/extend-suffix": {
+      input: Ltx23TrainerV2ExtendSuffixInput;
+      output: Ltx23TrainerV2ExtendSuffixOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/i2v": {
+      input: Ltx23TrainerV2I2vInput;
+      output: Ltx23TrainerV2I2vOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/ic-lora/a2a": {
+      input: Ltx23TrainerV2IcLoraA2aInput;
+      output: Ltx23TrainerV2IcLoraA2aOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/ic-lora/av2av": {
+      input: Ltx23TrainerV2IcLoraAv2avInput;
+      output: Ltx23TrainerV2IcLoraAv2avOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/ic-lora/av2av-masked": {
+      input: Ltx23TrainerV2IcLoraAv2avMaskedInput;
+      output: Ltx23TrainerV2IcLoraAv2avMaskedOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/ic-lora/v2v": {
+      input: Ltx23TrainerV2IcLoraV2vInput;
+      output: Ltx23TrainerV2IcLoraV2vOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/ic-lora/v2v-masked": {
+      input: Ltx23TrainerV2IcLoraV2vMaskedInput;
+      output: Ltx23TrainerV2IcLoraV2vMaskedOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/inpaint": {
+      input: Ltx23TrainerV2InpaintInput;
+      output: Ltx23TrainerV2InpaintOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/interpolate": {
+      input: Ltx23TrainerV2InterpolateInput;
+      output: Ltx23TrainerV2InterpolateOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/outpaint": {
+      input: Ltx23TrainerV2OutpaintInput;
+      output: Ltx23TrainerV2OutpaintOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/t2a": {
+      input: Ltx23TrainerV2T2aInput;
+      output: Ltx23TrainerV2T2aOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/t2v": {
+      input: Ltx23TrainerV2T2vInput;
+      output: Ltx23TrainerV2T2vOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/v2a": {
+      input: Ltx23TrainerV2V2aInput;
+      output: Ltx23TrainerV2V2aOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/v2v": {
+      input: Ltx23TrainerV2V2vInput;
+      output: Ltx23TrainerV2V2vOutput;
+    };
+    "fal-ai/ltx23-trainer-v2/v2v-masked": {
+      input: Ltx23TrainerV2V2vMaskedInput;
+      output: Ltx23TrainerV2V2vMaskedOutput;
+    };
+    "fal-ai/ltx23-v2v-trainer": {
+      input: Ltx23V2vTrainerInput;
+      output: Ltx23V2vTrainerOutput;
+    };
+    "fal-ai/ltx23-video-trainer": {
+      input: Ltx23VideoTrainerInput;
+      output: Ltx23VideoTrainerOutput;
+    };
+    "fal-ai/ltxv-13b-098-distilled": {
+      input: Ltxv13b098DistilledInput;
+      output: Ltxv13b098DistilledOutput;
+    };
+    "fal-ai/ltxv-13b-098-distilled/extend": {
+      input: Ltxv13b098DistilledExtendInput;
+      output: Ltxv13b098DistilledExtendOutput;
+    };
+    "fal-ai/ltxv-13b-098-distilled/image-to-video": {
+      input: Ltxv13b098DistilledImageToVideoInput;
+      output: Ltxv13b098DistilledImageToVideoOutput;
+    };
+    "fal-ai/ltxv-13b-098-distilled/multiconditioning": {
+      input: Ltxv13b098DistilledMulticonditioningInput;
+      output: Ltxv13b098DistilledMulticonditioningOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2": {
+      input: LumaDreamMachineRay2Input;
+      output: LumaDreamMachineRay2Output;
+    };
+    "fal-ai/luma-dream-machine/ray-2-flash": {
+      input: LumaDreamMachineRay2FlashInput;
+      output: LumaDreamMachineRay2FlashOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2-flash/image-to-video": {
+      input: LumaDreamMachineRay2FlashImageToVideoInput;
+      output: LumaDreamMachineRay2FlashImageToVideoOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2-flash/modify": {
+      input: LumaDreamMachineRay2FlashModifyInput;
+      output: LumaDreamMachineRay2FlashModifyOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2-flash/reframe": {
+      input: LumaDreamMachineRay2FlashReframeInput;
+      output: LumaDreamMachineRay2FlashReframeOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2/image-to-video": {
+      input: LumaDreamMachineRay2ImageToVideoInput;
+      output: LumaDreamMachineRay2ImageToVideoOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2/modify": {
+      input: LumaDreamMachineRay2ModifyInput;
+      output: LumaDreamMachineRay2ModifyOutput;
+    };
+    "fal-ai/luma-dream-machine/ray-2/reframe": {
+      input: LumaDreamMachineRay2ReframeInput;
+      output: LumaDreamMachineRay2ReframeOutput;
+    };
+    "fal-ai/luma-photon": {
+      input: LumaPhotonInput;
+      output: LumaPhotonOutput;
+    };
+    "fal-ai/luma-photon/flash": {
+      input: LumaPhotonFlashInput;
+      output: LumaPhotonFlashOutput;
+    };
+    "fal-ai/luma-photon/flash/modify": {
+      input: LumaPhotonFlashModifyInput;
+      output: LumaPhotonFlashModifyOutput;
+    };
+    "fal-ai/luma-photon/flash/reframe": {
+      input: LumaPhotonFlashReframeInput;
+      output: LumaPhotonFlashReframeOutput;
+    };
+    "fal-ai/luma-photon/modify": {
+      input: LumaPhotonModifyInput;
+      output: LumaPhotonModifyOutput;
+    };
+    "fal-ai/luma-photon/reframe": {
+      input: LumaPhotonReframeInput;
+      output: LumaPhotonReframeOutput;
+    };
+    "fal-ai/lumina-image/v2": {
+      input: LuminaImageV2Input;
+      output: LuminaImageV2Output;
+    };
+    "fal-ai/lyria2": {
+      input: lyria2Input;
+      output: lyria2Output;
+    };
+    "fal-ai/lyria3": {
+      input: lyria3Input;
+      output: lyria3Output;
+    };
+    "fal-ai/lyria3/pro": {
+      input: Lyria3ProInput;
+      output: Lyria3ProOutput;
+    };
+    "fal-ai/magi-distilled": {
+      input: MagiDistilledInput;
+      output: MagiDistilledOutput;
+    };
+    "fal-ai/magi-distilled/extend-video": {
+      input: MagiDistilledExtendVideoInput;
+      output: MagiDistilledExtendVideoOutput;
+    };
+    "fal-ai/magi-distilled/image-to-video": {
+      input: MagiDistilledImageToVideoInput;
+      output: MagiDistilledImageToVideoOutput;
+    };
+    "fal-ai/marlin": {
+      input: marlinInput;
+      output: marlinOutput;
+    };
+    "fal-ai/marlin/find": {
+      input: MarlinFindInput;
+      output: MarlinFindOutput;
+    };
+    "fal-ai/maya": {
+      input: mayaInput;
+      output: mayaOutput;
+    };
+    "fal-ai/maya/batch": {
+      input: MayaBatchInput;
+      output: MayaBatchOutput;
+    };
+    "fal-ai/meshy/rigging": {
+      input: MeshyRiggingInput;
+      output: MeshyRiggingOutput;
+    };
+    "fal-ai/meshy/rigging/multi-animation": {
+      input: MeshyRiggingMultiAnimationInput;
+      output: MeshyRiggingMultiAnimationOutput;
+    };
+    "fal-ai/meshy/v5/multi-image-to-3d": {
+      input: MeshyV5MultiImageTo3dInput;
+      output: MeshyV5MultiImageTo3dOutput;
+    };
+    "fal-ai/meshy/v5/remesh": {
+      input: MeshyV5RemeshInput;
+      output: MeshyV5RemeshOutput;
+    };
+    "fal-ai/meshy/v5/retexture": {
+      input: MeshyV5RetextureInput;
+      output: MeshyV5RetextureOutput;
+    };
+    "fal-ai/meshy/v6-preview/image-to-3d": {
+      input: MeshyV6PreviewImageTo3dInput;
+      output: MeshyV6PreviewImageTo3dOutput;
+    };
+    "fal-ai/meshy/v6-preview/text-to-3d": {
+      input: MeshyV6PreviewTextTo3dInput;
+      output: MeshyV6PreviewTextTo3dOutput;
+    };
+    "fal-ai/meshy/v6/image-to-3d": {
+      input: MeshyV6ImageTo3dInput;
+      output: MeshyV6ImageTo3dOutput;
+    };
+    "fal-ai/meshy/v6/multi-image-to-3d": {
+      input: MeshyV6MultiImageTo3dInput;
+      output: MeshyV6MultiImageTo3dOutput;
+    };
+    "fal-ai/meshy/v6/text-to-3d": {
+      input: MeshyV6TextTo3dInput;
+      output: MeshyV6TextTo3dOutput;
+    };
+    "fal-ai/minimax-music": {
+      input: MinimaxMusicInput;
+      output: MinimaxMusicOutput;
+    };
+    "fal-ai/minimax-music/v1.5": {
+      input: MinimaxMusicV15Input;
+      output: MinimaxMusicV15Output;
+    };
+    "fal-ai/minimax-music/v2": {
+      input: MinimaxMusicV2Input;
+      output: MinimaxMusicV2Output;
+    };
+    "fal-ai/minimax-music/v2.5": {
+      input: MinimaxMusicV25Input;
+      output: MinimaxMusicV25Output;
+    };
+    "fal-ai/minimax-music/v2.6": {
+      input: MinimaxMusicV26Input;
+      output: MinimaxMusicV26Output;
+    };
+    "fal-ai/minimax/hailuo-02-fast/image-to-video": {
+      input: MinimaxHailuo02FastImageToVideoInput;
+      output: MinimaxHailuo02FastImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-02/pro/image-to-video": {
+      input: MinimaxHailuo02ProImageToVideoInput;
+      output: MinimaxHailuo02ProImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-02/pro/text-to-video": {
+      input: MinimaxHailuo02ProTextToVideoInput;
+      output: MinimaxHailuo02ProTextToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-02/standard/image-to-video": {
+      input: MinimaxHailuo02StandardImageToVideoInput;
+      output: MinimaxHailuo02StandardImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-02/standard/text-to-video": {
+      input: MinimaxHailuo02StandardTextToVideoInput;
+      output: MinimaxHailuo02StandardTextToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-2.3-fast/pro/image-to-video": {
+      input: MinimaxHailuo23FastProImageToVideoInput;
+      output: MinimaxHailuo23FastProImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video": {
+      input: MinimaxHailuo23FastStandardImageToVideoInput;
+      output: MinimaxHailuo23FastStandardImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-2.3/pro/image-to-video": {
+      input: MinimaxHailuo23ProImageToVideoInput;
+      output: MinimaxHailuo23ProImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-2.3/pro/text-to-video": {
+      input: MinimaxHailuo23ProTextToVideoInput;
+      output: MinimaxHailuo23ProTextToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-2.3/standard/image-to-video": {
+      input: MinimaxHailuo23StandardImageToVideoInput;
+      output: MinimaxHailuo23StandardImageToVideoOutput;
+    };
+    "fal-ai/minimax/hailuo-2.3/standard/text-to-video": {
+      input: MinimaxHailuo23StandardTextToVideoInput;
+      output: MinimaxHailuo23StandardTextToVideoOutput;
+    };
+    "fal-ai/minimax/image-01": {
+      input: MinimaxImage01Input;
+      output: MinimaxImage01Output;
+    };
+    "fal-ai/minimax/image-01/subject-reference": {
+      input: MinimaxImage01SubjectReferenceInput;
+      output: MinimaxImage01SubjectReferenceOutput;
+    };
+    "fal-ai/minimax/preview/speech-2.5-hd": {
+      input: MinimaxPreviewSpeech25HdInput;
+      output: MinimaxPreviewSpeech25HdOutput;
+    };
+    "fal-ai/minimax/preview/speech-2.5-turbo": {
+      input: MinimaxPreviewSpeech25TurboInput;
+      output: MinimaxPreviewSpeech25TurboOutput;
+    };
+    "fal-ai/minimax/speech-02-hd": {
+      input: MinimaxSpeech02HdInput;
+      output: MinimaxSpeech02HdOutput;
+    };
+    "fal-ai/minimax/speech-02-turbo": {
+      input: MinimaxSpeech02TurboInput;
+      output: MinimaxSpeech02TurboOutput;
+    };
+    "fal-ai/minimax/speech-2.6-hd": {
+      input: MinimaxSpeech26HdInput;
+      output: MinimaxSpeech26HdOutput;
+    };
+    "fal-ai/minimax/speech-2.6-turbo": {
+      input: MinimaxSpeech26TurboInput;
+      output: MinimaxSpeech26TurboOutput;
+    };
+    "fal-ai/minimax/speech-2.8-hd": {
+      input: MinimaxSpeech28HdInput;
+      output: MinimaxSpeech28HdOutput;
+    };
+    "fal-ai/minimax/speech-2.8-turbo": {
+      input: MinimaxSpeech28TurboInput;
+      output: MinimaxSpeech28TurboOutput;
+    };
+    "fal-ai/minimax/video-01": {
+      input: MinimaxVideo01Input;
+      output: MinimaxVideo01Output;
+    };
+    "fal-ai/minimax/video-01-director": {
+      input: MinimaxVideo01DirectorInput;
+      output: MinimaxVideo01DirectorOutput;
+    };
+    "fal-ai/minimax/video-01-director/image-to-video": {
+      input: MinimaxVideo01DirectorImageToVideoInput;
+      output: MinimaxVideo01DirectorImageToVideoOutput;
+    };
+    "fal-ai/minimax/video-01-live": {
+      input: MinimaxVideo01LiveInput;
+      output: MinimaxVideo01LiveOutput;
+    };
+    "fal-ai/minimax/video-01-live/image-to-video": {
+      input: MinimaxVideo01LiveImageToVideoInput;
+      output: MinimaxVideo01LiveImageToVideoOutput;
+    };
+    "fal-ai/minimax/video-01-subject-reference": {
+      input: MinimaxVideo01SubjectReferenceInput;
+      output: MinimaxVideo01SubjectReferenceOutput;
+    };
+    "fal-ai/minimax/video-01/image-to-video": {
+      input: MinimaxVideo01ImageToVideoInput;
+      output: MinimaxVideo01ImageToVideoOutput;
+    };
+    "fal-ai/minimax/voice-clone": {
+      input: MinimaxVoiceCloneInput;
+      output: MinimaxVoiceCloneOutput;
+    };
+    "fal-ai/minimax/voice-design": {
+      input: MinimaxVoiceDesignInput;
+      output: MinimaxVoiceDesignOutput;
+    };
+    "fal-ai/mmaudio-v2": {
+      input: MmaudioV2Input;
+      output: MmaudioV2Output;
+    };
+    "fal-ai/mmaudio-v2/text-to-audio": {
+      input: MmaudioV2TextToAudioInput;
+      output: MmaudioV2TextToAudioOutput;
+    };
+    "fal-ai/moondream-next": {
+      input: MoondreamNextInput;
+      output: MoondreamNextOutput;
+    };
+    "fal-ai/moondream-next/batch": {
+      input: MoondreamNextBatchInput;
+      output: MoondreamNextBatchOutput;
+    };
+    "fal-ai/moondream-next/detection": {
+      input: MoondreamNextDetectionInput;
+      output: MoondreamNextDetectionOutput;
+    };
+    "fal-ai/moondream/batched": {
+      input: MoondreamBatchedInput;
+      output: MoondreamBatchedOutput;
+    };
+    "fal-ai/moondream2": {
+      input: moondream2Input;
+      output: moondream2Output;
+    };
+    "fal-ai/moondream2/object-detection": {
+      input: Moondream2ObjectDetectionInput;
+      output: Moondream2ObjectDetectionOutput;
+    };
+    "fal-ai/moondream2/point-object-detection": {
+      input: Moondream2PointObjectDetectionInput;
+      output: Moondream2PointObjectDetectionOutput;
+    };
+    "fal-ai/moondream2/visual-query": {
+      input: Moondream2VisualQueryInput;
+      output: Moondream2VisualQueryOutput;
+    };
+    "fal-ai/moondream3-preview/caption": {
+      input: Moondream3PreviewCaptionInput;
+      output: Moondream3PreviewCaptionOutput;
+    };
+    "fal-ai/moondream3-preview/detect": {
+      input: Moondream3PreviewDetectInput;
+      output: Moondream3PreviewDetectOutput;
+    };
+    "fal-ai/moondream3-preview/point": {
+      input: Moondream3PreviewPointInput;
+      output: Moondream3PreviewPointOutput;
+    };
+    "fal-ai/moondream3-preview/query": {
+      input: Moondream3PreviewQueryInput;
+      output: Moondream3PreviewQueryOutput;
+    };
+    "fal-ai/moondream3-preview/segment": {
+      input: Moondream3PreviewSegmentInput;
+      output: Moondream3PreviewSegmentOutput;
+    };
+    "fal-ai/musetalk": {
+      input: musetalkInput;
+      output: musetalkOutput;
+    };
+    "fal-ai/nafnet/deblur": {
+      input: NafnetDeblurInput;
+      output: NafnetDeblurOutput;
+    };
+    "fal-ai/nafnet/denoise": {
+      input: NafnetDenoiseInput;
+      output: NafnetDenoiseOutput;
+    };
+    "fal-ai/nano-banana": {
+      input: NanoBananaInput;
+      output: NanoBananaOutput;
+    };
+    "fal-ai/nano-banana-2": {
+      input: NanoBanana2Input;
+      output: NanoBanana2Output;
+    };
+    "fal-ai/nano-banana-2/edit": {
+      input: NanoBanana2EditInput;
+      output: NanoBanana2EditOutput;
+    };
+    "fal-ai/nano-banana-pro": {
+      input: NanoBananaProInput;
+      output: NanoBananaProOutput;
+    };
+    "fal-ai/nano-banana-pro/edit": {
+      input: NanoBananaProEditInput;
+      output: NanoBananaProEditOutput;
+    };
+    "fal-ai/nano-banana/edit": {
+      input: NanoBananaEditInput;
+      output: NanoBananaEditOutput;
+    };
+    "fal-ai/nemotron-diffusion-vlm": {
+      input: NemotronDiffusionVlmInput;
+      output: NemotronDiffusionVlmOutput;
+    };
+    "fal-ai/nucleus-image": {
+      input: NucleusImageInput;
+      output: NucleusImageOutput;
+    };
+    "fal-ai/object-removal": {
+      input: ObjectRemovalInput;
+      output: ObjectRemovalOutput;
+    };
+    "fal-ai/object-removal/bbox": {
+      input: ObjectRemovalBboxInput;
+      output: ObjectRemovalBboxOutput;
+    };
+    "fal-ai/object-removal/mask": {
+      input: ObjectRemovalMaskInput;
+      output: ObjectRemovalMaskOutput;
+    };
+    "fal-ai/omni-zero": {
+      input: OmniZeroInput;
+      output: OmniZeroOutput;
+    };
+    "fal-ai/omnigen-v1": {
+      input: OmnigenV1Input;
+      output: OmnigenV1Output;
+    };
+    "fal-ai/omnigen-v2": {
+      input: OmnigenV2Input;
+      output: OmnigenV2Output;
+    };
+    "fal-ai/omnilottie": {
+      input: omnilottieInput;
+      output: omnilottieOutput;
+    };
+    "fal-ai/omnilottie/image-to-lottie": {
+      input: OmnilottieImageToLottieInput;
+      output: OmnilottieImageToLottieOutput;
+    };
+    "fal-ai/omnilottie/video-to-lottie": {
+      input: OmnilottieVideoToLottieInput;
+      output: OmnilottieVideoToLottieOutput;
+    };
+    "fal-ai/one-to-all-animation/1.3b": {
+      input: OneToAllAnimation13bInput;
+      output: OneToAllAnimation13bOutput;
+    };
+    "fal-ai/one-to-all-animation/14b": {
+      input: OneToAllAnimation14bInput;
+      output: OneToAllAnimation14bOutput;
+    };
+    "fal-ai/orpheus-tts": {
+      input: OrpheusTtsInput;
+      output: OrpheusTtsOutput;
+    };
+    "fal-ai/ovi": {
+      input: oviInput;
+      output: oviOutput;
+    };
+    "fal-ai/ovi/image-to-video": {
+      input: OviImageToVideoInput;
+      output: OviImageToVideoOutput;
+    };
+    "fal-ai/ovis-image": {
+      input: OvisImageInput;
+      output: OvisImageOutput;
+    };
+    "fal-ai/pasd": {
+      input: pasdInput;
+      output: pasdOutput;
+    };
+    "fal-ai/patina": {
+      input: patinaInput;
+      output: patinaOutput;
+    };
+    "fal-ai/patina/material": {
+      input: PatinaMaterialInput;
+      output: PatinaMaterialOutput;
+    };
+    "fal-ai/patina/material/extract": {
+      input: PatinaMaterialExtractInput;
+      output: PatinaMaterialExtractOutput;
+    };
+    "fal-ai/personaplex": {
+      input: personaplexInput;
+      output: personaplexOutput;
+    };
+    "fal-ai/personaplex/realtime": {
+      input: PersonaplexRealtimeInput;
+      output: PersonaplexRealtimeOutput;
+    };
+    "fal-ai/phota": {
+      input: photaInput;
+      output: photaOutput;
+    };
+    "fal-ai/phota/create-profile": {
+      input: PhotaCreateProfileInput;
+      output: PhotaCreateProfileOutput;
+    };
+    "fal-ai/phota/edit": {
+      input: PhotaEditInput;
+      output: PhotaEditOutput;
+    };
+    "fal-ai/phota/enhance": {
+      input: PhotaEnhanceInput;
+      output: PhotaEnhanceOutput;
+    };
+    "fal-ai/photomaker": {
+      input: photomakerInput;
+      output: photomakerOutput;
+    };
+    "fal-ai/pika/v2.1/image-to-video": {
+      input: PikaV21ImageToVideoInput;
+      output: PikaV21ImageToVideoOutput;
+    };
+    "fal-ai/pika/v2.1/text-to-video": {
+      input: PikaV21TextToVideoInput;
+      output: PikaV21TextToVideoOutput;
+    };
+    "fal-ai/pika/v2.2/image-to-video": {
+      input: PikaV22ImageToVideoInput;
+      output: PikaV22ImageToVideoOutput;
+    };
+    "fal-ai/pika/v2.2/pikaframes": {
+      input: PikaV22PikaframesInput;
+      output: PikaV22PikaframesOutput;
+    };
+    "fal-ai/pika/v2.2/pikascenes": {
+      input: PikaV22PikascenesInput;
+      output: PikaV22PikascenesOutput;
+    };
+    "fal-ai/pika/v2.2/text-to-video": {
+      input: PikaV22TextToVideoInput;
+      output: PikaV22TextToVideoOutput;
+    };
+    "fal-ai/pika/v2/turbo/image-to-video": {
+      input: PikaV2TurboImageToVideoInput;
+      output: PikaV2TurboImageToVideoOutput;
+    };
+    "fal-ai/pika/v2/turbo/text-to-video": {
+      input: PikaV2TurboTextToVideoInput;
+      output: PikaV2TurboTextToVideoOutput;
+    };
+    "fal-ai/pixal3d": {
+      input: pixal3dInput;
+      output: pixal3dOutput;
+    };
+    "fal-ai/pixart-sigma": {
+      input: PixartSigmaInput;
+      output: PixartSigmaOutput;
+    };
+    "fal-ai/pixverse/c1/image-to-video": {
+      input: PixverseC1ImageToVideoInput;
+      output: PixverseC1ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/c1/reference-to-video": {
+      input: PixverseC1ReferenceToVideoInput;
+      output: PixverseC1ReferenceToVideoOutput;
+    };
+    "fal-ai/pixverse/c1/text-to-video": {
+      input: PixverseC1TextToVideoInput;
+      output: PixverseC1TextToVideoOutput;
+    };
+    "fal-ai/pixverse/c1/transition": {
+      input: PixverseC1TransitionInput;
+      output: PixverseC1TransitionOutput;
+    };
+    "fal-ai/pixverse/extend": {
+      input: PixverseExtendInput;
+      output: PixverseExtendOutput;
+    };
+    "fal-ai/pixverse/extend/fast": {
+      input: PixverseExtendFastInput;
+      output: PixverseExtendFastOutput;
+    };
+    "fal-ai/pixverse/lipsync": {
+      input: PixverseLipsyncInput;
+      output: PixverseLipsyncOutput;
+    };
+    "fal-ai/pixverse/sound-effects": {
+      input: PixverseSoundEffectsInput;
+      output: PixverseSoundEffectsOutput;
+    };
+    "fal-ai/pixverse/swap": {
+      input: PixverseSwapInput;
+      output: PixverseSwapOutput;
+    };
+    "fal-ai/pixverse/v3.5/effects": {
+      input: PixverseV35EffectsInput;
+      output: PixverseV35EffectsOutput;
+    };
+    "fal-ai/pixverse/v3.5/image-to-video": {
+      input: PixverseV35ImageToVideoInput;
+      output: PixverseV35ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v3.5/image-to-video/fast": {
+      input: PixverseV35ImageToVideoFastInput;
+      output: PixverseV35ImageToVideoFastOutput;
+    };
+    "fal-ai/pixverse/v3.5/text-to-video": {
+      input: PixverseV35TextToVideoInput;
+      output: PixverseV35TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v3.5/text-to-video/fast": {
+      input: PixverseV35TextToVideoFastInput;
+      output: PixverseV35TextToVideoFastOutput;
+    };
+    "fal-ai/pixverse/v3.5/transition": {
+      input: PixverseV35TransitionInput;
+      output: PixverseV35TransitionOutput;
+    };
+    "fal-ai/pixverse/v4.5/effects": {
+      input: PixverseV45EffectsInput;
+      output: PixverseV45EffectsOutput;
+    };
+    "fal-ai/pixverse/v4.5/image-to-video": {
+      input: PixverseV45ImageToVideoInput;
+      output: PixverseV45ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v4.5/image-to-video/fast": {
+      input: PixverseV45ImageToVideoFastInput;
+      output: PixverseV45ImageToVideoFastOutput;
+    };
+    "fal-ai/pixverse/v4.5/text-to-video": {
+      input: PixverseV45TextToVideoInput;
+      output: PixverseV45TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v4.5/text-to-video/fast": {
+      input: PixverseV45TextToVideoFastInput;
+      output: PixverseV45TextToVideoFastOutput;
+    };
+    "fal-ai/pixverse/v4.5/transition": {
+      input: PixverseV45TransitionInput;
+      output: PixverseV45TransitionOutput;
+    };
+    "fal-ai/pixverse/v4/effects": {
+      input: PixverseV4EffectsInput;
+      output: PixverseV4EffectsOutput;
+    };
+    "fal-ai/pixverse/v4/image-to-video": {
+      input: PixverseV4ImageToVideoInput;
+      output: PixverseV4ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v4/image-to-video/fast": {
+      input: PixverseV4ImageToVideoFastInput;
+      output: PixverseV4ImageToVideoFastOutput;
+    };
+    "fal-ai/pixverse/v4/text-to-video": {
+      input: PixverseV4TextToVideoInput;
+      output: PixverseV4TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v4/text-to-video/fast": {
+      input: PixverseV4TextToVideoFastInput;
+      output: PixverseV4TextToVideoFastOutput;
+    };
+    "fal-ai/pixverse/v5.5/effects": {
+      input: PixverseV55EffectsInput;
+      output: PixverseV55EffectsOutput;
+    };
+    "fal-ai/pixverse/v5.5/image-to-video": {
+      input: PixverseV55ImageToVideoInput;
+      output: PixverseV55ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v5.5/text-to-video": {
+      input: PixverseV55TextToVideoInput;
+      output: PixverseV55TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v5.5/transition": {
+      input: PixverseV55TransitionInput;
+      output: PixverseV55TransitionOutput;
+    };
+    "fal-ai/pixverse/v5.6/image-to-video": {
+      input: PixverseV56ImageToVideoInput;
+      output: PixverseV56ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v5.6/text-to-video": {
+      input: PixverseV56TextToVideoInput;
+      output: PixverseV56TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v5.6/transition": {
+      input: PixverseV56TransitionInput;
+      output: PixverseV56TransitionOutput;
+    };
+    "fal-ai/pixverse/v5/effects": {
+      input: PixverseV5EffectsInput;
+      output: PixverseV5EffectsOutput;
+    };
+    "fal-ai/pixverse/v5/image-to-video": {
+      input: PixverseV5ImageToVideoInput;
+      output: PixverseV5ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v5/text-to-video": {
+      input: PixverseV5TextToVideoInput;
+      output: PixverseV5TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v5/transition": {
+      input: PixverseV5TransitionInput;
+      output: PixverseV5TransitionOutput;
+    };
+    "fal-ai/pixverse/v6/extend": {
+      input: PixverseV6ExtendInput;
+      output: PixverseV6ExtendOutput;
+    };
+    "fal-ai/pixverse/v6/image-to-video": {
+      input: PixverseV6ImageToVideoInput;
+      output: PixverseV6ImageToVideoOutput;
+    };
+    "fal-ai/pixverse/v6/text-to-video": {
+      input: PixverseV6TextToVideoInput;
+      output: PixverseV6TextToVideoOutput;
+    };
+    "fal-ai/pixverse/v6/transition": {
+      input: PixverseV6TransitionInput;
+      output: PixverseV6TransitionOutput;
+    };
+    "fal-ai/playground-v25": {
+      input: PlaygroundV25Input;
+      output: PlaygroundV25Output;
+    };
+    "fal-ai/playground-v25/image-to-image": {
+      input: PlaygroundV25ImageToImageInput;
+      output: PlaygroundV25ImageToImageOutput;
+    };
+    "fal-ai/playground-v25/inpainting": {
+      input: PlaygroundV25InpaintingInput;
+      output: PlaygroundV25InpaintingOutput;
+    };
+    "fal-ai/pony-v7": {
+      input: PonyV7Input;
+      output: PonyV7Output;
+    };
+    "fal-ai/post-processing": {
+      input: PostProcessingInput;
+      output: PostProcessingOutput;
+    };
+    "fal-ai/post-processing/blur": {
+      input: PostProcessingBlurInput;
+      output: PostProcessingBlurOutput;
+    };
+    "fal-ai/post-processing/chromatic-aberration": {
+      input: PostProcessingChromaticAberrationInput;
+      output: PostProcessingChromaticAberrationOutput;
+    };
+    "fal-ai/post-processing/color-correction": {
+      input: PostProcessingColorCorrectionInput;
+      output: PostProcessingColorCorrectionOutput;
+    };
+    "fal-ai/post-processing/color-tint": {
+      input: PostProcessingColorTintInput;
+      output: PostProcessingColorTintOutput;
+    };
+    "fal-ai/post-processing/desaturate": {
+      input: PostProcessingDesaturateInput;
+      output: PostProcessingDesaturateOutput;
+    };
+    "fal-ai/post-processing/dissolve": {
+      input: PostProcessingDissolveInput;
+      output: PostProcessingDissolveOutput;
+    };
+    "fal-ai/post-processing/dodge-burn": {
+      input: PostProcessingDodgeBurnInput;
+      output: PostProcessingDodgeBurnOutput;
+    };
+    "fal-ai/post-processing/grain": {
+      input: PostProcessingGrainInput;
+      output: PostProcessingGrainOutput;
+    };
+    "fal-ai/post-processing/parabolize": {
+      input: PostProcessingParabolizeInput;
+      output: PostProcessingParabolizeOutput;
+    };
+    "fal-ai/post-processing/sharpen": {
+      input: PostProcessingSharpenInput;
+      output: PostProcessingSharpenOutput;
+    };
+    "fal-ai/post-processing/solarize": {
+      input: PostProcessingSolarizeInput;
+      output: PostProcessingSolarizeOutput;
+    };
+    "fal-ai/post-processing/vignette": {
+      input: PostProcessingVignetteInput;
+      output: PostProcessingVignetteOutput;
+    };
+    "fal-ai/pulid": {
+      input: pulidInput;
+      output: pulidOutput;
+    };
+    "fal-ai/qwen-3-tts/clone-voice/0.6b": {
+      input: Qwen3TtsCloneVoice06bInput;
+      output: Qwen3TtsCloneVoice06bOutput;
+    };
+    "fal-ai/qwen-3-tts/clone-voice/1.7b": {
+      input: Qwen3TtsCloneVoice17bInput;
+      output: Qwen3TtsCloneVoice17bOutput;
+    };
+    "fal-ai/qwen-3-tts/text-to-speech/0.6b": {
+      input: Qwen3TtsTextToSpeech06bInput;
+      output: Qwen3TtsTextToSpeech06bOutput;
+    };
+    "fal-ai/qwen-3-tts/text-to-speech/1.7b": {
+      input: Qwen3TtsTextToSpeech17bInput;
+      output: Qwen3TtsTextToSpeech17bOutput;
+    };
+    "fal-ai/qwen-3-tts/voice-design/1.7b": {
+      input: Qwen3TtsVoiceDesign17bInput;
+      output: Qwen3TtsVoiceDesign17bOutput;
+    };
+    "fal-ai/qwen-image": {
+      input: QwenImageInput;
+      output: QwenImageOutput;
+    };
+    "fal-ai/qwen-image-2/edit": {
+      input: QwenImage2EditInput;
+      output: QwenImage2EditOutput;
+    };
+    "fal-ai/qwen-image-2/pro/edit": {
+      input: QwenImage2ProEditInput;
+      output: QwenImage2ProEditOutput;
+    };
+    "fal-ai/qwen-image-2/pro/text-to-image": {
+      input: QwenImage2ProTextToImageInput;
+      output: QwenImage2ProTextToImageOutput;
+    };
+    "fal-ai/qwen-image-2/text-to-image": {
+      input: QwenImage2TextToImageInput;
+      output: QwenImage2TextToImageOutput;
+    };
+    "fal-ai/qwen-image-2512": {
+      input: QwenImage2512Input;
+      output: QwenImage2512Output;
+    };
+    "fal-ai/qwen-image-2512-trainer": {
+      input: QwenImage2512TrainerInput;
+      output: QwenImage2512TrainerOutput;
+    };
+    "fal-ai/qwen-image-2512/lora": {
+      input: QwenImage2512LoraInput;
+      output: QwenImage2512LoraOutput;
+    };
+    "fal-ai/qwen-image-edit": {
+      input: QwenImageEditInput;
+      output: QwenImageEditOutput;
+    };
+    "fal-ai/qwen-image-edit-2509": {
+      input: QwenImageEdit2509Input;
+      output: QwenImageEdit2509Output;
+    };
+    "fal-ai/qwen-image-edit-2509-lora": {
+      input: QwenImageEdit2509LoraInput;
+      output: QwenImageEdit2509LoraOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/add-background": {
+      input: QwenImageEdit2509LoraGalleryAddBackgroundInput;
+      output: QwenImageEdit2509LoraGalleryAddBackgroundOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/face-to-full-portrait": {
+      input: QwenImageEdit2509LoraGalleryFaceToFullPortraitInput;
+      output: QwenImageEdit2509LoraGalleryFaceToFullPortraitOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/group-photo": {
+      input: QwenImageEdit2509LoraGalleryGroupPhotoInput;
+      output: QwenImageEdit2509LoraGalleryGroupPhotoOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/integrate-product": {
+      input: QwenImageEdit2509LoraGalleryIntegrateProductInput;
+      output: QwenImageEdit2509LoraGalleryIntegrateProductOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/lighting-restoration": {
+      input: QwenImageEdit2509LoraGalleryLightingRestorationInput;
+      output: QwenImageEdit2509LoraGalleryLightingRestorationOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/multiple-angles": {
+      input: QwenImageEdit2509LoraGalleryMultipleAnglesInput;
+      output: QwenImageEdit2509LoraGalleryMultipleAnglesOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/next-scene": {
+      input: QwenImageEdit2509LoraGalleryNextSceneInput;
+      output: QwenImageEdit2509LoraGalleryNextSceneOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/remove-element": {
+      input: QwenImageEdit2509LoraGalleryRemoveElementInput;
+      output: QwenImageEdit2509LoraGalleryRemoveElementOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/remove-lighting": {
+      input: QwenImageEdit2509LoraGalleryRemoveLightingInput;
+      output: QwenImageEdit2509LoraGalleryRemoveLightingOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-lora-gallery/shirt-design": {
+      input: QwenImageEdit2509LoraGalleryShirtDesignInput;
+      output: QwenImageEdit2509LoraGalleryShirtDesignOutput;
+    };
+    "fal-ai/qwen-image-edit-2509-trainer": {
+      input: QwenImageEdit2509TrainerInput;
+      output: QwenImageEdit2509TrainerOutput;
+    };
+    "fal-ai/qwen-image-edit-2511": {
+      input: QwenImageEdit2511Input;
+      output: QwenImageEdit2511Output;
+    };
+    "fal-ai/qwen-image-edit-2511-multiple-angles": {
+      input: QwenImageEdit2511MultipleAnglesInput;
+      output: QwenImageEdit2511MultipleAnglesOutput;
+    };
+    "fal-ai/qwen-image-edit-2511/lora": {
+      input: QwenImageEdit2511LoraInput;
+      output: QwenImageEdit2511LoraOutput;
+    };
+    "fal-ai/qwen-image-edit-lora": {
+      input: QwenImageEditLoraInput;
+      output: QwenImageEditLoraOutput;
+    };
+    "fal-ai/qwen-image-edit-plus": {
+      input: QwenImageEditPlusInput;
+      output: QwenImageEditPlusOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora": {
+      input: QwenImageEditPlusLoraInput;
+      output: QwenImageEditPlusLoraOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/add-background": {
+      input: QwenImageEditPlusLoraGalleryAddBackgroundInput;
+      output: QwenImageEditPlusLoraGalleryAddBackgroundOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/face-to-full-portrait": {
+      input: QwenImageEditPlusLoraGalleryFaceToFullPortraitInput;
+      output: QwenImageEditPlusLoraGalleryFaceToFullPortraitOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/group-photo": {
+      input: QwenImageEditPlusLoraGalleryGroupPhotoInput;
+      output: QwenImageEditPlusLoraGalleryGroupPhotoOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/integrate-product": {
+      input: QwenImageEditPlusLoraGalleryIntegrateProductInput;
+      output: QwenImageEditPlusLoraGalleryIntegrateProductOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/lighting-restoration": {
+      input: QwenImageEditPlusLoraGalleryLightingRestorationInput;
+      output: QwenImageEditPlusLoraGalleryLightingRestorationOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/multiple-angles": {
+      input: QwenImageEditPlusLoraGalleryMultipleAnglesInput;
+      output: QwenImageEditPlusLoraGalleryMultipleAnglesOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/next-scene": {
+      input: QwenImageEditPlusLoraGalleryNextSceneInput;
+      output: QwenImageEditPlusLoraGalleryNextSceneOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/remove-element": {
+      input: QwenImageEditPlusLoraGalleryRemoveElementInput;
+      output: QwenImageEditPlusLoraGalleryRemoveElementOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/remove-lighting": {
+      input: QwenImageEditPlusLoraGalleryRemoveLightingInput;
+      output: QwenImageEditPlusLoraGalleryRemoveLightingOutput;
+    };
+    "fal-ai/qwen-image-edit-plus-lora-gallery/shirt-design": {
+      input: QwenImageEditPlusLoraGalleryShirtDesignInput;
+      output: QwenImageEditPlusLoraGalleryShirtDesignOutput;
+    };
+    "fal-ai/qwen-image-edit/image-to-image": {
+      input: QwenImageEditImageToImageInput;
+      output: QwenImageEditImageToImageOutput;
+    };
+    "fal-ai/qwen-image-edit/inpaint": {
+      input: QwenImageEditInpaintInput;
+      output: QwenImageEditInpaintOutput;
+    };
+    "fal-ai/qwen-image-layered": {
+      input: QwenImageLayeredInput;
+      output: QwenImageLayeredOutput;
+    };
+    "fal-ai/qwen-image-layered/lora": {
+      input: QwenImageLayeredLoraInput;
+      output: QwenImageLayeredLoraOutput;
+    };
+    "fal-ai/qwen-image-max/edit": {
+      input: QwenImageMaxEditInput;
+      output: QwenImageMaxEditOutput;
+    };
+    "fal-ai/qwen-image-max/text-to-image": {
+      input: QwenImageMaxTextToImageInput;
+      output: QwenImageMaxTextToImageOutput;
+    };
+    "fal-ai/qwen-image/image-to-image": {
+      input: QwenImageImageToImageInput;
+      output: QwenImageImageToImageOutput;
+    };
+    "fal-ai/realistic-vision": {
+      input: RealisticVisionInput;
+      output: RealisticVisionOutput;
+    };
+    "fal-ai/reconviagen-0.5": {
+      input: Reconviagen05Input;
+      output: Reconviagen05Output;
+    };
+    "fal-ai/recraft-20b": {
+      input: Recraft20bInput;
+      output: Recraft20bOutput;
+    };
+    "fal-ai/recraft/upscale/creative": {
+      input: RecraftUpscaleCreativeInput;
+      output: RecraftUpscaleCreativeOutput;
+    };
+    "fal-ai/recraft/upscale/crisp": {
+      input: RecraftUpscaleCrispInput;
+      output: RecraftUpscaleCrispOutput;
+    };
+    "fal-ai/recraft/v3/create-style": {
+      input: RecraftV3CreateStyleInput;
+      output: RecraftV3CreateStyleOutput;
+    };
+    "fal-ai/recraft/v3/image-to-image": {
+      input: RecraftV3ImageToImageInput;
+      output: RecraftV3ImageToImageOutput;
+    };
+    "fal-ai/recraft/v3/text-to-image": {
+      input: RecraftV3TextToImageInput;
+      output: RecraftV3TextToImageOutput;
+    };
+    "fal-ai/recraft/v4.1/pro/text-to-image": {
+      input: RecraftV41ProTextToImageInput;
+      output: RecraftV41ProTextToImageOutput;
+    };
+    "fal-ai/recraft/v4.1/pro/text-to-vector": {
+      input: RecraftV41ProTextToVectorInput;
+      output: RecraftV41ProTextToVectorOutput;
+    };
+    "fal-ai/recraft/v4.1/text-to-image": {
+      input: RecraftV41TextToImageInput;
+      output: RecraftV41TextToImageOutput;
+    };
+    "fal-ai/recraft/v4.1/text-to-vector": {
+      input: RecraftV41TextToVectorInput;
+      output: RecraftV41TextToVectorOutput;
+    };
+    "fal-ai/recraft/v4.1/utility/pro/text-to-image": {
+      input: RecraftV41UtilityProTextToImageInput;
+      output: RecraftV41UtilityProTextToImageOutput;
+    };
+    "fal-ai/recraft/v4.1/utility/text-to-image": {
+      input: RecraftV41UtilityTextToImageInput;
+      output: RecraftV41UtilityTextToImageOutput;
+    };
+    "fal-ai/recraft/v4/pro/text-to-image": {
+      input: RecraftV4ProTextToImageInput;
+      output: RecraftV4ProTextToImageOutput;
+    };
+    "fal-ai/recraft/v4/pro/text-to-vector": {
+      input: RecraftV4ProTextToVectorInput;
+      output: RecraftV4ProTextToVectorOutput;
+    };
+    "fal-ai/recraft/v4/text-to-image": {
+      input: RecraftV4TextToImageInput;
+      output: RecraftV4TextToImageOutput;
+    };
+    "fal-ai/recraft/v4/text-to-vector": {
+      input: RecraftV4TextToVectorInput;
+      output: RecraftV4TextToVectorOutput;
+    };
+    "fal-ai/recraft/vectorize": {
+      input: RecraftVectorizeInput;
+      output: RecraftVectorizeOutput;
+    };
+    "fal-ai/retoucher": {
+      input: retoucherInput;
+      output: retoucherOutput;
+    };
+    "fal-ai/rife": {
+      input: rifeInput;
+      output: rifeOutput;
+    };
+    "fal-ai/rife/video": {
+      input: RifeVideoInput;
+      output: RifeVideoOutput;
+    };
+    "fal-ai/sa2va/4b/image": {
+      input: Sa2va4bImageInput;
+      output: Sa2va4bImageOutput;
+    };
+    "fal-ai/sa2va/4b/video": {
+      input: Sa2va4bVideoInput;
+      output: Sa2va4bVideoOutput;
+    };
+    "fal-ai/sa2va/8b/image": {
+      input: Sa2va8bImageInput;
+      output: Sa2va8bImageOutput;
+    };
+    "fal-ai/sa2va/8b/video": {
+      input: Sa2va8bVideoInput;
+      output: Sa2va8bVideoOutput;
+    };
+    "fal-ai/sadtalker": {
+      input: sadtalkerInput;
+      output: sadtalkerOutput;
+    };
+    "fal-ai/sadtalker/reference": {
+      input: SadtalkerReferenceInput;
+      output: SadtalkerReferenceOutput;
+    };
+    "fal-ai/sam-3-1/image": {
+      input: Sam31ImageInput;
+      output: Sam31ImageOutput;
+    };
+    "fal-ai/sam-3-1/image-rle": {
+      input: Sam31ImageRleInput;
+      output: Sam31ImageRleOutput;
+    };
+    "fal-ai/sam-3-1/video": {
+      input: Sam31VideoInput;
+      output: Sam31VideoOutput;
+    };
+    "fal-ai/sam-3-1/video-rle": {
+      input: Sam31VideoRleInput;
+      output: Sam31VideoRleOutput;
+    };
+    "fal-ai/sam-3/3d-align": {
+      input: Sam33dAlignInput;
+      output: Sam33dAlignOutput;
+    };
+    "fal-ai/sam-3/3d-body": {
+      input: Sam33dBodyInput;
+      output: Sam33dBodyOutput;
+    };
+    "fal-ai/sam-3/3d-objects": {
+      input: Sam33dObjectsInput;
+      output: Sam33dObjectsOutput;
+    };
+    "fal-ai/sam-3/image": {
+      input: Sam3ImageInput;
+      output: Sam3ImageOutput;
+    };
+    "fal-ai/sam-3/image-rle": {
+      input: Sam3ImageRleInput;
+      output: Sam3ImageRleOutput;
+    };
+    "fal-ai/sam-3/image/embed": {
+      input: Sam3ImageEmbedInput;
+      output: Sam3ImageEmbedOutput;
+    };
+    "fal-ai/sam-3/video": {
+      input: Sam3VideoInput;
+      output: Sam3VideoOutput;
+    };
+    "fal-ai/sam-3/video-rle": {
+      input: Sam3VideoRleInput;
+      output: Sam3VideoRleOutput;
+    };
+    "fal-ai/sam-audio/separate": {
+      input: SamAudioSeparateInput;
+      output: SamAudioSeparateOutput;
+    };
+    "fal-ai/sam-audio/span-separate": {
+      input: SamAudioSpanSeparateInput;
+      output: SamAudioSpanSeparateOutput;
+    };
+    "fal-ai/sam-audio/visual-separate": {
+      input: SamAudioVisualSeparateInput;
+      output: SamAudioVisualSeparateOutput;
+    };
+    "fal-ai/sam2/auto-segment": {
+      input: Sam2AutoSegmentInput;
+      output: Sam2AutoSegmentOutput;
+    };
+    "fal-ai/sam2/image": {
+      input: Sam2ImageInput;
+      output: Sam2ImageOutput;
+    };
+    "fal-ai/sam2/video": {
+      input: Sam2VideoInput;
+      output: Sam2VideoOutput;
+    };
+    "fal-ai/sana": {
+      input: sanaInput;
+      output: sanaOutput;
+    };
+    "fal-ai/sana/sprint": {
+      input: SanaSprintInput;
+      output: SanaSprintOutput;
+    };
+    "fal-ai/sana/v1.5/1.6b": {
+      input: SanaV1516bInput;
+      output: SanaV1516bOutput;
+    };
+    "fal-ai/sana/v1.5/4.8b": {
+      input: SanaV1548bInput;
+      output: SanaV1548bOutput;
+    };
+    "fal-ai/scail-2": {
+      input: Scail2Input;
+      output: Scail2Output;
+    };
+    "fal-ai/scene-finder": {
+      input: SceneFinderInput;
+      output: SceneFinderOutput;
+    };
+    "fal-ai/sdxl-controlnet-union": {
+      input: SdxlControlnetUnionInput;
+      output: SdxlControlnetUnionOutput;
+    };
+    "fal-ai/sdxl-controlnet-union/image-to-image": {
+      input: SdxlControlnetUnionImageToImageInput;
+      output: SdxlControlnetUnionImageToImageOutput;
+    };
+    "fal-ai/sdxl-controlnet-union/inpainting": {
+      input: SdxlControlnetUnionInpaintingInput;
+      output: SdxlControlnetUnionInpaintingOutput;
+    };
+    "fal-ai/seedvr/upscale/image": {
+      input: SeedvrUpscaleImageInput;
+      output: SeedvrUpscaleImageOutput;
+    };
+    "fal-ai/seedvr/upscale/image/seamless": {
+      input: SeedvrUpscaleImageSeamlessInput;
+      output: SeedvrUpscaleImageSeamlessOutput;
+    };
+    "fal-ai/seedvr/upscale/video": {
+      input: SeedvrUpscaleVideoInput;
+      output: SeedvrUpscaleVideoOutput;
+    };
+    "fal-ai/sensenova-u1-infographic": {
+      input: SensenovaU1InfographicInput;
+      output: SensenovaU1InfographicOutput;
+    };
+    "fal-ai/silero-vad": {
+      input: SileroVadInput;
+      output: SileroVadOutput;
+    };
+    "fal-ai/smart-resize": {
+      input: SmartResizeInput;
+      output: SmartResizeOutput;
+    };
+    "fal-ai/smart-turn": {
+      input: SmartTurnInput;
+      output: SmartTurnOutput;
+    };
+    "fal-ai/speech-to-text": {
+      input: SpeechToTextInput;
+      output: SpeechToTextOutput;
+    };
+    "fal-ai/speech-to-text/turbo": {
+      input: SpeechToTextTurboInput;
+      output: SpeechToTextTurboOutput;
+    };
+    "fal-ai/stable-audio": {
+      input: StableAudioInput;
+      output: StableAudioOutput;
+    };
+    "fal-ai/stable-audio-25/audio-to-audio": {
+      input: StableAudio25AudioToAudioInput;
+      output: StableAudio25AudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-25/inpaint": {
+      input: StableAudio25InpaintInput;
+      output: StableAudio25InpaintOutput;
+    };
+    "fal-ai/stable-audio-25/text-to-audio": {
+      input: StableAudio25TextToAudioInput;
+      output: StableAudio25TextToAudioOutput;
+    };
+    "fal-ai/stable-audio-3-trainer": {
+      input: StableAudio3TrainerInput;
+      output: StableAudio3TrainerOutput;
+    };
+    "fal-ai/stable-audio-3/medium/audio-inpainting": {
+      input: StableAudio3MediumAudioInpaintingInput;
+      output: StableAudio3MediumAudioInpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/medium/audio-outpainting": {
+      input: StableAudio3MediumAudioOutpaintingInput;
+      output: StableAudio3MediumAudioOutpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/medium/audio-to-audio": {
+      input: StableAudio3MediumAudioToAudioInput;
+      output: StableAudio3MediumAudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/medium/base/audio-inpainting": {
+      input: StableAudio3MediumBaseAudioInpaintingInput;
+      output: StableAudio3MediumBaseAudioInpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/medium/base/audio-outpainting": {
+      input: StableAudio3MediumBaseAudioOutpaintingInput;
+      output: StableAudio3MediumBaseAudioOutpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/medium/base/audio-to-audio": {
+      input: StableAudio3MediumBaseAudioToAudioInput;
+      output: StableAudio3MediumBaseAudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/medium/base/text-to-audio": {
+      input: StableAudio3MediumBaseTextToAudioInput;
+      output: StableAudio3MediumBaseTextToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/medium/text-to-audio": {
+      input: StableAudio3MediumTextToAudioInput;
+      output: StableAudio3MediumTextToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/audio-inpainting": {
+      input: StableAudio3SmallMusicAudioInpaintingInput;
+      output: StableAudio3SmallMusicAudioInpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/audio-outpainting": {
+      input: StableAudio3SmallMusicAudioOutpaintingInput;
+      output: StableAudio3SmallMusicAudioOutpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/audio-to-audio": {
+      input: StableAudio3SmallMusicAudioToAudioInput;
+      output: StableAudio3SmallMusicAudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/base/audio-inpainting": {
+      input: StableAudio3SmallMusicBaseAudioInpaintingInput;
+      output: StableAudio3SmallMusicBaseAudioInpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/base/audio-outpainting": {
+      input: StableAudio3SmallMusicBaseAudioOutpaintingInput;
+      output: StableAudio3SmallMusicBaseAudioOutpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/base/audio-to-audio": {
+      input: StableAudio3SmallMusicBaseAudioToAudioInput;
+      output: StableAudio3SmallMusicBaseAudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/base/text-to-audio": {
+      input: StableAudio3SmallMusicBaseTextToAudioInput;
+      output: StableAudio3SmallMusicBaseTextToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/music/text-to-audio": {
+      input: StableAudio3SmallMusicTextToAudioInput;
+      output: StableAudio3SmallMusicTextToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/audio-inpainting": {
+      input: StableAudio3SmallSfxAudioInpaintingInput;
+      output: StableAudio3SmallSfxAudioInpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/audio-outpainting": {
+      input: StableAudio3SmallSfxAudioOutpaintingInput;
+      output: StableAudio3SmallSfxAudioOutpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/audio-to-audio": {
+      input: StableAudio3SmallSfxAudioToAudioInput;
+      output: StableAudio3SmallSfxAudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/base/audio-inpainting": {
+      input: StableAudio3SmallSfxBaseAudioInpaintingInput;
+      output: StableAudio3SmallSfxBaseAudioInpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/base/audio-outpainting": {
+      input: StableAudio3SmallSfxBaseAudioOutpaintingInput;
+      output: StableAudio3SmallSfxBaseAudioOutpaintingOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/base/audio-to-audio": {
+      input: StableAudio3SmallSfxBaseAudioToAudioInput;
+      output: StableAudio3SmallSfxBaseAudioToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/base/text-to-audio": {
+      input: StableAudio3SmallSfxBaseTextToAudioInput;
+      output: StableAudio3SmallSfxBaseTextToAudioOutput;
+    };
+    "fal-ai/stable-audio-3/small/sfx/text-to-audio": {
+      input: StableAudio3SmallSfxTextToAudioInput;
+      output: StableAudio3SmallSfxTextToAudioOutput;
+    };
+    "fal-ai/stable-cascade": {
+      input: StableCascadeInput;
+      output: StableCascadeOutput;
+    };
+    "fal-ai/stable-cascade/sote-diffusion": {
+      input: StableCascadeSoteDiffusionInput;
+      output: StableCascadeSoteDiffusionOutput;
+    };
+    "fal-ai/stable-diffusion-v15": {
+      input: StableDiffusionV15Input;
+      output: StableDiffusionV15Output;
+    };
+    "fal-ai/stable-diffusion-v3-medium": {
+      input: StableDiffusionV3MediumInput;
+      output: StableDiffusionV3MediumOutput;
+    };
+    "fal-ai/stable-diffusion-v3-medium/image-to-image": {
+      input: StableDiffusionV3MediumImageToImageInput;
+      output: StableDiffusionV3MediumImageToImageOutput;
+    };
+    "fal-ai/stable-diffusion-v35-large": {
+      input: StableDiffusionV35LargeInput;
+      output: StableDiffusionV35LargeOutput;
+    };
+    "fal-ai/stable-diffusion-v35-medium": {
+      input: StableDiffusionV35MediumInput;
+      output: StableDiffusionV35MediumOutput;
+    };
+    "fal-ai/stable-video": {
+      input: StableVideoInput;
+      output: StableVideoOutput;
+    };
+    "fal-ai/stepx-edit2": {
+      input: StepxEdit2Input;
+      output: StepxEdit2Output;
+    };
+    "fal-ai/sync-lipsync": {
+      input: SyncLipsyncInput;
+      output: SyncLipsyncOutput;
+    };
+    "fal-ai/sync-lipsync/react-1": {
+      input: SyncLipsyncReact1Input;
+      output: SyncLipsyncReact1Output;
+    };
+    "fal-ai/sync-lipsync/v2": {
+      input: SyncLipsyncV2Input;
+      output: SyncLipsyncV2Output;
+    };
+    "fal-ai/sync-lipsync/v2/pro": {
+      input: SyncLipsyncV2ProInput;
+      output: SyncLipsyncV2ProOutput;
+    };
+    "fal-ai/sync-lipsync/v3": {
+      input: SyncLipsyncV3Input;
+      output: SyncLipsyncV3Output;
+    };
+    "fal-ai/sync-lipsync/v3/image-to-video": {
+      input: SyncLipsyncV3ImageToVideoInput;
+      output: SyncLipsyncV3ImageToVideoOutput;
+    };
+    "fal-ai/t2v-turbo": {
+      input: T2vTurboInput;
+      output: T2vTurboOutput;
+    };
+    "fal-ai/tada/1b/text-to-speech": {
+      input: Tada1bTextToSpeechInput;
+      output: Tada1bTextToSpeechOutput;
+    };
+    "fal-ai/tada/3b/text-to-speech": {
+      input: Tada3bTextToSpeechInput;
+      output: Tada3bTextToSpeechOutput;
+    };
+    "fal-ai/telestyle-v2": {
+      input: TelestyleV2Input;
+      output: TelestyleV2Output;
+    };
+    "fal-ai/thinksound": {
+      input: thinksoundInput;
+      output: thinksoundOutput;
+    };
+    "fal-ai/thinksound/audio": {
+      input: ThinksoundAudioInput;
+      output: ThinksoundAudioOutput;
+    };
+    "fal-ai/topaz/upscale/image": {
+      input: TopazUpscaleImageInput;
+      output: TopazUpscaleImageOutput;
+    };
+    "fal-ai/topaz/upscale/video": {
+      input: TopazUpscaleVideoInput;
+      output: TopazUpscaleVideoOutput;
+    };
+    "fal-ai/trellis": {
+      input: trellisInput;
+      output: trellisOutput;
+    };
+    "fal-ai/trellis-2": {
+      input: Trellis2Input;
+      output: Trellis2Output;
+    };
+    "fal-ai/trellis-2-lora": {
+      input: Trellis2LoraInput;
+      output: Trellis2LoraOutput;
+    };
+    "fal-ai/trellis-2-lora-trainer": {
+      input: Trellis2LoraTrainerInput;
+      output: Trellis2LoraTrainerOutput;
+    };
+    "fal-ai/trellis-2/retexture": {
+      input: Trellis2RetextureInput;
+      output: Trellis2RetextureOutput;
+    };
+    "fal-ai/trellis/multi": {
+      input: TrellisMultiInput;
+      output: TrellisMultiOutput;
+    };
+    "fal-ai/triposr": {
+      input: triposrInput;
+      output: triposrOutput;
+    };
+    "fal-ai/turbo-flux-trainer": {
+      input: TurboFluxTrainerInput;
+      output: TurboFluxTrainerOutput;
+    };
+    "fal-ai/uno": {
+      input: unoInput;
+      output: unoOutput;
+    };
+    "fal-ai/uso": {
+      input: usoInput;
+      output: usoOutput;
+    };
+    "fal-ai/vecglypher": {
+      input: vecglypherInput;
+      output: vecglypherOutput;
+    };
+    "fal-ai/vecglypher/image-to-svg": {
+      input: VecglypherImageToSvgInput;
+      output: VecglypherImageToSvgOutput;
+    };
+    "fal-ai/veo3.1": {
+      input: Veo31Input;
+      output: Veo31Output;
+    };
+    "fal-ai/veo3.1/extend-video": {
+      input: Veo31ExtendVideoInput;
+      output: Veo31ExtendVideoOutput;
+    };
+    "fal-ai/veo3.1/fast": {
+      input: Veo31FastInput;
+      output: Veo31FastOutput;
+    };
+    "fal-ai/veo3.1/fast/extend-video": {
+      input: Veo31FastExtendVideoInput;
+      output: Veo31FastExtendVideoOutput;
+    };
+    "fal-ai/veo3.1/fast/first-last-frame-to-video": {
+      input: Veo31FastFirstLastFrameToVideoInput;
+      output: Veo31FastFirstLastFrameToVideoOutput;
+    };
+    "fal-ai/veo3.1/fast/image-to-video": {
+      input: Veo31FastImageToVideoInput;
+      output: Veo31FastImageToVideoOutput;
+    };
+    "fal-ai/veo3.1/first-last-frame-to-video": {
+      input: Veo31FirstLastFrameToVideoInput;
+      output: Veo31FirstLastFrameToVideoOutput;
+    };
+    "fal-ai/veo3.1/image-to-video": {
+      input: Veo31ImageToVideoInput;
+      output: Veo31ImageToVideoOutput;
+    };
+    "fal-ai/veo3.1/lite": {
+      input: Veo31LiteInput;
+      output: Veo31LiteOutput;
+    };
+    "fal-ai/veo3.1/lite/first-last-frame-to-video": {
+      input: Veo31LiteFirstLastFrameToVideoInput;
+      output: Veo31LiteFirstLastFrameToVideoOutput;
+    };
+    "fal-ai/veo3.1/lite/image-to-video": {
+      input: Veo31LiteImageToVideoInput;
+      output: Veo31LiteImageToVideoOutput;
+    };
+    "fal-ai/veo3.1/reference-to-video": {
+      input: Veo31ReferenceToVideoInput;
+      output: Veo31ReferenceToVideoOutput;
+    };
+    "fal-ai/vibevoice": {
+      input: vibevoiceInput;
+      output: vibevoiceOutput;
+    };
+    "fal-ai/vibevoice/0.5b": {
+      input: Vibevoice05bInput;
+      output: Vibevoice05bOutput;
+    };
+    "fal-ai/vibevoice/7b": {
+      input: Vibevoice7bInput;
+      output: Vibevoice7bOutput;
+    };
+    "fal-ai/video-prompt-generator": {
+      input: VideoPromptGeneratorInput;
+      output: VideoPromptGeneratorOutput;
+    };
+    "fal-ai/video-understanding": {
+      input: VideoUnderstandingInput;
+      output: VideoUnderstandingOutput;
+    };
+    "fal-ai/video-upscaler": {
+      input: VideoUpscalerInput;
+      output: VideoUpscalerOutput;
+    };
+    "fal-ai/vidu/image-to-video": {
+      input: ViduImageToVideoInput;
+      output: ViduImageToVideoOutput;
+    };
+    "fal-ai/vidu/q1/image-to-video": {
+      input: ViduQ1ImageToVideoInput;
+      output: ViduQ1ImageToVideoOutput;
+    };
+    "fal-ai/vidu/q1/reference-to-video": {
+      input: ViduQ1ReferenceToVideoInput;
+      output: ViduQ1ReferenceToVideoOutput;
+    };
+    "fal-ai/vidu/q1/start-end-to-video": {
+      input: ViduQ1StartEndToVideoInput;
+      output: ViduQ1StartEndToVideoOutput;
+    };
+    "fal-ai/vidu/q1/text-to-video": {
+      input: ViduQ1TextToVideoInput;
+      output: ViduQ1TextToVideoOutput;
+    };
+    "fal-ai/vidu/q2/image-to-video/pro": {
+      input: ViduQ2ImageToVideoProInput;
+      output: ViduQ2ImageToVideoProOutput;
+    };
+    "fal-ai/vidu/q2/image-to-video/turbo": {
+      input: ViduQ2ImageToVideoTurboInput;
+      output: ViduQ2ImageToVideoTurboOutput;
+    };
+    "fal-ai/vidu/q2/reference-to-image": {
+      input: ViduQ2ReferenceToImageInput;
+      output: ViduQ2ReferenceToImageOutput;
+    };
+    "fal-ai/vidu/q2/reference-to-video/pro": {
+      input: ViduQ2ReferenceToVideoProInput;
+      output: ViduQ2ReferenceToVideoProOutput;
+    };
+    "fal-ai/vidu/q2/text-to-image": {
+      input: ViduQ2TextToImageInput;
+      output: ViduQ2TextToImageOutput;
+    };
+    "fal-ai/vidu/q2/text-to-video": {
+      input: ViduQ2TextToVideoInput;
+      output: ViduQ2TextToVideoOutput;
+    };
+    "fal-ai/vidu/q2/video-extension/pro": {
+      input: ViduQ2VideoExtensionProInput;
+      output: ViduQ2VideoExtensionProOutput;
+    };
+    "fal-ai/vidu/q3/image-to-video": {
+      input: ViduQ3ImageToVideoInput;
+      output: ViduQ3ImageToVideoOutput;
+    };
+    "fal-ai/vidu/q3/image-to-video/turbo": {
+      input: ViduQ3ImageToVideoTurboInput;
+      output: ViduQ3ImageToVideoTurboOutput;
+    };
+    "fal-ai/vidu/q3/reference-to-video/mix": {
+      input: ViduQ3ReferenceToVideoMixInput;
+      output: ViduQ3ReferenceToVideoMixOutput;
+    };
+    "fal-ai/vidu/q3/text-to-video": {
+      input: ViduQ3TextToVideoInput;
+      output: ViduQ3TextToVideoOutput;
+    };
+    "fal-ai/vidu/q3/text-to-video/turbo": {
+      input: ViduQ3TextToVideoTurboInput;
+      output: ViduQ3TextToVideoTurboOutput;
+    };
+    "fal-ai/vidu/reference-to-image": {
+      input: ViduReferenceToImageInput;
+      output: ViduReferenceToImageOutput;
+    };
+    "fal-ai/vidu/reference-to-video": {
+      input: ViduReferenceToVideoInput;
+      output: ViduReferenceToVideoOutput;
+    };
+    "fal-ai/vidu/start-end-to-video": {
+      input: ViduStartEndToVideoInput;
+      output: ViduStartEndToVideoOutput;
+    };
+    "fal-ai/vidu/template-to-video": {
+      input: ViduTemplateToVideoInput;
+      output: ViduTemplateToVideoOutput;
+    };
+    "fal-ai/void-video-inpainting": {
+      input: VoidVideoInpaintingInput;
+      output: VoidVideoInpaintingOutput;
+    };
+    "fal-ai/wan-22-image-trainer": {
+      input: Wan22ImageTrainerInput;
+      output: Wan22ImageTrainerOutput;
+    };
+    "fal-ai/wan-22-trainer/i2v-a14b": {
+      input: Wan22TrainerI2vA14bInput;
+      output: Wan22TrainerI2vA14bOutput;
+    };
+    "fal-ai/wan-22-trainer/t2v-a14b": {
+      input: Wan22TrainerT2vA14bInput;
+      output: Wan22TrainerT2vA14bOutput;
+    };
+    "fal-ai/wan-22-vace-fun-a14b/depth": {
+      input: Wan22VaceFunA14bDepthInput;
+      output: Wan22VaceFunA14bDepthOutput;
+    };
+    "fal-ai/wan-22-vace-fun-a14b/inpainting": {
+      input: Wan22VaceFunA14bInpaintingInput;
+      output: Wan22VaceFunA14bInpaintingOutput;
+    };
+    "fal-ai/wan-22-vace-fun-a14b/outpainting": {
+      input: Wan22VaceFunA14bOutpaintingInput;
+      output: Wan22VaceFunA14bOutpaintingOutput;
+    };
+    "fal-ai/wan-22-vace-fun-a14b/reframe": {
+      input: Wan22VaceFunA14bReframeInput;
+      output: Wan22VaceFunA14bReframeOutput;
+    };
+    "fal-ai/wan-25-preview/image-to-image": {
+      input: Wan25PreviewImageToImageInput;
+      output: Wan25PreviewImageToImageOutput;
+    };
+    "fal-ai/wan-25-preview/image-to-video": {
+      input: Wan25PreviewImageToVideoInput;
+      output: Wan25PreviewImageToVideoOutput;
+    };
+    "fal-ai/wan-25-preview/text-to-image": {
+      input: Wan25PreviewTextToImageInput;
+      output: Wan25PreviewTextToImageOutput;
+    };
+    "fal-ai/wan-25-preview/text-to-video": {
+      input: Wan25PreviewTextToVideoInput;
+      output: Wan25PreviewTextToVideoOutput;
+    };
+    "fal-ai/wan-effects": {
+      input: WanEffectsInput;
+      output: WanEffectsOutput;
+    };
+    "fal-ai/wan-flf2v": {
+      input: WanFlf2vInput;
+      output: WanFlf2vOutput;
+    };
+    "fal-ai/wan-i2v": {
+      input: WanI2vInput;
+      output: WanI2vOutput;
+    };
+    "fal-ai/wan-i2v-lora": {
+      input: WanI2vLoraInput;
+      output: WanI2vLoraOutput;
+    };
+    "fal-ai/wan-motion": {
+      input: WanMotionInput;
+      output: WanMotionOutput;
+    };
+    "fal-ai/wan-pro/image-to-video": {
+      input: WanProImageToVideoInput;
+      output: WanProImageToVideoOutput;
+    };
+    "fal-ai/wan-pro/text-to-video": {
+      input: WanProTextToVideoInput;
+      output: WanProTextToVideoOutput;
+    };
+    "fal-ai/wan-t2v": {
+      input: WanT2vInput;
+      output: WanT2vOutput;
+    };
+    "fal-ai/wan-t2v-lora": {
+      input: WanT2vLoraInput;
+      output: WanT2vLoraOutput;
+    };
+    "fal-ai/wan-trainer/i2v-720p": {
+      input: WanTrainerI2v720pInput;
+      output: WanTrainerI2v720pOutput;
+    };
+    "fal-ai/wan-trainer/t2v": {
+      input: WanTrainerT2vInput;
+      output: WanTrainerT2vOutput;
+    };
+    "fal-ai/wan-trainer/t2v-14b": {
+      input: WanTrainerT2v14bInput;
+      output: WanTrainerT2v14bOutput;
+    };
+    "fal-ai/wan-vace-14b": {
+      input: WanVace14bInput;
+      output: WanVace14bOutput;
+    };
+    "fal-ai/wan-vace-14b/depth": {
+      input: WanVace14bDepthInput;
+      output: WanVace14bDepthOutput;
+    };
+    "fal-ai/wan-vace-14b/inpainting": {
+      input: WanVace14bInpaintingInput;
+      output: WanVace14bInpaintingOutput;
+    };
+    "fal-ai/wan-vace-14b/outpainting": {
+      input: WanVace14bOutpaintingInput;
+      output: WanVace14bOutpaintingOutput;
+    };
+    "fal-ai/wan-vace-14b/pose": {
+      input: WanVace14bPoseInput;
+      output: WanVace14bPoseOutput;
+    };
+    "fal-ai/wan-vace-14b/reframe": {
+      input: WanVace14bReframeInput;
+      output: WanVace14bReframeOutput;
+    };
+    "fal-ai/wan-vace-apps/long-reframe": {
+      input: WanVaceAppsLongReframeInput;
+      output: WanVaceAppsLongReframeOutput;
+    };
+    "fal-ai/wan-vace-apps/video-edit": {
+      input: WanVaceAppsVideoEditInput;
+      output: WanVaceAppsVideoEditOutput;
+    };
+    "fal-ai/wan/v2.2-14b/animate/move": {
+      input: WanV2214bAnimateMoveInput;
+      output: WanV2214bAnimateMoveOutput;
+    };
+    "fal-ai/wan/v2.2-14b/animate/replace": {
+      input: WanV2214bAnimateReplaceInput;
+      output: WanV2214bAnimateReplaceOutput;
+    };
+    "fal-ai/wan/v2.2-14b/speech-to-video": {
+      input: WanV2214bSpeechToVideoInput;
+      output: WanV2214bSpeechToVideoOutput;
+    };
+    "fal-ai/wan/v2.2-5b/image-to-video": {
+      input: WanV225bImageToVideoInput;
+      output: WanV225bImageToVideoOutput;
+    };
+    "fal-ai/wan/v2.2-5b/text-to-image": {
+      input: WanV225bTextToImageInput;
+      output: WanV225bTextToImageOutput;
+    };
+    "fal-ai/wan/v2.2-5b/text-to-video": {
+      input: WanV225bTextToVideoInput;
+      output: WanV225bTextToVideoOutput;
+    };
+    "fal-ai/wan/v2.2-5b/text-to-video/distill": {
+      input: WanV225bTextToVideoDistillInput;
+      output: WanV225bTextToVideoDistillOutput;
+    };
+    "fal-ai/wan/v2.2-5b/text-to-video/fast-wan": {
+      input: WanV225bTextToVideoFastWanInput;
+      output: WanV225bTextToVideoFastWanOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/image-to-image": {
+      input: WanV22A14bImageToImageInput;
+      output: WanV22A14bImageToImageOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/image-to-video/lora": {
+      input: WanV22A14bImageToVideoLoraInput;
+      output: WanV22A14bImageToVideoLoraOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/image-to-video/turbo": {
+      input: WanV22A14bImageToVideoTurboInput;
+      output: WanV22A14bImageToVideoTurboOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/text-to-image": {
+      input: WanV22A14bTextToImageInput;
+      output: WanV22A14bTextToImageOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/text-to-image/lora": {
+      input: WanV22A14bTextToImageLoraInput;
+      output: WanV22A14bTextToImageLoraOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/text-to-video": {
+      input: WanV22A14bTextToVideoInput;
+      output: WanV22A14bTextToVideoOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/text-to-video/lora": {
+      input: WanV22A14bTextToVideoLoraInput;
+      output: WanV22A14bTextToVideoLoraOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/text-to-video/turbo": {
+      input: WanV22A14bTextToVideoTurboInput;
+      output: WanV22A14bTextToVideoTurboOutput;
+    };
+    "fal-ai/wan/v2.2-a14b/video-to-video": {
+      input: WanV22A14bVideoToVideoInput;
+      output: WanV22A14bVideoToVideoOutput;
+    };
+    "fal-ai/wan/v2.7/edit": {
+      input: WanV27EditInput;
+      output: WanV27EditOutput;
+    };
+    "fal-ai/wan/v2.7/edit-video": {
+      input: WanV27EditVideoInput;
+      output: WanV27EditVideoOutput;
+    };
+    "fal-ai/wan/v2.7/image-to-video": {
+      input: WanV27ImageToVideoInput;
+      output: WanV27ImageToVideoOutput;
+    };
+    "fal-ai/wan/v2.7/pro/edit": {
+      input: WanV27ProEditInput;
+      output: WanV27ProEditOutput;
+    };
+    "fal-ai/wan/v2.7/pro/text-to-image": {
+      input: WanV27ProTextToImageInput;
+      output: WanV27ProTextToImageOutput;
+    };
+    "fal-ai/wan/v2.7/reference-to-video": {
+      input: WanV27ReferenceToVideoInput;
+      output: WanV27ReferenceToVideoOutput;
+    };
+    "fal-ai/wan/v2.7/text-to-image": {
+      input: WanV27TextToImageInput;
+      output: WanV27TextToImageOutput;
+    };
+    "fal-ai/wan/v2.7/text-to-video": {
+      input: WanV27TextToVideoInput;
+      output: WanV27TextToVideoOutput;
+    };
+    "fal-ai/wizper": {
+      input: wizperInput;
+      output: wizperOutput;
+    };
+    "fal-ai/workflow-utilities/audio-compressor": {
+      input: WorkflowUtilitiesAudioCompressorInput;
+      output: WorkflowUtilitiesAudioCompressorOutput;
+    };
+    "fal-ai/workflow-utilities/auto-subtitle": {
+      input: WorkflowUtilitiesAutoSubtitleInput;
+      output: WorkflowUtilitiesAutoSubtitleOutput;
+    };
+    "fal-ai/workflow-utilities/blend-video": {
+      input: WorkflowUtilitiesBlendVideoInput;
+      output: WorkflowUtilitiesBlendVideoOutput;
+    };
+    "fal-ai/workflow-utilities/extract-nth-frame": {
+      input: WorkflowUtilitiesExtractNthFrameInput;
+      output: WorkflowUtilitiesExtractNthFrameOutput;
+    };
+    "fal-ai/workflow-utilities/impulse-response": {
+      input: WorkflowUtilitiesImpulseResponseInput;
+      output: WorkflowUtilitiesImpulseResponseOutput;
+    };
+    "fal-ai/workflow-utilities/interleave-video": {
+      input: WorkflowUtilitiesInterleaveVideoInput;
+      output: WorkflowUtilitiesInterleaveVideoOutput;
+    };
+    "fal-ai/workflow-utilities/pick-image-by-index": {
+      input: WorkflowUtilitiesPickImageByIndexInput;
+      output: WorkflowUtilitiesPickImageByIndexOutput;
+    };
+    "fal-ai/workflow-utilities/reverse-video": {
+      input: WorkflowUtilitiesReverseVideoInput;
+      output: WorkflowUtilitiesReverseVideoOutput;
+    };
+    "fal-ai/workflow-utilities/scale-video": {
+      input: WorkflowUtilitiesScaleVideoInput;
+      output: WorkflowUtilitiesScaleVideoOutput;
+    };
+    "fal-ai/workflow-utilities/trim-video": {
+      input: WorkflowUtilitiesTrimVideoInput;
+      output: WorkflowUtilitiesTrimVideoOutput;
+    };
+    "fal-ai/x-ailab/nsfw": {
+      input: XAilabNsfwInput;
+      output: XAilabNsfwOutput;
+    };
+    "fal-ai/z-image-trainer": {
+      input: ZImageTrainerInput;
+      output: ZImageTrainerOutput;
+    };
+    "fal-ai/z-image-turbo-trainer-v2": {
+      input: ZImageTurboTrainerV2Input;
+      output: ZImageTurboTrainerV2Output;
+    };
+    "fal-ai/z-image/base": {
+      input: ZImageBaseInput;
+      output: ZImageBaseOutput;
+    };
+    "fal-ai/z-image/base/lora": {
+      input: ZImageBaseLoraInput;
+      output: ZImageBaseLoraOutput;
+    };
+    "fal-ai/z-image/turbo": {
+      input: ZImageTurboInput;
+      output: ZImageTurboOutput;
+    };
+    "fal-ai/z-image/turbo/controlnet": {
+      input: ZImageTurboControlnetInput;
+      output: ZImageTurboControlnetOutput;
+    };
+    "fal-ai/z-image/turbo/controlnet/lora": {
+      input: ZImageTurboControlnetLoraInput;
+      output: ZImageTurboControlnetLoraOutput;
+    };
+    "fal-ai/z-image/turbo/image-to-image": {
+      input: ZImageTurboImageToImageInput;
+      output: ZImageTurboImageToImageOutput;
+    };
+    "fal-ai/z-image/turbo/image-to-image/lora": {
+      input: ZImageTurboImageToImageLoraInput;
+      output: ZImageTurboImageToImageLoraOutput;
+    };
+    "fal-ai/z-image/turbo/inpaint": {
+      input: ZImageTurboInpaintInput;
+      output: ZImageTurboInpaintOutput;
+    };
+    "fal-ai/z-image/turbo/inpaint/lora": {
+      input: ZImageTurboInpaintLoraInput;
+      output: ZImageTurboInpaintLoraOutput;
+    };
+    "fal-ai/z-image/turbo/lora": {
+      input: ZImageTurboLoraInput;
+      output: ZImageTurboLoraOutput;
+    };
+    "fal-ai/z-image/turbo/tiling": {
+      input: ZImageTurboTilingInput;
+      output: ZImageTurboTilingOutput;
+    };
+    "fal-ai/z-image/turbo/tiling/lora": {
+      input: ZImageTurboTilingLoraInput;
+      output: ZImageTurboTilingLoraOutput;
+    };
+    "fal-ai/zonos": {
+      input: zonosInput;
+      output: zonosOutput;
+    };
+    "fal-ai/zonos2": {
+      input: zonos2Input;
+      output: zonos2Output;
+    };
+    "google/gemini-omni-flash": {
+      input: GeminiOmniFlashInput;
+      output: GeminiOmniFlashOutput;
+    };
+    "google/gemini-omni-flash/edit": {
+      input: GeminiOmniFlashEditInput;
+      output: GeminiOmniFlashEditOutput;
+    };
+    "google/gemini-omni-flash/image-to-video": {
+      input: GeminiOmniFlashImageToVideoInput;
+      output: GeminiOmniFlashImageToVideoOutput;
+    };
+    "google/gemini-omni-flash/reference-to-video": {
+      input: GeminiOmniFlashReferenceToVideoInput;
+      output: GeminiOmniFlashReferenceToVideoOutput;
+    };
+    "google/nano-banana-2-lite": {
+      input: NanoBanana2LiteInput;
+      output: NanoBanana2LiteOutput;
+    };
+    "google/nano-banana-lite": {
+      input: NanoBananaLiteInput;
+      output: NanoBananaLiteOutput;
+    };
+    "google/nano-banana-lite/edit": {
+      input: NanoBananaLiteEditInput;
+      output: NanoBananaLiteEditOutput;
+    };
+    "ideogram/v4": {
+      input: v4Input;
+      output: v4Output;
+    };
+    "ideogram/v4/fast": {
+      input: V4FastInput;
+      output: V4FastOutput;
+    };
+    "ideogram/v4/image-to-image": {
+      input: V4ImageToImageInput;
+      output: V4ImageToImageOutput;
+    };
+    "ideogram/v4/image-to-image/lora": {
+      input: V4ImageToImageLoraInput;
+      output: V4ImageToImageLoraOutput;
+    };
+    "ideogram/v4/instant": {
+      input: V4InstantInput;
+      output: V4InstantOutput;
+    };
+    "ideogram/v4/lora": {
+      input: V4LoraInput;
+      output: V4LoraOutput;
+    };
+    "ideogram/v4/tiling": {
+      input: V4TilingInput;
+      output: V4TilingOutput;
+    };
+    "ideogram/v4/tiling/lora": {
+      input: V4TilingLoraInput;
+      output: V4TilingLoraOutput;
+    };
+    "ideogram/v4/trainer": {
+      input: V4TrainerInput;
+      output: V4TrainerOutput;
+    };
+    "imagineart/imagineart-1.5-preview/text-to-image": {
+      input: Imagineart15PreviewTextToImageInput;
+      output: Imagineart15PreviewTextToImageOutput;
+    };
+    "imagineart/imagineart-1.5-pro-preview/text-to-image": {
+      input: Imagineart15ProPreviewTextToImageInput;
+      output: Imagineart15ProPreviewTextToImageOutput;
+    };
+    "imagineart/imagineart-2.0-edit-preview/image-to-image": {
+      input: Imagineart20EditPreviewImageToImageInput;
+      output: Imagineart20EditPreviewImageToImageOutput;
+    };
+    "imagineart/imagineart-2.0-preview/text-to-image": {
+      input: Imagineart20PreviewTextToImageInput;
+      output: Imagineart20PreviewTextToImageOutput;
+    };
+    "krea/v2/large/text-to-image": {
+      input: V2LargeTextToImageInput;
+      output: V2LargeTextToImageOutput;
+    };
+    "krea/v2/medium/text-to-image": {
+      input: V2MediumTextToImageInput;
+      output: V2MediumTextToImageOutput;
+    };
+    "krea/v2/medium/turbo/text-to-image": {
+      input: V2MediumTurboTextToImageInput;
+      output: V2MediumTurboTextToImageOutput;
+    };
+    "luma/agent/ray/v3.2/image-to-video": {
+      input: AgentRayV32ImageToVideoInput;
+      output: AgentRayV32ImageToVideoOutput;
+    };
+    "luma/agent/ray/v3.2/reframe": {
+      input: AgentRayV32ReframeInput;
+      output: AgentRayV32ReframeOutput;
+    };
+    "luma/agent/ray/v3.2/text-to-video": {
+      input: AgentRayV32TextToVideoInput;
+      output: AgentRayV32TextToVideoOutput;
+    };
+    "luma/agent/ray/v3.2/video-to-video": {
+      input: AgentRayV32VideoToVideoInput;
+      output: AgentRayV32VideoToVideoOutput;
+    };
+    "luma/agent/uni-1/v1/edit": {
+      input: AgentUni1V1EditInput;
+      output: AgentUni1V1EditOutput;
+    };
+    "luma/agent/uni-1/v1/max": {
+      input: AgentUni1V1MaxInput;
+      output: AgentUni1V1MaxOutput;
+    };
+    "luma/agent/uni-1/v1/max/edit": {
+      input: AgentUni1V1MaxEditInput;
+      output: AgentUni1V1MaxEditOutput;
+    };
+    "luma/agent/uni-1/v1/text-to-image": {
+      input: AgentUni1V1TextToImageInput;
+      output: AgentUni1V1TextToImageOutput;
+    };
+    "microsoft/mai-image-2.5": {
+      input: MaiImage25Input;
+      output: MaiImage25Output;
+    };
+    "microsoft/mai-image-2.5-pro": {
+      input: MaiImage25ProInput;
+      output: MaiImage25ProOutput;
+    };
+    "microsoft/mai-image-2.5-pro/edit": {
+      input: MaiImage25ProEditInput;
+      output: MaiImage25ProEditOutput;
+    };
+    "microsoft/mai-image-2.5/edit": {
+      input: MaiImage25EditInput;
+      output: MaiImage25EditOutput;
+    };
+    "minimax/h3/image-to-video": {
+      input: H3ImageToVideoInput;
+      output: H3ImageToVideoOutput;
+    };
+    "minimax/h3/reference-to-video": {
+      input: H3ReferenceToVideoInput;
+      output: H3ReferenceToVideoOutput;
+    };
+    "minimax/h3/text-to-video": {
+      input: H3TextToVideoInput;
+      output: H3TextToVideoOutput;
+    };
+    "mirelo-ai/sfx-v1.5/video-to-audio": {
+      input: SfxV15VideoToAudioInput;
+      output: SfxV15VideoToAudioOutput;
+    };
+    "mirelo-ai/sfx-v1.5/video-to-video": {
+      input: SfxV15VideoToVideoInput;
+      output: SfxV15VideoToVideoOutput;
+    };
+    "mirelo-ai/sfx-v1/video-to-audio": {
+      input: SfxV1VideoToAudioInput;
+      output: SfxV1VideoToAudioOutput;
+    };
+    "mirelo-ai/sfx-v1/video-to-video": {
+      input: SfxV1VideoToVideoInput;
+      output: SfxV1VideoToVideoOutput;
+    };
+    "mirelo-ai/sfx1.6/extend-audio": {
+      input: Sfx16ExtendAudioInput;
+      output: Sfx16ExtendAudioOutput;
+    };
+    "mirelo-ai/sfx1.6/inpaint-audio": {
+      input: Sfx16InpaintAudioInput;
+      output: Sfx16InpaintAudioOutput;
+    };
+    "mirelo-ai/sfx1.6/text-to-audio": {
+      input: Sfx16TextToAudioInput;
+      output: Sfx16TextToAudioOutput;
+    };
+    "mirelo-ai/sfx1.6/video-to-video": {
+      input: Sfx16VideoToVideoInput;
+      output: Sfx16VideoToVideoOutput;
+    };
+    "moonvalley/marey/i2v": {
+      input: MareyI2vInput;
+      output: MareyI2vOutput;
+    };
+    "moonvalley/marey/motion-transfer": {
+      input: MareyMotionTransferInput;
+      output: MareyMotionTransferOutput;
+    };
+    "moonvalley/marey/pose-transfer": {
+      input: MareyPoseTransferInput;
+      output: MareyPoseTransferOutput;
+    };
+    "moonvalley/marey/t2v": {
+      input: MareyT2vInput;
+      output: MareyT2vOutput;
+    };
+    "nvidia/cosmos-3-super/image-to-video": {
+      input: Cosmos3SuperImageToVideoInput;
+      output: Cosmos3SuperImageToVideoOutput;
+    };
+    "nvidia/cosmos-3-super/text-to-image": {
+      input: Cosmos3SuperTextToImageInput;
+      output: Cosmos3SuperTextToImageOutput;
+    };
+    "nvidia/nemotron-3-nano-omni": {
+      input: Nemotron3NanoOmniInput;
+      output: Nemotron3NanoOmniOutput;
+    };
+    "nvidia/nemotron-3-nano-omni/audio": {
+      input: Nemotron3NanoOmniAudioInput;
+      output: Nemotron3NanoOmniAudioOutput;
+    };
+    "nvidia/nemotron-3-nano-omni/video": {
+      input: Nemotron3NanoOmniVideoInput;
+      output: Nemotron3NanoOmniVideoOutput;
+    };
+    "nvidia/nemotron-3-nano-omni/vision": {
+      input: Nemotron3NanoOmniVisionInput;
+      output: Nemotron3NanoOmniVisionOutput;
+    };
+    "nvidia/nemotron-asr-multilingual/asr": {
+      input: NemotronAsrMultilingualAsrInput;
+      output: NemotronAsrMultilingualAsrOutput;
+    };
+    "openai/gpt-image-2": {
+      input: GptImage2Input;
+      output: GptImage2Output;
+    };
+    "openai/gpt-image-2/edit": {
+      input: GptImage2EditInput;
+      output: GptImage2EditOutput;
+    };
+    "openrouter/router": {
+      input: routerInput;
+      output: routerOutput;
+    };
+    "openrouter/router/audio": {
+      input: RouterAudioInput;
+      output: RouterAudioOutput;
+    };
+    "openrouter/router/enterprise": {
+      input: RouterEnterpriseInput;
+      output: RouterEnterpriseOutput;
+    };
+    "openrouter/router/openai/v1/chat/completions": {
+      input: RouterOpenaiV1ChatCompletionsInput;
+      output: RouterOpenaiV1ChatCompletionsOutput;
+    };
+    "openrouter/router/openai/v1/embeddings": {
+      input: RouterOpenaiV1EmbeddingsInput;
+      output: RouterOpenaiV1EmbeddingsOutput;
+    };
+    "openrouter/router/openai/v1/responses": {
+      input: RouterOpenaiV1ResponsesInput;
+      output: RouterOpenaiV1ResponsesOutput;
+    };
+    "openrouter/router/video": {
+      input: RouterVideoInput;
+      output: RouterVideoOutput;
+    };
+    "openrouter/router/video/enterprise": {
+      input: RouterVideoEnterpriseInput;
+      output: RouterVideoEnterpriseOutput;
+    };
+    "openrouter/router/vision": {
+      input: RouterVisionInput;
+      output: RouterVisionOutput;
+    };
+    "perceptron/isaac-01": {
+      input: Isaac01Input;
+      output: Isaac01Output;
+    };
+    "pixelcut/background-removal": {
+      input: BackgroundRemovalInput;
+      output: BackgroundRemovalOutput;
+    };
+    "pixelcut/product-photo": {
+      input: ProductPhotoInput;
+      output: ProductPhotoOutput;
+    };
+    "pixelcut/video-background-removal": {
+      input: VideoBackgroundRemovalInput;
+      output: VideoBackgroundRemovalOutput;
+    };
+    "resemble-ai/chatterboxhd/speech-to-speech": {
+      input: ChatterboxhdSpeechToSpeechInput;
+      output: ChatterboxhdSpeechToSpeechOutput;
+    };
+    "resemble-ai/chatterboxhd/text-to-speech": {
+      input: ChatterboxhdTextToSpeechInput;
+      output: ChatterboxhdTextToSpeechOutput;
+    };
+    "reve/2.1/edit": {
+      input: _21EditInput;
+      output: _21EditOutput;
+    };
+    "reve/2.1/remix": {
+      input: _21RemixInput;
+      output: _21RemixOutput;
+    };
+    "reve/2.1/text-to-image": {
+      input: _21TextToImageInput;
+      output: _21TextToImageOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux-lora": {
+      input: JuggernautFluxLoraInput;
+      output: JuggernautFluxLoraOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux-lora/inpainting": {
+      input: JuggernautFluxLoraInpaintingInput;
+      output: JuggernautFluxLoraInpaintingOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux/base": {
+      input: JuggernautFluxBaseInput;
+      output: JuggernautFluxBaseOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux/base/image-to-image": {
+      input: JuggernautFluxBaseImageToImageInput;
+      output: JuggernautFluxBaseImageToImageOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux/lightning": {
+      input: JuggernautFluxLightningInput;
+      output: JuggernautFluxLightningOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux/pro": {
+      input: JuggernautFluxProInput;
+      output: JuggernautFluxProOutput;
+    };
+    "rundiffusion-fal/juggernaut-flux/pro/image-to-image": {
+      input: JuggernautFluxProImageToImageInput;
+      output: JuggernautFluxProImageToImageOutput;
+    };
+    "rundiffusion-fal/rundiffusion-photo-flux": {
+      input: RundiffusionPhotoFluxInput;
+      output: RundiffusionPhotoFluxOutput;
+    };
+    "smoretalk-ai/rembg-enhance": {
+      input: RembgEnhanceInput;
+      output: RembgEnhanceOutput;
+    };
+    "sonilo/v1.1/text-to-music": {
+      input: V11TextToMusicInput;
+      output: V11TextToMusicOutput;
+    };
+    "sonilo/v1.1/text-to-sound-effects": {
+      input: V11TextToSoundEffectsInput;
+      output: V11TextToSoundEffectsOutput;
+    };
+    "sonilo/v1.1/video-to-music": {
+      input: V11VideoToMusicInput;
+      output: V11VideoToMusicOutput;
+    };
+    "sonilo/v1.1/video-to-sound-effects": {
+      input: V11VideoToSoundEffectsInput;
+      output: V11VideoToSoundEffectsOutput;
+    };
+    "sonilo/v1.1/video-to-video-music": {
+      input: V11VideoToVideoMusicInput;
+      output: V11VideoToVideoMusicOutput;
+    };
+    "sonilo/v1.1/video-to-video-sound-effects": {
+      input: V11VideoToVideoSoundEffectsInput;
+      output: V11VideoToVideoSoundEffectsOutput;
+    };
+    "tripo3d/h3.1/image-to-3d": {
+      input: H31ImageTo3dInput;
+      output: H31ImageTo3dOutput;
+    };
+    "tripo3d/h3.1/multiview-to-3d": {
+      input: H31MultiviewTo3dInput;
+      output: H31MultiviewTo3dOutput;
+    };
+    "tripo3d/h3.1/text-to-3d": {
+      input: H31TextTo3dInput;
+      output: H31TextTo3dOutput;
+    };
+    "tripo3d/p1/image-to-3d": {
+      input: P1ImageTo3dInput;
+      output: P1ImageTo3dOutput;
+    };
+    "tripo3d/p1/text-to-3d": {
+      input: P1TextTo3dInput;
+      output: P1TextTo3dOutput;
+    };
+    "tripo3d/tripo/v2.5/image-to-3d": {
+      input: TripoV25ImageTo3dInput;
+      output: TripoV25ImageTo3dOutput;
+    };
+    "tripo3d/tripo/v2.5/multiview-to-3d": {
+      input: TripoV25MultiviewTo3dInput;
+      output: TripoV25MultiviewTo3dOutput;
+    };
+    "tripo3d/triposplat": {
+      input: triposplatInput;
+      output: triposplatOutput;
+    };
+    "veed/avatars/audio-to-video": {
+      input: AvatarsAudioToVideoInput;
+      output: AvatarsAudioToVideoOutput;
+    };
+    "veed/avatars/text-to-video": {
+      input: AvatarsTextToVideoInput;
+      output: AvatarsTextToVideoOutput;
+    };
+    "veed/fabric-1.0": {
+      input: Fabric10Input;
+      output: Fabric10Output;
+    };
+    "veed/fabric-1.0/fast": {
+      input: Fabric10FastInput;
+      output: Fabric10FastOutput;
+    };
+    "veed/fabric-1.0/text": {
+      input: Fabric10TextInput;
+      output: Fabric10TextOutput;
+    };
+    "veed/lipsync": {
+      input: lipsyncInput;
+      output: lipsyncOutput;
+    };
+    "veed/lipsync/v2": {
+      input: LipsyncV2Input;
+      output: LipsyncV2Output;
+    };
+    "veed/subtitles": {
+      input: subtitlesInput;
+      output: subtitlesOutput;
+    };
+    "veed/video-background-removal": {
+      input: VideoBackgroundRemovalInput;
+      output: VideoBackgroundRemovalOutput;
+    };
+    "veed/video-background-removal/fast": {
+      input: VideoBackgroundRemovalFastInput;
+      output: VideoBackgroundRemovalFastOutput;
+    };
+    "veed/video-background-removal/green-screen": {
+      input: VideoBackgroundRemovalGreenScreenInput;
+      output: VideoBackgroundRemovalGreenScreenOutput;
+    };
+    "wan/v2.6/image-to-image": {
+      input: V26ImageToImageInput;
+      output: V26ImageToImageOutput;
+    };
+    "wan/v2.6/image-to-video": {
+      input: V26ImageToVideoInput;
+      output: V26ImageToVideoOutput;
+    };
+    "wan/v2.6/image-to-video/flash": {
+      input: V26ImageToVideoFlashInput;
+      output: V26ImageToVideoFlashOutput;
+    };
+    "wan/v2.6/reference-to-video": {
+      input: V26ReferenceToVideoInput;
+      output: V26ReferenceToVideoOutput;
+    };
+    "wan/v2.6/reference-to-video/flash": {
+      input: V26ReferenceToVideoFlashInput;
+      output: V26ReferenceToVideoFlashOutput;
+    };
+    "wan/v2.6/text-to-image": {
+      input: V26TextToImageInput;
+      output: V26TextToImageOutput;
+    };
+    "xai/grok-imagine-image": {
+      input: GrokImagineImageInput;
+      output: GrokImagineImageOutput;
+    };
+    "xai/grok-imagine-image/edit": {
+      input: GrokImagineImageEditInput;
+      output: GrokImagineImageEditOutput;
+    };
+    "xai/grok-imagine-image/quality/edit": {
+      input: GrokImagineImageQualityEditInput;
+      output: GrokImagineImageQualityEditOutput;
+    };
+    "xai/grok-imagine-image/quality/text-to-image": {
+      input: GrokImagineImageQualityTextToImageInput;
+      output: GrokImagineImageQualityTextToImageOutput;
+    };
+    "xai/grok-imagine-video/edit-video": {
+      input: GrokImagineVideoEditVideoInput;
+      output: GrokImagineVideoEditVideoOutput;
+    };
+    "xai/grok-imagine-video/extend-video": {
+      input: GrokImagineVideoExtendVideoInput;
+      output: GrokImagineVideoExtendVideoOutput;
+    };
+    "xai/grok-imagine-video/image-to-video": {
+      input: GrokImagineVideoImageToVideoInput;
+      output: GrokImagineVideoImageToVideoOutput;
+    };
+    "xai/grok-imagine-video/reference-to-video": {
+      input: GrokImagineVideoReferenceToVideoInput;
+      output: GrokImagineVideoReferenceToVideoOutput;
+    };
+    "xai/grok-imagine-video/text-to-video": {
+      input: GrokImagineVideoTextToVideoInput;
+      output: GrokImagineVideoTextToVideoOutput;
+    };
+    "xai/grok-imagine-video/v1.5/image-to-video": {
+      input: GrokImagineVideoV15ImageToVideoInput;
+      output: GrokImagineVideoV15ImageToVideoOutput;
+    };
+    "xai/tts/v1": {
+      input: TtsV1Input;
+      output: TtsV1Output;
+    };
+  }
+}

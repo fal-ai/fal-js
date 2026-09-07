@@ -46,6 +46,28 @@ const result = await fal.subscribe("my-function-id", {
 });
 ```
 
+## Endpoint types
+
+The client ships without endpoint types, which keeps it small. Install [`@fal-ai/types`](https://www.npmjs.com/package/@fal-ai/types) and import it once, anywhere in your project, to have endpoint ids autocomplete and inputs and results typed per endpoint:
+
+```sh
+npm install --save @fal-ai/types
+```
+
+```ts
+import "@fal-ai/types";
+
+const result = await fal.subscribe("fal-ai/flux/dev", {
+  input: { prompt: "a cat wearing a tiny hat" },
+});
+
+result.data.images[0].url; // typed
+```
+
+Without it, everything still works — endpoint ids accept any string, inputs are `Record<string, any>` and results are `any`.
+
+> **Upgrading:** the endpoint types used to be bundled in this package. They now live in `@fal-ai/types`, so install it to keep them. Existing imports from `@fal-ai/client/endpoints` keep working unchanged — that subpath now re-exports `@fal-ai/types` — though new code should import from `@fal-ai/types` directly.
+
 ## More features
 
 The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.

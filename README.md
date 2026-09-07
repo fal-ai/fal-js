@@ -1,6 +1,7 @@
 # The fal.ai JS client
 
 ![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=client&style=flat-square)
+![@fal-ai/types npm package](https://img.shields.io/npm/v/@fal-ai/types?color=%237527D7&label=types&style=flat-square)
 ![@fal-ai/server-proxy npm package](https://img.shields.io/npm/v/@fal-ai/server-proxy?color=%237527D7&label=proxy&style=flat-square)
 ![Build](https://img.shields.io/github/actions/workflow/status/fal-ai/fal-js/build.yml?style=flat-square)
 ![License](https://img.shields.io/github/license/fal-ai/fal-js?style=flat-square)
@@ -43,6 +44,38 @@ This client library is crafted as a lightweight layer atop platform standards li
 The result's type is contingent upon your Python function's output. Types in Python are mapped to their corresponding types in JavaScript.
 
 See the available [model APIs](https://fal.ai/models) for more details.
+
+### Endpoint types
+
+The client ships without endpoint types, which keeps it small. Install `@fal-ai/types` to have endpoint ids autocomplete and inputs and results typed per endpoint:
+
+```sh
+npm install --save @fal-ai/types
+```
+
+Import it once, anywhere in your project:
+
+```ts
+import "@fal-ai/types";
+```
+
+From then on, `fal.run`, `fal.subscribe` and `fal.stream` know each endpoint's schema:
+
+```ts
+const result = await fal.subscribe("fal-ai/flux/dev", {
+  input: { prompt: "a cat wearing a tiny hat" },
+});
+
+result.data.images[0].url; // typed
+```
+
+Without it, everything still works — endpoint ids accept any string, inputs are `Record<string, any>` and results are `any`.
+
+The individual types are exported too, for when you want to reference them directly:
+
+```ts
+import type { FluxDevInput, FluxDevOutput } from "@fal-ai/types";
+```
 
 ### The fal client proxy
 

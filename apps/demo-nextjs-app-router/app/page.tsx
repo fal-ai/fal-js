@@ -1,7 +1,7 @@
 "use client";
 
 import { createFalClient } from "@fal-ai/client";
-import { IllusionDiffusionOutput } from "@fal-ai/client/endpoints";
+import { IllusionDiffusionOutput } from "@fal-ai/types";
 import { useMemo, useState } from "react";
 
 const fal = createFalClient({

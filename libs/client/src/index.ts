@@ -36,6 +36,37 @@ export type {
 } from "./types/common";
 export { parseEndpointId } from "./utils";
 
+/**
+ * The registry of known fal endpoints, mapping an endpoint id to its input and
+ * output types.
+ *
+ * This interface is intentionally empty. The client ships no endpoint types of
+ * its own, which keeps it small. Install
+ * [`@fal-ai/types`](https://www.npmjs.com/package/@fal-ai/types) and import it
+ * once anywhere in your project to populate it:
+ *
+ * ```ts
+ * import "@fal-ai/types";
+ * ```
+ *
+ * With the registry populated, {@link FalClient.run}, {@link FalClient.subscribe}
+ * and {@link FalClient.stream} type their input and result per endpoint, and
+ * endpoint ids autocomplete. Without it, endpoint ids accept any string and the
+ * input and output fall back to `Record<string, any>` and `any`.
+ *
+ * Two constraints keep this working, both load-bearing:
+ *
+ * 1. It must stay an `interface`. Declaration merging, which is how
+ *    `@fal-ai/types` extends it, does not apply to type aliases.
+ * 2. It must be declared here in the entry point, not re-exported from another
+ *    module. An augmentation of `"@fal-ai/client"` can only merge with a
+ *    declaration that lives in the module the specifier resolves to.
+ *
+ * @see https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface EndpointTypeMap {}
+
 type SingletonFalClient = {
   config(config: Config): void;
 } & FalClient;
