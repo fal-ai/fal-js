@@ -84,6 +84,19 @@ describe("headers utilities", () => {
       );
     });
 
+    it("should trim keys and values, matching what the server stores", () => {
+      expect(validateTagsHeader({ "  Team  ": "  design  " })).toBe(
+        "team=design",
+      );
+    });
+
+    it("should apply length limits to the trimmed value", () => {
+      const padded = ` ${"d".repeat(MAX_TAG_VALUE_LENGTH)} `;
+      expect(validateTagsHeader({ team: padded })).toBe(
+        `team=${"d".repeat(MAX_TAG_VALUE_LENGTH)}`,
+      );
+    });
+
     it("should throw for keys outside the allowed charset", () => {
       expect(() => validateTagsHeader({ "team name": "design" })).toThrow(
         'Tag key "team name" must match',
@@ -100,7 +113,7 @@ describe("headers utilities", () => {
       expect(() => validateTagsHeader({ team: "design,growth" })).toThrow(
         'Tag value for "team" must be printable ASCII without commas',
       );
-      expect(() => validateTagsHeader({ team: "design\n" })).toThrow(
+      expect(() => validateTagsHeader({ team: "des\nign" })).toThrow(
         'Tag value for "team" must be printable ASCII without commas',
       );
     });

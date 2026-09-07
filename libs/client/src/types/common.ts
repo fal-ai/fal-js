@@ -53,6 +53,9 @@ export type RunOptions<Input> = {
    * e.g. `{ team: "design", env: "prod" }`. Keys are lowercased, and both keys
    * and values are limited (at most 10 pairs, 1 KB in total).
    *
+   * Values cannot contain commas, which separate pairs. Surrounding whitespace
+   * is stripped from keys and values before they are recorded.
+   *
    * This will be sent as a single packed `x-fal-tags` header. Streaming and
    * realtime requests cannot carry headers, so they cannot be tagged.
    */

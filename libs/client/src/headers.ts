@@ -105,9 +105,10 @@ const RESERVED_TAG_KEY_PREFIX = "fal.";
 
 /**
  * Validates the tags and serializes them into the packed `X-Fal-Tags` header
- * value, i.e. a comma-separated list of `key=value` pairs. Keys are lowercased
- * to match the canonical form the server stores; duplicates after lowercasing
- * follow the server's last-wins rule.
+ * value, i.e. a comma-separated list of `key=value` pairs.
+ *
+ * Keys and values are trimmed and keys lowercased, matching what the server
+ * stores; limits apply to that normalized form. Duplicate keys are last-wins.
  *
  * Throws an error if the tags don't match the limits enforced by the server.
  *
@@ -126,8 +127,9 @@ export function validateTagsHeader(tags: Record<string, string>): string {
   const pairs = new Map<string, string>();
   // Keys and values are ASCII-only once validated, so length is the byte size.
   let size = 0;
-  for (const [rawKey, value] of entries) {
-    const key = rawKey.toLowerCase();
+  for (const [rawKey, rawValue] of entries) {
+    const key = rawKey.trim().toLowerCase();
+    const value = typeof rawValue === "string" ? rawValue.trim() : rawValue;
     if (!TAG_KEY_PATTERN.test(key)) {
       throw new Error(
         `Tag key "${rawKey}" must match ${TAG_KEY_PATTERN} once lowercased`,
