@@ -1,6 +1,7 @@
 import { createParser } from "eventsource-parser";
 import { type TokenProvider, getTemporaryAuthToken } from "./auth";
 import { RequiredConfig } from "./config";
+import { buildTagsHeaders } from "./headers";
 import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
@@ -76,6 +77,13 @@ export type StreamOptions<Input> = {
    * instead of the default internal token fetching mechanism.
    */
   readonly tokenProvider?: TokenProvider;
+
+  /**
+   * Tags to attribute the request's usage and cost to your own dimensions.
+   *
+   * @see RunOptions.tags
+   */
+  readonly tags?: Record<string, string>;
 };
 
 const EVENT_STREAM_TIMEOUT = 15 * 1000;
@@ -190,6 +198,7 @@ export class FalStream<Input, Output> {
           headers: {
             accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
             "content-type": "application/json",
+            ...buildTagsHeaders(options.tags),
           },
           body: input && method !== "get" ? JSON.stringify(input) : undefined,
           signal: this.abortController.signal,
@@ -205,6 +214,7 @@ export class FalStream<Input, Output> {
         options: {
           headers: {
             accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
+            ...buildTagsHeaders(options.tags),
           },
           responseHandler: async (response) => {
             this._requestId = response.headers.get("x-fal-request-id");
