@@ -28,6 +28,18 @@ import {
   type RealtimeSession,
 } from "./extension";
 import { countTurnServers } from "./ice";
+import {
+  applyWmaCodecPreferences,
+  applyWmaOpusPreferences,
+  normalizeWmaReceiveTrack,
+  type WmaReceiveTrack,
+} from "./wma-media";
+export type {
+  WmaOpusReceiveOptions,
+  WmaReceiveTrack,
+  WmaReceiveTrackKind,
+  WmaReceiveTrackOptions,
+} from "./wma-media";
 
 const WMA_URL = "https://wma.fal.run";
 const ICE_DISCOVERY_TIMEOUT_MS = 5_000;
@@ -46,9 +58,6 @@ const DEFAULT_STUN_URL = "stun:stun.l.google.com:19302";
 
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type WmaControlMessage = object;
-
-/** A WebRTC media kind the browser should offer to receive from the model. */
-export type WmaReceiveTrackKind = "audio" | "video";
 
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaOptions {
@@ -80,8 +89,13 @@ export interface WmaOptions {
    * Omit this option to preserve the legacy behavior: local tracks use `direction` (defaulting to
    * `sendrecv`), while a session without local tracks offers one `recvonly` video transceiver.
    * Because this option derives directions per track, it cannot be combined with `direction`.
+   *
+   * Object entries optionally tune receive preferences before negotiation. Strings retain defaults.
+   * Opus preferences describe reception; codec ordering may affect both directions on sendrecv
+   * tracks. Close and reopen to change them. These do not set the model's encoder target or
+   * guarantee a negotiated codec/bitrate.
    */
-  receive?: readonly WmaReceiveTrackKind[];
+  receive?: readonly WmaReceiveTrack[];
   /**
    * Media to send UP, on the same peer connection the output comes back on.
    *
@@ -620,6 +634,7 @@ export function wma(endpointId?: string) {
           "WMA receive tracks cannot be combined with an explicit direction.",
         );
       }
+      const receive = options.receive?.map(normalizeWmaReceiveTrack);
       const iceServers = options.iceServers ?? (await fetchIceServers(context));
       const pc = new RTCPeerConnection({
         iceServers,
@@ -640,22 +655,26 @@ export function wma(endpointId?: string) {
       // A local track is added through a transceiver so the caller's requested direction reaches
       // SDP. Never add a second media transceiver for the same track.
       const localTracks = options.localStream?.getTracks() ?? [];
-      if (options.receive !== undefined) {
+      if (receive !== undefined) {
         const unmatchedLocalTracks = [...localTracks];
-        for (const kind of options.receive) {
+        for (const preferences of receive) {
+          const { kind } = preferences;
           const localIndex = unmatchedLocalTracks.findIndex(
             (track) => track.kind === kind,
           );
-          if (localIndex === -1) {
-            pc.addTransceiver(kind, { direction: "recvonly" });
-            continue;
-          }
-
-          const [track] = unmatchedLocalTracks.splice(localIndex, 1);
-          pc.addTransceiver(track, {
-            direction: "sendrecv",
-            streams: [options.localStream!],
-          });
+          const transceiver =
+            localIndex === -1
+              ? pc.addTransceiver(kind, { direction: "recvonly" })
+              : pc.addTransceiver(
+                  unmatchedLocalTracks.splice(localIndex, 1)[0],
+                  {
+                    direction: "sendrecv",
+                    streams: [options.localStream!],
+                  },
+                );
+          applyWmaCodecPreferences(transceiver, preferences, (message) =>
+            context.diagnostic({ kind: "warning", message }),
+          );
         }
         for (const track of unmatchedLocalTracks) {
           pc.addTransceiver(track, {
@@ -934,6 +953,9 @@ export function wma(endpointId?: string) {
 
       try {
         const offer = await pc.createOffer();
+        if (offer.sdp !== undefined && receive !== undefined) {
+          offer.sdp = applyWmaOpusPreferences(offer.sdp, receive);
+        }
         // Attach listeners BEFORE setLocalDescription starts gathering — fast host/srflx
         // candidates otherwise fire before the waiter exists and are never counted.
         // Non-trickle signalling needs the kernel's sufficient-set / quiet-period / hard-bound
