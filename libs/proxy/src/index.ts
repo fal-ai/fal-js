@@ -40,14 +40,55 @@ export function isAllowedUrl(url: string, patterns?: string[]): boolean {
   return defaultUrlMatcher(url);
 }
 
-/**
- * Extracts the URL without the scheme for validation purposes.
- * @param targetUrl the full URL including scheme.
- * @returns the URL without the scheme (host + path + query).
- */
-function getUrlWithoutScheme(targetUrl: string): string {
-  const url = new URL(targetUrl);
-  return `${url.host}${url.pathname}${url.search}`;
+// Only these WMA bridge routes may use the service-host allowlist bypass. App-scoped routes carry
+// the fal app identity in JSON; the heartbeat acts only on an already-authorized session.
+const SERVICE_APP_SCOPED_PATHS = new Set(["/ice", "/session"]);
+const SERVICE_SESSION_SCOPED_PATHS = new Set(["/session/heartbeat"]);
+
+function normalizeServicePath(url: URL): string | undefined {
+  try {
+    const path = decodeURIComponent(url.pathname).replace(/\/{2,}/g, "/");
+    return path.replace(/\/+$/, "") || "/";
+  } catch {
+    return undefined;
+  }
+}
+
+function countJsonKeys(body: string, key: string): number {
+  let count = 0;
+  for (let index = 0; index < body.length; index++) {
+    if (body[index] !== '"') continue;
+    const start = index;
+    for (index++; index < body.length; index++) {
+      if (body[index] === "\\") {
+        index++;
+        continue;
+      }
+      if (body[index] !== '"') continue;
+
+      let next = index + 1;
+      while (/\s/.test(body[next] ?? "")) next++;
+      if (body[next] === ":") {
+        try {
+          if (JSON.parse(body.slice(start, index + 1)) === key) count++;
+        } catch {
+          // The full parse below rejects malformed JSON. This scan only detects duplicate keys.
+        }
+      }
+      break;
+    }
+  }
+  return count;
+}
+
+function appIdFromRequestBody(body: string | undefined): string | undefined {
+  if (!body || countJsonKeys(body, "app_id") > 1) return undefined;
+  try {
+    const value = JSON.parse(body) as { app_id?: unknown };
+    return typeof value.app_id === "string" ? value.app_id : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -131,27 +172,84 @@ export async function handleRequest<ResponseType>(
     ? (config as ProxyConfig)
     : applyProxyConfig(config);
 
-  const urlToValidate = getUrlWithoutScheme(targetUrl);
-  if (!isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)) {
+  let requestBodyPromise: Promise<string | undefined> | undefined;
+  const readRequestBody = () =>
+    (requestBodyPromise ??= behavior.getRequestBody());
+  const behaviorWithCachedBody: ProxyBehavior<ResponseType> = {
+    id: behavior.id,
+    method: behavior.method,
+    respondWith: (status, data) => behavior.respondWith(status, data),
+    sendResponse: (response) => behavior.sendResponse(response),
+    getHeaders: () => behavior.getHeaders(),
+    getHeader: (name) => behavior.getHeader(name),
+    sendHeader: (name, value) => behavior.sendHeader(name, value),
+    getRequestBody: readRequestBody,
+    resolveApiKey: behavior.resolveApiKey?.bind(behavior),
+  };
+  let authenticationPromise: Promise<boolean> | undefined;
+  const authenticate = () =>
+    (authenticationPromise ??= (async () =>
+      (await resolvedConfig.isAuthenticated?.(behaviorWithCachedBody)) ??
+      false)());
+
+  const target = new URL(targetUrl);
+  const serviceHosts = new Set(
+    (resolvedConfig.serviceHosts ?? ["wma.fal.run"]).map((host) =>
+      host.toLowerCase(),
+    ),
+  );
+  const isServiceHost =
+    target.protocol === "https:" && serviceHosts.has(target.host.toLowerCase());
+
+  const urlToValidate = `${target.host}${target.pathname}${target.search}`;
+  if (
+    !isServiceHost &&
+    !isAllowedUrl(urlToValidate, resolvedConfig.allowedUrlPatterns)
+  ) {
     return behavior.respondWith(400, "Invalid request");
   }
 
-  // Check allowed endpoints for POST requests only, skip for *.fal.ai domains
-  if (behavior.method?.toUpperCase() === "POST" && !isFalAiDomain(targetUrl)) {
+  const method = behavior.method?.toUpperCase();
+  if (isServiceHost) {
+    if (method !== "POST") {
+      return behavior.respondWith(400, "Invalid request");
+    }
+    const path = normalizeServicePath(target);
+    const isAppScoped =
+      path !== undefined && SERVICE_APP_SCOPED_PATHS.has(path);
+    if (
+      !isAppScoped &&
+      (path === undefined || !SERVICE_SESSION_SCOPED_PATHS.has(path))
+    ) {
+      return behavior.respondWith(400, "Invalid request");
+    }
+
+    const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
+    if (isAppScoped && allowedEndpoints.length > 0) {
+      const isAuthenticated = await authenticate();
+      if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
+        return behavior.respondWith(401, "Unauthorized");
+      }
+      const appId = appIdFromRequestBody(await readRequestBody());
+      if (!appId || !isAllowedEndpoint(appId, allowedEndpoints)) {
+        return behavior.respondWith(400, "Invalid request");
+      }
+    }
+  } else if (method === "POST" && !isFalAiDomain(targetUrl)) {
+    // Normal app-serving URLs keep the existing path-based endpoint check.
     const endpoint = getEndpoint(targetUrl);
     if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
       return behavior.respondWith(400, "Invalid request");
     }
   }
 
-  const isAuthenticated =
-    (await resolvedConfig.isAuthenticated?.(behavior)) ?? false;
+  const isAuthenticated = await authenticate();
   if (!isAuthenticated && !resolvedConfig.allowUnauthorizedRequests) {
     return behavior.respondWith(401, "Unauthorized");
   }
 
   const authorization =
-    (await resolvedConfig.resolveFalAuth?.(behavior)) ??
+    (await resolvedConfig.resolveFalAuth?.(behaviorWithCachedBody)) ??
     (await behavior.resolveApiKey?.());
   if (!authorization) {
     return behavior.respondWith(401, "Unauthorized");
@@ -180,7 +278,7 @@ export async function handleRequest<ResponseType>(
     body:
       behavior.method?.toUpperCase() === "GET"
         ? undefined
-        : await behavior.getRequestBody(),
+        : await readRequestBody(),
   });
 
   // copy headers from fal to the proxied response

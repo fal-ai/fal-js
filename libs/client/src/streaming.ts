@@ -5,7 +5,11 @@ import { buildUrl, dispatchRequest } from "./request";
 import { ApiError, defaultResponseHandler } from "./response";
 import { type StorageClient } from "./storage";
 import { EndpointType, InputType, OutputType } from "./types/client";
-import { ensureEndpointIdFormat, resolveEndpointPath } from "./utils";
+import {
+  ensureEndpointIdFormat,
+  isValidUrl,
+  resolveEndpointPath,
+} from "./utils";
 
 export type StreamingConnectionMode = "client" | "server";
 
@@ -167,7 +171,12 @@ export class FalStream<Input, Output> {
       if (connectionMode === "client") {
         // if we are in the browser, we need to get a temporary token
         // to authenticate the request
-        const appId = ensureEndpointIdFormat(endpointId);
+        // A full fal URL is a valid endpoint here, exactly as buildUrl accepts it — the token
+        // scope is then the URL itself, which a custom tokenProvider resolves. Only bare ids go
+        // through the endpoint-format check (which throws on scheme-bearing strings).
+        const appId = isValidUrl(endpointId)
+          ? endpointId
+          : ensureEndpointIdFormat(endpointId);
         const resolvedPath =
           resolveEndpointPath(endpointId, undefined, "/stream") ?? "";
         const fetchToken = tokenProvider

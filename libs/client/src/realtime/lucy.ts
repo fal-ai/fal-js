@@ -1,0 +1,385 @@
+import type { TokenProvider } from "../auth";
+import { throwIfRealtimeAborted } from "./abort";
+import { defineRealtimeExtension, type RealtimeSession } from "./extension";
+
+const DEFAULT_ENDPOINTS = [
+  "decart/lucy-2-5/realtime",
+  "decart/lucy-2/realtime",
+] as const;
+
+const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
+  { urls: "stun:stun.l.google.com:19302" },
+];
+
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
+export type LucyConnectionState = "negotiating" | RTCPeerConnectionState;
+
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
+export interface LucyRealtimeOptions<Input = Record<string, unknown>> {
+  /** First model input. Sending it starts the fal WebSocket session. */
+  input: Input;
+  /** Camera, canvas, or video stream sent to Lucy. */
+  localStream?: MediaStream | null;
+  /** Used only when the endpoint does not supply STUN/TURN configuration. */
+  fallbackIceServers?: RTCIceServer[];
+  /** How long to wait for the endpoint's remote SDP answer. */
+  negotiationTimeoutMs?: number;
+  /** How long to wait after `ready` for a separate ICE-server message. */
+  iceServerGraceMs?: number;
+  tokenProvider?: TokenProvider;
+  tokenExpirationSeconds?: number;
+  /** Injectable for tests and non-window browser runtimes. */
+  peerConnectionFactory?: (
+    configuration: RTCConfiguration,
+  ) => RTCPeerConnection;
+}
+
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
+export interface LucyRealtimeSession<Input = Record<string, unknown>>
+  extends RealtimeSession {
+  readonly remoteStream: MediaStream | null;
+  send(input: Partial<Input> & Record<string, unknown>): void;
+}
+
+type SignalingMessage = {
+  type?: string;
+  sdp?: string;
+  candidate?: RTCIceCandidateInit | null;
+  iceServers?: RTCIceServer[];
+  ice_servers?: RTCIceServer[];
+  iceservers?: RTCIceServer[];
+};
+
+/** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
+export interface LucyRealtimeExtensionConfig {
+  endpoints?: readonly string[];
+}
+
+/**
+ * Lucy's fal-WebSocket + WebRTC signaling protocol.
+ *
+ * The extension owns SDP/ICE ordering, remote-candidate buffering, and
+ * teardown. The application only provides media, observes the remote stream,
+ * and sends model controls.
+ *
+ * @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release.
+ */
+export function lucyRealtime<Input = Record<string, unknown>>(
+  config: LucyRealtimeExtensionConfig = {},
+) {
+  const endpoints = config.endpoints ?? DEFAULT_ENDPOINTS;
+
+  return defineRealtimeExtension<
+    LucyRealtimeOptions<Input>,
+    LucyRealtimeSession<Input>
+  >({
+    id: "fal/lucy-webrtc",
+    defaultEndpoint: endpoints[0],
+    supports: (endpointId) => endpoints.includes(endpointId),
+    async open(context, options) {
+      throwIfRealtimeAborted(context.signal);
+      const createPeerConnection =
+        options.peerConnectionFactory ??
+        ((configuration: RTCConfiguration) =>
+          new RTCPeerConnection(configuration));
+      let peer: RTCPeerConnection | null = null;
+      const transport: {
+        connection?: {
+          send(input: Record<string, unknown>): void;
+          close(): void;
+        };
+      } = {};
+      let remoteStream: MediaStream | null = null;
+      const publishedStreams = new WeakSet<MediaStream>();
+      let hasRemoteDescription = false;
+      let applyingRemoteDescription = false;
+      let initialized = false;
+      let settled = false;
+      let iceGraceTimer: ReturnType<typeof setTimeout> | undefined;
+      const pendingCandidates: RTCIceCandidateInit[] = [];
+
+      // Reported as PROGRESS DETAIL, not as lifecycle. Lucy's own vocabulary — "negotiating", then
+      // the peer connection's states — is meaningful to someone debugging Lucy and meaningless as a
+      // cross-protocol signal, so the kernel owns "opening/live/failed/closed" and this carries the
+      // specifics underneath it.
+      const reportState = (next: LucyConnectionState) => {
+        context.diagnostic({
+          kind: "progress",
+          phase: "connection-state",
+          detail: { state: next },
+        });
+      };
+      reportState("negotiating");
+
+      let resolveNegotiationRaw!: () => void;
+      let rejectNegotiationRaw!: (error: Error) => void;
+      const negotiation = new Promise<void>((resolve, reject) => {
+        resolveNegotiationRaw = resolve;
+        rejectNegotiationRaw = reject;
+      });
+      // Setup below can throw before execution reaches `await negotiation`. Teardown then aborts
+      // the context and rejects this promise, so mark that rejection observed immediately while
+      // preserving the original promise for the later await to propagate the same failure.
+      void negotiation.catch(() => undefined);
+      // `settled` flips the moment the promise SETTLES, not when open()'s awaiting continuation
+      // runs — otherwise an error frame landing in the microtask gap between the answer's resolve
+      // and that continuation would call rejectNegotiation on an already-resolved promise (a
+      // silent no-op) instead of context.fail, and a terminal failure would vanish entirely.
+      const resolveNegotiation = () => {
+        settled = true;
+        resolveNegotiationRaw();
+      };
+      const rejectNegotiation = (error: Error) => {
+        settled = true;
+        rejectNegotiationRaw(error);
+      };
+      const negotiationTimer = setTimeout(() => {
+        rejectNegotiation(
+          new Error(
+            `Lucy signaling did not return an SDP answer within ${
+              options.negotiationTimeoutMs ?? 15_000
+            }ms`,
+          ),
+        );
+      }, options.negotiationTimeoutMs ?? 15_000);
+
+      const fail = (error: unknown) => {
+        const resolved =
+          error instanceof Error ? error : new Error(String(error));
+        if (!settled) {
+          // Before the session exists, the failure travels by rejecting open() — the caller is still
+          // awaiting it, so a diagnostic would be a second copy of something they already get.
+          rejectNegotiation(resolved);
+        } else {
+          // After open() resolves, a throw has no awaiting caller. context.fail publishes the
+          // failure, latches state as "failed", and tears down the session.
+          void context.fail(resolved.message);
+        }
+      };
+      const abortNegotiation = () => {
+        if (settled) return;
+        fail(
+          context.signal.reason ??
+            new DOMException("Lucy signaling aborted", "AbortError"),
+        );
+      };
+      context.signal.addEventListener("abort", abortNegotiation, {
+        once: true,
+      });
+      // A caller can abort synchronously from the "negotiating" diagnostic, before this listener
+      // exists — and an AbortSignal does not replay its event. Without the recheck, negotiation
+      // waits out its timeout and reports that instead of the caller's abort reason.
+      if (context.signal.aborted) {
+        throw (
+          context.signal.reason ??
+          new DOMException("Lucy signaling aborted", "AbortError")
+        );
+      }
+
+      const flushCandidates = async () => {
+        if (!peer || !hasRemoteDescription) return;
+        for (const candidate of pendingCandidates.splice(0)) {
+          await peer.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+      };
+
+      const initializePeer = async (iceServers?: RTCIceServer[]) => {
+        if (initialized || context.signal.aborted) return;
+        initialized = true;
+        clearTimeout(iceGraceTimer);
+        peer = createPeerConnection({
+          iceServers:
+            iceServers ?? options.fallbackIceServers ?? DEFAULT_ICE_SERVERS,
+        });
+        const localStream = options.localStream;
+        const localTracks = localStream?.getTracks() ?? [];
+        // Track COUNT, not stream truthiness: a valid-but-empty MediaStream (created before its
+        // camera track attached) would otherwise add no tracks AND skip the receive-only
+        // transceiver, producing an offer with no video media section at all — and tracks added
+        // to the stream later never reach the peer connection.
+        if (localTracks.length > 0) {
+          for (const track of localTracks) {
+            peer.addTrack(track, localStream as MediaStream);
+          }
+        } else {
+          peer.addTransceiver("video", { direction: "recvonly" });
+        }
+        peer.ontrack = (event) => {
+          const streams =
+            event.streams.length > 0
+              ? event.streams
+              : [new MediaStream([event.track])];
+          remoteStream = streams[0];
+          for (const stream of streams) {
+            if (!publishedStreams.has(stream)) {
+              publishedStreams.add(stream);
+              context.media(stream);
+            }
+          }
+        };
+        peer.onicecandidate = (event) => {
+          if (!event.candidate) return;
+          transport.connection?.send({
+            type: "icecandidate",
+            candidate: {
+              candidate: event.candidate.candidate,
+              sdpMid: event.candidate.sdpMid,
+              sdpMLineIndex: event.candidate.sdpMLineIndex,
+            },
+          });
+        };
+        peer.onconnectionstatechange = () => {
+          if (!peer) return;
+          // A dead peer is a failure; a closed peer is an orderly teardown. Status UIs need that
+          // distinction even though both paths release the same resources.
+          if (peer.connectionState === "failed") {
+            void context.fail(
+              "Lucy peer connection failed — no candidate pair survived",
+              { iceConnectionState: peer.iceConnectionState },
+            );
+          }
+          // context.fail() latches the terminal cause synchronously before this user-visible
+          // progress callback can re-enter close() and misclassify the failure as orderly.
+          reportState(peer.connectionState);
+          if (peer.connectionState === "closed") {
+            void context.close();
+          }
+        };
+
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        if (!offer.sdp) throw new Error("Lucy WebRTC offer has no SDP");
+        transport.connection?.send({ type: "offer", sdp: offer.sdp });
+      };
+
+      const handleMessage = async (message: SignalingMessage) => {
+        switch (message.type?.toLowerCase()) {
+          case "ready": {
+            // Every spelling SignalingMessage declares — the separate "iceservers" handler and
+            // the type both accept the all-lowercase key, and a ready frame carrying TURN under
+            // it must not be treated as carrying none.
+            const supplied =
+              message.iceServers ?? message.ice_servers ?? message.iceservers;
+            if (supplied) {
+              await initializePeer(supplied);
+            } else {
+              iceGraceTimer = setTimeout(
+                () => void initializePeer().catch(fail),
+                options.iceServerGraceMs ?? 1_000,
+              );
+            }
+            break;
+          }
+          case "iceservers": {
+            if (initialized) {
+              // The grace timer already built the peer with fallback servers; a config arriving
+              // now cannot join this negotiation. Surface the drop — on TURN-requiring networks
+              // this is the difference between "failed 20s later, silently" and a lead.
+              context.diagnostic({
+                kind: "warning",
+                message:
+                  "ICE servers arrived after the peer connection was created and were ignored; " +
+                  "consider raising iceServerGraceMs.",
+              });
+              break;
+            }
+            await initializePeer(
+              message.iceServers ?? message.ice_servers ?? message.iceservers,
+            );
+            break;
+          }
+          case "answer": {
+            if (!peer || !message.sdp) return;
+            // Idempotent against at-least-once signaling delivery: a second answer would call
+            // setRemoteDescription in signalingState "stable", throw InvalidStateError, and the
+            // .catch(fail) would tear down a perfectly live session.
+            if (hasRemoteDescription || applyingRemoteDescription) return;
+            applyingRemoteDescription = true;
+            try {
+              await peer.setRemoteDescription({
+                type: "answer",
+                sdp: message.sdp,
+              });
+              hasRemoteDescription = true;
+            } finally {
+              applyingRemoteDescription = false;
+            }
+            await flushCandidates();
+            resolveNegotiation();
+            break;
+          }
+          case "icecandidate": {
+            if (!message.candidate) return;
+            if (!peer || !hasRemoteDescription) {
+              pendingCandidates.push(message.candidate);
+            } else {
+              await peer.addIceCandidate(
+                new RTCIceCandidate(message.candidate),
+              );
+            }
+            break;
+          }
+          case "error":
+            fail(new Error("Lucy signaling endpoint reported an error"));
+            break;
+        }
+      };
+
+      transport.connection = context.connect(context.endpointId, {
+        connectionKey: `lucy-${crypto.randomUUID()}`,
+        throttleInterval: 0,
+        tokenProvider: options.tokenProvider,
+        tokenExpirationSeconds: options.tokenExpirationSeconds,
+        onResult: (message) => {
+          void handleMessage(message as SignalingMessage).catch(fail);
+        },
+        onError: fail,
+        // A NORMAL remote closure of the signaling socket is not an error, but this session's
+        // controls ride on it: before the answer it means negotiation can never complete, and
+        // after it the session cannot be steered — either way "live" would be a lie.
+        onClose: () => {
+          if (!settled) {
+            fail(
+              new Error("Lucy signaling closed before negotiation completed"),
+            );
+            return;
+          }
+          void context.close();
+        },
+      });
+      context.addCleanup(() => {
+        context.signal.removeEventListener("abort", abortNegotiation);
+        clearTimeout(negotiationTimer);
+        clearTimeout(iceGraceTimer);
+        const connection = transport.connection;
+        transport.connection = undefined;
+        connection?.close();
+        peer?.close();
+        peer = null;
+        reportState("closed");
+      });
+
+      transport.connection.send(options.input as Record<string, unknown>);
+      try {
+        // `settled` is already latched by resolveNegotiation/rejectNegotiation — the only
+        // settlers of this promise — before it can observably settle here.
+        await negotiation;
+        context.signal.removeEventListener("abort", abortNegotiation);
+      } finally {
+        clearTimeout(negotiationTimer);
+      }
+
+      return {
+        get remoteStream() {
+          return remoteStream;
+        },
+        send(input) {
+          transport.connection?.send(input);
+        },
+        close() {
+          // The client wraps this with the managed, idempotent cleanup.
+        },
+      };
+    },
+  });
+}

@@ -53,6 +53,15 @@ export interface ProxyConfig {
   allowedUrlPatterns?: string[];
 
   /**
+   * fal-operated service hosts whose paths are infrastructure routes rather than app ids.
+   * Only the proxy's known service routes are forwarded, and app-scoped routes still enforce
+   * `allowedEndpoints` against the `app_id` in their JSON body. Set to `[]` to disable them.
+   *
+   * @default ["wma.fal.run"]
+   */
+  serviceHosts?: string[];
+
+  /**
    * Endpoint patterns (glob-style) that are allowed to be called via POST requests.
    * The endpoint is the path portion of the URL without the leading slash.
    *
@@ -124,6 +133,7 @@ export async function isAuthorizationHeaderPresent(
 
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
   allowedUrlPatterns: DEFAULT_ALLOWED_URL_PATTERNS,
+  serviceHosts: ["wma.fal.run"],
   allowedEndpoints: [],
   allowUnauthorizedRequests: true,
   isAuthenticated: isAuthorizationHeaderPresent,
