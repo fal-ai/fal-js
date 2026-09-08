@@ -1,131 +1,3 @@
-export type _21EditInput = {
-  /**
-   * The desired aspect ratio of the generated image. With `auto`, the model picks an appropriate aspect ratio for the request. Default value: `"auto"`
-   */
-  aspect_ratio?:
-    | "4:1"
-    | "3:1"
-    | "21:9"
-    | "2:1"
-    | "17:9"
-    | "16:9"
-    | "3:2"
-    | "4:3"
-    | "5:4"
-    | "1:1"
-    | "4:5"
-    | "3:4"
-    | "2:3"
-    | "9:16"
-    | "1:2"
-    | "1:3"
-    | "1:4"
-    | "auto";
-  /**
-   * URL of the reference image to edit. Must be publicly accessible or base64 data URI. Supports PNG, JPEG, WebP, AVIF, and HEIF formats.
-   */
-  image_url: string | Blob | File;
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * Output format for the generated image. Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * The text description of how to edit the provided image. You can refer to the reference image with `<frame>0</frame>`.
-   */
-  prompt: string;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
-export type _21RemixInput = {
-  /**
-   * The desired aspect ratio of the generated image. With `auto`, the model picks an appropriate aspect ratio for the request. Default value: `"auto"`
-   */
-  aspect_ratio?:
-    | "4:1"
-    | "3:1"
-    | "21:9"
-    | "2:1"
-    | "17:9"
-    | "16:9"
-    | "3:2"
-    | "4:3"
-    | "5:4"
-    | "1:1"
-    | "4:5"
-    | "3:4"
-    | "2:3"
-    | "9:16"
-    | "1:2"
-    | "1:3"
-    | "1:4"
-    | "auto";
-  /**
-   * List of reference images. Refer to them from the prompt with `<frame>N</frame>` (0-based). Must provide between 1 and 8 images (inclusive). Each image must be less than 10 MB. Supports PNG, JPEG, WebP, AVIF, and HEIF formats.
-   */
-  image_urls: Array<string>;
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * Output format for the generated image. Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * The text description of the desired image. Refer to a reference image by frame: `<frame>N</frame>` is the Nth entry in `image_urls` (0-based, so the first reference is `<frame>0</frame>`).
-   */
-  prompt: string;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
-export type _21TextToImageInput = {
-  /**
-   * The desired aspect ratio of the generated image. With `auto`, the model picks an appropriate aspect ratio for the request. Default value: `"auto"`
-   */
-  aspect_ratio?:
-    | "4:1"
-    | "3:1"
-    | "21:9"
-    | "2:1"
-    | "17:9"
-    | "16:9"
-    | "3:2"
-    | "4:3"
-    | "5:4"
-    | "1:1"
-    | "4:5"
-    | "3:4"
-    | "2:3"
-    | "9:16"
-    | "1:2"
-    | "1:3"
-    | "1:4"
-    | "auto";
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * Output format for the generated image. Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * The text description of the desired image.
-   */
-  prompt: string;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
 export type A2AInput = {
   /**
    * Aspect ratio to use for training. Default value: `"1:1"`
@@ -404,7 +276,7 @@ export type AceStepAudioInpaintInput = {
    */
   tag_guidance_scale?: number;
   /**
-   * Comma-separated list of genre tags to control the style of the generated audio.
+   * Comma-separated list of genre tags to control the style of the generated audio. Can also be supplied as `prompt`.
    */
   tags: string;
   /**
@@ -474,7 +346,7 @@ export type AceStepAudioOutpaintInput = {
    */
   tag_guidance_scale?: number;
   /**
-   * Comma-separated list of genre tags to control the style of the generated audio.
+   * Comma-separated list of genre tags to control the style of the generated audio. Can also be supplied as `prompt`.
    */
   tags: string;
 };
@@ -548,7 +420,7 @@ export type AceStepAudioToAudioInput = {
    */
   tag_guidance_scale?: number;
   /**
-   * Comma-separated list of genre tags to control the style of the generated audio.
+   * Comma-separated list of genre tags to control the style of the generated audio. Can also be supplied as `prompt`.
    */
   tags: string;
 };
@@ -606,7 +478,7 @@ export type AceStepInput = {
    */
   tag_guidance_scale?: number;
   /**
-   * Comma-separated list of genre tags to control the style of the generated audio.
+   * Comma-separated list of genre tags to control the style of the generated audio. Can also be supplied as `prompt`.
    */
   tags: string;
 };
@@ -868,6 +740,38 @@ export type AddTextToImageInput = {
    */
   y_percent?: number;
 };
+export type AdEraserInput = {
+  /**
+   * Normalized xyxy boxes around the promotional elements to remove.
+   */
+  boxes: Array<Array<unknown>>;
+  /**
+   * The source ad.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Random seed for reproducibility. Default value: `5555`
+   */
+  seed?: number;
+  /**
+   * If true, returns the image directly in the response (increases latency).
+   */
+  sync_mode?: boolean;
+};
+export type AdjustImageInput = {
+  /**
+   * Url of the image to process
+   */
+  image_url: string | Blob | File;
+  /**
+   * Color & lighting correction. Adjust V2 fixes exposure/lighting; White Balance corrects color; Colorize adds color to B&W images. Default value: `"Adjust V2"`
+   */
+  model?: "Adjust V2" | "White Balance" | "Colorize";
+  /**
+   * Output format of the processed image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+};
 export type AdvancedInput = {
   /**
    * Default caption to use if no caption is found for a media file.
@@ -1040,6 +944,10 @@ export type AgentRayV32ReframeInput = {
    */
   aspect_ratio: "3:4" | "4:3" | "1:1" | "9:16" | "16:9" | "21:9";
   /**
+   * Duration of the reframed video. Defaults to matching the source video's duration; set explicitly to 5s or 10s to override.
+   */
+  duration?: "5s" | "10s";
+  /**
    * Text prompt describing the content to paint into the newly exposed canvas area when reframing to the target aspect ratio.
    */
   prompt: string;
@@ -1052,7 +960,7 @@ export type AgentRayV32ReframeInput = {
    */
   source_position?: RayReframeSourcePosition;
   /**
-   * URL of the source video to reframe (must be 30 seconds or less).
+   * URL of the source video to reframe (must be 10 seconds or less).
    */
   video_url: string | Blob | File;
 };
@@ -1150,6 +1058,10 @@ export type AgentRayV32VideoToVideoInput = {
    * Optional URL of an image to use as the edited video's first frame — e.g. a restyled version of the source's opening frame to steer the look of the edit. Leave unset to let the model derive the first frame from the source video.
    */
   start_image_url?: string | Blob | File;
+  /**
+   * Optional opaque identifier for the end user making the request. Used only for abuse attribution; never interpreted by fal.
+   */
+  user?: string;
   /**
    * URL of the source video to edit.
    */
@@ -1668,20 +1580,6 @@ export type AnswerOutput = {
    */
   type: string;
 };
-export type ArtifactsOutput = {
-  /**
-   * `ready`, `partial`, or `processing`.
-   */
-  compose_status?: string;
-  /**
-   *
-   */
-  encrypted_travel_id: string;
-  /**
-   * Variants keyed original / withWatermark / withInstruction / withInstructionAndWatermark, each with url/status/resolution.
-   */
-  video?: Video;
-};
 export type AspectRatio = {
   /**
    * Aspect ratio for 4K resolution output Default value: `"1:1"`
@@ -2188,6 +2086,10 @@ export type AudioInput = {
    */
   audio_url: string | Blob | File;
   /**
+   * Give the model access to real-time web information via OpenRouter's web search server tool. When enabled, the model decides when to search and may search multiple times per request. Search costs are charged in addition to token usage.
+   */
+  enable_web_search?: boolean;
+  /**
    * This sets the upper limit for the number of tokens the model can generate in response. It won't produce more than this limit. The maximum value is the context length minus the prompt length.
    */
   max_tokens?: number;
@@ -2211,6 +2113,10 @@ export type AudioInput = {
    * This setting influences the variety in the model's responses. Lower values lead to more predictable and typical responses, while higher values encourage more diverse and less common responses. At 0, the model always gives the same response for a given input. Default value: `1`
    */
   temperature?: number;
+  /**
+   * Options for web search (engine, result limits, domain filters, ...). Ignored unless enable_web_search is true.
+   */
+  web_search_options?: WebSearchOptions;
 };
 export type AudioOutpaintingInput = {
   /**
@@ -2568,6 +2474,10 @@ export type AudioVolumeOutput = {
 };
 export type AuraFlowInput = {
   /**
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
    * Whether to perform prompt expansion (recommended) Default value: `true`
    */
   expand_prompt?: boolean;
@@ -2597,6 +2507,10 @@ export type AuraFlowInput = {
   sync_mode?: boolean;
 };
 export type AuraFlowOutput = {
+  /**
+   * Whether the generated images contain NSFW concepts.
+   */
+  has_nsfw_concepts: Array<boolean>;
   /**
    * The generated images
    */
@@ -3254,6 +3168,12 @@ export type AvatarVWatermark = {
    */
   scale?: number;
 };
+export type AvatarXTextToVideoOutput = {
+  /**
+   *
+   */
+  video: Video;
+};
 export type Background = {
   /**
    * Solid background color (R/G/B, 0–255). Applies when mode is 'Color'. Defaults to white.
@@ -3374,7 +3294,7 @@ export type BaseImageToInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -3456,7 +3376,7 @@ export type BaseKontextEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -3527,7 +3447,7 @@ export type BaseKontextImg2ImgInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -3582,7 +3502,7 @@ export type BaseKontextInpaintInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -3643,7 +3563,7 @@ export type BaseKontextInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -3699,7 +3619,7 @@ export type BaseQwenEditImg2ImgInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -3762,7 +3682,7 @@ export type BaseReduxInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -4138,26 +4058,6 @@ export type BGReplaceInput = {
    */
   sync_mode?: boolean;
 };
-export type BindTravelInput = {
-  /**
-   * Travel to associate with the session; it is ended upstream when the session closes or expires.
-   */
-  encrypted_travel_id: string;
-  /**
-   * Session ID from POST /session.
-   */
-  session_id: string;
-};
-export type BindTravelOutput = {
-  /**
-   * False when the session id is not one of ours.
-   */
-  bound: boolean;
-  /**
-   * Refreshed session id embedding the bound travel; use it for all subsequent heartbeat/close calls.
-   */
-  session_id: string;
-};
 export type birefnetInput = {
   /**
    * URL of the image to remove background from
@@ -4337,7 +4237,7 @@ export type BirefnetV2VideoOutput = {
 };
 export type bitdanceInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -4379,24 +4279,6 @@ export type bitdanceInput = {
    * If true, the media will be returned as a data URI.
    */
   sync_mode?: boolean;
-};
-export type bitdanceOutput = {
-  /**
-   * Whether the generated images contain NSFW concepts.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The generated image files info.
-   */
-  images: Array<Image>;
-  /**
-   * The prompt used for generating the image.
-   */
-  prompt: string;
-  /**
-   * Seed of the generated image.
-   */
-  seed: number;
 };
 export type BlendingInput = {
   /**
@@ -4487,7 +4369,7 @@ export type BooguImageEditInput = {
    */
   cfg_range_start?: number;
   /**
-   * If true, the safety checker is run on the input and output images. Default value: `true`
+   * If true, the safety checker is run on the input and output images. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -4552,7 +4434,7 @@ export type BooguImageInput = {
    */
   cfg_range_start?: number;
   /**
-   * If true, the safety checker is run on the generated images. Default value: `true`
+   * If true, the safety checker is run on the generated images. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -4870,6 +4752,10 @@ export type ByteDanceTTS2Input = {
 };
 export type BytedanceUpscalerUpscaleVideoInput = {
   /**
+   * The color bit depth of the output video. 10-bit and 12-bit output require the Pro enhancement tier. Default value: `"8"`
+   */
+  bit_depth?: 8 | 10 | 12;
+  /**
    * The enhancement preset optimized for specific video scenarios. 'general' is a general-purpose template, 'ugc' targets user-generated short videos, 'short_series' is for short dramas, 'aigc' is for AI-generated content, and 'old_film' is for classic film restoration. Default value: `"general"`
    */
   enhancement_preset?: "general" | "ugc" | "short_series" | "aigc" | "old_film";
@@ -4886,13 +4772,13 @@ export type BytedanceUpscalerUpscaleVideoInput = {
    */
   scale_ratio?: number;
   /**
-   * The target FPS of the video to upscale. Default value: `"30fps"`
+   * The target frame rate of the enhanced video in frames per second. Default value: `30`
    */
-  target_fps?: "30fps" | "60fps";
+  target_fps?: number;
   /**
    * The target resolution of the video to upscale. Default value: `"1080p"`
    */
-  target_resolution?: "1080p" | "2k" | "4k";
+  target_resolution?: "1080p" | "2k" | "4k" | "6k" | "8k";
   /**
    * The URL of the video to upscale.
    */
@@ -4907,6 +4793,23 @@ export type CameraControl = {
    * The value of the camera movement
    */
   movement_value: number;
+};
+export type CancelOutput = {
+  /**
+   *
+   */
+  cancelled: boolean;
+  /**
+   *
+   */
+  message: string;
+  /**
+   *
+   */
+  reason?:
+    | "missing_or_invalid_request_id"
+    | "request_not_active"
+    | "delivery_already_committed";
 };
 export type CannyInput = {
   /**
@@ -6370,6 +6273,10 @@ export type Character = {
 };
 export type ChatInput = {
   /**
+   * Give the model access to real-time web information via OpenRouter's web search server tool. When enabled, the model decides when to search and may search multiple times per request. Search costs are charged in addition to token usage.
+   */
+  enable_web_search?: boolean;
+  /**
    * This sets the upper limit for the number of tokens the model can generate in response. It won't produce more than this limit. The maximum value is the context length minus the prompt length.
    */
   max_tokens?: number;
@@ -6393,6 +6300,10 @@ export type ChatInput = {
    * This setting influences the variety in the model's responses. Lower values lead to more predictable and typical responses, while higher values encourage more diverse and less common responses. At 0, the model always gives the same response for a given input. Default value: `1`
    */
   temperature?: number;
+  /**
+   * Options for web search (engine, result limits, domain filters, ...). Ignored unless enable_web_search is true.
+   */
+  web_search_options?: WebSearchOptions;
 };
 export type ChatOutput = {
   /**
@@ -6489,7 +6400,7 @@ export type ChatterboxTextToSpeechMultilingualInput = {
    */
   seed?: number;
   /**
-   * Controls randomness and variation in generation (0.05-5.0). Higher values create more varied speech patterns. Default value: `0.8`
+   * Controls randomness and variation in generation (0.05-2.0). Higher values create more varied speech patterns. Default value: `0.8`
    */
   temperature?: number;
   /**
@@ -6537,7 +6448,7 @@ export type ChronoEditInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -6591,7 +6502,7 @@ export type ChronoEditLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -6659,7 +6570,7 @@ export type ChronoEditOutput = {
 };
 export type ChronoEditPaintBrushInput = {
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -6713,7 +6624,7 @@ export type ChronoEditPaintBrushInput = {
 };
 export type ChronoEditUpscalerInput = {
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -6888,16 +6799,6 @@ export type ClipOutput = {
    * Extracted video clip of the first detected segment.
    */
   video?: File;
-};
-export type CloseHappyOysterSessionInput = {
-  /**
-   * Session identifier from POST /session.
-   */
-  session_id: string;
-  /**
-   * True only after the SDK reports the travel completed. Closes the server session without sending a duplicate upstream end request.
-   */
-  travel_completed?: boolean;
 };
 export type codeformerInput = {
   /**
@@ -7727,7 +7628,7 @@ export type Cosmos3SuperImageToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for the input prompt and image. Default value: `true`
+   * Enable content moderation for the input prompt and image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -7800,7 +7701,7 @@ export type Cosmos3SuperTextToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for the input prompt and generated images. Default value: `true`
+   * Enable content moderation for the input prompt and generated images. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -7846,6 +7747,20 @@ export type Cosmos3SuperTextToImageInput = {
    * If `True`, the image is returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type Cosmos3SuperTextToImageOutput = {
+  /**
+   * Whether each generated image was flagged by the safety checker.
+   */
+  has_nsfw_concepts: Array<boolean>;
+  /**
+   * The generated images.
+   */
+  images: Array<ImageFile>;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
 };
 export type CosmosPredict25DistilledTextToVideoInput = {
   /**
@@ -8030,76 +7945,6 @@ export type CreateVoiceOutput = {
    * Unique identifier for the created voice
    */
   voice_id: string;
-};
-export type CreateWorldInput = {
-  /**
-   * Event style for generated events.
-   */
-  event_style?: "normal" | "dramatic";
-  /**
-   * First-frame anchor image URL.
-   */
-  first_frame_image_url?: string | Blob | File;
-  /**
-   * Additional reference image URLs.
-   */
-  image_urls?: Array<string>;
-  /**
-   * Camera movement style (directing mode).
-   */
-  layout?: "Stable" | "Fast";
-  /**
-   * Experience mode: `adventure` (explore/play) or `directing` (story).
-   */
-  mode: "adventure" | "directing";
-  /**
-   * Narrative style (directing mode).
-   */
-  narrative?: "Calm" | "Dramatic" | "Normal";
-  /**
-   * Camera perspective. Required in adventure mode.
-   */
-  perspective?: "first_person" | "third_person";
-  /**
-   * Natural-language world description. Required for simple creation unless `upload_mode` is `scenario_role`.
-   */
-  prompt?: string;
-  /**
-   * Encrypted ID of a template world to derive this world from.
-   */
-  ref_world_id?: string;
-  /**
-   * Video resolution. Required in directing mode.
-   */
-  resolution?: "480p" | "720p";
-  /**
-   * Role reference image URL (scenario_role).
-   */
-  role_image_url?: string | Blob | File;
-  /**
-   * Role description (scenario_role).
-   */
-  role_prompt?: string;
-  /**
-   * Scene reference image URL (scenario_role).
-   */
-  scene_image_url?: string | Blob | File;
-  /**
-   * Scene description (scenario_role).
-   */
-  scene_prompt?: string;
-  /**
-   * Structured script (`subjects` + up to 45 `acts`); selects scriptlist creation. Directing mode only.
-   */
-  script_list?: unknown;
-  /**
-   * When true the upstream build is awaited (up to ~120s) before returning; otherwise poll `/worlds/build-status`.
-   */
-  sync?: boolean;
-  /**
-   * Adventure creation sub-mode; default `first_frame`.
-   */
-  upload_mode?: "first_frame" | "scenario_role";
 };
 export type CreatifyAuroraInput = {
   /**
@@ -8321,6 +8166,16 @@ export type DavinciMagihumanInput = {
    */
   seed?: number;
 };
+export type DeblurVideoInput = {
+  /**
+   * Whether to use H264 codec for output video. Default is H265.
+   */
+  H264_output?: boolean;
+  /**
+   * URL of the video to deblur (motion deblur, Themis 2)
+   */
+  video_url: string | Blob | File;
+};
 export type deepfilternet3Input = {
   /**
    * The format for the output audio. Default value: `"mp3"`
@@ -8362,16 +8217,6 @@ export type DeepFilterNetTimings = {
    * Preprocessing time.
    */
   preprocess: number;
-};
-export type DeleteWorldOutput = {
-  /**
-   *
-   */
-  deleted: boolean;
-  /**
-   *
-   */
-  encrypted_world_id: string;
 };
 export type demucsInput = {
   /**
@@ -8437,6 +8282,50 @@ export type demucsOutput = {
    */
   vocals?: File;
 };
+export type DenoiseImageInput = {
+  /**
+   * Url of the image to process
+   */
+  image_url: string | Blob | File;
+  /**
+   * Denoise model. Normal is general-purpose; Strong and Extreme remove progressively more noise; Denoise Max is Topaz's highest-quality generative denoiser. Default value: `"Normal"`
+   */
+  model?: "Normal" | "Strong" | "Extreme" | "Denoise Max";
+  /**
+   * Output format of the processed image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+};
+export type DenoiseVideoInput = {
+  /**
+   * Compression artifact removal level (0.0-1.0). Default varies by model.
+   */
+  compression?: number;
+  /**
+   * Whether to use H264 codec for output video. Default is H265.
+   */
+  H264_output?: boolean;
+  /**
+   * Halo reduction level (0.0-1.0). Default varies by model.
+   */
+  halo?: number;
+  /**
+   * Denoise model. Nyx is high-quality denoising with texture preservation; Nyx Fast trades quality for speed on high-volume workloads; Nyx XL targets extreme noise; Nyx HF is precision denoising for pipeline-ready outputs (denoise only, no upscaling). Default value: `"Nyx"`
+   */
+  model?: "Nyx" | "Nyx Fast" | "Nyx XL" | "Nyx HF";
+  /**
+   * Noise reduction level (0.0-1.0). Default varies by model.
+   */
+  noise?: number;
+  /**
+   * Optional upscale applied on top of denoising. 1.0 keeps the source resolution. Default value: `1`
+   */
+  upscale_factor?: number;
+  /**
+   * URL of the video to denoise
+   */
+  video_url: string | Blob | File;
+};
 export type DepthAnythingVideoInput = {
   /**
    * Colormap for depth visualization. 'turbo' (recommended) shows near=warm, far=cool. 'grayscale' for raw normalized depth. 'inferno'/'magma' for perceptually uniform. 'viridis' for colorblind-friendly. Default value: `"grayscale"`
@@ -8491,7 +8380,7 @@ export type DepthLoraInput = {
    */
   control_lora_strength?: number;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8624,7 +8513,7 @@ export type DetectionOutput = {
 };
 export type DevImageToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8672,7 +8561,7 @@ export type DevKontextEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8734,7 +8623,7 @@ export type DevKontextEditInput = {
 };
 export type DevReduxInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8785,7 +8674,7 @@ export type DevStreamingKontextEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8843,7 +8732,7 @@ export type DevStreamingKontextImg2ImgInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8885,7 +8774,7 @@ export type DevStreamingKontextInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -8971,7 +8860,7 @@ export type DifferentialDiffusionInput = {
    */
   easycontrols?: Array<EasyControlWeight>;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -9190,7 +9079,7 @@ export type DistilledExtendVideoInput = {
    */
   enable_detail_pass?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -9268,7 +9157,7 @@ export type DistilledImageToVideoInput = {
    */
   enable_detail_pass?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -9346,7 +9235,7 @@ export type DistilledMultiConditioningVideoInput = {
    */
   enable_detail_pass?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -9520,7 +9409,7 @@ export type Dreamomni2EditInput = {
 };
 export type DropShadow = {
   /**
-   * Shadow blur radius, as a percentage of the smaller canvas dimension. 0 is a hard-edged shadow; larger values are softer. Clamped to 5%. Default value: `1.2`
+   * Shadow blur strength (0 to 100). 0 is a hard-edged shadow; 100 is the softest, a radius of 5% of the smaller canvas dimension. Default value: `24`
    */
   blur?: number;
   /**
@@ -9528,7 +9417,7 @@ export type DropShadow = {
    */
   color?: RGBColor;
   /**
-   * Horizontal shadow offset, as a percentage of the canvas width. Positive moves the shadow right, negative moves it left. Clamped to ±10%. Default value: `5`
+   * Horizontal shadow offset strength (-100 to 100). Positive moves the shadow right, negative moves it left. 100 is the maximum offset, 10% of the canvas width. Default value: `50`
    */
   horizontal?: number;
   /**
@@ -9536,7 +9425,7 @@ export type DropShadow = {
    */
   opacity?: number;
   /**
-   * Vertical shadow offset, as a percentage of the canvas height. Positive moves the shadow down, negative moves it up. Clamped to ±10%. Default value: `0.8`
+   * Vertical shadow offset strength (-100 to 100). Positive moves the shadow down, negative moves it up. 100 is the maximum offset, 10% of the canvas height. Default value: `8`
    */
   vertical?: number;
 };
@@ -9662,7 +9551,7 @@ export type EditImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -9719,7 +9608,7 @@ export type EditImageLoraInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -9788,7 +9677,7 @@ export type edittoInput = {
    */
   enable_auto_downsample?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -10064,6 +9953,26 @@ export type EffectInput = {
     | "WonderPOP Surprise"
     | "White Chicks"
     | "Kiss me"
+    | "What a Day"
+    | "The Last Leap at Sunset"
+    | "Tiny Sticker Chef Chaos"
+    | "Mini Squeeze Toy"
+    | "Tearful Gunman"
+    | "Street Fashion Caricature"
+    | "Mini Me Makeover"
+    | "Street Art Awakening"
+    | "Hug Together"
+    | "ACAI dance Duet"
+    | "PUBG Winner Hit!"
+    | "Blocky Mini-Me"
+    | "Cheat Day Busted"
+    | "MiniSocial Recharge"
+    | "My Little Perler Charm"
+    | "Where did this cobweb come from?"
+    | "Holy Beast Summoning Technique"
+    | "IT'S THE FIRST OF THE MONTH"
+    | "Pet Editorial"
+    | "Three lifetime bond"
     | "Pixel World"
     | "Mint in Box"
     | "Hands up, Hand"
@@ -10411,7 +10320,9 @@ export type Embedding = {
    */
   path: string;
   /**
-   * The list of tokens to use for the embedding.
+   * The list of tokens to use for the embedding. When omitted, tokens
+   * are generated as <s0>, <s1>, ... to match the number of vectors in
+   * the embedding file.
    */
   tokens?: Array<string>;
 };
@@ -10570,42 +10481,6 @@ export type Emu35Output = {
    */
   seed: number;
 };
-export type EndTravelInput = {
-  /**
-   * Encrypted travel ID from the client's enter-travel.
-   */
-  encrypted_travel_id: string;
-  /**
-   * Pass TRAVEL_NO_STREAM_AUTO_END when ending because no stream arrived in time; the travel is then marked failed and produces no replay artifact.
-   */
-  fail_code?: string;
-};
-export type EndTravelOutput = {
-  /**
-   *
-   */
-  duration_sec?: number;
-  /**
-   *
-   */
-  encrypted_travel_id: string;
-  /**
-   *
-   */
-  ended_at?: string;
-  /**
-   *
-   */
-  error_code?: string;
-  /**
-   *
-   */
-  error_message?: string;
-  /**
-   *
-   */
-  status: string;
-};
 export type EQBand = {
   /**
    * Center frequency in Hz (20-20000)
@@ -10662,7 +10537,7 @@ export type ErnieImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable NSFW safety checking on the generated images. Default value: `true`
+   * Enable NSFW safety checking on the generated images. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -10724,7 +10599,7 @@ export type ErnieImageLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable NSFW safety checking on the generated images. Default value: `true`
+   * Enable NSFW safety checking on the generated images. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -10928,6 +10803,18 @@ export type EvfSamOutput = {
    */
   image: File;
 };
+export type ExpandPromptInput = {
+  /**
+   * Text prompt to expand.
+   */
+  prompt: string;
+};
+export type ExpandPromptOutput = {
+  /**
+   * The expanded prompt.
+   */
+  expanded_prompt: string;
+};
 export type ExtendAudioInput = {
   /**
    * When true, run the extend+loop path: extend the prefix and stitch the end back to the prefix start so the tile loops seamlessly. When false, run a one-shot extension.
@@ -10946,7 +10833,7 @@ export type ExtendAudioInput = {
    */
   double_output?: boolean;
   /**
-   * Number of variations to generate. Default value: `1`
+   * Number of variations to generate. Default value: `2`
    */
   num_samples?: number;
   /**
@@ -11297,11 +11184,11 @@ export type ExtractTextureInput = {
    */
   strength?: number;
   /**
-   * Tile size in latent space (64 = 512px, 128 = 1024px). Default value: `128`
+   * Tile size in latent space. Automatically capped to the generated image dimensions on tiled axes (64 = 512px, 128 = 1024px). Default value: `128`
    */
   tile_size?: number;
   /**
-   * Tile stride in latent space. Default value: `64`
+   * Tile stride in latent space. Automatically capped to half the effective tile size. Default value: `64`
    */
   tile_stride?: number;
   /**
@@ -11859,6 +11746,45 @@ export type FiboBbqPreviewGenerateInput = {
    */
   sync_mode?: boolean;
 };
+export type FiboEdit15EditInput = {
+  /**
+   * Output aspect ratio. Left unset, the output keeps the ratio of the first reference image. A chosen ratio applies only with two or more reference images; with a single reference the output keeps that image's ratio either way.
+   */
+  aspect_ratio?:
+    | "1:1"
+    | "2:3"
+    | "3:2"
+    | "3:4"
+    | "4:3"
+    | "4:5"
+    | "5:4"
+    | "9:16"
+    | "16:9";
+  /**
+   * 1-4 reference images (files or URLs). Order is significant: the instruction is resolved against the images in the order they are sent.
+   */
+  image_urls?: Array<string>;
+  /**
+   * Instruction for image editing.
+   */
+  instruction?: string;
+  /**
+   * Mask (file or URL) marking the region to regenerate: white where the model should edit, black elsewhere. Single-reference requests only, and it must be the same size as that image. A masked edit comes back at the reference's own resolution.
+   */
+  mask_url?: string | Blob | File;
+  /**
+   * Random seed for reproducibility. Default value: `5555`
+   */
+  seed?: number;
+  /**
+   * A pre-built structured prompt, used verbatim instead of having VGL build one when no instruction is sent. Accepts what a previous edit returned.
+   */
+  structured_instruction?: StructuredInstruction;
+  /**
+   * If true, returns the image directly in the response (increases latency).
+   */
+  sync_mode?: boolean;
+};
 export type FiboEditEditInput = {
   /**
    * Guidance scale for text. Default value: `5`
@@ -11972,6 +11898,41 @@ export type FiboEditEditStructuredInstructionOutput = {
    * A list of text to be rendered in the image.
    */
   text_render?: Array<void>;
+};
+export type FiboGen15TextToImageInput = {
+  /**
+   * Aspect ratio. Options: 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9 Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "1:1"
+    | "2:3"
+    | "3:2"
+    | "3:4"
+    | "4:3"
+    | "4:5"
+    | "5:4"
+    | "9:16"
+    | "16:9";
+  /**
+   * Prompt for image generation.
+   */
+  prompt?: string;
+  /**
+   * Output image resolution Default value: `"1MP"`
+   */
+  resolution?: "1MP" | "4MP";
+  /**
+   * Random seed for reproducibility. Default value: `5555`
+   */
+  seed?: number;
+  /**
+   * The structured prompt to generate an image from.
+   */
+  structured_prompt?: StructuredPrompt;
+  /**
+   * If true, returns the image directly in the response (increases latency).
+   */
+  sync_mode?: boolean;
 };
 export type FiboGenerateInput = {
   /**
@@ -12113,10 +12074,6 @@ export type FiboLiteGenerateInput = {
    */
   image_url?: string | Blob | File;
   /**
-   * Negative prompt for image generation. Default value: `""`
-   */
-  negative_prompt?: string;
-  /**
    * The prompt to generate.
    */
   prompt?: string;
@@ -12124,10 +12081,6 @@ export type FiboLiteGenerateInput = {
    * Seed for the random number generator. Default value: `7`
    */
   seed?: number;
-  /**
-   * Number of inference steps. Default value: `8`
-   */
-  steps_num?: number;
   /**
    * The structured prompt to generate.
    */
@@ -12441,7 +12394,7 @@ export type FireredImageEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12699,7 +12652,7 @@ export type Flux2EditInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12752,7 +12705,7 @@ export type Flux2FlashEditInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12801,7 +12754,7 @@ export type Flux2FlashInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12842,7 +12795,7 @@ export type Flux2FlashInput = {
 };
 export type Flux2FlexEditInput = {
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12892,7 +12845,7 @@ export type Flux2FlexEditInput = {
 };
 export type Flux2FlexInput = {
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12945,7 +12898,7 @@ export type Flux2Input = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -12990,7 +12943,7 @@ export type Flux2Input = {
 };
 export type Flux2Klein4bEditInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13035,7 +12988,7 @@ export type Flux2Klein4bEditInput = {
 };
 export type Flux2Klein4bEditLoraInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13084,7 +13037,7 @@ export type Flux2Klein4bEditLoraInput = {
 };
 export type Flux2Klein4bInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13133,7 +13086,7 @@ export type Flux2LoraEditInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13190,7 +13143,7 @@ export type Flux2LoraGalleryAddBackgroundInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
+   * Whether to enable the safety checker for the generated image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13247,7 +13200,7 @@ export type Flux2LoraGalleryMultipleAnglesInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13316,7 +13269,7 @@ export type Flux2LoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13365,7 +13318,7 @@ export type Flux2LoraInput = {
 };
 export type Flux2MaxEditInput = {
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13407,7 +13360,7 @@ export type Flux2MaxEditInput = {
 };
 export type Flux2MaxInput = {
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13448,7 +13401,7 @@ export type Flux2ProOutpaintInput = {
    */
   auto_crop?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13517,6 +13470,654 @@ export type Flux2TrainerInput = {
    */
   steps?: number;
 };
+export type Flux3DraftEnhanceInput = {
+  /**
+   * URL or data URI of the encrypted draft cache bundle to enhance.
+   */
+  draft_cache_url: string | Blob | File;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
+export type Flux3DraftOutput = {
+  /**
+   * Durable encrypted cache bundle; pass it to `draft-enhance` for a full-quality render. Absent when the partner did not return a cache bundle for this draft.
+   */
+  draft_cache?: File;
+  /**
+   * The draft video.
+   */
+  video: File;
+};
+export type Flux3EditVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16"
+    | "9:21";
+  /**
+   * Duration of the generated video in seconds. `auto` lets the model choose. Default value: `"auto"`
+   */
+  duration?: "auto" | 5 | 10 | 15 | 20;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Whether to ground the generation in the prompt's real-world context. Default value: `true`
+   */
+  grounding?: boolean;
+  /**
+   * The text prompt describing how to change the input video. The clip is re-rendered preserving motion, timing, and framing.
+   */
+  prompt: string;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * The seed to use for the generation. Random when not provided.
+   */
+  seed?: number;
+  /**
+   * URL of the input video. MP4, under 50 MB and under 15 seconds.
+   */
+  video_url: string | Blob | File;
+};
+export type Flux3ExtendVideoDraftInput = {
+  /**
+   * Aspect ratio of the generated draft. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Draft duration in whole seconds from 5 through 20, or `auto`. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the draft video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt describing the draft video.
+   */
+  prompt: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * URL or data URI of the source MP4, at most 50 MiB.
+   */
+  video_url: string | Blob | File;
+};
+export type Flux3ExtendVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Duration of the generated video in seconds. `auto` lets the model choose. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt describing how the video continues from the source clip's final frames.
+   */
+  prompt: string;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * URL of the input video. MP4, under 50 MB and under 15 seconds.
+   */
+  video_url: string | Blob | File;
+};
+export type Flux3FirstLastFrameToVideoDraftInput = {
+  /**
+   * Aspect ratio of the generated draft. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Draft duration in whole seconds from 5 through 20. An explicit duration pins the two images to the video boundaries. Default value: `"5"`
+   */
+  duration?:
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * URL or data URI of the image used as the last frame of the draft.
+   */
+  end_image_url: string | Blob | File;
+  /**
+   * Whether to generate audio for the draft video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt describing the draft video.
+   */
+  prompt: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * URL or data URI of the image used as the first frame of the draft.
+   */
+  start_image_url: string | Blob | File;
+};
+export type Flux3FirstLastFrameToVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Duration of the generated video in seconds. An explicit duration is required to place the end frame. Default value: `"5"`
+   */
+  duration?:
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * URL of the image used as the last frame of the video (PNG, JPEG, or WebP).
+   */
+  end_image_url: string | Blob | File;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt describing the video you want to generate.
+   */
+  prompt: string;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * URL of the image used as the first frame of the video (PNG, JPEG, or WebP).
+   */
+  start_image_url: string | Blob | File;
+};
+export type Flux3ImageReferenceToVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16"
+    | "9:21";
+  /**
+   * Duration of the generated video in seconds. `auto` lets the model choose. Default value: `"auto"`
+   */
+  duration?: "auto" | 5 | 10 | 15 | 20;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Whether to ground the generation in the prompt's real-world context. Default value: `true`
+   */
+  grounding?: boolean;
+  /**
+   * The text prompt describing the video you want to generate.
+   */
+  prompt: string;
+  /**
+   * URLs of 1-10 reference images (PNG, JPEG, or WebP). Subjects in the references stay recognizable while the prompt describes a new scene.
+   */
+  reference_image_urls: Array<string>;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * The seed to use for the generation. Random when not provided.
+   */
+  seed?: number;
+};
+export type Flux3ImageToVideoDraftInput = {
+  /**
+   * Aspect ratio of the generated draft. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Draft duration in whole seconds from 5 through 20, or `auto`. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the draft video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * URL or data URI of the opening keyframe image.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt describing the draft video.
+   */
+  prompt: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
+export type Flux3ImageToVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Duration of the generated video in seconds. `auto` lets the model choose. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * URL of the image the video starts from (PNG, JPEG, or WebP).
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt describing the video you want to generate.
+   */
+  prompt: string;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
+export type Flux3Keyframe = {
+  /**
+   * Frame position of this keyframe in the generated 24 fps video. Must be unique and at most `duration * 24`.
+   */
+  frame_index: number;
+  /**
+   * URL of the keyframe image (PNG, JPEG, or WebP).
+   */
+  image_url: string | Blob | File;
+};
+export type Flux3KeyframesToVideoDraftInput = {
+  /**
+   * Aspect ratio of the generated draft. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Draft duration in whole seconds from 5 through 20. An explicit duration is required to validate keyframe positions. Default value: `"5"`
+   */
+  duration?:
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the draft video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Keyframe images pinned to frame positions in the generated draft. Up to 10 keyframes with unique `frame_index` values.
+   */
+  keyframes: Array<Flux3Keyframe>;
+  /**
+   * The text prompt describing the draft video.
+   */
+  prompt: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
+export type Flux3KeyframesToVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Duration of the generated video in seconds. An explicit duration is required to validate keyframe positions. Default value: `"5"`
+   */
+  duration?:
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Keyframe images pinned to frame positions in the generated video. Up to 10 keyframes with unique `frame_index` values.
+   */
+  keyframes: Array<Flux3Keyframe>;
+  /**
+   * The text prompt describing the video you want to generate.
+   */
+  prompt: string;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
+export type Flux3TextToVideoDraftInput = {
+  /**
+   * Aspect ratio of the generated draft. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Draft duration in whole seconds from 5 through 20, or `auto`. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the draft video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt describing the draft video.
+   */
+  prompt: string;
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
+export type Flux3TextToVideoInput = {
+  /**
+   * Aspect ratio of the generated video. `auto` lets the model choose. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "21:9"
+    | "2:1"
+    | "16:9"
+    | "4:3"
+    | "1:1"
+    | "3:4"
+    | "9:16";
+  /**
+   * Duration of the generated video in seconds. `auto` lets the model choose. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
+  /**
+   * Whether to generate audio for the video. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt describing the video you want to generate.
+   */
+  prompt: string;
+  /**
+   * Resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "720p" | "1080p";
+  /**
+   * The safety tolerance level for the generated video. 0 is the strictest and 4 is the most permissive. Default value: `2`
+   */
+  safety_tolerance?: number;
+};
 export type FluxControlLoraCannyImageToImageInput = {
   /**
    * The image to use for control lora. This is used to control the style of the generated image.
@@ -13527,7 +14128,7 @@ export type FluxControlLoraCannyImageToImageInput = {
    */
   control_lora_strength?: number;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13591,7 +14192,7 @@ export type FluxDevInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13659,7 +14260,7 @@ export type FluxGeneralImageToImageInput = {
    */
   easycontrols?: Array<EasyControlWeight>;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13825,7 +14426,7 @@ export type FluxGeneralInpaintingInput = {
    */
   easycontrols?: Array<EasyControlWeight>;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -13995,7 +14596,7 @@ export type FluxGeneralInput = {
    */
   easycontrols?: Array<EasyControlWeight>;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -14265,7 +14866,7 @@ export type FluxLoraCannyInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -14372,7 +14973,7 @@ export type FluxLoraFillInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -15330,7 +15931,7 @@ export type FluxProVtoInput = {
 };
 export type FluxPulidInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -15397,7 +15998,7 @@ export type FluxSchnellReduxInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -15439,7 +16040,7 @@ export type FluxSchnellReduxInput = {
 };
 export type FluxSubjectInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -15487,6 +16088,28 @@ export type FluxSubjectInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type FluxVideoUpscaleInput = {
+  /**
+   * Use 0 for a source-faithful upscale or 1 for creative detail enhancement. Default value: `"1"`
+   */
+  creativity?: 0 | 1;
+  /**
+   * Optional description used to guide creative detail enhancement.
+   */
+  prompt?: string;
+  /**
+   * Moderation strictness. Lower values are stricter. Default value: `2`
+   */
+  safety_tolerance?: number;
+  /**
+   * Output scaling factor. The source aspect ratio is preserved. Default value: `2`
+   */
+  upscale_factor?: number;
+  /**
+   * URL of the MP4 video to upscale. The video must be at most 20 seconds and 50 MB.
+   */
+  video_url: string | Blob | File;
 };
 export type FluxVisionUpscalerInput = {
   /**
@@ -16397,7 +17020,7 @@ export type fooocusInput = {
    */
   control_type?: "ImagePrompt" | "PyraCanny" | "CPDS" | "FaceSwap";
   /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
+   * If set to false, the safety checker will be disabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -17774,7 +18397,7 @@ export type GlmImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable NSFW safety checking on the generated images. Default value: `true`
+   * Enable NSFW safety checking on the generated images. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -17827,7 +18450,7 @@ export type GlmImageToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable NSFW safety checking on the generated images. Default value: `true`
+   * Enable NSFW safety checking on the generated images. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18088,6 +18711,10 @@ export type GptImage1MiniInput = {
 };
 export type GptImage2EditInput = {
   /**
+   * Background for the generated image Default value: `"auto"`
+   */
+  background?: "auto" | "transparent" | "opaque";
+  /**
    * The size of the generated image. Use 'auto' to infer from input images. Default value: `auto`
    */
   image_size?:
@@ -18129,6 +18756,10 @@ export type GptImage2EditInput = {
   sync_mode?: boolean;
 };
 export type GptImage2Input = {
+  /**
+   * Background for the generated image Default value: `"auto"`
+   */
+  background?: "auto" | "transparent" | "opaque";
   /**
    * The size of the generated image. Supports preset names, explicit {width, height}, or 'auto' to let the model pick the best size. Concrete sizes must have both dimensions as multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400. Default value: `landscape_4_3`
    */
@@ -18368,17 +18999,301 @@ export type H31TextTo3dInput = {
    */
   texture_seed?: number;
 };
+export type H3Flf2vTrainerInput = {
+  /**
+   * Aspect ratio to use for training. Matches the aspect ratios supported by the MiniMax H3 API. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * If true, videos will be automatically scaled to the target frame count and fps.
+   */
+  auto_scale_input?: boolean;
+  /**
+   * When enabled, the trainer returns a downloadable archive of your preprocessed training data for manual inspection. Use this to verify that your videos, images, and captions were processed correctly before committing to a full training run.
+   */
+  debug_dataset?: boolean;
+  /**
+   * Probability of conditioning on the first frame only. Default value: `0.2`
+   */
+  first_frame_conditioning_p?: number;
+  /**
+   * Probability of conditioning on BOTH the first and last frames (the API's first-to-last keyframe mode). The remaining probability mass trains unconditioned text-to-video-audio. Default value: `0.4`
+   */
+  first_last_frame_conditioning_p?: number;
+  /**
+   * Target frames per second for the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Probability of conditioning on the last frame only. Default value: `0.2`
+   */
+  last_frame_conditioning_p?: number;
+  /**
+   * Learning rate for optimization. Higher values can lead to faster training but may cause overfitting. Default value: `0.0002`
+   */
+  learning_rate?: number;
+  /**
+   * Number of frames per training sample. Must satisfy frames % 17 == 5 (e.g., 22, 39, 56, 73, 90, 107, 124). Default value: `73`
+   */
+  number_of_frames?: number;
+  /**
+   * The number of training steps. Default value: `2000`
+   */
+  number_of_steps?: number;
+  /**
+   * The rank of the LoRA adaptation. Higher values increase capacity but use more memory. Default value: `"32"`
+   */
+  rank?: 8 | 16 | 32 | 64 | 128;
+  /**
+   * Resolution to use for training. Higher resolutions require more memory. Default value: `"medium"`
+   */
+  resolution?: "low" | "medium" | "high";
+  /**
+   * The duration threshold in seconds. If a video is longer than this, it will be split into scenes. Default value: `30`
+   */
+  split_input_duration_threshold?: number;
+  /**
+   * If true, videos above a certain duration threshold will be split into scenes. Default value: `true`
+   */
+  split_input_into_scenes?: boolean;
+  /**
+   * Reject dataset-quality fallbacks during preprocessing, including captions that would use a blank prompt, missing sidecar keyframes, and videos without a readable audio track. By default these cases are reported in logs and use the documented blank-prompt, clip-frame, or silence fallback.
+   */
+  strict_dataset?: boolean;
+  /**
+   * URL to zip archive with video clips. Try to use at least 10 clips, although more is better.
+   *
+   * **Supported video formats:** .mp4, .mov, .avi, .mkv
+   *
+   * Note: The dataset must contain ONLY videos. Image datasets are not supported - images cannot serve as training media (some endpoints accept images as conditioning sidecars; see the endpoint's documentation). Mixed image/video archives are also rejected.
+   *
+   * The archive can also contain text files with captions. Each text file should have the same base name as the video clip it corresponds to.
+   */
+  training_data_url: string | Blob | File;
+  /**
+   * A phrase that will trigger the LoRA style. Will be prepended to captions during training. Default value: `""`
+   */
+  trigger_phrase?: string;
+};
+export type H3I2vTrainerInput = {
+  /**
+   * Aspect ratio to use for training. Matches the aspect ratios supported by the MiniMax H3 API. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * If true, videos will be automatically scaled to the target frame count and fps.
+   */
+  auto_scale_input?: boolean;
+  /**
+   * When enabled, the trainer returns a downloadable archive of your preprocessed training data for manual inspection. Use this to verify that your videos, images, and captions were processed correctly before committing to a full training run.
+   */
+  debug_dataset?: boolean;
+  /**
+   * Probability of conditioning on the first frame during training. Higher values improve image-to-video performance. Default value: `0.5`
+   */
+  first_frame_conditioning_p?: number;
+  /**
+   * Target frames per second for the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Learning rate for optimization. Higher values can lead to faster training but may cause overfitting. Default value: `0.0002`
+   */
+  learning_rate?: number;
+  /**
+   * Number of frames per training sample. Must satisfy frames % 17 == 5 (e.g., 22, 39, 56, 73, 90, 107, 124). Default value: `73`
+   */
+  number_of_frames?: number;
+  /**
+   * The number of training steps. Default value: `2000`
+   */
+  number_of_steps?: number;
+  /**
+   * The rank of the LoRA adaptation. Higher values increase capacity but use more memory. Default value: `"32"`
+   */
+  rank?: 8 | 16 | 32 | 64 | 128;
+  /**
+   * Resolution to use for training. Higher resolutions require more memory. Default value: `"medium"`
+   */
+  resolution?: "low" | "medium" | "high";
+  /**
+   * The duration threshold in seconds. If a video is longer than this, it will be split into scenes. Default value: `30`
+   */
+  split_input_duration_threshold?: number;
+  /**
+   * If true, videos above a certain duration threshold will be split into scenes. Default value: `true`
+   */
+  split_input_into_scenes?: boolean;
+  /**
+   * Reject dataset-quality fallbacks during preprocessing, including captions that would use a blank prompt, missing sidecar keyframes, and videos without a readable audio track. By default these cases are reported in logs and use the documented blank-prompt, clip-frame, or silence fallback.
+   */
+  strict_dataset?: boolean;
+  /**
+   * URL to zip archive with video clips. Try to use at least 10 clips, although more is better.
+   *
+   * **Supported video formats:** .mp4, .mov, .avi, .mkv
+   *
+   * Note: The dataset must contain ONLY videos. Image datasets are not supported - images cannot serve as training media (some endpoints accept images as conditioning sidecars; see the endpoint's documentation). Mixed image/video archives are also rejected.
+   *
+   * The archive can also contain text files with captions. Each text file should have the same base name as the video clip it corresponds to.
+   */
+  training_data_url: string | Blob | File;
+  /**
+   * A phrase that will trigger the LoRA style. Will be prepended to captions during training. Default value: `""`
+   */
+  trigger_phrase?: string;
+};
 export type H3ImageToVideoInput = {
   /**
    * The duration of the video in seconds. Default value: `5`
    */
   duration?: number;
   /**
-   * Optional URL of the image to use as the last frame, for first-to-last keyframe generation.
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Optional URL of the image to use as the last frame. It may be provided alone for end-only keyframe generation; in that case the output canvas follows this image.
    */
   end_image_url?: string | Blob | File;
   /**
-   * URL of the image to use as the first frame. The output aspect ratio follows this image.
+   * Optional URL of the image to use as the first frame. When provided, the output canvas follows this image. If only end_image_url is provided, the canvas follows that last frame instead. If both images are omitted, the request is handled as text-to-video (16:9 by default).
+   */
+  image_url?: string | Blob | File;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'fast' returns in about a second. 'balanced' picks per request. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode?: string;
+  /**
+   * The resolution of the generated video. 480P and 768P are native generation modes; 2K and 4K upscale a 768P base result. Default value: `"2K"`
+   */
+  resolution?: "480P" | "768P" | "2K" | "4K";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3ImageToVideoLoraInput = {
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Optional URL of the image to use as the last frame. It may be provided alone for end-only keyframe generation; in that case the output canvas follows this image.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * Optional URL of the image to use as the first frame. When provided, the output canvas follows this image. If only end_image_url is provided, the canvas follows that last frame instead. If both images are omitted, the request is handled as text-to-video (16:9 by default).
+   */
+  image_url?: string | Blob | File;
+  /**
+   * List of LoRA adapters to apply to the transformer.
+   */
+  loras: Array<LoRAInput>;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'fast' returns in about a second. 'balanced' picks per request. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode?: string;
+  /**
+   * The resolution of the generated video. 480P and 768P are native generation modes; 2K and 4K upscale a 768P base result. Default value: `"2K"`
+   */
+  resolution?: "480P" | "768P" | "2K" | "4K";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3MaxCameraKeyframe = {
+  /**
+   * Horizontal camera angle around the subject, in degrees.
+   */
+  azimuth: number;
+  /**
+   * Camera distance from the subject in normalized scene units.
+   */
+  distance: number;
+  /**
+   * Vertical camera angle around the subject, in degrees.
+   */
+  elevation: number;
+  /**
+   * Normalized video time, from 0 at the start to 1 at the end.
+   */
+  time: number;
+};
+export type H3MaxImageToVideoInput = {
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Optional URL of the image to use as the last frame. It may be provided alone for end-only keyframe generation; in that case the output canvas follows this image.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * Optional URL of the image to use as the first frame. When provided, the output canvas follows this image. If only end_image_url is provided, the canvas follows that last frame instead. If both images are omitted, the request is handled as text-to-video (16:9 by default).
+   */
+  image_url?: string | Blob | File;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
+  /**
+   * The native generation resolution of the video. Default value: `"768P"`
+   */
+  resolution?: "480P" | "768P";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3MaxMultiAngleInput = {
+  /**
+   * Ordered camera keyframes. The first pose is held before its time and the final pose is held for the remainder of the video.
+   */
+  camera_trajectory?: Array<H3MaxCameraKeyframe>;
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * URL of the image to use as the first frame.
    */
   image_url: string | Blob | File;
   /**
@@ -18386,11 +19301,23 @@ export type H3ImageToVideoInput = {
    */
   prompt: string;
   /**
-   * The resolution of the generated video. Only 2K is currently supported. Default value: `"2K"`
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
+  /**
+   * The native resolution supported by the camera-control adapter. Default value: `"480P"`
    */
   resolution?: string;
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
 };
-export type H3ReferenceToVideoInput = {
+export type H3MaxReferenceToVideoInput = {
   /**
    * The aspect ratio of the generated video. Default value: `"adaptive"`
    */
@@ -18400,9 +19327,17 @@ export type H3ReferenceToVideoInput = {
    */
   duration?: number;
   /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
    * Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.
    */
   prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
   /**
    * URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Audio cannot be the only reference input; provide at least one reference image or video with it. Reference images, videos, and audio clips must add up to at most 12 files.
    */
@@ -18416,9 +19351,251 @@ export type H3ReferenceToVideoInput = {
    */
   reference_video_urls?: Array<string>;
   /**
-   * The resolution of the generated video. Only 2K is currently supported. Default value: `"2K"`
+   * The native generation resolution of the video. Default value: `"768P"`
    */
-  resolution?: string;
+  resolution?: "480P" | "768P";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3MaxReferenceToVideoOutput = {
+  /**
+   * The prompt after expansion, as sent to the model. Null when prompt expansion was disabled, left the prompt unchanged, or was performed internally by MiniMax's hosted API.
+   */
+  expanded_prompt?: string;
+  /**
+   * Base seed for reproducing the generation.
+   */
+  seed: number;
+  /**
+   * Timing breakdown in seconds. 'inference' is the DiT denoising time on the GPU backend. Null on routes that do not report backend timings.
+   */
+  timings?: unknown;
+  /**
+   * The generated video
+   */
+  video: File;
+};
+export type H3MaxTextToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
+  /**
+   * The native generation resolution of the video. Default value: `"768P"`
+   */
+  resolution?: "480P" | "768P";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3MaxTextToVideoOutput = {
+  /**
+   * The prompt after expansion, as sent to the model. Null when prompt expansion was disabled, left the prompt unchanged, or was performed internally by MiniMax's hosted API.
+   */
+  expanded_prompt?: string;
+  /**
+   * Timing breakdown in seconds. 'inference' is the DiT denoising time on the GPU backend. Null on routes that do not report backend timings.
+   */
+  timings?: unknown;
+  /**
+   * The generated video
+   */
+  video: File;
+};
+export type H3Ref2vaTrainerInput = {
+  /**
+   * Aspect ratio to use for training. Matches the aspect ratios supported by the MiniMax H3 API. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * If true, videos will be automatically scaled to the target frame count and fps.
+   */
+  auto_scale_input?: boolean;
+  /**
+   * When enabled, the trainer returns a downloadable archive of your preprocessed training data for manual inspection. Use this to verify that your videos, images, captions and reference images were processed correctly before committing to a full training run.
+   */
+  debug_dataset?: boolean;
+  /**
+   * Target frames per second for the video. Default value: `24`
+   */
+  frame_rate?: number;
+  /**
+   * Learning rate for optimization. Higher values can lead to faster training but may cause overfitting. Default value: `0.0002`
+   */
+  learning_rate?: number;
+  /**
+   * Number of frames per training sample. Must satisfy frames % 17 == 5 (e.g., 22, 39, 56, 73, 90, 107, 124). Default value: `73`
+   */
+  number_of_frames?: number;
+  /**
+   * The number of training steps. Default value: `2000`
+   */
+  number_of_steps?: number;
+  /**
+   * The rank of the LoRA adaptation. Higher values increase capacity but use more memory. Default value: `"32"`
+   */
+  rank?: 8 | 16 | 32 | 64 | 128;
+  /**
+   * Probability of conditioning on the reference images during training. The remaining probability mass trains unconditioned text-to-video-audio, which keeps prompt-only generation stable. Default value: `0.9`
+   */
+  reference_conditioning_p?: number;
+  /**
+   * Resolution to use for training. Higher resolutions require more memory. Default value: `"medium"`
+   */
+  resolution?: "low" | "medium" | "high";
+  /**
+   * URL of a previously trained LoRA (.safetensors) from this trainer to WARM-START from: its weights initialize the adapter and training continues for number_of_steps more steps. Weights only — the optimizer and learning-rate schedule start fresh.
+   */
+  resume_from_lora_url?: string | Blob | File;
+  /**
+   * The duration threshold in seconds. If a video is longer than this, it will be split into scenes. Default value: `30`
+   */
+  split_input_duration_threshold?: number;
+  /**
+   * If true, videos above a certain duration threshold will be split into scenes. Note: reference sidecars are dropped for clips that get split. Default value: `true`
+   */
+  split_input_into_scenes?: boolean;
+  /**
+   * Reject dataset-quality fallbacks during preprocessing, including captions that would use a blank prompt, missing reference sidecars, and videos without a readable audio track. By default these cases are reported in logs and use the documented fallback.
+   */
+  strict_dataset?: boolean;
+  /**
+   * URL to zip archive with video clips of your subject. Try to use at least 10 clips, although more is better.
+   *
+   * **Supported video formats:** .mp4, .mov, .avi, .mkv
+   *
+   * Note: The dataset must contain ONLY videos. Image datasets are not supported - images cannot serve as training media (provide them as reference sidecars instead, see below). Mixed image/video archives are also rejected.
+   *
+   * Optional per-clip extras, matched by base name: a caption text file (`clip01.txt`), and ORDERED reference sidecars `clip01.ref_1.<ext>` .. `clip01.ref_4.<ext>` where the extension picks the modality — images (.png/.jpg/.jpeg), videos (.mp4/.mov/.avi/.mkv/.webm; their soundtrack becomes an audio reference too), or audio (.wav/.mp3/.flac/.m4a/.ogg/.aac). Clips without reference sidecars train against a frame of the clip itself as the reference.
+   */
+  training_data_url: string | Blob | File;
+  /**
+   * A phrase that will trigger the LoRA style. Will be prepended to captions during training. Default value: `""`
+   */
+  trigger_phrase?: string;
+};
+export type H3ReferenceToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'fast' returns in about a second. 'balanced' picks per request. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode?: string;
+  /**
+   * URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Audio cannot be the only reference input; provide at least one reference image or video with it. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_audio_urls?: Array<string>;
+  /**
+   * URLs of subject/style reference images, referenced in the prompt as Image 1, Image 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_image_urls?: Array<string>;
+  /**
+   * URLs of motion/reference video clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Video 1, Video 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_video_urls?: Array<string>;
+  /**
+   * The resolution of the generated video. 480P and 768P are native generation modes; 2K and 4K upscale a 768P base result. Default value: `"2K"`
+   */
+  resolution?: "480P" | "768P" | "2K" | "4K";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3ReferenceToVideoLoraInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * List of LoRA adapters to apply to the transformer.
+   */
+  loras: Array<LoRAInput>;
+  /**
+   * Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'fast' returns in about a second. 'balanced' picks per request. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode?: string;
+  /**
+   * URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Audio cannot be the only reference input; provide at least one reference image or video with it. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_audio_urls?: Array<string>;
+  /**
+   * URLs of subject/style reference images, referenced in the prompt as Image 1, Image 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_image_urls?: Array<string>;
+  /**
+   * URLs of motion/reference video clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Video 1, Video 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_video_urls?: Array<string>;
+  /**
+   * The resolution of the generated video. 480P and 768P are native generation modes; 2K and 4K upscale a 768P base result. Default value: `"2K"`
+   */
+  resolution?: "480P" | "768P" | "2K" | "4K";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
 };
 export type H3TextToVideoInput = {
   /**
@@ -18430,13 +19607,77 @@ export type H3TextToVideoInput = {
    */
   duration?: number;
   /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
    * Text prompt for video generation
    */
   prompt: string;
   /**
-   * The resolution of the generated video. Only 2K is currently supported. Default value: `"2K"`
+   * How much effort to spend rewriting the prompt before generation. 'fast' returns in about a second. 'balanced' picks per request. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
    */
-  resolution?: string;
+  prompt_expansion_mode?: string;
+  /**
+   * The resolution of the generated video. 480P and 768P are native generation modes; 2K and 4K upscale a 768P base result. Default value: `"2K"`
+   */
+  resolution?: "480P" | "768P" | "2K" | "4K";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3TextToVideoLoraInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * List of LoRA adapters to apply to the transformer.
+   */
+  loras: Array<LoRAInput>;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'fast' returns in about a second. 'balanced' picks per request. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode?: string;
+  /**
+   * The resolution of the generated video. 480P and 768P are native generation modes; 2K and 4K upscale a 768P base result. Default value: `"2K"`
+   */
+  resolution?: "480P" | "768P" | "2K" | "4K";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type H3TextToVideoOutput = {
+  /**
+   * The prompt after expansion, as sent to the model. Null when prompt expansion was disabled, left the prompt unchanged, or was performed internally by MiniMax's hosted API.
+   */
+  expanded_prompt?: string;
+  /**
+   * The generated video
+   */
+  video: File;
 };
 export type HappyHorse15ReferenceToVideoInput = {
   /**
@@ -18457,7 +19698,7 @@ export type HappyHorse15ReferenceToVideoInput = {
    */
   duration?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18496,7 +19737,7 @@ export type HappyHorse15TextToVideoInput = {
    */
   duration?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18518,7 +19759,7 @@ export type HappyHorseImageToVideoInput = {
    */
   duration?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18548,7 +19789,7 @@ export type HappyHorseReferenceToVideoInput = {
    */
   duration?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18578,7 +19819,7 @@ export type HappyHorseTextToVideoInput = {
    */
   duration?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18600,7 +19841,7 @@ export type HappyHorseVideoEditInput = {
    */
   audio_setting?: "auto" | "origin";
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18632,7 +19873,7 @@ export type HdrStyleInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
+   * Whether to enable the safety checker for the generated image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -18678,6 +19919,20 @@ export type HdrStyleInput = {
    * If `True`, the media will be returned as a data URI and won't be saved in history.
    */
   sync_mode?: boolean;
+};
+export type HdrStyleOutput = {
+  /**
+   * The generated HDR style images
+   */
+  images: Array<Image>;
+  /**
+   * The prompt used for generation
+   */
+  prompt: string;
+  /**
+   * The seed used for generation
+   */
+  seed: number;
 };
 export type HeadshotInput = {
   /**
@@ -19084,6 +20339,16 @@ export type HeygenV2VideoAgentInput = {
    * Natural language prompt describing the video to generate. Include details about style, visual elements, and desired length for best results.
    */
   prompt: string;
+};
+export type HeygenV3FillerWordRemovalInput = {
+  /**
+   * Optional display title for the removal job.
+   */
+  title?: string;
+  /**
+   * URL of the source video to remove filler words and long silences from.
+   */
+  video_url: string | Blob | File;
 };
 export type HeygenV3LipsyncSpeedInput = {
   /**
@@ -20543,9 +21808,49 @@ export type HeygenV3VideoAgentInput = {
     | "Ginny"
     | "Hope";
 };
+export type Hi3dImageTo3dInput = {
+  /**
+   * Generate PBR material maps together with the texture. Only supported (and billed) for v2.0/v2.1 and v3.0 models when enable_texture is true; ignored otherwise. Default value: `true`
+   */
+  enable_pbr?: boolean;
+  /**
+   * If set to true, input images are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to generate textures in addition to geometry. When false, only the geometry mesh is generated (and billed). Default value: `true`
+   */
+  enable_texture?: boolean;
+  /**
+   * File format of the generated model. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "stl" | "fbx" | "usdz";
+  /**
+   * Target face count of the generated model. When unset, the partner picks the recommended count for the resolution (e.g. 500k for 512, 1M for 1024, 2M for 1536).
+   */
+  face_count?: number;
+  /**
+   * URL of the input image. PNG, JPEG and WebP formats are supported, up to 20MB.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Model version used for generation. 'hitem3d*' are the general models; 'scene-portrait*' are tuned for portraits/characters. Default value: `"hitem3dv2.1"`
+   */
+  model?:
+    | "hitem3dv1.5"
+    | "hitem3dv2.0"
+    | "hitem3dv2.1"
+    | "scene-portraitv1.5"
+    | "scene-portraitv2.0"
+    | "scene-portraitv2.1";
+  /**
+   * Generation resolution. Supported values depend on the model: v1.5/v2.0 accept 512, 1024, 1536 and 1536pro; v2.1 accepts 1536fast and 1536pro; scene-portraitv1.5 accepts 1536; scene-portraitv2.0 accepts 1536pro; scene-portraitv2.1 accepts 1536profast and 1536pro. Defaults to the model's recommended resolution (1024 for v1.5/v2.0, the fast tier otherwise).
+   */
+  resolution?: "512" | "1024" | "1536" | "1536pro" | "1536fast" | "1536profast";
+};
 export type HidreamI1DevInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -20593,7 +21898,7 @@ export type HidreamI1DevInput = {
 };
 export type HidreamI1FullImageToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -20658,7 +21963,7 @@ export type HidreamI1FullImageToImageInput = {
 };
 export type HidreamI1FullInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -20819,6 +22124,16 @@ export type HidreamO1ImageInput = {
    */
   sync_mode?: boolean;
 };
+export type Hitem3DOutput = {
+  /**
+   * Generated 3D model file.
+   */
+  model_mesh: File;
+  /**
+   * Preview image of the generated model, when available.
+   */
+  thumbnail?: File;
+};
 export type Hunyuan3DInput = {
   /**
    * Guidance scale for the model. Default value: `7.5`
@@ -20949,7 +22264,7 @@ export type Hunyuan3dV3TextTo3dInput = {
 };
 export type HunyuanImageToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -21114,7 +22429,7 @@ export type HunyuanImageV3TextToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -21199,7 +22514,7 @@ export type HunyuanMotionOutput = {
 };
 export type HunyuanTextToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -21316,7 +22631,7 @@ export type HunyuanVideoInput = {
    */
   aspect_ratio?: "16:9" | "9:16";
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -21418,7 +22733,7 @@ export type HunyuanVideoVideoToVideoInput = {
    */
   aspect_ratio?: "16:9" | "9:16";
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -21898,7 +23213,7 @@ export type IclightV2Input = {
    */
   enable_hr_fix?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -23393,6 +24708,24 @@ export type ImageAppsV2StyleTransferInput = {
     | "pixel_art"
     | "claymation";
 };
+export type ImageAppsV2VirtualTryOnInput = {
+  /**
+   * Aspect ratio for 4K output (default: 3:4 for fashion)
+   */
+  aspect_ratio?: AspectRatio;
+  /**
+   * Clothing photo URL
+   */
+  clothing_image_url: string | Blob | File;
+  /**
+   * Person photo URL
+   */
+  person_image_url: string | Blob | File;
+  /**
+   *  Default value: `true`
+   */
+  preserve_pose?: boolean;
+};
 export type ImageChatOutput = {
   /**
    * Dictionary of label: mask image
@@ -23423,7 +24756,7 @@ export type ImageEditInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -23670,9 +25003,9 @@ export type ImageTo3DInput = {
    */
   image_url: string | Blob | File;
   /**
-   * Type of 3D mesh generation. 'standard' produces a regular high-detail mesh; 'lowpoly' produces a low-poly mesh optimized for cleaner polygons. When set to 'lowpoly', the remesh controls (topology, target_polycount, should_remesh) are ignored by Meshy. Default value: `"standard"`
+   * Type of 3D mesh generation. 'standard' produces a regular high-detail mesh; 'lowpoly' produces a low-poly mesh optimized for cleaner polygons; 'smart-topology' uses Meshy-T2 for clean, natively separated parts. When set to 'lowpoly', the remesh controls (topology, target_polycount, should_remesh) are ignored by Meshy. Default value: `"standard"`
    */
-  model_type?: "standard" | "lowpoly";
+  model_type?: "standard" | "lowpoly" | "smart-topology";
   /**
    * Pose mode for the generated model. 'a-pose' generates an A-pose, 't-pose' generates a T-pose, empty string for no specific pose. Default value: `""`
    */
@@ -23694,7 +25027,7 @@ export type ImageTo3DInput = {
    */
   symmetry_mode?: "off" | "auto" | "on";
   /**
-   * Target number of polygons in the generated model Default value: `30000`
+   * Target number of polygons in the generated model. When model_type is 'smart-topology' and this is left unset, Meshy's lower smart-topology default (4,000) is used instead; smart topology accepts at most 15,000. Default value: `30000`
    */
   target_polycount?: number;
   /**
@@ -23755,6 +25088,76 @@ export type ImageTo3DOutput = {
    * Preview thumbnail of the generated model
    */
   thumbnail?: File;
+};
+export type ImageTo3DV7Input = {
+  /**
+   * Animation preset ID from Meshy's library. Only used when enable_animation is true; in that case it must be in [0, 696] (``0`` is the "Idle" preset) and is otherwise rejected with a 422. See https://docs.meshy.ai/en/api/animation-library for available action IDs. Default value: `92`
+   */
+  animation_action_id?: number;
+  /**
+   * Apply an animation preset to the rigged model. Requires enable_rigging to be true.
+   */
+  enable_animation?: boolean;
+  /**
+   * Generate PBR Maps (metallic, roughness, normal) in addition to base color
+   */
+  enable_pbr?: boolean;
+  /**
+   * Automatically rig the generated model as a humanoid character. Includes basic walking and running animations. Best results with humanoid characters that have clearly defined limbs.
+   */
+  enable_rigging?: boolean;
+  /**
+   * If set to true, input data will be checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Image URL or base64 data URI for 3D model creation. Supports .jpg, .jpeg, and .png formats. Also supports AVIF and HEIF formats which will be automatically converted.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Type of 3D mesh generation. 'standard' produces a regular high-detail mesh; 'lowpoly' produces a low-poly mesh optimized for cleaner polygons; 'smart-topology' uses Meshy-T2 for clean, natively separated parts. When set to 'lowpoly', the remesh controls (topology, target_polycount, should_remesh) are ignored by Meshy. Default value: `"standard"`
+   */
+  model_type?: "standard" | "lowpoly" | "smart-topology";
+  /**
+   * Pose mode for the generated model. 'a-pose' generates an A-pose, 't-pose' generates a T-pose, empty string for no specific pose. Default value: `""`
+   */
+  pose_mode?: "a-pose" | "t-pose" | "";
+  /**
+   * Approximate height of the character in meters. Only used when enable_rigging is true. Default value: `1.7`
+   */
+  rigging_height_meters?: number;
+  /**
+   * Whether to enable the remesh phase Default value: `true`
+   */
+  should_remesh?: boolean;
+  /**
+   * Whether to generate textures Default value: `true`
+   */
+  should_texture?: boolean;
+  /**
+   * Controls symmetry behavior during model generation. Off disables symmetry, Auto determines it automatically, On enforces symmetry. Default value: `"auto"`
+   */
+  symmetry_mode?: "off" | "auto" | "on";
+  /**
+   * Target number of polygons in the generated model. When model_type is 'smart-topology' and this is left unset, Meshy's lower smart-topology default (4,000) is used instead; smart topology accepts at most 15,000. Default value: `30000`
+   */
+  target_polycount?: number;
+  /**
+   * 2D image to guide the texturing process
+   */
+  texture_image_url?: string | Blob | File;
+  /**
+   * Text prompt to guide the texturing process
+   */
+  texture_prompt?: string;
+  /**
+   * Specify the topology of the generated model. Quad for smooth surfaces, Triangle for detailed geometry. Default value: `"triangle"`
+   */
+  topology?: "quad" | "triangle";
+  /**
+   * Enable higher-fidelity geometry with finer surface detail. Only available for standard generation (ultra requires Meshy-7; it cannot be combined with smart topology or lowpoly).
+   */
+  ultra_mode?: boolean;
 };
 export type ImageToImageControlNetInput = {
   /**
@@ -24012,7 +25415,7 @@ export type ImageToImageInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -24243,7 +25646,7 @@ export type ImageToImageLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -24298,20 +25701,6 @@ export type ImageToImageLoraInput = {
    * If `True`, the image is returned as a data URI and is not stored.
    */
   sync_mode?: boolean;
-};
-export type ImageToImageOutput = {
-  /**
-   * The original prompt (prompt expansion is not available for image editing)
-   */
-  actual_prompt?: string;
-  /**
-   * The edited images
-   */
-  images: Array<ImageFile>;
-  /**
-   * The seeds used for each generated image
-   */
-  seeds: Array<number>;
 };
 export type ImageToImagePlaygroundv25Input = {
   /**
@@ -24497,7 +25886,7 @@ export type ImageToImageSD15Input = {
 };
 export type ImageToImageTurboInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -24658,7 +26047,7 @@ export type ImageToVideoFlashInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -24712,7 +26101,7 @@ export type ImageToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -24926,6 +26315,32 @@ export type ImpulseResponseInput = {
    */
   wet_level?: number;
 };
+export type IncreaseResolutionInput = {
+  /**
+   * Upscale factor. Each factor is its own SwinIR checkpoint. Default value: `"2"`
+   */
+  desired_increase?: 2 | 4;
+  /**
+   * URL of the image to upscale.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Image format. JPEG carries no alpha, so preserve_alpha does not apply. Default value: `"png"`
+   */
+  output_type?: "png" | "jpeg";
+  /**
+   * Reattach the source alpha channel to the result. Default value: `true`
+   */
+  preserve_alpha?: boolean;
+  /**
+   * Correct the upscaled result's color cast against the source image.
+   */
+  preserve_color?: boolean;
+  /**
+   * Return the image inline instead of as a URL.
+   */
+  sync_mode?: boolean;
+};
 export type IndexTts2TextToSpeechInput = {
   /**
    * The audio file to generate the speech from.
@@ -25054,43 +26469,13 @@ export type InfinityStarTextToVideoInput = {
    */
   use_apg?: boolean;
 };
-export type InfoOutput = {
-  /**
-   *
-   */
-  adventure_commands: unknown;
-  /**
-   *
-   */
-  api_base_url: string | Blob | File;
-  /**
-   *
-   */
-  heartbeat_interval_sec: number;
-  /**
-   *
-   */
-  max_token_expire_seconds: number;
-  /**
-   *
-   */
-  modes: unknown;
-  /**
-   *
-   */
-  session_timeout_sec: number;
-  /**
-   *
-   */
-  ticket_expires_in: number;
-};
 export type InpaintAudioInput = {
   /**
    * URL of the source audio. Maximum 10 seconds — longer clips are rejected. The model regenerates only the region defined by `segment`; everything outside it is preserved.
    */
   audio_url: string | Blob | File;
   /**
-   * Number of variations to generate. Default value: `1`
+   * Number of variations to generate. Default value: `2`
    */
   num_samples?: number;
   /**
@@ -25782,7 +27167,7 @@ export type InpaintInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -25850,7 +27235,7 @@ export type InpaintLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -25912,7 +27297,7 @@ export type InpaintLoraInput = {
 };
 export type InpaintTurboInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -26017,7 +27402,7 @@ export type Input = {
 };
 export type InstantCharacterInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -26075,30 +27460,6 @@ export type InstantCharacterInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
-};
-export type InstructInput = {
-  /**
-   * Directing-mode text instruction (e.g. a story beat).
-   */
-  content: string;
-  /**
-   * Encrypted travel ID from the client's enter-travel.
-   */
-  encrypted_travel_id: string;
-};
-export type InstructOutput = {
-  /**
-   *
-   */
-  accepted: boolean;
-  /**
-   *
-   */
-  content: string;
-  /**
-   *
-   */
-  encrypted_travel_id: string;
 };
 export type InterleaveVideoInput = {
   /**
@@ -26213,6 +27574,28 @@ export type InterpolateValidation = {
    * URL to the first-frame keyframe image.
    */
   start_image_url: string | Blob | File;
+};
+export type InterpolateVideoInput = {
+  /**
+   * Whether to use H264 codec for output video. Default is H265.
+   */
+  H264_output?: boolean;
+  /**
+   * Frame interpolation model. Apollo is general-purpose; Chronos targets real-world motion; Aion handles extreme/complex motion. Default value: `"Apollo"`
+   */
+  model?: "Apollo" | "Chronos" | "Aion";
+  /**
+   * Slow-motion factor: 2 makes the output twice as long at the target FPS (2x slow motion), up to 8x. 1 keeps the original speed. The extra generated frames are billed like interpolated frames. Default value: `1`
+   */
+  slowdown_factor?: number;
+  /**
+   * Target frames per second for the interpolated output. Default value: `60`
+   */
+  target_fps?: number;
+  /**
+   * URL of the video to retime / interpolate
+   */
+  video_url: string | Blob | File;
 };
 export type InworldTtsInput = {
   /**
@@ -26457,12 +27840,6 @@ export type IpAdapterFaceIdInput = {
    */
   width?: number;
 };
-export type IssueTokenInput = {
-  /**
-   * Temporary token validity. Prefer the maximum so the token outlives the session; refresh via this endpoint on expiry. Default value: `1800`
-   */
-  expire_in_seconds?: number;
-};
 export type IV2VInput = {
   /**
    * Aspect ratio to use for training. Default value: `"1:1"`
@@ -26573,7 +27950,7 @@ export type janusInput = {
    */
   cfg_weight?: number;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -26806,7 +28183,7 @@ export type KleinBaseEditLoRAInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -26867,7 +28244,7 @@ export type KleinBaseLoRAInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -26920,7 +28297,7 @@ export type KleinBaseLoRAInput = {
 };
 export type KleinLoRAInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28256,7 +29633,7 @@ export type KokoroSpanishInput = {
 };
 export type KolorsImg2ImgInput = {
   /**
-   * Enable safety checker. Default value: `true`
+   * Enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28327,7 +29704,7 @@ export type KolorsImg2ImgInput = {
 };
 export type kolorsInput = {
   /**
-   * Enable safety checker. Default value: `true`
+   * Enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28399,7 +29776,7 @@ export type Krea2ImageToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28453,7 +29830,7 @@ export type Krea2ImageToImageLoRAInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28511,7 +29888,7 @@ export type Krea2Input = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28594,7 +29971,7 @@ export type Krea2LoRAInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28643,7 +30020,7 @@ export type Krea2StyleInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28696,7 +30073,7 @@ export type Krea2TilingInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28753,7 +30130,7 @@ export type Krea2TilingLoRAInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If true, the output safety checker is enabled. Default value: `true`
+   * If true, the output safety checker is enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28920,7 +30297,7 @@ export type KreaWan14bVideoToVideoInput = {
 };
 export type L2PInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -28993,7 +30370,8 @@ export type LcmSd15I2iInput = {
   /**
    * If set to true, the resulting image will be checked whether it includes any
    * potentially unsafe content. If it does, it will be replaced with a black
-   * image. Default value: `true`
+   * image. Disabling safety checks requires account authorization; unauthorized
+   * requests are always checked. Default value: `true`
    */
   enable_safety_checks?: boolean;
   /**
@@ -29261,47 +30639,11 @@ export type ListAvatarsOutput = {
    */
   avatars: Array<string>;
 };
-export type ListTravelsInput = {
-  /**
-   * World whose travels to list; must be owned by the caller.
-   */
-  encrypted_world_id: string;
-  /**
-   *  Default value: `1`
-   */
-  page?: number;
-  /**
-   *  Default value: `20`
-   */
-  page_size?: number;
-  /**
-   *
-   */
-  status?: "init" | "pending" | "running" | "failed" | "completed";
-};
 export type ListVoicesOutput = {
   /**
    * List of available voice names
    */
   voices: Array<string>;
-};
-export type ListWorldsInput = {
-  /**
-   *
-   */
-  mode?: "adventure" | "directing";
-  /**
-   *  Default value: `1`
-   */
-  page?: number;
-  /**
-   *  Default value: `20`
-   */
-  page_size?: number;
-  /**
-   *
-   */
-  status?: "generating" | "ready" | "failed";
 };
 export type LivePortraitImageInput = {
   /**
@@ -29559,7 +30901,7 @@ export type LongcatImageEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29602,7 +30944,7 @@ export type LongcatImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29660,7 +31002,7 @@ export type LongcatSingleAvatarAudioToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29706,7 +31048,7 @@ export type LongcatSingleAvatarImageAudioToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29748,7 +31090,7 @@ export type LongcatVideoDistilledImageToVideo480pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29802,7 +31144,7 @@ export type LongcatVideoDistilledImageToVideo720pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29864,7 +31206,7 @@ export type LongcatVideoDistilledTextToVideo480pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29918,7 +31260,7 @@ export type LongcatVideoDistilledTextToVideo720pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -29976,7 +31318,7 @@ export type LongcatVideoImageToVideo480pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -30042,7 +31384,7 @@ export type LongcatVideoImageToVideo720pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -30116,7 +31458,7 @@ export type LongcatVideoTextToVideo480pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -30182,7 +31524,7 @@ export type LongcatVideoTextToVideo720pInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Whether to enable safety checker. Default value: `true`
+   * Whether to enable safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -30824,7 +32166,7 @@ export type LoraInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -30879,13 +32221,17 @@ export type LoraInput = {
 };
 export type LoRAInput = {
   /**
-   * URL to an Ideogram V4 LoRA weights file (.safetensors).
+   * URL or HuggingFace repo id (owner/repo) of the LoRA weights.
    */
   path: string;
   /**
-   * Scale factor for the LoRA weights. Default value: `1`
+   * Strength of the LoRA (0.0 to 4.0). Default value: `1`
    */
   scale?: number;
+  /**
+   * Name of the LoRA weight file. Only used when `path` is a HuggingFace repo and it holds more than one LoRA.
+   */
+  weight_name?: string;
 };
 export type loraOutput = {
   /**
@@ -31127,7 +32473,7 @@ export type Ltx23AudioToVideoInput = {
    */
   aspect_ratio?: "auto" | "16:9" | "9:16";
   /**
-   * URL of the audio file to generate a video from. Duration must be between 2 and 20 seconds. Must be publicly accessible or base64 data URI.
+   * URL of the audio file to generate a video from. Duration must be between 2 and 20 seconds; pro models support a maximum of 10 seconds. Must be publicly accessible or base64 data URI.
    */
   audio_url: string | Blob | File;
   /**
@@ -37441,6 +38787,174 @@ export type Ltx23VideoTrainerInput = {
    */
   with_audio?: boolean;
 };
+export type Ltx25ImageToVideoFastInput = {
+  /**
+   * The aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input image. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16";
+  /**
+   * Optional camera motion applied to the generated video.
+   */
+  camera_motion?:
+    | "dolly_in"
+    | "dolly_out"
+    | "dolly_left"
+    | "dolly_right"
+    | "jib_up"
+    | "jib_down"
+    | "static"
+    | "focus_shift";
+  /**
+   * The duration of the generated video in seconds. At 720p and 1080p, 24 or 25 FPS supports up to 20 seconds, while 48 or 50 FPS supports up to 10 seconds. At 1440p and 2160p, all frame rates support up to 10 seconds. Set to 'auto' to let the model choose the duration automatically. Default value: `"auto"`
+   */
+  duration?: 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 | "auto";
+  /**
+   * The URL of the end image to use for the generated video. When provided, generates a transition video between start and end frames.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * The frames per second of the generated video. Default value: `"25"`
+   */
+  fps?: 24 | 25 | 48 | 50;
+  /**
+   * Whether to generate audio for the generated video Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The URL of the start image to use for the generated video.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The prompt to use for the generated video
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Default value: `"1080p"`
+   */
+  resolution?: "720p" | "1080p" | "1440p" | "2160p";
+};
+export type Ltx25ImageToVideoProInput = {
+  /**
+   * The aspect ratio of the generated video. If 'auto', the aspect ratio will be determined automatically based on the input image. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "16:9" | "9:16";
+  /**
+   * Optional camera motion applied to the generated video.
+   */
+  camera_motion?:
+    | "dolly_in"
+    | "dolly_out"
+    | "dolly_left"
+    | "dolly_right"
+    | "jib_up"
+    | "jib_down"
+    | "static"
+    | "focus_shift";
+  /**
+   * The duration of the generated video in seconds, up to 10 seconds. Set to 'auto' to let the model choose the duration automatically. Default value: `"auto"`
+   */
+  duration?: 6 | 8 | 10 | "auto";
+  /**
+   * The URL of the end image to use for the generated video. When provided, generates a transition video between start and end frames.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * The frames per second of the generated video. Default value: `"25"`
+   */
+  fps?: 24 | 25 | 50;
+  /**
+   * Whether to generate audio for the generated video Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The URL of the start image to use for the generated video.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The prompt to use for the generated video
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Default value: `"1080p"`
+   */
+  resolution?: "720p" | "1080p";
+};
+export type Ltx25TextToVideoFastInput = {
+  /**
+   * The aspect ratio of the generated video Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16";
+  /**
+   * Optional camera motion applied to the generated video.
+   */
+  camera_motion?:
+    | "dolly_in"
+    | "dolly_out"
+    | "dolly_left"
+    | "dolly_right"
+    | "jib_up"
+    | "jib_down"
+    | "static"
+    | "focus_shift";
+  /**
+   * The duration of the generated video in seconds. At 720p and 1080p, 24 or 25 FPS supports up to 20 seconds, while 48 or 50 FPS supports up to 10 seconds. At 1440p and 2160p, all frame rates support up to 10 seconds. Set to 'auto' to let the model choose the duration automatically. Default value: `"auto"`
+   */
+  duration?: 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 | "auto";
+  /**
+   * The frames per second of the generated video. Default value: `"25"`
+   */
+  fps?: 24 | 25 | 48 | 50;
+  /**
+   * Whether to generate audio for the generated video Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The prompt to use for the generated video
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Default value: `"1080p"`
+   */
+  resolution?: "720p" | "1080p" | "1440p" | "2160p";
+};
+export type Ltx25TextToVideoProInput = {
+  /**
+   * The aspect ratio of the generated video Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16";
+  /**
+   * Optional camera motion applied to the generated video.
+   */
+  camera_motion?:
+    | "dolly_in"
+    | "dolly_out"
+    | "dolly_left"
+    | "dolly_right"
+    | "jib_up"
+    | "jib_down"
+    | "static"
+    | "focus_shift";
+  /**
+   * The duration of the generated video in seconds, up to 10 seconds. Set to 'auto' to let the model choose the duration automatically. Default value: `"auto"`
+   */
+  duration?: 6 | 8 | 10 | "auto";
+  /**
+   * The frames per second of the generated video. Default value: `"25"`
+   */
+  fps?: 24 | 25 | 50;
+  /**
+   * Whether to generate audio for the generated video Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The prompt to use for the generated video
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Default value: `"1080p"`
+   */
+  resolution?: "720p" | "1080p";
+};
 export type LTX2AudioToVideoInput = {
   /**
    * The acceleration level to use. Default value: `"regular"`
@@ -40311,7 +41825,7 @@ export type Ltxv13b098DistilledInput = {
    */
   enable_detail_pass?: boolean;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -40775,7 +42289,7 @@ export type LuminaImageV2Input = {
    */
   cfg_trunc_ratio?: number;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -40934,7 +42448,7 @@ export type MagiDistilledExtendVideoInput = {
    */
   aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -40972,7 +42486,7 @@ export type MagiDistilledImageToVideoInput = {
    */
   aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -41006,7 +42520,7 @@ export type MagiDistilledInput = {
    */
   aspect_ratio?: "auto" | "16:9" | "9:16" | "1:1";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -41453,11 +42967,11 @@ export type MaterialInput = {
    */
   strength?: number;
   /**
-   * Tile size in latent space (64 = 512px, 128 = 1024px). Default value: `128`
+   * Tile size in latent space. Automatically capped to the generated image dimensions on tiled axes (64 = 512px, 128 = 1024px). Default value: `128`
    */
   tile_size?: number;
   /**
-   * Tile stride in latent space. Default value: `64`
+   * Tile stride in latent space. Automatically capped to half the effective tile size. Default value: `64`
    */
   tile_stride?: number;
   /**
@@ -42284,7 +43798,7 @@ export type MinimaxVoiceCloneInput = {
 };
 export type MinimaxVoiceDesignInput = {
   /**
-   * Text for audio preview. Limited to 500 characters. A fee of $30 per 1M characters will be charged for the generation of the preview audio.
+   * Text for audio preview. Must be at least 1 character and limited to 500 characters. A fee of $30 per 1M characters will be charged for the generation of the preview audio.
    */
   preview_text: string;
   /**
@@ -42665,6 +44179,24 @@ export type MultiAnimationOutput = {
    */
   rigged_character_glb?: File;
 };
+export type MulticolorInput = {
+  /**
+   * If set to true, inputs are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * File format of the generated model. STL, USDZ and 3MF are not currently supported by the partner. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "fbx";
+  /**
+   * URL of the input textured model. Only GLB format is supported, up to 200MB.
+   */
+  mesh_url: string | Blob | File;
+  /**
+   * Number of colors in the generated model (1-8), or 0 for the maximum. Use 0 if you plan to edit the colors later. Default value: `4`
+   */
+  number_of_colors?: number;
+};
 export type MultiConditioningVideoInput = {
   /**
    * Aspect ratio of the generated video (16:9 or 9:16). Default value: `"16:9"`
@@ -42771,7 +44303,7 @@ export type MultipleAnglesInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
+   * Whether to enable the safety checker for the generated image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -42892,6 +44424,124 @@ export type MultiviewTo3dInput = {
    */
   texture_seed?: number;
 };
+export type MultiViewTo3DInput = {
+  /**
+   * URL of the back view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  back_image_url?: string | Blob | File;
+  /**
+   * Generate PBR material maps together with the texture. Only supported (and billed) for v2.0/v2.1 and v3.0 models when enable_texture is true; ignored otherwise. Default value: `true`
+   */
+  enable_pbr?: boolean;
+  /**
+   * If set to true, input images are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to generate textures in addition to geometry. When false, only the geometry mesh is generated (and billed). Default value: `true`
+   */
+  enable_texture?: boolean;
+  /**
+   * File format of the generated model. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "stl" | "fbx" | "usdz";
+  /**
+   * Target face count of the generated model. When unset, the partner picks the recommended count for the resolution (e.g. 500k for 512, 1M for 1024, 2M for 1536).
+   */
+  face_count?: number;
+  /**
+   * URL of the front view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  front_image_url?: string | Blob | File;
+  /**
+   * URL of the left view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  left_image_url?: string | Blob | File;
+  /**
+   * Model version used for generation. 'hitem3d*' are the general models; 'scene-portrait*' are tuned for portraits/characters. Default value: `"hitem3dv2.1"`
+   */
+  model?:
+    | "hitem3dv1.5"
+    | "hitem3dv2.0"
+    | "hitem3dv2.1"
+    | "scene-portraitv1.5"
+    | "scene-portraitv2.0"
+    | "scene-portraitv2.1";
+  /**
+   * Generation resolution. Supported values depend on the model: v1.5/v2.0 accept 512, 1024, 1536 and 1536pro; v2.1 accepts 1536fast and 1536pro; scene-portraitv1.5 accepts 1536; scene-portraitv2.0 accepts 1536pro; scene-portraitv2.1 accepts 1536profast and 1536pro. Defaults to the model's recommended resolution (1024 for v1.5/v2.0, the fast tier otherwise).
+   */
+  resolution?: "512" | "1024" | "1536" | "1536pro" | "1536fast" | "1536profast";
+  /**
+   * URL of the right view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  right_image_url?: string | Blob | File;
+};
+export type MuseImageEditInput = {
+  /**
+   * The output aspect ratio. Supported values are "21:9", "16:9", "4:3", "3:2", "1:1", "2:3", "3:4", "9:16", and "9:21". If omitted, Muse chooses the output dimensions automatically based on the request.
+   */
+  aspect_ratio?:
+    | "21:9"
+    | "16:9"
+    | "4:3"
+    | "3:2"
+    | "1:1"
+    | "2:3"
+    | "3:4"
+    | "9:16"
+    | "9:21";
+  /**
+   * Reference images used for the edit. Provide between 1 and 10 HTTP(S) or data URLs.
+   */
+  image_urls: Array<string>;
+  /**
+   * The number of edited images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The format of the generated image. Default value: `"webp"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * The text prompt used to generate or edit the image.
+   */
+  prompt: string;
+  /**
+   * If `True`, the image is returned as a data URI and is not persisted in the request history.
+   */
+  sync_mode?: boolean;
+};
+export type MuseImageInput = {
+  /**
+   * The output aspect ratio. Supported values are "21:9", "16:9", "4:3", "3:2", "1:1", "2:3", "3:4", "9:16", and "9:21". If omitted, Muse chooses the output dimensions automatically based on the request.
+   */
+  aspect_ratio?:
+    | "21:9"
+    | "16:9"
+    | "4:3"
+    | "3:2"
+    | "1:1"
+    | "2:3"
+    | "3:4"
+    | "9:16"
+    | "9:21";
+  /**
+   * The number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The format of the generated image. Default value: `"webp"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * The text prompt used to generate or edit the image.
+   */
+  prompt: string;
+  /**
+   * If `True`, the image is returned as a data URI and is not persisted in the request history.
+   */
+  sync_mode?: boolean;
+};
 export type musetalkInput = {
   /**
    * URL of the audio
@@ -42901,6 +44551,46 @@ export type musetalkInput = {
    * URL of the source video
    */
   source_video_url: string | Blob | File;
+};
+export type Music3Input = {
+  /**
+   * Upper bound on the generated audio length in seconds. The model may stop earlier; the actual duration is returned in the output. Default value: `60`
+   */
+  duration?: number;
+  /**
+   * Classifier-free guidance scale of the flow-matching stage. Default value: `1.7`
+   */
+  guidance_scale?: number;
+  /**
+   * The lyrics to sing. Structure tags such as [intro], [verse], [pre-chorus], [chorus], [post-chorus], [bridge], [instrumental], [solo] and [outro] must each be on their own line; text on the same line as a leading tag is dropped by the model's input contract.
+   */
+  lyrics: string;
+  /**
+   * Number of flow-matching Euler steps per 8-second denoising chunk. More steps improve quality at the cost of speed. Default value: `30`
+   */
+  num_inference_steps?: number;
+  /**
+   * Music description: style, mood, vocals, instrumentation and arrangement. For precise control use a Structured Caption with global metadata (genre, BPM, key, emotional progression), vocal details, and a section-by-section arrangement.
+   */
+  prompt: string;
+  /**
+   * Random seed for reproducibility. If not provided, a random seed will be used.
+   */
+  seed?: number;
+};
+export type Music3Output = {
+  /**
+   * The generated audio file (44.1 kHz 16-bit stereo WAV).
+   */
+  audio: File;
+  /**
+   * The actual duration of the generated audio in seconds (may be shorter than the requested duration).
+   */
+  duration: number;
+  /**
+   * The random seed used for the generation process.
+   */
+  seed: number;
 };
 export type MusicCompositionPlan = {
   /**
@@ -43720,7 +45410,7 @@ export type NextSceneInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
+   * Whether to enable the safety checker for the generated image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -43781,7 +45471,7 @@ export type NucleusImageInput = {
    */
   aspect_ratio?: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "3:2" | "2:3";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -44127,6 +45817,90 @@ export type OCRBoundingBox = {
    */
   quad_boxes: Array<OCRBoundingBoxSingle>;
 };
+export type Omni11FlashImageToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16";
+  /**
+   * The duration of the generated video, in seconds. Default value: `8`
+   */
+  duration?: number;
+  /**
+   * Optional URL of the end frame. When provided, the model interpolates between the two images in their listed order.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * URL of the first frame to animate.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt describing how the first image should be animated or interpolated into the optional end image.
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "360p" | "720p" | "1080p" | "4k";
+};
+export type Omni11FlashReferenceToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16";
+  /**
+   * The duration of the generated video, in seconds. Default value: `8`
+   */
+  duration?: number;
+  /**
+   * URLs of reference images to incorporate into the video.
+   */
+  image_urls?: Array<string>;
+  /**
+   * The text prompt describing the video. Reference media is sent in list order before the prompt.
+   */
+  prompt: string;
+  /**
+   * URLs of up to three reference videos. Each video must be at most three seconds long.
+   */
+  reference_video_urls?: Array<string>;
+  /**
+   * The resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "360p" | "720p" | "1080p" | "4k";
+};
+export type Omni11FlashTextToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "16:9" | "9:16";
+  /**
+   * The duration of the generated video, in seconds. Default value: `8`
+   */
+  duration?: number;
+  /**
+   * The text prompt describing the video you want to generate.
+   */
+  prompt: string;
+  /**
+   * The resolution of the generated video. Default value: `"720p"`
+   */
+  resolution?: "360p" | "720p" | "1080p" | "4k";
+};
+export type Omni11FlashVideoEditInput = {
+  /**
+   * A simple instruction describing the edit.
+   */
+  prompt: string;
+  /**
+   * The resolution of the edited video. Default value: `"720p"`
+   */
+  resolution?: "360p" | "720p" | "1080p" | "4k";
+  /**
+   * URL of the video to edit.
+   */
+  video_url: string | Blob | File;
+};
 export type OmniFlashImageToVideoInput = {
   /**
    * The aspect ratio of the generated video. Default value: `"16:9"`
@@ -44175,7 +45949,7 @@ export type OmniFlashVideoEditInput = {
 };
 export type OmnigenV1Input = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -44239,7 +46013,7 @@ export type OmnigenV2Input = {
    */
   cfg_range_start?: number;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -44891,7 +46665,7 @@ export type OvisImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -44974,20 +46748,6 @@ export type P1TextTo3dInput = {
    * Whether to generate textures for the model. Default value: `true`
    */
   texture?: boolean;
-};
-export type P1TextTo3dOutput = {
-  /**
-   * Generated 3D model file. May be GLB or FBX depending on Tripo output.
-   */
-  model_mesh: File;
-  /**
-   * URLs for different 3D model variants.
-   */
-  model_urls: ModelUrls;
-  /**
-   * Preview render of the generated 3D model.
-   */
-  rendered_image?: File;
 };
 export type ParabolizeInput = {
   /**
@@ -45098,6 +46858,45 @@ export type patinaOutput = {
    * Timing breakdown (seconds).
    */
   timings?: unknown;
+};
+export type PerformInput = {
+  /**
+   * Publicly fetchable HTTPS URL of the driving audio; no cookies or authorization headers. Supports MP3, PCM WAV or AIFF, AAC or ALAC, Opus or Vorbis, and FLAC audio from 3 to 180 seconds and up to 64 MiB, with one mono or stereo stream sampled from 8 to 48 kHz. The generated video follows this audio.
+   */
+  audio_url: string | Blob | File;
+  /**
+   * Stock visual that can be used instead of an image or video reference; it does not supply audio. Browse the [avatar catalog](https://captions.ai/help/docs/api/actor-catalog) to preview the available visuals and copy the exact Avatar value. Default and None both mean no avatar. Any supplied image or video reference overrides the selection, and audio always comes from audio_url.
+   */
+  avatar?:
+    | "None"
+    | "Ayesha"
+    | "Ayesha (16:9)"
+    | "Farhan"
+    | "Farhan (16:9)"
+    | "Giulia"
+    | "Giulia (16:9)"
+    | "Jasmine"
+    | "Jasmine (16:9)"
+    | "Luke"
+    | "Luke (16:9)"
+    | "Maya"
+    | "Maya (16:9)"
+    | "Michael"
+    | "Michael (16:9)"
+    | "Neha"
+    | "Neha (16:9)"
+    | "Tariq"
+    | "Tariq (16:9)"
+    | "Valerie"
+    | "Valerie (16:9)";
+  /**
+   * Publicly fetchable HTTPS URL of the reference image; no cookies or authorization headers. Ignored when video_reference_url is also supplied. Supports one static .jpg, .jpeg, .png, or .webp image up to 25 MiB, with a short edge of at least 512 px, no edge over 8192 px, at most 25 megapixels, and a 9:16 or 16:9 aspect ratio (within 5%).
+   */
+  image_reference_url?: string | Blob | File;
+  /**
+   * Publicly fetchable HTTPS URL of the reference video; no cookies or authorization headers. Takes precedence over image_reference_url when both are supplied. Supports H.264, H.265/HEVC, or ProRes in .mp4, .mov, or .m4v and VP8 or VP9 in .webm, from 1 to 120 seconds and up to 1 GiB, with exactly one video stream and a 9:16 or 16:9 display aspect ratio (within 5%). The video must contain a usable one-second reference window; any audio track is ignored.
+   */
+  video_reference_url?: string | Blob | File;
 };
 export type personaplexInput = {
   /**
@@ -45274,6 +47073,10 @@ export type PhotaEditInput = {
    */
   aspect_ratio?: "auto" | "1:1" | "16:9" | "4:3" | "3:4" | "9:16";
   /**
+   * Base model used to render the image. Identity composes on top of whichever base model is selected, so trained profiles work with all of them. Only `nb2` supports `4K`. Default value: `"nb2"`
+   */
+  base_model?: "nb2" | "qwen-image-2" | "flux-2" | "seedream-5-pro";
+  /**
    * List of URLs/ Base64 data URIs of the images to edit. At least one image is required; for pure text-to-image generation use the `/` endpoint instead. A maximum of 10 images are supported, additional images will be ignored.
    */
   image_urls: Array<string>;
@@ -45329,6 +47132,10 @@ export type photaInput = {
    * Aspect ratio of the generated image. Default value: `"auto"`
    */
   aspect_ratio?: "auto" | "1:1" | "16:9" | "4:3" | "3:4" | "9:16";
+  /**
+   * Base model used to render the image. Identity composes on top of whichever base model is selected, so trained profiles work with all of them. Only `nb2` supports `4K`. Default value: `"nb2"`
+   */
+  base_model?: "nb2" | "qwen-image-2" | "flux-2" | "seedream-5-pro";
   /**
    * Number of images to generate. Default value: `1`
    */
@@ -46580,6 +48387,26 @@ export type PixverseV55EffectsInput = {
     | "WonderPOP Surprise"
     | "White Chicks"
     | "Kiss me"
+    | "What a Day"
+    | "The Last Leap at Sunset"
+    | "Tiny Sticker Chef Chaos"
+    | "Mini Squeeze Toy"
+    | "Tearful Gunman"
+    | "Street Fashion Caricature"
+    | "Mini Me Makeover"
+    | "Street Art Awakening"
+    | "Hug Together"
+    | "ACAI dance Duet"
+    | "PUBG Winner Hit!"
+    | "Blocky Mini-Me"
+    | "Cheat Day Busted"
+    | "MiniSocial Recharge"
+    | "My Little Perler Charm"
+    | "Where did this cobweb come from?"
+    | "Holy Beast Summoning Technique"
+    | "IT'S THE FIRST OF THE MONTH"
+    | "Pet Editorial"
+    | "Three lifetime bond"
     | "Pixel World"
     | "Mint in Box"
     | "Hands up, Hand"
@@ -47206,7 +49033,7 @@ export type PolygonOutput = {
 };
 export type PonyV7Input = {
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -47267,7 +49094,7 @@ export type PortraitInput = {
 };
 export type PoseTransferInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -47684,7 +49511,7 @@ export type ProductPhotoInput = {
    */
   margin?: Margin;
   /**
-   * The format of the resultant image (PNG or JPEG). When not set, matches the input format. A transparent background is always PNG.
+   * The format of the resultant image (PNG or JPEG). When not set, matches the input format. JPEG cannot be combined with a transparent background.
    */
   output_format?: "png" | "jpeg";
   /**
@@ -48326,17 +50153,17 @@ export type QwenImage2512TrainerInput = {
    */
   steps?: number;
 };
-export type QwenImage2EditInput = {
+export type QwenImage3EditInput = {
   /**
-   * Enable LLM prompt optimization for better results. Default value: `true`
+   * Enable automatic LLM prompt rewriting for better results. Default value: `true`
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
-   * The size of the generated image. If not provided, the size of the final input image will be used.  Total number of pixels must be between 512x512 and 2048x2048.
+   * The size of the generated image. If not provided, the model determines the resolution automatically. Total number of pixels must be between 512x512 and 2048x2048.
    */
   image_size?:
     | ImageSize
@@ -48347,7 +50174,7 @@ export type QwenImage2EditInput = {
     | "landscape_4_3"
     | "landscape_16_9";
   /**
-   * Reference images for editing (1-3 images required). Order matters: reference as 'image 1', 'image 2', 'image 3' in prompt. Resolution: 384-5000px each dimension. Max size: 10MB each. Formats: JPEG, JPG, PNG (no alpha), WEBP.
+   * Reference images for editing (1-3 images required). Order matters: reference as 'image 1', 'image 2', 'image 3' in prompt. Resolution: 384-2048px each dimension. Max size: 10MB each. Formats: JPEG, JPG, PNG (no alpha), WEBP.
    */
   image_urls: Array<string>;
   /**
@@ -48363,7 +50190,7 @@ export type QwenImage2EditInput = {
    */
   output_format?: "jpeg" | "png" | "webp";
   /**
-   * Text prompt describing the desired image. Supports Chinese and English. Max 800 characters.
+   * Text prompt describing the desired edit. Supports Chinese and English. Max 5000 characters.
    */
   prompt: string;
   /**
@@ -48375,13 +50202,13 @@ export type QwenImage2EditInput = {
    */
   sync_mode?: boolean;
 };
-export type QwenImage2TextToImageInput = {
+export type QwenImage3TextToImageInput = {
   /**
-   * Enable LLM prompt optimization for better results. Default value: `true`
+   * Enable automatic LLM prompt rewriting for better results. Default value: `true`
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48408,7 +50235,7 @@ export type QwenImage2TextToImageInput = {
    */
   output_format?: "jpeg" | "png" | "webp";
   /**
-   * Text prompt describing the desired image. Supports Chinese and English.
+   * Text prompt describing the desired image. Supports Chinese and English. Max 5000 characters.
    */
   prompt: string;
   /**
@@ -48426,7 +50253,7 @@ export type QwenImageEdit2509Input = {
    */
   acceleration?: "none" | "regular";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48485,7 +50312,7 @@ export type QwenImageEdit2509LoraInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48553,7 +50380,7 @@ export type QwenImageEdit2511MultipleAnglesInput = {
    */
   additional_prompt?: string;
   /**
-   * Whether to enable the safety checker. Default value: `true`
+   * Whether to enable the safety checker. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48622,7 +50449,7 @@ export type QwenImageEditInpaintInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48689,7 +50516,7 @@ export type QwenImageEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48748,7 +50575,7 @@ export type QwenImageEditLoraInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48812,7 +50639,7 @@ export type QwenImageI2IInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48884,7 +50711,7 @@ export type QwenImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -48948,7 +50775,7 @@ export type QwenImageLayeredInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -49741,7 +51568,7 @@ export type Recraft20bInput = {
    */
   colors?: Array<RGBColor>;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -49930,7 +51757,7 @@ export type RecraftV3TextToImageInput = {
    */
   colors?: Array<RGBColor>;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -50052,7 +51879,7 @@ export type RecraftV4TextToImageInput = {
    */
   colors?: Array<RGBColor>;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -50070,6 +51897,20 @@ export type RecraftV4TextToImageInput = {
    *
    */
   prompt: string;
+};
+export type Ref2VAOutput = {
+  /**
+   * Configuration used for setting up inference endpoints.
+   */
+  config_file: File;
+  /**
+   * A downloadable archive containing the preprocessed training data. Only present when `debug_dataset` is enabled in the input.
+   */
+  debug_dataset?: File;
+  /**
+   * URL to the trained LoRA weights (.safetensors).
+   */
+  lora_file: File;
 };
 export type ReferenceEditVideoInput = {
   /**
@@ -50131,7 +51972,7 @@ export type ReferenceToVideoFlashInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -50181,7 +52022,7 @@ export type ReferenceToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -50322,6 +52163,34 @@ export type ReimagineInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type ReliefInput = {
+  /**
+   * If set to true, input images are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * URL of the input image. PNG, JPEG and WebP formats are supported, up to 20MB.
+   */
+  image_url: string | Blob | File;
+  /**
+   * File format of the generated depth map. Default value: `"png"`
+   */
+  output_format?: "png" | "exr";
+  /**
+   * Whether to remove the image background before generation. Default value: `true`
+   */
+  remove_background?: boolean;
+};
+export type ReliefOutput = {
+  /**
+   * Generated depth map file (PNG or EXR).
+   */
+  depth_map: File;
+  /**
+   * Preview image of the generated relief, when available.
+   */
+  thumbnail?: File;
 };
 export type RelightingInput = {
   /**
@@ -50505,7 +52374,7 @@ export type RemoveLightingInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
+   * Whether to enable the safety checker for the generated image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -50612,6 +52481,20 @@ export type Resolution = {
    */
   width: number;
 };
+export type RestoreImageInput = {
+  /**
+   * Url of the image to process
+   */
+  image_url: string | Blob | File;
+  /**
+   * Restoration. Recover 3 rebuilds natural detail; Dust-Scratch V2 cleans up film dust and scratches; Faces restores facial detail with Face Recovery 3. Default value: `"Recover 3"`
+   */
+  model?: "Recover 3" | "Dust-Scratch V2" | "Faces";
+  /**
+   * Output format of the processed image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+};
 export type RestyletInput = {
   /**
    * The source image.
@@ -50687,100 +52570,6 @@ export type RetextureOutput = {
    */
   thumbnail?: File;
 };
-export type ReveCreateInput = {
-  /**
-   * The desired aspect ratio of the generated image. Default value: `"3:2"`
-   */
-  aspect_ratio?: "16:9" | "9:16" | "3:2" | "2:3" | "4:3" | "3:4" | "1:1";
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * Output format for the generated image. Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * The text description of the desired image.
-   */
-  prompt: string;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
-export type ReveEditInput = {
-  /**
-   * URL of the reference image to edit. Must be publicly accessible or base64 data URI. Supports PNG, JPEG, WebP, AVIF, and HEIF formats.
-   */
-  image_url: string | Blob | File;
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * Output format for the generated image. Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * The text description of how to edit the provided image.
-   */
-  prompt: string;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
-export type ReveRemixInput = {
-  /**
-   * The desired aspect ratio of the generated image. If not provided, will be smartly chosen by the model.
-   */
-  aspect_ratio?: "16:9" | "9:16" | "3:2" | "2:3" | "4:3" | "3:4" | "1:1";
-  /**
-   * List of URLs of reference images. Must provide between 1 and 6 images (inclusive). Each image must be less than 10 MB. Supports PNG, JPEG, WebP, AVIF, and HEIF formats.
-   */
-  image_urls: Array<string>;
-  /**
-   * Number of images to generate Default value: `1`
-   */
-  num_images?: number;
-  /**
-   * Output format for the generated image. Default value: `"png"`
-   */
-  output_format?: "png" | "jpeg" | "webp";
-  /**
-   * The text description of the desired image. May include XML img tags like <img>0</img> to refer to specific images by their index in the image_urls list.
-   */
-  prompt: string;
-  /**
-   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
-   */
-  sync_mode?: boolean;
-};
-export type RewindInput = {
-  /**
-   * Encrypted travel ID from the client's enter-travel.
-   */
-  encrypted_travel_id: string;
-  /**
-   * Target position in seconds; the server may round it down.
-   */
-  rewind_to_sec: number;
-};
-export type RewindOutput = {
-  /**
-   *
-   */
-  encrypted_travel_id: string;
-  /**
-   *
-   */
-  resumed_at_sec?: number;
-  /**
-   *
-   */
-  status: string;
-};
 export type RewriteTextInput = {
   /**
    * The source image.
@@ -50822,7 +52611,7 @@ export type RFInversionInput = {
    */
   easycontrols?: Array<EasyControlWeight>;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -51440,9 +53229,13 @@ export type routerOutput = {
 };
 export type RouterVisionInput = {
   /**
-   * List of image URLs to be processed
+   * Give the model access to real-time web information via OpenRouter's web search server tool. When enabled, the model decides when to search and may search multiple times per request. Search costs are charged in addition to token usage.
    */
-  image_urls: Array<string>;
+  enable_web_search?: boolean;
+  /**
+   * List of image URLs to be processed.
+   */
+  image_urls?: Array<string>;
   /**
    * This sets the upper limit for the number of tokens the model can generate in response. It won't produce more than this limit. The maximum value is the context length minus the prompt length.
    */
@@ -51451,6 +53244,10 @@ export type RouterVisionInput = {
    * Name of the model to use. Charged based on actual token usage.
    */
   model: string;
+  /**
+   * List of PDF document URLs to be processed. Only PDF files are accepted: http(s) URLs must point to a .pdf file and data URIs must be data:application/pdf;base64,... Models without native PDF support fall back to OpenRouter's document parsing.
+   */
+  pdf_urls?: Array<string>;
   /**
    * Prompt to be used for the image
    */
@@ -51467,6 +53264,10 @@ export type RouterVisionInput = {
    * This setting influences the variety in the model's responses. Lower values lead to more predictable and typical responses, while higher values encourage more diverse and less common responses. At 0, the model always gives the same response for a given input. Default value: `1`
    */
   temperature?: number;
+  /**
+   * Options for web search (engine, result limits, domain filters, ...). Ignored unless enable_web_search is true.
+   */
+  web_search_options?: WebSearchOptions;
 };
 export type RundiffusionPhotoFluxInput = {
   /**
@@ -52546,7 +54347,7 @@ export type SamOutput = {
 };
 export type sanaInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -52815,7 +54616,7 @@ export type SceneFinderOutput = {
 };
 export type SchnellReduxInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -52857,7 +54658,7 @@ export type SchnellReduxInput = {
 };
 export type SchnellTextToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -52910,6 +54711,16 @@ export type ScribbleInput = {
    * Whether to use the safe version of the Scribble detector
    */
   safe?: boolean;
+};
+export type SdrToHdrVideoInput = {
+  /**
+   * Output container/codec: mp4 delivers 10-bit H265 HDR10; prores delivers 10-bit ProRes 422 HQ in a .mov, Topaz's recommended format for grading and mastering workflows (much larger files). Default value: `"mp4"`
+   */
+  output_format?: "mp4" | "prores";
+  /**
+   * URL of the SDR video to convert to HDR
+   */
+  video_url: string | Blob | File;
 };
 export type SdxlControlnetUnionInput = {
   /**
@@ -53113,6 +54924,155 @@ export type Seed3DImageTo3DOutput = {
    */
   usage_tokens: number;
 };
+export type Seedance20ImageToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to infer from the input image. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Output bitrate mode. 'high' requests a higher-quality, larger-file encode from the model; 'standard' uses the default bitrate. Default value: `"standard"`
+   */
+  bitrate_mode?: "standard" | "high";
+  /**
+   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "10"
+    | "11"
+    | "12"
+    | "13"
+    | "14"
+    | "15";
+  /**
+   * The URL of the image to use as the last frame of the video. When provided, the generated video will transition from the starting image to this ending image. Supported formats: JPEG, PNG, WebP. Max 30 MB.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * The unique user ID of the end user.
+   */
+  end_user_id?: string;
+  /**
+   * Whether to generate synchronized audio for the video, including sound effects, ambient sounds, and lip-synced speech. The cost of video generation is the same regardless of whether audio is generated or not. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The URL of the starting frame image to animate. Supported formats: JPEG, PNG, WebP. Max 30 MB.
+   */
+  image_url: string | Blob | File;
+  /**
+   * The text prompt describing the desired motion and action for the video.
+   */
+  prompt: string;
+  /**
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality, 4k for highest quality. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p" | "1080p" | "4k";
+};
+export type Seedance20ReferenceToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to let the model decide. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file. At least one reference image or video is required.
+   */
+  audio_urls?: Array<string>;
+  /**
+   * Output bitrate mode. 'high' requests a higher-quality, larger-file encode from the model; 'standard' uses the default bitrate. Default value: `"standard"`
+   */
+  bitrate_mode?: "standard" | "high";
+  /**
+   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "10"
+    | "11"
+    | "12"
+    | "13"
+    | "14"
+    | "15";
+  /**
+   * The unique user ID of the end user.
+   */
+  end_user_id?: string;
+  /**
+   * Whether to generate synchronized audio for the video, including sound effects, ambient sounds, and lip-synced speech. The cost of video generation is the same regardless of whether audio is generated or not. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * Reference images to guide video generation. Refer to them in the prompt as @Image1, @Image2, etc. Supported formats: JPEG, PNG, WebP. Max 30 MB per image. Up to 9 images. Total files across all modalities must not exceed 12.
+   */
+  image_urls?: Array<string>;
+  /**
+   * The text prompt used to generate the video.
+   */
+  prompt: string;
+  /**
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality, 4k for highest quality. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p" | "1080p" | "4k";
+  /**
+   * Reference videos to guide video generation. Refer to them in the prompt as @Video1, @Video2, etc. Supported formats: MP4, MOV. Up to 3 videos, combined duration must be between 2 and 15 seconds, total size under 50 MB. Each video must be between ~480p (640x640) and ~720p (834x1112) in resolution.
+   */
+  video_urls?: Array<string>;
+};
+export type Seedance20TextToVideoInput = {
+  /**
+   * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to let the model decide. Default value: `"auto"`
+   */
+  aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Output bitrate mode. 'high' requests a higher-quality, larger-file encode from the model; 'standard' uses the default bitrate. Default value: `"standard"`
+   */
+  bitrate_mode?: "standard" | "high";
+  /**
+   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   */
+  duration?:
+    | "auto"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "10"
+    | "11"
+    | "12"
+    | "13"
+    | "14"
+    | "15";
+  /**
+   * The unique user ID of the end user.
+   */
+  end_user_id?: string;
+  /**
+   * Whether to generate synchronized audio for the video, including sound effects, ambient sounds, and lip-synced speech. The cost of video generation is the same regardless of whether audio is generated or not. Default value: `true`
+   */
+  generate_audio?: boolean;
+  /**
+   * The text prompt used to generate the video
+   */
+  prompt: string;
+  /**
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality, 4k for highest quality. Default value: `"720p"`
+   */
+  resolution?: "480p" | "720p" | "1080p" | "4k";
+};
 export type Seedance2I2VFastInput = {
   /**
    * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to infer from the input image. Default value: `"auto"`
@@ -53166,15 +55126,15 @@ export type Seedance2I2VFastInput = {
 };
 export type Seedance2I2VInput = {
   /**
-   * The aspect ratio of the generated video. Use 16:9 for landscape, 9:16 for portrait/vertical, 1:1 for square, 21:9 for ultrawide cinematic, or auto to infer from the input image. Default value: `"auto"`
+   * The aspect ratio of the generated video. Always "auto" for image-to-video Default value: `"auto"`
    */
-  aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  aspect_ratio?: string;
   /**
    * Output bitrate mode. 'high' requests a higher-quality, larger-file encode from the model; 'standard' uses the default bitrate. Default value: `"standard"`
    */
   bitrate_mode?: "standard" | "high";
   /**
-   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   * Duration of the video in seconds. Supports 4 to 30 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
    */
   duration?:
     | "auto"
@@ -53189,7 +55149,22 @@ export type Seedance2I2VInput = {
     | "12"
     | "13"
     | "14"
-    | "15";
+    | "15"
+    | "16"
+    | "17"
+    | "18"
+    | "19"
+    | "20"
+    | "21"
+    | "22"
+    | "23"
+    | "24"
+    | "25"
+    | "26"
+    | "27"
+    | "28"
+    | "29"
+    | "30";
   /**
    * The URL of the image to use as the last frame of the video. When provided, the generated video will transition from the starting image to this ending image. Supported formats: JPEG, PNG, WebP. Max 30 MB.
    */
@@ -53211,9 +55186,9 @@ export type Seedance2I2VInput = {
    */
   prompt: string;
   /**
-   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality, 4k for highest quality. Default value: `"720p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality. Default value: `"720p"`
    */
-  resolution?: "480p" | "720p" | "1080p" | "4k";
+  resolution?: "480p" | "720p" | "1080p";
 };
 export type Seedance2I2VMiniInput = {
   /**
@@ -53268,7 +55243,7 @@ export type Seedance2R2V4KInput = {
    */
   aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
   /**
-   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file.If audio is provided, at least one reference image or video is required.
+   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file. At least one reference image or video is required.
    */
   audio_urls?: Array<string>;
   /**
@@ -53323,7 +55298,7 @@ export type Seedance2R2VFastInput = {
    */
   aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
   /**
-   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file.If audio is provided, at least one reference image or video is required.
+   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file. At least one reference image or video is required.
    */
   audio_urls?: Array<string>;
   /**
@@ -53378,7 +55353,7 @@ export type Seedance2R2VInput = {
    */
   aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
   /**
-   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file.If audio is provided, at least one reference image or video is required.
+   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 10 files. Each file must be 1.8 to 30.2 seconds and no larger than 15 MB; combined duration must not exceed 30.2 seconds. At least one reference image or video is required.
    */
   audio_urls?: Array<string>;
   /**
@@ -53386,7 +55361,7 @@ export type Seedance2R2VInput = {
    */
   bitrate_mode?: "standard" | "high";
   /**
-   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   * Duration of the video in seconds. Supports 4 to 30 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
    */
   duration?:
     | "auto"
@@ -53401,7 +55376,22 @@ export type Seedance2R2VInput = {
     | "12"
     | "13"
     | "14"
-    | "15";
+    | "15"
+    | "16"
+    | "17"
+    | "18"
+    | "19"
+    | "20"
+    | "21"
+    | "22"
+    | "23"
+    | "24"
+    | "25"
+    | "26"
+    | "27"
+    | "28"
+    | "29"
+    | "30";
   /**
    * The unique user ID of the end user.
    */
@@ -53411,7 +55401,7 @@ export type Seedance2R2VInput = {
    */
   generate_audio?: boolean;
   /**
-   * Reference images to guide video generation. Refer to them in the prompt as @Image1, @Image2, etc. Supported formats: JPEG, PNG, WebP. Max 30 MB per image. Up to 9 images. Total files across all modalities must not exceed 12.
+   * Reference images to guide video generation. Refer to them in the prompt as @Image1, @Image2, etc. Supported formats: JPG, PNG, WebP, BMP, TIFF, GIF, HEIC, HEIF. Max 30 MB per image. Up to 30 images. Total files across all modalities must not exceed 50.
    */
   image_urls?: Array<string>;
   /**
@@ -53419,11 +55409,11 @@ export type Seedance2R2VInput = {
    */
   prompt: string;
   /**
-   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality, 4k for highest quality. Default value: `"720p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality. Default value: `"720p"`
    */
-  resolution?: "480p" | "720p" | "1080p" | "4k";
+  resolution?: "480p" | "720p" | "1080p";
   /**
-   * Reference videos to guide video generation. Refer to them in the prompt as @Video1, @Video2, etc. Supported formats: MP4, MOV. Up to 3 videos, combined duration must be between 2 and 15 seconds, total size under 50 MB. Each video must be between ~480p (640x640) and ~720p (834x1112) in resolution.
+   * Reference videos to guide video generation. Refer to them in the prompt as @Video1, @Video2, etc. Supported formats: MP4, MOV. Up to 10 videos. Each video must be 1.8 to 30.2 seconds and no larger than 200 MB; combined duration must not exceed 30.2 seconds. Dimensions must be 300 to 6,000 pixels per side, aspect ratio 0.4 to 2.5, and frame rate 24 to 60 FPS.
    */
   video_urls?: Array<string>;
 };
@@ -53433,7 +55423,7 @@ export type Seedance2R2VMiniInput = {
    */
   aspect_ratio?: "auto" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
   /**
-   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file.If audio is provided, at least one reference image or video is required.
+   * Reference audio to guide video generation. Refer to them in the prompt as @Audio1, @Audio2, etc. Supported formats: MP3, WAV. Up to 3 files, combined duration must not exceed 15 seconds. Max 15 MB per file. At least one reference image or video is required.
    */
   audio_urls?: Array<string>;
   /**
@@ -53531,7 +55521,7 @@ export type Seedance2T2VInput = {
    */
   bitrate_mode?: "standard" | "high";
   /**
-   * Duration of the video in seconds. Supports 4 to 15 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
+   * Duration of the video in seconds. Supports 4 to 30 seconds, or auto to let the model decide based on the prompt. Default value: `"auto"`
    */
   duration?:
     | "auto"
@@ -53546,7 +55536,22 @@ export type Seedance2T2VInput = {
     | "12"
     | "13"
     | "14"
-    | "15";
+    | "15"
+    | "16"
+    | "17"
+    | "18"
+    | "19"
+    | "20"
+    | "21"
+    | "22"
+    | "23"
+    | "24"
+    | "25"
+    | "26"
+    | "27"
+    | "28"
+    | "29"
+    | "30";
   /**
    * The unique user ID of the end user.
    */
@@ -53560,9 +55565,9 @@ export type Seedance2T2VInput = {
    */
   prompt: string;
   /**
-   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality, 4k for highest quality. Default value: `"720p"`
+   * Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality. Default value: `"720p"`
    */
-  resolution?: "480p" | "720p" | "1080p" | "4k";
+  resolution?: "480p" | "720p" | "1080p";
 };
 export type Seedance2T2VMiniInput = {
   /**
@@ -53617,7 +55622,7 @@ export type SeedanceImageToVideoInput = {
    */
   duration?: "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53659,7 +55664,7 @@ export type SeedanceProFastImageToVideoInput = {
    */
   duration?: "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53697,7 +55702,7 @@ export type SeedanceProTextToVideoInput = {
    */
   duration?: "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53731,7 +55736,7 @@ export type SeedanceProv15ImageToVideoInput = {
    */
   duration?: "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53773,7 +55778,7 @@ export type SeedanceProv15TextToVideoInput = {
    */
   duration?: "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53807,7 +55812,7 @@ export type SeedanceReferenceToVideoInput = {
    */
   duration?: "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53845,7 +55850,7 @@ export type SeedanceTextToVideoInput = {
    */
   duration?: "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53955,7 +55960,7 @@ export type SeedAudioVoiceCloneOutput = {
 };
 export type SeedDream45EditInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -53998,7 +56003,7 @@ export type SeedDream45EditInput = {
 };
 export type SeedDream45T2IInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54037,7 +56042,7 @@ export type SeedDream45T2IInput = {
 };
 export type SeedDream4EditInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54085,7 +56090,7 @@ export type SeedDream4EditInput = {
 };
 export type SeedDream4T2IInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54129,7 +56134,7 @@ export type SeedDream4T2IInput = {
 };
 export type SeedDream50LiteT2IInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54167,9 +56172,41 @@ export type SeedDream50LiteT2IInput = {
    */
   sync_mode?: boolean;
 };
+export type SeedDream50ProLayer = {
+  /**
+   * The layer's position in the base image coordinate system. Omitted for the base image.
+   */
+  bounding_box?: SeedDream50ProLayerBoundingBox;
+  /**
+   * Detailed model-generated description of the layer. Omitted for the base image.
+   */
+  description?: string;
+  /**
+   * The generated base image or separated layer.
+   */
+  image: Image;
+  /**
+   * Model-generated label for the layer. Omitted for the base image.
+   */
+  name?: string;
+  /**
+   * Stacking order from bottom to top. The base image always has z_index 0.
+   */
+  z_index: number;
+};
+export type SeedDream50ProLayerBoundingBox = {
+  /**
+   * Layer bounds as [left, top, right, bottom] pixel coordinates in the output base image coordinate system.
+   */
+  absolute: Array<number>;
+  /**
+   * Layer bounds as [left, top, right, bottom] coordinates normalized to the integer range [0, 1000].
+   */
+  normalized: Array<number>;
+};
 export type SeedDream50ProT2IInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54204,7 +56241,7 @@ export type SeedDream50ProT2IInput = {
 };
 export type SeedDreamInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54241,7 +56278,7 @@ export type SeedDreamInput = {
 };
 export type SeedEditInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54267,7 +56304,7 @@ export type SeedEditInput = {
 };
 export type SeedreamV5LiteEditInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54307,7 +56344,7 @@ export type SeedreamV5LiteEditInput = {
 };
 export type SeedreamV5ProEditInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -54343,6 +56380,42 @@ export type SeedreamV5ProEditInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type SeedreamV5ProLayerizeInput = {
+  /**
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Prompt optimization mode. `standard` prioritizes image quality; `fast` reduces generation time. Default value: `"standard"`
+   */
+  enhance_prompt_mode?: "standard" | "fast";
+  /**
+   * Resolution tier for the output base image and layers. `auto` adapts to the input image while preserving each element's aspect ratio. Default value: `"auto"`
+   */
+  image_size?: "auto" | "auto_1K" | "auto_1.5K" | "auto_2K";
+  /**
+   * URL of the image to decompose into a base image and independently editable layers. The image must contain between 512x512 and 6000x6000 total pixels, have an aspect ratio between 1/16 and 16, and be no larger than 30 MB.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Optional instructions describing which elements to separate. When empty, the model automatically separates the major elements. Normalized `<bbox>left top right bottom</bbox>` tags may be used for precise coordinate targeting. Default value: `""`
+   */
+  prompt?: string;
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
+export type SeedreamV5ProLayerizeOutput = {
+  /**
+   * The same images as `layers`, in the same order, flattened for gallery rendering.
+   */
+  images: Array<Image>;
+  /**
+   * The base image followed by up to 16 separated layers, ordered by increasing z_index.
+   */
+  layers: Array<SeedDream50ProLayer>;
 };
 export type SeedVRImageInput = {
   /**
@@ -54585,7 +56658,7 @@ export type Sfx16VideoToVideoInput = {
    */
   duration?: number;
   /**
-   * Number of variations to generate. Default value: `1`
+   * Number of variations to generate. Default value: `2`
    */
   num_samples?: number;
   /**
@@ -54631,7 +56704,7 @@ export type SfxV15VideoToAudioInput = {
    */
   num_samples?: number;
   /**
-   * The seed to use for the generation. If not provided, a random seed will be used Default value: `8069`
+   * The seed to use for the generation. If not provided, a random seed will be used Default value: `8922`
    */
   seed?: number;
   /**
@@ -54646,18 +56719,6 @@ export type SfxV15VideoToAudioInput = {
    * A video url that can accessed from the API to process and add sound effects
    */
   video_url: string | Blob | File;
-};
-export type SfxV15VideoToAudioOutput = {
-  /**
-   * The generated sound effects audio
-   */
-  audio: Array<AudioOutput>;
-};
-export type SfxV15VideoToVideoOutput = {
-  /**
-   * The processed video with sound effects
-   */
-  video: Array<VideoOutput>;
 };
 export type Sfxv1TextToAudioInput = {
   /**
@@ -54728,6 +56789,31 @@ export type ShadowLightSourcePosition = {
    * Height above subject (0 to 2). Leave unset to auto-estimate the light from the image.
    */
   z?: number;
+};
+export type SharpenImageInput = {
+  /**
+   * Url of the image to process
+   */
+  image_url: string | Blob | File;
+  /**
+   * Sharpen model tuned per blur type (defocus, motion, portrait, wildlife, …). Super Focus is Topaz's generative deblur for severely blurred images. Default value: `"Standard"`
+   */
+  model?:
+    | "Standard"
+    | "Strong"
+    | "Lens Blur V2"
+    | "Motion Blur"
+    | "Natural"
+    | "Refocus"
+    | "Wildlife"
+    | "Portrait"
+    | "Auto Sharpen"
+    | "Super Focus V3"
+    | "Super Focus V2";
+  /**
+   * Output format of the processed image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
 };
 export type SharpenInput = {
   /**
@@ -55003,7 +57089,7 @@ export type SolarizeInput = {
 };
 export type SoteDiffusionInput = {
   /**
-   * If set to false, the safety checker will be disabled. Default value: `true`
+   * If set to false, the safety checker will be disabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55113,6 +57199,45 @@ export type SpeakerConfig = {
     | "Zephyr"
     | "Zubenelgenubi";
 };
+export type SpeakInput = {
+  /**
+   * Publicly fetchable HTTPS URL of a voice reference. When supplied, video_reference_url is also required and the selected avatar is ignored; no cookies or authorization headers. Supports MP3, PCM WAV or AIFF, AAC or ALAC, Opus or Vorbis, and FLAC audio from 10 to 180 seconds and up to 64 MiB, with one mono or stereo stream sampled from 8 to 48 kHz. Only the first 60 seconds are used.
+   */
+  audio_reference_url?: string | Blob | File;
+  /**
+   * Stock visual and voice. Browse the [avatar catalog](https://captions.ai/help/docs/api/actor-catalog) to preview every available avatar and copy the exact Avatar value. Select None to send no avatar. When video_reference_url and audio_reference_url are both supplied, the references replace the avatar entirely and it may be omitted. Default value: `Jasmine`
+   */
+  avatar?:
+    | "None"
+    | "Ayesha"
+    | "Ayesha (16:9)"
+    | "Farhan"
+    | "Farhan (16:9)"
+    | "Giulia"
+    | "Giulia (16:9)"
+    | "Jasmine"
+    | "Jasmine (16:9)"
+    | "Luke"
+    | "Luke (16:9)"
+    | "Maya"
+    | "Maya (16:9)"
+    | "Michael"
+    | "Michael (16:9)"
+    | "Neha"
+    | "Neha (16:9)"
+    | "Tariq"
+    | "Tariq (16:9)"
+    | "Valerie"
+    | "Valerie (16:9)";
+  /**
+   * Use 50 to 1,500 characters. The 50-character minimum typically produces about four seconds of speech. Generated speech must be 180 seconds or shorter; speaking pace may cause shorter scripts to exceed this limit.
+   */
+  script: string;
+  /**
+   * Publicly fetchable HTTPS URL of a reference video. When supplied, audio_reference_url is also required and the selected avatar is ignored; no cookies or authorization headers. Supports H.264, H.265/HEVC, or ProRes in .mp4, .mov, or .m4v and VP8 or VP9 in .webm, from 1 to 120 seconds and up to 1 GiB, with a 9:16 or 16:9 display aspect ratio (within 5%). Any audio track is ignored.
+   */
+  video_reference_url?: string | Blob | File;
+};
 export type SpeechOutput = {
   /**
    * The partial or final transcription output from Canary
@@ -55158,6 +57283,36 @@ export type SplitAudioOutput = {
    * List of split audio segments
    */
   audio: Array<AudioFile>;
+};
+export type SplitInput = {
+  /**
+   * If set to true, inputs are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * File format of the generated model. Character split currently supports only 'glb'. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "stl" | "fbx" | "usdz";
+  /**
+   * Joint type added between character parts (used when model is 'character'). Default value: `"ball"`
+   */
+  joint?: "none" | "ball" | "dovetail";
+  /**
+   * Split granularity (used when model is 'general'). Default value: `"medium"`
+   */
+  level?: "low" | "medium" | "high";
+  /**
+   * URL of the input model to split. GLB, STL and OBJ formats are supported, up to 200MB.
+   */
+  mesh_url: string | Blob | File;
+  /**
+   * Split model type: 'character' splits humanoid models using a template with optional joints; 'general' splits any model by granularity level. Default value: `"character"`
+   */
+  model?: "character" | "general";
+  /**
+   * Character split template (used when model is 'character'): 'a' 6 parts, 'b' 5 parts, 'c' 4 parts excluding head, 'd' 4 parts including head, 'e' 3 parts, 'f' 2 parts. Default value: `"a"`
+   */
+  part?: "a" | "b" | "c" | "d" | "e" | "f";
 };
 export type SplitTextInput = {
   /**
@@ -55394,7 +57549,7 @@ export type StableDiffusionV35LargeInput = {
    */
   controlnet?: ControlNet;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55460,7 +57615,7 @@ export type StableDiffusionV35MediumInput = {
    */
   auto_fix?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55513,7 +57668,7 @@ export type StableDiffusionV35MediumInput = {
 };
 export type StableDiffusionV3MediumImageToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55572,7 +57727,7 @@ export type StableDiffusionV3MediumImageToImageInput = {
 };
 export type StableDiffusionV3MediumInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55808,7 +57963,7 @@ export type StepxEdit2Output = {
 };
 export type StreamingDevTextToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55851,7 +58006,7 @@ export type StreamingDevTextToImageInput = {
 };
 export type StreamingFastTextToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55899,7 +58054,7 @@ export type StreamingFlux2EditImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -55948,7 +58103,7 @@ export type StreamingFlux2EditImageLoRAInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56001,7 +58156,7 @@ export type StreamingFlux2TextToImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56046,7 +58201,7 @@ export type StreamingFlux2TextToImageLoRAInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56091,7 +58246,7 @@ export type StreamingFlux2TextToImageLoRAInput = {
 };
 export type StreamingFullTextToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56148,7 +58303,7 @@ export type StreamingImageToImageInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56202,7 +58357,7 @@ export type StreamingImageToImageLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56260,7 +58415,7 @@ export type StreamingInpaintInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56318,7 +58473,7 @@ export type StreamingInpaintLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56380,7 +58535,7 @@ export type StreamingInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56427,7 +58582,7 @@ export type StreamingKleinBaseInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56472,7 +58627,7 @@ export type StreamingKleinBaseInput = {
 };
 export type StreamingKleinInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56513,7 +58668,7 @@ export type StreamingKontextEditInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56580,7 +58735,7 @@ export type StreamingKontextImg2ImgInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56631,7 +58786,7 @@ export type StreamingKontextInpaintInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56688,7 +58843,7 @@ export type StreamingKontextInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56740,7 +58895,7 @@ export type StreamingTextToImageInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56785,7 +58940,7 @@ export type StreamingTextToImageLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56834,7 +58989,7 @@ export type StreamingTilingInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -56895,7 +59050,7 @@ export type StreamingTilingLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -57201,12 +59356,6 @@ export type StyleReferenceInput = {
    * URL to zip archive with images, use PNG format. Maximum 5 images are allowed.
    */
   images_data_url: string | Blob | File;
-};
-export type StyleReferenceOutput = {
-  /**
-   * The ID of the created style, this ID can be used to reference the style in the future.
-   */
-  style_id: string;
 };
 export type StylizeInput = {
   /**
@@ -58543,9 +60692,9 @@ export type TextTo3DInput = {
    */
   mode?: "preview" | "full";
   /**
-   * Type of 3D mesh generation. 'standard' produces a regular high-detail mesh; 'lowpoly' produces a low-poly mesh optimized for cleaner polygons. When set to 'lowpoly', the remesh controls (topology, target_polycount, should_remesh) are ignored by Meshy. Default value: `"standard"`
+   * Type of 3D mesh generation. 'standard' produces a regular high-detail mesh; 'lowpoly' produces a low-poly mesh optimized for cleaner polygons; 'smart-topology' uses Meshy-T2 for clean, natively separated parts on the geometry (preview) step. When set to 'lowpoly', the remesh controls (topology, target_polycount, should_remesh) are ignored by Meshy. Default value: `"standard"`
    */
-  model_type?: "standard" | "lowpoly";
+  model_type?: "standard" | "lowpoly" | "smart-topology";
   /**
    * Pose mode for the generated model. 'a-pose' generates an A-pose, 't-pose' generates a T-pose, empty string for no specific pose. Default value: `""`
    */
@@ -58571,7 +60720,7 @@ export type TextTo3DInput = {
    */
   symmetry_mode?: "off" | "auto" | "on";
   /**
-   * Target number of polygons in the generated model Default value: `30000`
+   * Target number of polygons in the generated model. When model_type is 'smart-topology' and this is left unset, Meshy's lower smart-topology default (4,000) is used instead; smart topology accepts at most 15,000. Default value: `30000`
    */
   target_polycount?: number;
   /**
@@ -58641,6 +60790,84 @@ export type TextTo3DOutput = {
    */
   thumbnail?: File;
 };
+export type TextTo3DV7Input = {
+  /**
+   * Animation preset ID from Meshy's library. Only used when enable_animation is true; in that case it must be in [0, 696] (``0`` is the "Idle" preset) and is otherwise rejected with a 422. See https://docs.meshy.ai/en/api/animation-library for available action IDs. Default value: `92`
+   */
+  animation_action_id?: number;
+  /**
+   * Apply an animation preset to the rigged model. Requires enable_rigging to be true.
+   */
+  enable_animation?: boolean;
+  /**
+   * Generate PBR Maps (metallic, roughness, normal) in addition to base color.
+   */
+  enable_pbr?: boolean;
+  /**
+   * Whether to enable prompt expansion. This will use a large language model to expand the prompt with additional details while maintaining the original meaning.
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Automatically rig the generated model as a humanoid character. Includes basic walking and running animations. Best results with humanoid characters that have clearly defined limbs.
+   */
+  enable_rigging?: boolean;
+  /**
+   * If set to true, input data will be checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Generation mode. 'preview' returns untextured geometry only, 'full' returns textured model (preview + refine). Default value: `"full"`
+   */
+  mode?: "preview" | "full";
+  /**
+   * Type of 3D mesh generation. 'standard' produces a regular high-detail mesh; 'lowpoly' produces a low-poly mesh optimized for cleaner polygons; 'smart-topology' uses Meshy-T2 for clean, natively separated parts on the geometry (preview) step. When set to 'lowpoly', the remesh controls (topology, target_polycount, should_remesh) are ignored by Meshy. Default value: `"standard"`
+   */
+  model_type?: "standard" | "lowpoly" | "smart-topology";
+  /**
+   * Pose mode for the generated model. 'a-pose' generates an A-pose, 't-pose' generates a T-pose, empty string for no specific pose. Default value: `""`
+   */
+  pose_mode?: "a-pose" | "t-pose" | "";
+  /**
+   * Describe what kind of object the 3D model is. Maximum 600 characters.
+   */
+  prompt: string;
+  /**
+   * Approximate height of the character in meters. Only used when enable_rigging is true. Default value: `1.7`
+   */
+  rigging_height_meters?: number;
+  /**
+   * Seed for reproducible results. Same prompt and seed usually generate the same result.
+   */
+  seed?: number;
+  /**
+   * Whether to enable the remesh phase. When false, returns unprocessed triangular mesh. Default value: `true`
+   */
+  should_remesh?: boolean;
+  /**
+   * Controls symmetry behavior during model generation. Default value: `"auto"`
+   */
+  symmetry_mode?: "off" | "auto" | "on";
+  /**
+   * Target number of polygons in the generated model. When model_type is 'smart-topology' and this is left unset, Meshy's lower smart-topology default (4,000) is used instead; smart topology accepts at most 15,000. Default value: `30000`
+   */
+  target_polycount?: number;
+  /**
+   * 2D image to guide the texturing process (only used in 'full' mode)
+   */
+  texture_image_url?: string | Blob | File;
+  /**
+   * Additional text prompt to guide the texturing process (only used in 'full' mode)
+   */
+  texture_prompt?: string;
+  /**
+   * Specify the topology of the generated model. Quad for smooth surfaces, Triangle for detailed geometry. Default value: `"triangle"`
+   */
+  topology?: "quad" | "triangle";
+  /**
+   * Enable higher-fidelity geometry with finer surface detail on the preview (geometry) step. Only available for standard generation (ultra requires Meshy-7; it cannot be combined with smart topology or lowpoly).
+   */
+  ultra_mode?: boolean;
+};
 export type TextToAudioBaseInput = {
   /**
    * Audio bitrate for compressed output formats (e.g., mp3, aac, opus). Format e.g. '192k' or '320k'. Ignored for lossless formats (wav, flac). Default value: `"192k"`
@@ -58697,11 +60924,11 @@ export type TextToAudioInput = {
    */
   double_output?: boolean;
   /**
-   * Duration of the generated audio in seconds. Default value: `10`
+   * Duration of the generated audio in seconds. The minimum is 0.1s for ordinary sound effects and 1s when ambience=true. Default value: `10`
    */
   duration?: number;
   /**
-   * Number of variations to generate. Default value: `1`
+   * Number of variations to generate. Default value: `2`
    */
   num_samples?: number;
   /**
@@ -58991,7 +61218,7 @@ export type TextToImageLoRAInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -59036,23 +61263,9 @@ export type TextToImageLoRAInput = {
    */
   sync_mode?: boolean;
 };
-export type TextToImageOutput = {
-  /**
-   * Whether each generated image was flagged by the safety checker.
-   */
-  has_nsfw_concepts: Array<boolean>;
-  /**
-   * The generated images.
-   */
-  images: Array<ImageFile>;
-  /**
-   * The seed used for generation.
-   */
-  seed: number;
-};
 export type TextToImageWanInput = {
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -59103,7 +61316,7 @@ export type TextToImageWanOutput = {
 };
 export type TextToMusicInput = {
   /**
-   * Requested output duration in seconds (max 600). Also used for billing (one billable unit per second per sample, rounded up). Default value: `90`
+   * Requested output duration in seconds (max 600). Also used for billing (one billable unit per second per sample, rounded up; each sample under 10s bills as 10s). Default value: `90`
    */
   duration?: number;
   /**
@@ -59219,7 +61432,7 @@ export type TextToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -59343,6 +61556,32 @@ export type TextureFiles = {
    */
   roughness?: File;
 };
+export type TextureInput = {
+  /**
+   * If set to true, input images are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * File format of the generated model. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "stl" | "fbx" | "usdz";
+  /**
+   * URL of the reference image used to texture the model. PNG, JPEG and WebP formats are supported, up to 20MB.
+   */
+  image_url: string | Blob | File;
+  /**
+   * URL of the geometry model to texture. Only GLB format is supported (e.g. the geometry output of the image-to-3d endpoint with enable_texture=false).
+   */
+  mesh_url: string | Blob | File;
+  /**
+   * Model version used for texturing. Only v1.5 models support the staged texture task. Default value: `"hitem3dv1.5"`
+   */
+  model?: "hitem3dv1.5" | "scene-portraitv1.5";
+  /**
+   * Texture generation resolution. hitem3dv1.5 accepts 512, 1024, 1536 and 1536pro; scene-portraitv1.5 accepts 1536. Defaults to the model's recommended resolution.
+   */
+  resolution?: "512" | "1024" | "1536" | "1536pro";
+};
 export type TextureTransformInput = {
   /**
    * Aspect ratio for 4K output
@@ -59445,7 +61684,7 @@ export type TilingInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -59510,7 +61749,7 @@ export type TilingLoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -59631,170 +61870,6 @@ export type TimestepsInput = {
    * Defaults to 'default' which means the scheduler will use the `num_inference_steps` parameter. Default value: `"default"`
    */
   method?: "default" | "array";
-};
-export type TokenOutput = {
-  /**
-   * Open Platform base URL for the client SDK (`apiBaseUrl`).
-   */
-  api_base_url: string | Blob | File;
-  /**
-   * Requested validity in seconds.
-   */
-  expires_in: number;
-  /**
-   * Short-lived Open Platform API-key token.
-   */
-  token: string;
-};
-export type TopazUpscaleImageInput = {
-  /**
-   * Enable automatic prompt generation for generative upscaling. Applies to Redefine model only.
-   */
-  autoprompt?: boolean;
-  /**
-   * Creativity level for generative upscaling (1-6). Higher values produce more creative/hallucinated details. Applies to Redefine model only.
-   */
-  creativity?: number;
-  /**
-   *
-   */
-  crop_to_fill?: boolean;
-  /**
-   * Denoising level (0.0-1.0). Applies to Standard V2, Low Resolution V2, CGI, High Fidelity V2, Text Refine, and Redefine models.
-   */
-  denoise?: number;
-  /**
-   * Detail recovery level (0.0-1.0). Applies to Recovery V2 model only.
-   */
-  detail?: number;
-  /**
-   * Enhancement strength for generative upscaling. Applies to Wonder 3 model only. When omitted, Topaz auto-configures it.
-   */
-  enhancement_strength?: "low" | "medium" | "high";
-  /**
-   * Whether to apply face enhancement to the image. Applies to standard enhance and Recovery V2 models. Default value: `true`
-   */
-  face_enhancement?: boolean;
-  /**
-   * Creativity level for face enhancement. 0.0 means no creativity, 1.0 means maximum creativity. Ignored if face enhancement is disabled.
-   */
-  face_enhancement_creativity?: number;
-  /**
-   * Strength of the face enhancement. 0.0 means no enhancement, 1.0 means maximum enhancement. Ignored if face enhancement is disabled. Default value: `0.8`
-   */
-  face_enhancement_strength?: number;
-  /**
-   * Compression artifact removal level (0.0-1.0). Applies to Standard V2, Low Resolution V2, High Fidelity V2, and Text Refine models.
-   */
-  fix_compression?: number;
-  /**
-   * Url of the image to be upscaled
-   */
-  image_url: string | Blob | File;
-  /**
-   * Model to use for image enhancement, grouped by family. Precision — Standard V2 fits most photos, High Fidelity V2 preserves detail in professional shots, Low Resolution V2 recovers compressed sources, CGI targets art and rendered graphics, Text Refine keeps text and shapes crisp. Generative — Wonder 3 is Topaz's most advanced generative model, Redefine adds prompt-guided creative detail, Standard MAX maximizes quality, Recovery/Recovery V2 rebuild extreme low-resolution images. Default value: `"Standard V2"`
-   */
-  model?:
-    | "Standard V2"
-    | "High Fidelity V2"
-    | "Low Resolution V2"
-    | "CGI"
-    | "Text Refine"
-    | "Wonder 3"
-    | "Wonder"
-    | "Standard MAX"
-    | "Redefine"
-    | "Recovery V2"
-    | "Recovery";
-  /**
-   * Output format of the upscaled image. Default value: `"jpeg"`
-   */
-  output_format?: "jpeg" | "png";
-  /**
-   * Text prompt to guide generative upscaling (max 1024 chars). Applies to Redefine model only.
-   */
-  prompt?: string;
-  /**
-   * Sharpening level (0.0-1.0). Applies to Standard V2, Low Resolution V2, CGI, High Fidelity V2, Text Refine, and Redefine models.
-   */
-  sharpen?: number;
-  /**
-   * Enhancement strength (0.01-1.0). Applies to Text Refine model only.
-   */
-  strength?: number;
-  /**
-   * Subject detection mode for the image enhancement. Applies to standard enhance and Recovery V2 models. Default value: `"All"`
-   */
-  subject_detection?: "All" | "Foreground" | "Background";
-  /**
-   * Texture detail level for generative upscaling (1-5). Applies to Redefine model only.
-   */
-  texture?: number;
-  /**
-   * Factor to upscale the image by (e.g. 2.0 doubles width and height) Default value: `2`
-   */
-  upscale_factor?: number;
-};
-export type TopazUpscaleVideoInput = {
-  /**
-   * Compression artifact removal level (0.0-1.0). Default varies by model.
-   */
-  compression?: number;
-  /**
-   * Film grain amount (0.0-0.1). Default varies by model.
-   */
-  grain?: number;
-  /**
-   * Whether to use H264 codec for output video. Default is H265.
-   */
-  H264_output?: boolean;
-  /**
-   * Halo reduction level (0.0-1.0). Default varies by model.
-   */
-  halo?: number;
-  /**
-   * Video enhancement model, grouped by family. Precision — Proteus fits most footage, Artemis denoises and sharpens degraded sources, Gaia HQ/CG refine rendered content, Gaia 2 handles animation and motion graphics at 2x. Denoise — Nyx models are dedicated noise reduction. Generative — Starlight models use diffusion for restoration and upscaling. Starlight Precise 1, Starlight Precise 2 and Starlight Fast 1 are deprecated by Topaz; prefer Starlight Precise 2.5 or Starlight Fast 2. Default value: `"Proteus"`
-   */
-  model?:
-    | "Proteus"
-    | "Artemis HQ"
-    | "Artemis MQ"
-    | "Artemis LQ"
-    | "Gaia HQ"
-    | "Gaia CG"
-    | "Gaia 2"
-    | "Nyx"
-    | "Nyx Fast"
-    | "Nyx XL"
-    | "Nyx HF"
-    | "Starlight Precise 2.5"
-    | "Starlight HQ"
-    | "Starlight Mini"
-    | "Starlight Sharp"
-    | "Starlight Fast 2"
-    | "Starlight Precise 1"
-    | "Starlight Precise 2"
-    | "Starlight Fast 1";
-  /**
-   * Noise reduction level (0.0-1.0). Default varies by model.
-   */
-  noise?: number;
-  /**
-   * Recover original detail level (0.0-1.0). Higher values preserve more original detail.
-   */
-  recover_detail?: number;
-  /**
-   * Target FPS for frame interpolation. If set, frame interpolation will be enabled.
-   */
-  target_fps?: number;
-  /**
-   * Factor to upscale the video by (e.g. 2.0 doubles width and height) Default value: `2`
-   */
-  upscale_factor?: number;
-  /**
-   * URL of the video to upscale
-   */
-  video_url: string | Blob | File;
 };
 export type Track = {
   /**
@@ -59939,74 +62014,6 @@ export type TranscriptionWord = {
    * Type of element (word, spacing, or audio_event)
    */
   type: string;
-};
-export type TravelControlOutput = {
-  /**
-   *
-   */
-  encrypted_travel_id: string;
-  /**
-   *
-   */
-  status: string;
-};
-export type TravelListOutput = {
-  /**
-   *
-   */
-  items: Array<unknown>;
-  /**
-   *
-   */
-  pagination: unknown;
-};
-export type TravelStatusInput = {
-  /**
-   * Optional client RTC playback status heartbeat (DISCONNECTED / CONNECTING / CONNECTED / PLAYING / BUFFERING / PAUSED / RECONNECTING).
-   */
-  client_stream_status?: string;
-  /**
-   * Client status change timestamp (ms epoch).
-   */
-  client_stream_status_time_ms?: number;
-  /**
-   * Encrypted travel ID from the client's enter-travel.
-   */
-  encrypted_travel_id: string;
-};
-export type TravelStatusOutput = {
-  /**
-   *
-   */
-  chapters?: Array<unknown>;
-  /**
-   *
-   */
-  character_actions?: Array<string>;
-  /**
-   *
-   */
-  encrypted_travel_id: string;
-  /**
-   *
-   */
-  environment_actions?: Array<string>;
-  /**
-   *
-   */
-  rtc_status?: string;
-  /**
-   * `init`, `pending`, `running`, `failed`, or `completed`.
-   */
-  status: string;
-  /**
-   *
-   */
-  update_time?: string;
-  /**
-   *
-   */
-  user_instructions?: Array<unknown>;
 };
 export type Trellis2Input = {
   /**
@@ -60592,7 +62599,43 @@ export type TrioAudioOutput = {
    */
   audios: Array<Audio>;
 };
-export type Tripo3DSegmentationOutput = {
+export type Tripo3dOutput = {
+  /**
+   * Base model
+   */
+  base_model?: File;
+  /**
+   * Model
+   */
+  model_mesh?: File;
+  /**
+   * Pbr model
+   */
+  pbr_model?: File;
+  /**
+   * A preview image of the model
+   */
+  rendered_image?: File;
+  /**
+   * The task id of the 3D model generation.
+   */
+  task_id: string;
+};
+export type Tripo3DOutput = {
+  /**
+   * Generated 3D model file. May be GLB or FBX depending on Tripo output.
+   */
+  model_mesh: File;
+  /**
+   * URLs for different 3D model variants.
+   */
+  model_urls: ModelUrls;
+  /**
+   * Preview render of the generated 3D model.
+   */
+  rendered_image?: File;
+};
+export type TripoSegmentOutput = {
   /**
    * Segmented 3D model file. May be GLB or FBX depending on Tripo output.
    */
@@ -60697,28 +62740,6 @@ export type triposrOutput = {
    * Inference timings.
    */
   timings: unknown;
-};
-export type TripoV25ImageTo3dOutput = {
-  /**
-   * Base model
-   */
-  base_model?: File;
-  /**
-   * Model
-   */
-  model_mesh?: File;
-  /**
-   * Pbr model
-   */
-  pbr_model?: File;
-  /**
-   * A preview image of the model
-   */
-  rendered_image?: File;
-  /**
-   * The task id of the 3D model generation.
-   */
-  task_id: string;
 };
 export type TTSInput = {
   /**
@@ -60830,9 +62851,37 @@ export type TtsV1Input = {
    */
   text: string;
   /**
-   * Voice to use for synthesis. eve: energetic, upbeat. ara: warm, friendly. rex: confident, clear. sal: smooth, balanced. leo: authoritative, strong. Default value: `"eve"`
+   * Built-in xAI voice to use for synthesis. Default value: `"eve"`
    */
-  voice?: "eve" | "ara" | "rex" | "sal" | "leo";
+  voice?:
+    | "carina"
+    | "zagan"
+    | "helix"
+    | "orion"
+    | "luna"
+    | "iris"
+    | "altair"
+    | "zenith"
+    | "perseus"
+    | "helios"
+    | "lux"
+    | "kepler"
+    | "rigel"
+    | "cosmo"
+    | "celeste"
+    | "ursa"
+    | "sirius"
+    | "lumen"
+    | "castor"
+    | "naksh"
+    | "atlas"
+    | "aurora"
+    | "liora"
+    | "ara"
+    | "eve"
+    | "leo"
+    | "rex"
+    | "sal";
 };
 export type TurboFluxTrainerInput = {
   /**
@@ -60860,6 +62909,136 @@ export type TurboFluxTrainerInput = {
    * If no captions are provide the trigger_work will be used instead of captions. If captions are provided, the trigger word will replace the `[trigger]` string in the captions. Default value: `"ohwx"`
    */
   trigger_phrase?: string;
+};
+export type TurboImageToVideoHailuo03LoRAInput = {
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Optional URL of the image to use as the last frame. It may be provided alone for end-only keyframe generation; in that case the output canvas follows this image.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * Optional URL of the image to use as the first frame. When provided, the output canvas follows this image. If only end_image_url is provided, the canvas follows that last frame instead. If both images are omitted, the request is handled as text-to-video (16:9 by default).
+   */
+  image_url?: string | Blob | File;
+  /**
+   * List of LoRA adapters to apply to the transformer.
+   */
+  loras: Array<LoRAInput>;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
+  /**
+   * The native generation resolution of the video. Default value: `"768P"`
+   */
+  resolution?: "480P" | "768P";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type TurboReferenceToVideoHailuo03LoRAInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * List of LoRA adapters to apply to the transformer.
+   */
+  loras: Array<LoRAInput>;
+  /**
+   * Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
+  /**
+   * URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Audio cannot be the only reference input; provide at least one reference image or video with it. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_audio_urls?: Array<string>;
+  /**
+   * URLs of subject/style reference images, referenced in the prompt as Image 1, Image 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_image_urls?: Array<string>;
+  /**
+   * URLs of motion/reference video clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Video 1, Video 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.
+   */
+  reference_video_urls?: Array<string>;
+  /**
+   * The native generation resolution of the video. Default value: `"768P"`
+   */
+  resolution?: "480P" | "768P";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
+};
+export type TurboTextToVideoHailuo03LoRAInput = {
+  /**
+   * The aspect ratio of the generated video. Default value: `"16:9"`
+   */
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * The duration of the video in seconds. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * If set to true, the safety checker will be enabled. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * List of LoRA adapters to apply to the transformer.
+   */
+  loras: Array<LoRAInput>;
+  /**
+   * Text prompt for video generation
+   */
+  prompt: string;
+  /**
+   * How much effort to spend rewriting the prompt before generation. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt. Default value: `"balanced"`
+   */
+  prompt_expansion_mode: string;
+  /**
+   * The native generation resolution of the video. Default value: `"768P"`
+   */
+  resolution?: "480P" | "768P";
+  /**
+   * Random seed. A random seed is selected when omitted.
+   */
+  seed?: number;
+  /**
+   * Return the generated video as base64 instead of a CDN URL.
+   */
+  sync_mode?: boolean;
 };
 export type Turn = {
   /**
@@ -60903,7 +63082,7 @@ export type U1InfographicUnderstandInput = {
 };
 export type unoInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -60975,80 +63154,6 @@ export type unoOutput = {
    */
   timings: unknown;
 };
-export type UpdatePathConfigInput = {
-  /**
-   * Per-path circuit breaker threshold (0.0-1.0). Use -1 to reset to global default.
-   */
-  breaker_threshold?: number;
-  /**
-   * New concurrency limit. Use -1 to reset to unlimited.
-   */
-  concurrency_limit?: number;
-  /**
-   * New cost value.
-   */
-  cost?: number;
-  /**
-   * Enable/disable the path.
-   */
-  enabled?: boolean;
-  /**
-   * When True, path is excluded from local best-effort fallback pool.
-   */
-  exclude_from_best_effort?: boolean;
-  /**
-   * When False, path is exempt from health penalty and circuit breaker.
-   */
-  health_aware?: boolean;
-  /**
-   * Shared RPS budget with linked_rps_source. Use -1 to clear.
-   */
-  linked_rps_budget?: number;
-  /**
-   * Path ID whose RPS is subtracted from linked_rps_budget. Use empty string to clear.
-   */
-  linked_rps_source?: string;
-  /**
-   * Path ID to update.
-   */
-  path_id: string;
-  /**
-   * Enable/disable priority routing.
-   */
-  priority_enabled?: boolean;
-  /**
-   * When True, only priority users can be routed to this path.
-   */
-  priority_only?: boolean;
-  /**
-   * New RPS limit.
-   */
-  rps_limit?: number;
-};
-export type UpdateScriptInput = {
-  /**
-   * Encrypted travel ID from the client's enter-travel.
-   */
-  encrypted_travel_id: string;
-  /**
-   * Full replacement script; `acts` must contain exactly 45 turns.
-   */
-  script_list: unknown;
-};
-export type UpdateScriptOutput = {
-  /**
-   *
-   */
-  accepted: boolean;
-  /**
-   *
-   */
-  encrypted_travel_id: string;
-  /**
-   *
-   */
-  turn_count?: number;
-};
 export type UpscaleCreativeInput = {
   /**
    *  Default value: `"https://bria-datasets.s3.us-east-1.amazonaws.com/upscale/wild-west.png"`
@@ -61066,6 +63171,119 @@ export type UpscaleCreativeInput = {
    * If true, returns the image directly in the response (increases latency).
    */
   sync_mode?: boolean;
+};
+export type UpscaleImageCreativeInput = {
+  /**
+   * Enable automatic prompt generation. Applies to Bloom 2 only; Topaz defaults it to true when omitted.
+   */
+  autoprompt?: boolean;
+  /**
+   * Preserve the source image's colors in the output. Applies to Bloom 2 only.
+   */
+  color_preservation?: boolean;
+  /**
+   * Creativity level (1-9). Higher values produce more creative/hallucinated details. Applies to Bloom 2 only.
+   */
+  creativity?: number;
+  /**
+   *
+   */
+  crop_to_fill?: boolean;
+  /**
+   * Url of the image to be upscaled
+   */
+  image_url: string | Blob | File;
+  /**
+   * Creative (Bloom) upscaling model. Bloom 2 is the latest and most capable; Bloom creatively upscales and transforms AI-generated images; Bloom Realism biases the added detail toward photorealism. Default value: `"Bloom 2"`
+   */
+  model?: "Bloom 2" | "Bloom" | "Bloom Realism";
+  /**
+   * Output format of the upscaled image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * Factor to upscale the image by (e.g. 2.0 doubles width and height) Default value: `2`
+   */
+  upscale_factor?: number;
+};
+export type UpscaleImageGenerativeInput = {
+  /**
+   * Enable automatic prompt generation for generative upscaling. Applies to Redefine model only.
+   */
+  autoprompt?: boolean;
+  /**
+   * Creativity level for generative upscaling (1-6). Higher values produce more creative/hallucinated details. Applies to Redefine model only.
+   */
+  creativity?: number;
+  /**
+   *
+   */
+  crop_to_fill?: boolean;
+  /**
+   * Denoising level (0.0-1.0). Applies to Redefine model only.
+   */
+  denoise?: number;
+  /**
+   * Detail recovery level (0.0-1.0). Applies to Recovery V2 model only.
+   */
+  detail?: number;
+  /**
+   * Enhancement strength for generative upscaling. Applies to Wonder 3 and Wonder 3.5 models. When omitted, Topaz auto-configures it.
+   */
+  enhancement_strength?: "low" | "medium" | "high";
+  /**
+   * Whether to apply face enhancement to the image. Default value: `true`
+   */
+  face_enhancement?: boolean;
+  /**
+   * Creativity level for face enhancement. 0.0 means no creativity, 1.0 means maximum creativity. Ignored if face enhancement is disabled.
+   */
+  face_enhancement_creativity?: number;
+  /**
+   * Strength of the face enhancement. 0.0 means no enhancement, 1.0 means maximum enhancement. Ignored if face enhancement is disabled. Default value: `0.8`
+   */
+  face_enhancement_strength?: number;
+  /**
+   * Url of the image to be upscaled
+   */
+  image_url: string | Blob | File;
+  /**
+   * Generative upscaling model. Wonder 3.5 is the latest Wonder with finer detail and fewer repetitive patterns; Wonder 3 is Topaz's most advanced generative realism model (Wonder 2/Wonder are earlier generations); Recover 3 rebuilds natural detail; Standard MAX is high-quality precision-leaning upscaling; Redefine adds prompt-guided creative detail; Recovery and Recovery V2 rebuild extreme low-resolution images. Default value: `"Wonder 3"`
+   */
+  model?:
+    | "Wonder 3.5"
+    | "Wonder 3"
+    | "Wonder 2"
+    | "Wonder"
+    | "Recover 3"
+    | "Standard MAX"
+    | "Redefine"
+    | "Recovery V2"
+    | "Recovery";
+  /**
+   * Output format of the upscaled image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * Text prompt to guide generative upscaling (max 1024 chars). Applies to Redefine model only.
+   */
+  prompt?: string;
+  /**
+   * Sharpening level (0.0-1.0). Applies to Redefine model only.
+   */
+  sharpen?: number;
+  /**
+   * Subject detection mode for the image enhancement. Applies to Wonder 3, Recovery and Recovery V2 models. Default value: `"All"`
+   */
+  subject_detection?: "All" | "Foreground" | "Background";
+  /**
+   * Texture detail level for generative upscaling (1-5). Applies to Redefine model only.
+   */
+  texture?: number;
+  /**
+   * Factor to upscale the image by (e.g. 2.0 doubles width and height) Default value: `2`
+   */
+  upscale_factor?: number;
 };
 export type UpscaleImageInput = {
   /**
@@ -61097,9 +63315,79 @@ export type UpscaleImageInput = {
    */
   sync_mode?: boolean;
 };
+export type UpscaleImagePrecisionInput = {
+  /**
+   *
+   */
+  crop_to_fill?: boolean;
+  /**
+   * Denoising level (0.0-1.0). Default varies by model.
+   */
+  denoise?: number;
+  /**
+   * Whether to apply face enhancement to the image. Default value: `true`
+   */
+  face_enhancement?: boolean;
+  /**
+   * Creativity level for face enhancement. 0.0 means no creativity, 1.0 means maximum creativity. Ignored if face enhancement is disabled.
+   */
+  face_enhancement_creativity?: number;
+  /**
+   * Strength of the face enhancement. 0.0 means no enhancement, 1.0 means maximum enhancement. Ignored if face enhancement is disabled. Default value: `0.8`
+   */
+  face_enhancement_strength?: number;
+  /**
+   * Compression artifact removal level (0.0-1.0). Not supported by the CGI model.
+   */
+  fix_compression?: number;
+  /**
+   * Url of the image to be upscaled
+   */
+  image_url: string | Blob | File;
+  /**
+   * Precision upscaling model. Standard V2 fits most photos; High Fidelity V3/V2 preserve detail in professional shots; Low Resolution V2 recovers compressed sources; CGI targets art and rendered graphics; Text Refine keeps text and shapes crisp. Default value: `"Standard V2"`
+   */
+  model?:
+    | "Standard V2"
+    | "High Fidelity V3"
+    | "High Fidelity V2"
+    | "Low Resolution V2"
+    | "CGI"
+    | "Text Refine";
+  /**
+   * Output format of the upscaled image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png";
+  /**
+   * Sharpening level (0.0-1.0). Default varies by model.
+   */
+  sharpen?: number;
+  /**
+   * Enhancement strength (0.01-1.0). Applies to Text Refine model only.
+   */
+  strength?: number;
+  /**
+   * Subject detection mode for the image enhancement. Default value: `"All"`
+   */
+  subject_detection?: "All" | "Foreground" | "Background";
+  /**
+   * Factor to upscale the image by (e.g. 2.0 doubles width and height) Default value: `2`
+   */
+  upscale_factor?: number;
+};
+export type UpscaleImageTransparentInput = {
+  /**
+   * Url of the image to process
+   */
+  image_url: string | Blob | File;
+  /**
+   * Transparent upscaling always outputs PNG to preserve the alpha channel. Default value: `"png"`
+   */
+  output_format?: string;
+};
 export type UpscaleInput = {
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -61110,6 +63398,134 @@ export type UpscaleInput = {
    * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
    */
   sync_mode?: boolean;
+};
+export type UpscaleVideoCreativeInput = {
+  /**
+   * How much new detail and texture Astra 2 invents. 0.0 stays faithful to the source, 1.0 is maximally creative. Default value: `0.5`
+   */
+  creativity?: number;
+  /**
+   * Whether to use H264 codec for output video. Default is H265.
+   */
+  H264_output?: boolean;
+  /**
+   * Optional text prompt guiding the detail Astra 2 generates. When set, the input video is limited to 450 frames.
+   */
+  prompt?: string;
+  /**
+   * Bias generated detail toward photorealism (0.0-1.0).
+   */
+  realism?: number;
+  /**
+   * Output sharpness. 0.0 softens, 0.5 is neutral passthrough, 1.0 applies strong sharpening. Defaults to Topaz's neutral 0.5.
+   */
+  sharp?: number;
+  /**
+   * Target FPS for the output. Frame interpolation is enabled only when this differs from the source FPS.
+   */
+  target_fps?: number;
+  /**
+   * Requested upscale factor (e.g. 2.0 doubles width and height). Note: Astra 2 snaps to its own supported output resolutions (typically 4K when upscaling) and may override the requested target. Billing is based on the delivered resolution. Default value: `2`
+   */
+  upscale_factor?: number;
+  /**
+   * URL of the video to upscale
+   */
+  video_url: string | Blob | File;
+};
+export type UpscaleVideoGenerativeInput = {
+  /**
+   * Whether to use H264 codec for output video. Default is H265.
+   */
+  H264_output?: boolean;
+  /**
+   * Generative diffusion enhancement model. Starlight Precise 2.6 adds realism to AI-generated video; Starlight HQ maximizes quality on high-resolution sources; Starlight Mini restores archival footage; Starlight Sharp is fast restoration with sharper detail; Starlight Fast 2 is the fastest, cheapest diffusion upscaler. Default value: `"Starlight Precise 2.6"`
+   */
+  model?:
+    | "Starlight Precise 2.6"
+    | "Starlight HQ"
+    | "Starlight Mini"
+    | "Starlight Sharp"
+    | "Starlight Fast 2";
+  /**
+   * How much softening the model applies to the output, from 1 (sharpest) to 5 (softest). Starlight Precise 2.6 only; leave unset for Topaz's default.
+   */
+  softness?: number;
+  /**
+   * Target FPS for the output. Frame interpolation is enabled only when this differs from the source FPS.
+   */
+  target_fps?: number;
+  /**
+   * Factor to upscale the video by (e.g. 2.0 doubles width and height) Default value: `2`
+   */
+  upscale_factor?: number;
+  /**
+   * URL of the video to upscale
+   */
+  video_url: string | Blob | File;
+};
+export type UpscaleVideoPrecisionInput = {
+  /**
+   * Compression artifact removal level (0.0-1.0). Default varies by model.
+   */
+  compression?: number;
+  /**
+   * Film grain amount (0.0-0.1). Default varies by model.
+   */
+  grain?: number;
+  /**
+   * Whether to use H264 codec for output video. Default is H265.
+   */
+  H264_output?: boolean;
+  /**
+   * Halo reduction level (0.0-1.0). Default varies by model.
+   */
+  halo?: number;
+  /**
+   * Precision (non-generative) enhancement model. Proteus fits most real-world footage; Proteus Natural is a softer variant; Iris recovers faces; Dione deinterlaces legacy/interlaced sources; Artemis denoises and sharpens degraded footage; Gaia refines high-quality footage and CG (Gaia 2 upscales animation at 2x); Rhea maximizes fine detail via an internal 4x pass; Theia gives manual detail/fidelity control. Default value: `"Proteus"`
+   */
+  model?:
+    | "Proteus"
+    | "Proteus Natural"
+    | "Iris"
+    | "Iris Low Quality"
+    | "Dione DV"
+    | "Dione TV"
+    | "Dione Robust"
+    | "Dione Dehalo"
+    | "Dione Robust Dehalo"
+    | "Artemis High Quality"
+    | "Artemis Medium Quality"
+    | "Artemis Low Quality"
+    | "Artemis Strong Halo"
+    | "Artemis Medium Halo"
+    | "Artemis Aliasing & Moire"
+    | "Gaia HQ"
+    | "Gaia CG"
+    | "Gaia 2"
+    | "Rhea"
+    | "Theia Fine Tune Detail"
+    | "Theia Fine Tune Fidelity";
+  /**
+   * Noise reduction level (0.0-1.0). Default varies by model.
+   */
+  noise?: number;
+  /**
+   * Recover original detail level (0.0-1.0). Higher values preserve more original detail.
+   */
+  recover_detail?: number;
+  /**
+   * Target FPS for the output. Frame interpolation is enabled only when this differs from the source FPS.
+   */
+  target_fps?: number;
+  /**
+   * Factor to upscale the video by (e.g. 2.0 doubles width and height) Default value: `2`
+   */
+  upscale_factor?: number;
+  /**
+   * URL of the video to upscale
+   */
+  video_url: string | Blob | File;
 };
 export type UsageInfo = {
   /**
@@ -61212,7 +63628,7 @@ export type V16Input = {
    */
   model_image: string;
   /**
-   * Content moderation level for garment images. 'none' disables moderation, 'permissive' blocks only explicit content, 'conservative' also blocks underwear and swimwear. Default value: `"permissive"`
+   * Content moderation level for garment images. 'permissive' blocks only explicit content; 'conservative' also blocks underwear and swimwear. 'none' disables moderation only for accounts authorized to disable safety filters; for all other accounts it is treated as 'permissive'. Default value: `"permissive"`
    */
   moderation_level?: "none" | "permissive" | "conservative";
   /**
@@ -61344,6 +63760,10 @@ export type V2mDirectInput = {
    */
   instrumental?: boolean;
   /**
+   * Sung lyrics, used verbatim (no agent rewrite on this path). Ignored when instrumental=true, which occupies the same lyrics slot with the [instrumental] marker.
+   */
+  lyrics?: string;
+  /**
    *
    */
   model_prompts: Array<string>;
@@ -61360,11 +63780,15 @@ export type V2mDirectInput = {
    */
   num_samples_per_prompt?: number;
   /**
+   * Turn it up to match the text prompt Default value: `0.5`
+   */
+  prompt_influence?: number;
+  /**
    *
    */
   segment_prompts?: Array<string>;
   /**
-   *
+   * Optional section plan (`t label` lines). Kept as the semantic skeleton: sequence and labels are preserved and each boundary is snapped to the nearest shot cut (TransNetV2), like the marketplace path treats the agent's segments.
    */
   segments?: string;
   /**
@@ -61409,6 +63833,10 @@ export type V2mInput = {
    * Optional text prompt steering style; auto-generated if omitted.
    */
   prompt?: string;
+  /**
+   * Turn it up to match the text prompt Default value: `0.5`
+   */
+  prompt_influence?: number;
   /**
    * Per-segment style prompts; requires segments with matching line count.
    */
@@ -61642,6 +64070,44 @@ export type V2VValidation = {
    */
   reference_video_url: string | Blob | File;
 };
+export type V3ImageTo3DInput = {
+  /**
+   * Generate PBR material maps together with the texture. Only supported (and billed) for v2.0/v2.1 and v3.0 models when enable_texture is true; ignored otherwise. Default value: `true`
+   */
+  enable_pbr?: boolean;
+  /**
+   * If set to true, input images are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to generate textures in addition to geometry. When false, only the geometry mesh is generated (and billed). Default value: `true`
+   */
+  enable_texture?: boolean;
+  /**
+   * File format of the generated model. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "stl" | "fbx" | "usdz";
+  /**
+   * Target face count. The partner recommends 2,000,000 for 2048quality and 5,000,000 for 2048master.
+   */
+  face_count?: number;
+  /**
+   * URL of the input image. PNG, JPEG and WebP formats are supported, up to 20MB.
+   */
+  image_url: string | Blob | File;
+  /**
+   * Hi3D v3.0 model version used by this endpoint. Default value: `"hi3dv3.0"`
+   */
+  model?: string;
+  /**
+   * Generation resolution. 2048quality is the faster default; 2048master provides the highest quality. Default value: `"2048quality"`
+   */
+  resolution?: "2048quality" | "2048master";
+  /**
+   * De-shading strength. Default value: `0.5`
+   */
+  shading?: number;
+};
 export type V3ListStylesOutput = {
   /**
    * Whether more styles are available for pagination.
@@ -61655,6 +64121,56 @@ export type V3ListStylesOutput = {
    * List of available styles.
    */
   styles: Array<V3StyleInfo>;
+};
+export type V3MultiViewTo3DInput = {
+  /**
+   * URL of the back view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  back_image_url?: string | Blob | File;
+  /**
+   * Generate PBR material maps together with the texture. Only supported (and billed) for v2.0/v2.1 and v3.0 models when enable_texture is true; ignored otherwise. Default value: `true`
+   */
+  enable_pbr?: boolean;
+  /**
+   * If set to true, input images are checked for safety before processing. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Whether to generate textures in addition to geometry. When false, only the geometry mesh is generated (and billed). Default value: `true`
+   */
+  enable_texture?: boolean;
+  /**
+   * File format of the generated model. Default value: `"glb"`
+   */
+  export_format?: "glb" | "obj" | "stl" | "fbx" | "usdz";
+  /**
+   * Target face count. The partner recommends 2,000,000 for 2048quality and 5,000,000 for 2048master.
+   */
+  face_count?: number;
+  /**
+   * URL of the front view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  front_image_url?: string | Blob | File;
+  /**
+   * URL of the left view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  left_image_url?: string | Blob | File;
+  /**
+   * Hi3D v3.0 model version used by this endpoint. Default value: `"hi3dv3.0"`
+   */
+  model?: string;
+  /**
+   * Generation resolution. 2048quality is the faster default; 2048master provides the highest quality. Default value: `"2048quality"`
+   */
+  resolution?: "2048quality" | "2048master";
+  /**
+   * URL of the right view image (PNG/JPEG/WebP, up to 20MB).
+   */
+  right_image_url?: string | Blob | File;
+  /**
+   * De-shading strength. Default value: `0.5`
+   */
+  shading?: number;
 };
 export type V3StyleInfo = {
   /**
@@ -61682,9 +64198,33 @@ export type V3StyleInfo = {
    */
   thumbnail_url?: string | Blob | File;
 };
+export type V4CreateStyleInput = {
+  /**
+   * The base style of the generated images. Default value: `"any"`
+   */
+  base_style?: "any" | "vector_illustration";
+  /**
+   * The URLs of the style reference images. Supports PNG, JPG, and WEBP; provide between 1 and 10 images.
+   */
+  image_urls: Array<string>;
+  /**
+   * One weight per image URL, in the same order as `image_urls`.
+   */
+  image_weights?: Array<number>;
+  /**
+   * How closely generated images should follow the style. Default value: `"precise"`
+   */
+  match?: "precise" | "flexible";
+};
+export type V4CreateStyleOutput = {
+  /**
+   * The ID of the created style, this ID can be used to reference the style in the future.
+   */
+  style_id: string;
+};
 export type V4FastInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -61733,7 +64273,7 @@ export type V4ImageToImageInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -61791,7 +64331,7 @@ export type v4Input = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -61836,7 +64376,7 @@ export type v4Input = {
 };
 export type V4InstantInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -61881,7 +64421,7 @@ export type V4LoraInput = {
    */
   acceleration?: "none" | "low" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -61950,6 +64490,57 @@ export type v4Output = {
    *
    */
   timings: unknown;
+};
+export type V4StyleTextToImageInput = {
+  /**
+   * The preferable background color of the generated images.
+   */
+  background_color?: RGBColor;
+  /**
+   * An array of preferable colors
+   */
+  colors?: Array<RGBColor>;
+  /**
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   *  Default value: `square_hd`
+   */
+  image_size?:
+    | ImageSize
+    | "square_hd"
+    | "square"
+    | "portrait_4_3"
+    | "portrait_16_9"
+    | "landscape_4_3"
+    | "landscape_16_9";
+  /**
+   * The URLs of the style reference images. Supports PNG, JPG, and WEBP; provide between 1 and 10 images.
+   */
+  image_urls?: Array<string>;
+  /**
+   *
+   */
+  prompt: string;
+  /**
+   * The ID of an existing V4 custom style.
+   */
+  style_id?: string;
+  /**
+   * Override how closely the generation follows the custom style.
+   */
+  style_match?: "precise" | "flexible";
+};
+export type V4StyleTextToImageOutput = {
+  /**
+   *
+   */
+  images: Array<File>;
+  /**
+   * The custom style used or created for this generation.
+   */
+  style_id?: string;
 };
 export type Validation = {
   /**
@@ -62340,6 +64931,99 @@ export type Veo31ReferenceToVideoInput = {
    * The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict. Default value: `"4"`
    */
   safety_tolerance?: "1" | "2" | "3" | "4" | "5" | "6";
+};
+export type Vggt1bInput = {
+  /**
+   * How to handle images with an alpha channel. 'white'/'black' composite onto that background, 'mean' composites onto the ImageNet mean RGB, and 'keep' discards alpha and keeps the original pixel values. Default value: `"white"`
+   */
+  alpha_blend_onto?: "keep" | "white" | "black" | "mean";
+  /**
+   * How arrays are encoded inside the prediction JSON files. 'base64' emits {data, shape, dtype} objects; 'list' emits nested JSON lists, which are far larger. Default value: `"base64"`
+   */
+  array_encoding?: "base64" | "list";
+  /**
+   * Drop this percentage of the lowest-confidence points before building the point cloud. 0 keeps every point. Default value: `50`
+   */
+  confidence_percentile?: number;
+  /**
+   * Enable safety checking of the input images and video. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Keys to omit from each prediction JSON file.
+   */
+  exclude_keys?: Array<
+    | "image"
+    | "pose_enc"
+    | "extrinsic"
+    | "intrinsic"
+    | "depth"
+    | "depth_conf"
+    | "mask"
+    | "original_image"
+  >;
+  /**
+   * Return one 16-bit grayscale PNG depth raster per frame. Pixel values map linearly from `depth_range` onto 0-65535. Default value: `true`
+   */
+  export_depth_maps?: boolean;
+  /**
+   * Return a GLB scene holding the fused coloured point cloud plus a cone mesh per estimated camera. Default value: `true`
+   */
+  export_point_cloud?: boolean;
+  /**
+   * Return one JSON file per frame with the raw model outputs (camera pose encoding, depth, depth confidence, mask). Default value: `true`
+   */
+  export_prediction_data?: boolean;
+  /**
+   * Sample every n-th frame of `video_url`. The first and last frames of the video are always included. Ignored when no video is given. Default value: `24`
+   */
+  frame_sampling_rate?: number;
+  /**
+   * Input images to reconstruct. Accepts JPEG, PNG, WEBP and the other formats Pillow decodes. Images are padded to a square and resized so the longest side is 518 pixels.
+   */
+  image_urls?: Array<string>;
+  /**
+   * Upper bound on the number of points written to the GLB. Points above the default 250,000-point budget are evenly subsampled to limit GLB serialization and upload latency. Default value: `250000`
+   */
+  max_points?: number;
+  /**
+   * Optional input video. Frames are sampled every `frame_sampling_rate`-th frame (the first and last frames are always included) and appended after `image_urls`.
+   */
+  video_url?: string | Blob | File;
+};
+export type Vggt1bOutput = {
+  /**
+   * One 16-bit grayscale PNG depth raster per frame, in frame order (when `export_depth_maps` is true).
+   */
+  depth_maps?: Array<Image>;
+  /**
+   * The [min, max] depth used to quantize `depth_maps`. depth = min + (pixel / 65535) * (max - min).
+   */
+  depth_range: Array<number>;
+  /**
+   * Per-frame 3x4 camera-from-world extrinsics in OpenCV convention (x-right, y-down, z-forward).
+   */
+  extrinsics: Array<Array<Array<number>>>;
+  /**
+   * Per-frame 3x3 pinhole intrinsics, in pixels of the 518x518 model frame.
+   */
+  intrinsics: Array<Array<Array<number>>>;
+  /**
+   * Number of frames reconstructed (images plus sampled video frames).
+   */
+  num_frames: number;
+  /**
+   * GLB scene with the fused point cloud and camera cones (when `export_point_cloud` is true).
+   */
+  point_cloud?: File;
+  /**
+   * One JSON file of raw predictions per frame, in frame order (when `export_prediction_data` is true).
+   */
+  prediction_data?: Array<File>;
+  /**
+   * Wall-clock seconds per stage.
+   */
+  timings?: unknown;
 };
 export type Vibevoice05bInput = {
   /**
@@ -63908,6 +66592,33 @@ export type VideoAgentConfig = {
    */
   orientation?: "portrait" | "landscape";
 };
+export type VideoBackgroundRemovalGreenScreenDespillInput = {
+  /**
+   * Output container and codec. Options: mp4_h265, mp4_h264, webm_vp9, mov_h265, mov_proresks, mkv_h265, mkv_h264, mkv_vp9, gif. Default value: `"webm_vp9"`
+   */
+  output_container_and_codec?:
+    | "mp4_h265"
+    | "mp4_h264"
+    | "webm_vp9"
+    | "mov_h265"
+    | "mov_proresks"
+    | "mkv_h265"
+    | "mkv_h264"
+    | "mkv_vp9"
+    | "gif";
+  /**
+   * If true, audio will be preserved in the output video. Default value: `true`
+   */
+  preserve_audio?: boolean;
+  /**
+   * Strength of green-spill suppression. Higher values pull the green channel toward the red/blue average on green-dominant pixels, removing the green fringe around the subject. 0 disables it. Default value: `1`
+   */
+  spill_suppression?: number;
+  /**
+   * Input video filmed on a green screen.
+   */
+  video_url: string | Blob | File;
+};
 export type VideoBackgroundRemovalV3Input = {
   /**
    * If true, crop the output to the smallest rectangle the subject stays inside for the whole video.
@@ -63959,6 +66670,10 @@ export type VideoBackgroundRemovalV3Output = {
    * Video with removed background and audio.
    */
   video: Video;
+  /**
+   * Set when the request was served with an adjusted parameter, e.g. a transparent background falling back to black on a codec that cannot carry alpha.
+   */
+  warning?: string;
 };
 export type VideoChatOutput = {
   /**
@@ -64210,6 +66925,10 @@ export type VideoIncreaseResolutionInput = {
 };
 export type VideoInput = {
   /**
+   * Give the model access to real-time web information via OpenRouter's web search server tool. When enabled, the model decides when to search and may search multiple times per request. Search costs are charged in addition to token usage.
+   */
+  enable_web_search?: boolean;
+  /**
    * This sets the upper limit for the number of tokens the model can generate in response. It won't produce more than this limit. The maximum value is the context length minus the prompt length.
    */
   max_tokens?: number;
@@ -64237,6 +66956,10 @@ export type VideoInput = {
    * List of URLs or data URIs of video files to process. Supported formats: mp4, mpeg, mov, webm. For Google Gemini on AI Studio, YouTube links are also supported. Mutually exclusive with video_url.
    */
   video_urls?: Array<string>;
+  /**
+   * Options for web search (engine, result limits, domain filters, ...). Ignored unless enable_web_search is true.
+   */
+  web_search_options?: WebSearchOptions;
 };
 export type VideoPromptGeneratorInput = {
   /**
@@ -64377,12 +67100,6 @@ export type VideoPromptGeneratorInput = {
     | "Action"
     | "Experimental";
 };
-export type VideoPromptGeneratorOutput = {
-  /**
-   * Generated video prompt
-   */
-  prompt: string;
-};
 export type VideoSoundEffectsGeneratorInput = {
   /**
    * A video file to analyze & re-sound with generated SFX.
@@ -64483,6 +67200,10 @@ export type VideoToMusicInput = {
    */
   prompt?: string;
   /**
+   * Turn it up to match the text prompt Default value: `0.5`
+   */
+  prompt_influence?: number;
+  /**
    * Optional. Start scoring from this offset (seconds) into the video. Requires Start Offset + Duration <= Video Duration.
    */
   start_offset?: number;
@@ -64508,6 +67229,10 @@ export type VideoToVideoInput = {
    * Optional text prompt steering the musical style. If omitted, a prompt is generated automatically from the video.
    */
   prompt?: string;
+  /**
+   * Turn it up to match the text prompt Default value: `0.5`
+   */
+  prompt_influence?: number;
   /**
    * Optional. Start scoring from this offset (seconds) into the video. Requires Start Offset + Duration <= Video Duration.
    */
@@ -65118,7 +67843,7 @@ export type VirtualTryonInput = {
    */
   acceleration?: "none" | "regular";
   /**
-   * Whether to enable the safety checker for the generated image. Default value: `true`
+   * Whether to enable the safety checker for the generated image. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65171,21 +67896,17 @@ export type VirtualTryonInput = {
 };
 export type VirtualTryOnInput = {
   /**
-   * Aspect ratio for 4K output (default: 3:4 for fashion)
+   * The number of virtual try-on images to generate. Default value: `1`
    */
-  aspect_ratio?: AspectRatio;
+  num_images?: number;
   /**
-   * Clothing photo URL
-   */
-  clothing_image_url: string | Blob | File;
-  /**
-   * Person photo URL
+   * The URL of the image of the person trying on the product.
    */
   person_image_url: string | Blob | File;
   /**
-   *  Default value: `true`
+   * The URL of the product image to try on.
    */
-  preserve_pose?: boolean;
+  product_image_url: string | Blob | File;
 };
 export type VisionInput = {
   /**
@@ -65221,9 +67942,109 @@ export type VocabularyEntry = {
 };
 export type Voice = {
   /**
-   * Voice UUID.
+   * Predefined voice, chosen by name. Ignored when `id` is set. Default value: `"Jennie"`
    */
-  id: string;
+  name?:
+    | "Jennie"
+    | "Stella"
+    | "Max"
+    | "Hayes"
+    | "Elara"
+    | "Cleo"
+    | "Fisher"
+    | "Corin"
+    | "Thaddeus"
+    | "Lucina"
+    | "Acadia"
+    | "Huxley"
+    | "Winslet"
+    | "Jethro"
+    | "Elio"
+    | "Rupert"
+    | "Eira"
+    | "Nyra"
+    | "Arian"
+    | "Lily"
+    | "Pierce"
+    | "Kaela"
+    | "Elowen"
+    | "Freya"
+    | "Lenny"
+    | "Alessa"
+    | "Pandora"
+    | "Fia"
+    | "Abbott"
+    | "Kael"
+    | "Orla"
+    | "Sable"
+    | "Marnie"
+    | "Sera"
+    | "Virel"
+    | "Liora"
+    | "Riven"
+    | "Elys"
+    | "Dreena"
+    | "Rhea"
+    | "Vela"
+    | "Nymera"
+    | "Isolde"
+    | "Lirien"
+    | "Zella"
+    | "Avenna"
+    | "Mirelle"
+    | "Calia"
+    | "Lunea"
+    | "Lucan"
+    | "Tarian"
+    | "Arlo"
+    | "Jovan"
+    | "Neron"
+    | "Ziven"
+    | "Dax"
+    | "Orien"
+    | "Lior"
+    | "Eryx"
+    | "Tyren"
+    | "Nox"
+    | "Elric"
+    | "Varian"
+    | "Zoran"
+    | "Miro"
+    | "Dalen"
+    | "Ronix"
+    | "Jarek"
+    | "Nyxie"
+    | "Soren"
+    | "Viona"
+    | "Selene"
+    | "Rachiel"
+    | "Corbin"
+    | "Abigail"
+    | "Faith"
+    | "Kimberly"
+    | "Dave"
+    | "Grace"
+    | "Alden"
+    | "Renly"
+    | "Violet"
+    | "Joel"
+    | "Xavier"
+    | "Esmeralda"
+    | "Robert"
+    | "Lila"
+    | "Brooks"
+    | "Lennox"
+    | "Vanessa"
+    | "Simon"
+    | "Nyomi"
+    | "Jack"
+    | "Penelope"
+    | "Brayden"
+    | "Abel"
+    | "Nellie"
+    | "Connie"
+    | "Andrew"
+    | "Lincoln";
 };
 export type VoiceCloneOutput = {
   /**
@@ -65380,7 +68201,7 @@ export type VoidVideoInpaintingOutput = {
 };
 export type VTONInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65486,7 +68307,7 @@ export type Wan22ImageTrainerOutput = {
 };
 export type Wan25PreviewImageToImageInput = {
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65543,7 +68364,7 @@ export type Wan25PreviewImageToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65573,7 +68394,7 @@ export type Wan25PreviewTextToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65604,6 +68425,20 @@ export type Wan25PreviewTextToImageInput = {
    */
   seed?: number;
 };
+export type Wan25PreviewTextToImageOutput = {
+  /**
+   * The actual prompt used if prompt rewriting was enabled
+   */
+  actual_prompt?: string;
+  /**
+   * The generated images
+   */
+  images: Array<ImageFile>;
+  /**
+   * The seeds used for each generated image
+   */
+  seeds: Array<number>;
+};
 export type Wan25PreviewTextToVideoInput = {
   /**
    * The aspect ratio of the generated video Default value: `"16:9"`
@@ -65630,7 +68465,7 @@ export type Wan25PreviewTextToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65664,7 +68499,7 @@ export type Wan27ImageToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65706,7 +68541,7 @@ export type Wan27ReferenceToVideoInput = {
    */
   duration?: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65740,7 +68575,7 @@ export type Wan27ReferenceToVideoInput = {
 };
 export type Wan27TextToImageInput = {
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65793,7 +68628,7 @@ export type Wan27TextToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65827,7 +68662,7 @@ export type Wan27VideoEditInput = {
    */
   duration?: 0 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -65852,6 +68687,166 @@ export type Wan27VideoEditInput = {
    * Max file size: 100.0MB, Min duration: 2s, Max duration: 10s, Timeout: 30.0s
    */
   video_url: string | Blob | File;
+};
+export type Wan30ImageToVideoInput = {
+  /**
+   * Output aspect ratio, or adaptive selection. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Include generated audio. Default value: `true`
+   */
+  audio?: boolean;
+  /**
+   * Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality. Default value: `true`
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Enable enhanced reasoning before generation.
+   */
+  enable_thinking?: boolean;
+  /**
+   * Last frame of the generated video. Requires start_image_url.
+   */
+  end_image_url?: string | Blob | File;
+  /**
+   * Text prompt describing the motion to generate.
+   */
+  prompt?: string;
+  /**
+   * Output video resolution tier. Default value: `"1080p"`
+   */
+  resolution?: "480p" | "720p" | "1080p";
+  /**
+   *
+   */
+  seed?: number;
+  /**
+   * First frame of the generated video.
+   */
+  start_image_url: string | Blob | File;
+};
+export type Wan30ReferenceToVideoInput = {
+  /**
+   * Output aspect ratio, or adaptive selection. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Include generated audio. Default value: `true`
+   */
+  audio?: boolean;
+  /**
+   * Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality. Default value: `true`
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Enable enhanced reasoning before generation.
+   */
+  enable_thinking?: boolean;
+  /**
+   * Document URL to base the video on. Requires enable_thinking=true.
+   */
+  file_url?: string | Blob | File;
+  /**
+   * Text prompt directing how the reference media is used. Reference media can be addressed positionally, e.g. 'the subject in Image 1 walks past Video 1'.
+   */
+  prompt?: string;
+  /**
+   * Up to 5 reference audio URLs totaling at most 15 seconds.
+   */
+  reference_audio_urls?: Array<string>;
+  /**
+   * Up to 10 reference image URLs.
+   */
+  reference_image_urls?: Array<string>;
+  /**
+   * Up to 5 reference video URLs totaling at most 15 seconds. Each clip must be at least 16 fps.
+   */
+  reference_video_urls?: Array<string>;
+  /**
+   * Output video resolution tier. Default value: `"1080p"`
+   */
+  resolution?: "480p" | "720p" | "1080p";
+  /**
+   *
+   */
+  seed?: number;
+  /**
+   * Public webpage URL to base the video on. Requires enable_thinking=true. Only pages that do not require login can be read.
+   */
+  web_url?: string | Blob | File;
+};
+export type Wan30TextToVideoInput = {
+  /**
+   * Output aspect ratio, or adaptive selection. Default value: `"adaptive"`
+   */
+  aspect_ratio?: "adaptive" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+  /**
+   * Include generated audio. Default value: `true`
+   */
+  audio?: boolean;
+  /**
+   * Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media. Default value: `5`
+   */
+  duration?: number;
+  /**
+   * Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality. Default value: `true`
+   */
+  enable_prompt_expansion?: boolean;
+  /**
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
+   */
+  enable_safety_checker?: boolean;
+  /**
+   * Enable enhanced reasoning before generation.
+   */
+  enable_thinking?: boolean;
+  /**
+   * Text prompt for the generated video.
+   */
+  prompt: string;
+  /**
+   * Output video resolution tier. Default value: `"1080p"`
+   */
+  resolution?: "480p" | "720p" | "1080p";
+  /**
+   *
+   */
+  seed?: number;
+};
+export type Wan30TextToVideoOutput = {
+  /**
+   *
+   */
+  actual_prompt?: string;
+  /**
+   * Generated video duration in seconds.
+   */
+  duration: number;
+  /**
+   * The seed used for generation.
+   */
+  seed: number;
+  /**
+   * The generated video file.
+   */
+  video: VideoFile;
 };
 export type WanEffectsInput = {
   /**
@@ -65952,7 +68947,7 @@ export type WanFlf2vInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66018,7 +69013,7 @@ export type WanI2vInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66072,7 +69067,7 @@ export type WanI2vLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66138,7 +69133,7 @@ export type WanMotionInput = {
    */
   adapt_motion?: boolean;
   /**
-   * If set to true, input and output will be checked for safety. Default value: `true`
+   * If set to true, input and output will be checked for safety. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -66218,7 +69213,7 @@ export type WanT2vInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66264,7 +69259,7 @@ export type WanT2vLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66348,7 +69343,7 @@ export type WanV2214bAnimateMoveInput = {
    */
   enable_output_safety_checker?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66424,7 +69419,7 @@ export type WanV2214bSpeechToVideoInput = {
    */
   enable_output_safety_checker?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66494,7 +69489,7 @@ export type WanV225bImageToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66564,7 +69559,7 @@ export type WanV225bTextToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66635,7 +69630,7 @@ export type WanV225bTextToVideoDistillInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66705,7 +69700,7 @@ export type WanV225bTextToVideoFastWanInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66771,7 +69766,7 @@ export type WanV225bTextToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66845,7 +69840,7 @@ export type WanV22A14bImageToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -66936,7 +69931,7 @@ export type WanV22A14bImageToVideoLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67030,7 +70025,7 @@ export type WanV22A14bImageToVideoTurboInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67076,7 +70071,7 @@ export type WanV22A14bTextToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67133,7 +70128,7 @@ export type WanV22A14bTextToImageLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67210,7 +70205,7 @@ export type WanV22A14bTextToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67292,7 +70287,7 @@ export type WanV22A14bTextToVideoLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67378,7 +70373,7 @@ export type WanV22A14bTextToVideoTurboInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67424,7 +70419,7 @@ export type WanV22A14bVideoToVideoInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, input data will be checked for safety before processing.
+   * If set to true, input data will be checked for safety before processing. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67502,7 +70497,7 @@ export type WanV27EditInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * Enable content moderation for input and output. Default value: `true`
+   * Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -67563,7 +70558,7 @@ export type WanVace14bInpaintingInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67697,7 +70692,7 @@ export type WanVace14bInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67835,7 +70830,7 @@ export type WanVace14bOutpaintingInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -67977,7 +70972,7 @@ export type WanVace14bPoseInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -68103,7 +71098,7 @@ export type WanVace14bReframeInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -68225,7 +71220,7 @@ export type WanVaceAppsLongReframeInput = {
    */
   enable_auto_downsample?: boolean;
   /**
-   * If set to true, the safety checker will be enabled.
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.
    */
   enable_safety_checker?: boolean;
   /**
@@ -68361,6 +71356,34 @@ export type WanVaceAppsVideoEditOutput = {
    */
   video: VideoFile;
 };
+export type WanVACEFinalizeInput = {
+  /**
+   *
+   */
+  sync_mode?: boolean;
+  /**
+   *
+   */
+  video_url: string | Blob | File;
+};
+export type WanVACEFinalizeOutput = {
+  /**
+   *
+   */
+  recovered_watermark_payload?: string;
+  /**
+   *
+   */
+  video: VideoFile;
+  /**
+   *
+   */
+  watermark_detected?: boolean;
+  /**
+   *
+   */
+  watermark_message_matches?: boolean;
+};
 export type Watermark = {
   /**
    * Logo/watermark image URL. If empty, no watermark is added.
@@ -68427,6 +71450,66 @@ export type WaveformOutput = {
    * Normalized waveform data as an array of values between -1 and 1. The number of points is determined by audio duration × points_per_second.
    */
   waveform: Array<number>;
+};
+export type WebSearchOptions = {
+  /**
+   * Limit results to these domains. Supported by Exa and most native providers (not Google native search).
+   */
+  allowed_domains?: Array<string>;
+  /**
+   * Search engine to use. 'auto' uses native provider search when available and falls back to Exa. 'native' prefers the provider's built-in web search (OpenAI, Anthropic, Google, xAI, Perplexity), falling back to Exa for models without native support. 'exa' always uses Exa's search API. Default value: `"auto"`
+   */
+  engine?: "auto" | "native" | "exa";
+  /**
+   * Exclude results from these domains. Supported by Exa and some native providers (not OpenAI or Google native search).
+   */
+  excluded_domains?: Array<string>;
+  /**
+   * Exact maximum characters of content per result (1-100,000). Applies to the Exa engine; ignored with native provider search. Takes precedence over search_context_size when both are set.
+   */
+  max_characters?: number;
+  /**
+   * Maximum results per search call (1-25). Applies to the Exa engine; ignored with native provider search. Defaults to 5.
+   */
+  max_results?: number;
+  /**
+   * Maximum total results across all search calls in a single request. Useful for controlling cost and context size in agentic loops.
+   */
+  max_total_results?: number;
+  /**
+   * Maximum number of searches the model may perform in a single request. Once reached, further search calls return an error result instead of executing. With native provider search, forwarded only to Anthropic; other native providers ignore it.
+   */
+  max_uses?: number;
+  /**
+   * How much content to retrieve per result. For Exa: low=5K, medium=15K, high=30K characters per result; when omitted, Exa picks adaptively (~2-4K per result). Ignored with native provider search. Overridden by max_characters when both are set.
+   */
+  search_context_size?: "low" | "medium" | "high";
+  /**
+   * Approximate user location for location-biased results. Only supported by native provider search; ignored by Exa.
+   */
+  user_location?: WebSearchUserLocation;
+};
+export type WebSearchUserLocation = {
+  /**
+   * City name, e.g. 'San Francisco'.
+   */
+  city?: string;
+  /**
+   * Two-letter country code, e.g. 'US'.
+   */
+  country?: string;
+  /**
+   * Region or state, e.g. 'California'.
+   */
+  region?: string;
+  /**
+   * IANA timezone, e.g. 'America/Los_Angeles'.
+   */
+  timezone?: string;
+  /**
+   * Location type. Only 'approximate' is supported. Default value: `"approximate"`
+   */
+  type?: string;
 };
 export type WeightInput = {
   /**
@@ -68699,130 +71782,6 @@ export type wizperOutput = {
    */
   text: string;
 };
-export type WorldDetailOutput = {
-  /**
-   *
-   */
-  created_at?: string;
-  /**
-   *
-   */
-  creation_model?: string;
-  /**
-   *
-   */
-  encrypted_world_id: string;
-  /**
-   * First-frame image URL once available.
-   */
-  first_frame?: string;
-  /**
-   *
-   */
-  mode?: "adventure" | "directing";
-  /**
-   * World title once built.
-   */
-  name?: string;
-  /**
-   *
-   */
-  prompt?: string;
-  /**
-   *
-   */
-  script_list?: unknown;
-  /**
-   * `generating`, `ready`, or `failed`.
-   */
-  status: string;
-  /**
-   *
-   */
-  updated_at?: string;
-};
-export type WorldListOutput = {
-  /**
-   * The caller's worlds, newest first.
-   */
-  items: Array<WorldRecord>;
-  /**
-   *
-   */
-  page: number;
-  /**
-   *
-   */
-  page_size: number;
-};
-export type WorldRecord = {
-  /**
-   *
-   */
-  created_at?: string;
-  /**
-   * Creation prompt / description.
-   */
-  description?: string;
-  /**
-   *
-   */
-  encrypted_world_id: string;
-  /**
-   *
-   */
-  is_favorited?: boolean;
-  /**
-   * Creation extras (perspective, resolution, ...).
-   */
-  metadata?: unknown;
-  /**
-   *
-   */
-  mode?: "adventure" | "directing";
-  /**
-   *
-   */
-  name?: string;
-  /**
-   * `generating`, `ready`, or `failed`.
-   */
-  status: string;
-  /**
-   * First-frame image URL once available.
-   */
-  thumbnail_url?: string | Blob | File;
-  /**
-   *
-   */
-  updated_at?: string;
-  /**
-   *
-   */
-  user_id: string;
-};
-export type WorldStatusOutput = {
-  /**
-   *
-   */
-  encrypted_world_id: string;
-  /**
-   * First-frame image URL once available.
-   */
-  first_frame?: string;
-  /**
-   *
-   */
-  mode?: "adventure" | "directing";
-  /**
-   * World title once built.
-   */
-  name?: string;
-  /**
-   * `generating`, `ready`, or `failed`.
-   */
-  status: string;
-};
 export type XAIImageEditInput = {
   /**
    * Aspect ratio of the edited image. When set to `auto` (the default), the output preserves the aspect ratio of the first input image. Default value: `"auto"`
@@ -68858,6 +71817,54 @@ export type XAIImageEditInput = {
    * Text description of the desired image.
    */
   prompt: string;
+  /**
+   * Resolution of the generated image. `1k` for standard resolution, `2k` for high resolution. Default value: `"1k"`
+   */
+  resolution?: "1k" | "2k";
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
+export type XAIImageEditV2Input = {
+  /**
+   * Aspect ratio of the edited image. When set to `auto` (the default), the output preserves the aspect ratio of the first input image. Default value: `"auto"`
+   */
+  aspect_ratio?:
+    | "auto"
+    | "2:1"
+    | "20:9"
+    | "19.5:9"
+    | "16:9"
+    | "4:3"
+    | "3:2"
+    | "1:1"
+    | "2:3"
+    | "3:4"
+    | "9:16"
+    | "9:19.5"
+    | "9:20"
+    | "1:2";
+  /**
+   * List of URLs of the images to edit. A maximum of 3 images are supported.
+   */
+  image_urls?: Array<string>;
+  /**
+   * Number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * Text description of the desired image.
+   */
+  prompt: string;
+  /**
+   * Quality level of the edited image. Default value: `"medium"`
+   */
+  quality?: "low" | "medium";
   /**
    * Resolution of the generated image. `1k` for standard resolution, `2k` for high resolution. Default value: `"1k"`
    */
@@ -68964,6 +71971,49 @@ export type XAIImageToVideoV15Input = {
    */
   resolution?: "480p" | "720p" | "1080p";
 };
+export type XAIImageV2Input = {
+  /**
+   * Aspect ratio of the generated image. Default value: `"1:1"`
+   */
+  aspect_ratio?:
+    | "2:1"
+    | "20:9"
+    | "19.5:9"
+    | "16:9"
+    | "4:3"
+    | "3:2"
+    | "1:1"
+    | "2:3"
+    | "3:4"
+    | "9:16"
+    | "9:19.5"
+    | "9:20"
+    | "1:2";
+  /**
+   * Number of images to generate. Default value: `1`
+   */
+  num_images?: number;
+  /**
+   * The format of the generated image. Default value: `"jpeg"`
+   */
+  output_format?: "jpeg" | "png" | "webp";
+  /**
+   * Text description of the desired image.
+   */
+  prompt: string;
+  /**
+   * Quality level of the generated image. Default value: `"medium"`
+   */
+  quality?: "low" | "medium";
+  /**
+   * Resolution of the generated image. `1k` for standard resolution, `2k` for high resolution. Default value: `"1k"`
+   */
+  resolution?: "1k" | "2k";
+  /**
+   * If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+   */
+  sync_mode?: boolean;
+};
 export type XAilabNsfwInput = {
   /**
    * List of image URLs to check. If more than 10 images are provided, only the first 10 will be checked.
@@ -68991,32 +72041,6 @@ export type XAIReferenceToVideoInput = {
   prompt: string;
   /**
    * One or more reference image URLs to guide the video generation as style and content references. Reference in prompt as @Image1, @Image2, etc. Maximum 7 images.
-   */
-  reference_image_urls: Array<string>;
-  /**
-   * Resolution of the output video. Default value: `"480p"`
-   */
-  resolution?: "480p" | "720p";
-};
-export type XAIReferenceToVideoV15Input = {
-  /**
-   * Aspect ratio of the generated video. Default value: `"16:9"`
-   */
-  aspect_ratio?: "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16";
-  /**
-   * Video duration in seconds. Default value: `8`
-   */
-  duration?: number;
-  /**
-   * Text prompt describing the video. Tag references as <IMAGE_0>, <IMAGE_1>, etc. and the optional audio as <AUDIO_0>.
-   */
-  prompt: string;
-  /**
-   * Optional reference audio URL. At most one audio is supported.
-   */
-  reference_audio_urls?: Array<string>;
-  /**
-   * One or more reference image URLs to guide the video generation as style and content references. Reference in prompt as <IMAGE_0>, <IMAGE_1>, etc. Maximum 7 images.
    */
   reference_image_urls: Array<string>;
   /**
@@ -69185,7 +72209,7 @@ export type ZImageBaseImageToImageInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69248,7 +72272,7 @@ export type ZImageBaseImageToImageLoRAInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69315,7 +72339,7 @@ export type ZImageBaseLoraInput = {
    */
   acceleration?: "none" | "regular" | "high";
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69422,7 +72446,7 @@ export type ZImageTurboControlnetInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69493,7 +72517,7 @@ export type ZImageTurboControlnetLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69556,7 +72580,7 @@ export type ZImageTurboImageToImageInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69615,7 +72639,7 @@ export type ZImageTurboImageToImageLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69690,7 +72714,7 @@ export type ZImageTurboInpaintInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69765,7 +72789,7 @@ export type ZImageTurboInpaintLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69832,7 +72856,7 @@ export type ZImageTurboInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69882,7 +72906,7 @@ export type ZImageTurboLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69936,7 +72960,7 @@ export type ZImageTurboTilingInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -69989,11 +73013,11 @@ export type ZImageTurboTilingInput = {
    */
   sync_mode?: boolean;
   /**
-   * Tile size in latent space. Must be even (divisible by 2) for patchification. (64 = 512px, 128 = 1024px, 256 = 2048px). Default value: `128`
+   * Tile size in latent space. Must be even (divisible by 2) for patchification. Automatically capped to the generated image dimensions on tiled axes. (64 = 512px, 128 = 1024px, 256 = 2048px). Default value: `128`
    */
   tile_size?: number;
   /**
-   * Tile stride in latent space. Must be even (divisible by 2). (32 = 256px, 64 = 512px, 128 = 1024px). Default value: `64`
+   * Tile stride in latent space. Must be even (divisible by 2). Automatically capped to half the effective tile size. (32 = 256px, 64 = 512px, 128 = 1024px). Default value: `64`
    */
   tile_stride?: number;
   /**
@@ -70011,7 +73035,7 @@ export type ZImageTurboTilingLoraInput = {
    */
   enable_prompt_expansion?: boolean;
   /**
-   * If set to true, the safety checker will be enabled. Default value: `true`
+   * If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked, and images flagged as unsafe are returned as black images. Default value: `true`
    */
   enable_safety_checker?: boolean;
   /**
@@ -70068,11 +73092,11 @@ export type ZImageTurboTilingLoraInput = {
    */
   sync_mode?: boolean;
   /**
-   * Tile size in latent space. Must be even (divisible by 2) for patchification. (64 = 512px, 128 = 1024px, 256 = 2048px). Default value: `128`
+   * Tile size in latent space. Must be even (divisible by 2) for patchification. Automatically capped to the generated image dimensions on tiled axes. (64 = 512px, 128 = 1024px, 256 = 2048px). Default value: `128`
    */
   tile_size?: number;
   /**
-   * Tile stride in latent space. Must be even (divisible by 2). (32 = 256px, 64 = 512px, 128 = 1024px). Default value: `64`
+   * Tile stride in latent space. Must be even (divisible by 2). Automatically capped to half the effective tile size. (32 = 256px, 64 = 512px, 128 = 1024px). Default value: `64`
    */
   tile_stride?: number;
   /**
@@ -70224,9 +73248,6 @@ export type ZoomVideoInput = {
    */
   zoom_factor?: number;
 };
-export type _21EditOutput = BlurOutput;
-export type _21RemixOutput = BlurOutput;
-export type _21TextToImageOutput = BlurOutput;
 export type AceStepAudioInpaintOutput = AceStepOutput;
 export type AceStepAudioOutpaintOutput = AceStepOutput;
 export type AceStepAudioToAudioOutput = AceStepOutput;
@@ -70236,6 +73257,7 @@ export type AddBackgroundOutput = pulidOutput;
 export type AddObjectByTextInput = BlendingInput;
 export type AddSubtitlesToVideoOutput = I2VOutput;
 export type AddTextToImageOutput = HEDOutput;
+export type AdjustImageOutput = EvfSamOutput;
 export type AgeModifyOutput = BlurOutput;
 export type AgentRayV32ImageToVideoOutput = AgentRayV32ReframeOutput;
 export type AgentRayV32TextToVideoOutput = AgentRayV32ReframeOutput;
@@ -70261,7 +73283,7 @@ export type AmtInterpolationOutput = I2VOutput;
 export type AnimateDiffT2VOutput = ModifyOutput;
 export type AnimateDiffV2VOutput = ModifyOutput;
 export type ApartmentStagingInput = VirtualTryonInput;
-export type ApartmentStagingOutput = AuraFlowOutput;
+export type ApartmentStagingOutput = HdrStyleOutput;
 export type AudioCompressorOutput = MiniOutput;
 export type AudioEnterpriseInput = AudioInput;
 export type AudioEqualizerOutput = MiniOutput;
@@ -70292,6 +73314,9 @@ export type AvatarsAudioToVideoInput = Audio2VideoInput;
 export type AvatarsAudioToVideoOutput = I2VOutput;
 export type AvatarsTextToVideoInput = Text2VideoInput;
 export type AvatarsTextToVideoOutput = I2VOutput;
+export type AvatarXReferenceToVideoInput = PerformInput;
+export type AvatarXReferenceToVideoOutput = AvatarXTextToVideoOutput;
+export type AvatarXTextToVideoInput = SpeakInput;
 export type BabyVersionInput = ReframeInput;
 export type BabyVersionOutput = pulidOutput;
 export type BackgroundChangeInput = TimeOfDayInput;
@@ -70299,7 +73324,7 @@ export type BackgroundChangeOutput = pulidOutput;
 export type BagelEditOutput = unoOutput;
 export type bagelOutput = unoOutput;
 export type BallpointPenSketchInput = HdrStyleInput;
-export type BallpointPenSketchOutput = AuraFlowOutput;
+export type BallpointPenSketchOutput = HdrStyleOutput;
 export type BaseKreaImageToInput = BaseImageToInput;
 export type BaseKreaInput = FluxDevInput;
 export type BaseKreaReduxInput = BaseReduxInput;
@@ -70322,6 +73347,7 @@ export type BGRemoveBatchedOutput = BlurOutput;
 export type BGRemoveOutput = HEDOutput;
 export type BGReplaceOutput = pulidOutput;
 export type BirefnetV2Output = birefnetOutput;
+export type bitdanceOutput = AuraFlowOutput;
 export type BlendVideoOutput = I2VOutput;
 export type BooguImageEditOutput = unoOutput;
 export type BooguImageOutput = unoOutput;
@@ -70420,6 +73446,8 @@ export type Cogvideox5bVideoToVideoOutput = Cogvideox5bOutput;
 export type cogview4Output = unoOutput;
 export type CollectionToVideoOutput = I2VOutput;
 export type ColorCorrectionOutput = BlurOutput;
+export type ColorizeVideoInput = DeblurVideoInput;
+export type ColorizeVideoOutput = I2VOutput;
 export type ColorTintOutput = BlurOutput;
 export type CombineOutput = I2VOutput;
 export type ConcatImageOutput = HEDOutput;
@@ -70427,7 +73455,6 @@ export type ControlLightBaseInput = ControlLightInput;
 export type ConversationInput = personaplexInput;
 export type ConversationOutput = personaplexOutput;
 export type Cosmos3SuperImageToVideoOutput = lynxOutput;
-export type Cosmos3SuperTextToImageOutput = TextToImageOutput;
 export type CosmosPredict25DistilledTextToVideoOutput = lynxOutput;
 export type CosmosPredict25ImageToVideoOutput = lynxOutput;
 export type CosmosPredict25TextToVideoOutput = lynxOutput;
@@ -70444,6 +73471,9 @@ export type CrystalVideoUpscalerOutput = React1Output;
 export type DavinciMagihumanOutput = oviOutput;
 export type ddcolorInput = NafnetInput;
 export type ddcolorOutput = HEDOutput;
+export type DeblurVideoOutput = I2VOutput;
+export type DenoiseImageOutput = EvfSamOutput;
+export type DenoiseVideoOutput = I2VOutput;
 export type DepthAnythingV2Input = ZoeInput;
 export type DepthAnythingV2Output = HEDOutput;
 export type DepthMapOutput = HEDOutput;
@@ -70457,7 +73487,7 @@ export type DiaTtsVoiceCloneInput = DiaTtsInput;
 export type DiaTtsVoiceCloneOutput = DiaOutput;
 export type diffrhythmOutput = DiaOutput;
 export type DigitalComicArtInput = HdrStyleInput;
-export type DigitalComicArtOutput = AuraFlowOutput;
+export type DigitalComicArtOutput = HdrStyleOutput;
 export type DissolveOutput = BlurOutput;
 export type DistilledTextToImageInput = V4FastInput;
 export type DistilledTextToVideoInput = Ltxv13b098DistilledInput;
@@ -70594,6 +73624,7 @@ export type FfmpegApiMetadataOutput = MetadataOutput;
 export type FfmpegApiWaveformInput = WaveformInput;
 export type FfmpegApiWaveformOutput = WaveformOutput;
 export type FiboBbqPreviewGenerateOutput = FiboGenerateOutput;
+export type FiboEdit15EditOutput = GenfillV2Output;
 export type FiboEditAddObjectByTextInput = BlendingInput;
 export type FiboEditAddObjectByTextOutput = GenfillV2Output;
 export type FiboEditBlendInput = BlendingInput;
@@ -70617,6 +73648,7 @@ export type FiboEditRewriteTextInput = RewriteTextInput;
 export type FiboEditRewriteTextOutput = GenfillV2Output;
 export type FiboEditSketchToColoredImageInput = ZoeInput;
 export type FiboEditSketchToColoredImageOutput = GenfillV2Output;
+export type FiboGen15TextToImageOutput = FiboGenerateOutput;
 export type FiboLiteGenerateStructuredPromptInput = StructuredPromptInput;
 export type FiboLiteImageGenerationInput = FiboLiteGenerateInput;
 export type FiboLiteImageGenerationOutput = FiboLiteGenerateOutput;
@@ -70630,6 +73662,7 @@ export type FinegrainEraserMaskOutput = FinegrainEraserOutput;
 export type FireredImageEditOutput = unoOutput;
 export type FireredImageEditV11Input = FireredImageEditInput;
 export type FireredImageEditV11Output = unoOutput;
+export type FirstLastFrameToVideoAudioInput = H3Flf2vTrainerInput;
 export type flashtalkOutput = flashheadOutput;
 export type FlashvsrUpscaleVideoOutput = ModifyOutput;
 export type Florence2LargeCaptionInput = ZoeInput;
@@ -70737,27 +73770,27 @@ export type Flux2Klein9bOutput = v4Output;
 export type Flux2KleinRealtimeInput = RealtimeEditInput;
 export type Flux2KleinRealtimeOutput = RealtimeEditOutput;
 export type Flux2LoraEditOutput = v4Output;
-export type Flux2LoraGalleryAddBackgroundOutput = AuraFlowOutput;
+export type Flux2LoraGalleryAddBackgroundOutput = HdrStyleOutput;
 export type Flux2LoraGalleryApartmentStagingInput = VirtualTryonInput;
-export type Flux2LoraGalleryApartmentStagingOutput = AuraFlowOutput;
+export type Flux2LoraGalleryApartmentStagingOutput = HdrStyleOutput;
 export type Flux2LoraGalleryBallpointPenSketchInput = HdrStyleInput;
-export type Flux2LoraGalleryBallpointPenSketchOutput = AuraFlowOutput;
+export type Flux2LoraGalleryBallpointPenSketchOutput = HdrStyleOutput;
 export type Flux2LoraGalleryDigitalComicArtInput = HdrStyleInput;
-export type Flux2LoraGalleryDigitalComicArtOutput = AuraFlowOutput;
+export type Flux2LoraGalleryDigitalComicArtOutput = HdrStyleOutput;
 export type Flux2LoraGalleryFaceToFullPortraitInput =
   Flux2LoraGalleryAddBackgroundInput;
-export type Flux2LoraGalleryFaceToFullPortraitOutput = AuraFlowOutput;
+export type Flux2LoraGalleryFaceToFullPortraitOutput = HdrStyleOutput;
 export type Flux2LoraGalleryHdrStyleInput = HdrStyleInput;
-export type Flux2LoraGalleryHdrStyleOutput = AuraFlowOutput;
-export type Flux2LoraGalleryMultipleAnglesOutput = AuraFlowOutput;
+export type Flux2LoraGalleryHdrStyleOutput = HdrStyleOutput;
+export type Flux2LoraGalleryMultipleAnglesOutput = HdrStyleOutput;
 export type Flux2LoraGalleryRealismInput = HdrStyleInput;
-export type Flux2LoraGalleryRealismOutput = AuraFlowOutput;
+export type Flux2LoraGalleryRealismOutput = HdrStyleOutput;
 export type Flux2LoraGallerySatelliteViewStyleInput = HdrStyleInput;
-export type Flux2LoraGallerySatelliteViewStyleOutput = AuraFlowOutput;
+export type Flux2LoraGallerySatelliteViewStyleOutput = HdrStyleOutput;
 export type Flux2LoraGallerySepiaVintageInput = HdrStyleInput;
-export type Flux2LoraGallerySepiaVintageOutput = AuraFlowOutput;
+export type Flux2LoraGallerySepiaVintageOutput = HdrStyleOutput;
 export type Flux2LoraGalleryVirtualTryonInput = VirtualTryonInput;
-export type Flux2LoraGalleryVirtualTryonOutput = AuraFlowOutput;
+export type Flux2LoraGalleryVirtualTryonOutput = HdrStyleOutput;
 export type Flux2LoraOutput = v4Output;
 export type Flux2MaxEditOutput = Emu35Output;
 export type Flux2MaxImageEditInput = Flux2MaxEditInput;
@@ -70790,6 +73823,19 @@ export type Flux2TurboInput = Flux2FlashInput;
 export type Flux2TurboOutput = v4Output;
 export type Flux2TurboT2IOutput = v4Output;
 export type Flux2TurboTextToImageInput = Flux2FlashInput;
+export type Flux3DraftEnhanceOutput = I2VOutput;
+export type Flux3ExtendVideoDraftOutput = Flux3DraftOutput;
+export type Flux3ExtendVideoOutput = ModifyOutput;
+export type Flux3FirstLastFrameToVideoDraftOutput = Flux3DraftOutput;
+export type Flux3FirstLastFrameToVideoOutput = ModifyOutput;
+export type Flux3ImageToVideoDraftOutput = Flux3DraftOutput;
+export type Flux3ImageToVideoOutput = ModifyOutput;
+export type Flux3KeyframesToVideoDraftOutput = Flux3DraftOutput;
+export type Flux3KeyframesToVideoOutput = ModifyOutput;
+export type Flux3TextToVideoDraftOutput = Flux3DraftOutput;
+export type Flux3TextToVideoOutput = ModifyOutput;
+export type Flux3VideoOutput = ModifyOutput;
+export type Flux3VideoReferenceToVideoInput = Flux3EditVideoInput;
 export type FluxControlLoraCannyImageToImageOutput = unoOutput;
 export type FluxControlLoraCannyInput = DepthLoraInput;
 export type FluxControlLoraCannyOutput = unoOutput;
@@ -70885,6 +73931,7 @@ export type FluxSrpoImageToImageOutput = unoOutput;
 export type FluxSrpoInput = FluxDevInput;
 export type FluxSrpoOutput = unoOutput;
 export type FluxSubjectOutput = unoOutput;
+export type FluxVideoUpscaleOutput = I2VOutput;
 export type FooocusImagePromptOutput = fooocusOutput;
 export type FooocusInpaintOutput = fooocusOutput;
 export type FooocusLegacyInput = fooocusInput;
@@ -70919,6 +73966,15 @@ export type GeminiOmniFlashOutput = I2VOutput;
 export type GeminiOmniFlashReferenceToVideoInput =
   OmniFlashReferenceToVideoInput;
 export type GeminiOmniFlashReferenceToVideoOutput = I2VOutput;
+export type GeminiOmniFlashV11EditInput = Omni11FlashVideoEditInput;
+export type GeminiOmniFlashV11EditOutput = I2VOutput;
+export type GeminiOmniFlashV11ImageToVideoInput = Omni11FlashImageToVideoInput;
+export type GeminiOmniFlashV11ImageToVideoOutput = I2VOutput;
+export type GeminiOmniFlashV11ReferenceToVideoInput =
+  Omni11FlashReferenceToVideoInput;
+export type GeminiOmniFlashV11ReferenceToVideoOutput = I2VOutput;
+export type GeminiOmniFlashV11TextToVideoInput = Omni11FlashTextToVideoInput;
+export type GeminiOmniFlashV11TextToVideoOutput = I2VOutput;
 export type GeminiTtsOutput = DiaOutput;
 export type GenFillOutput = pulidOutput;
 export type ghiblifyOutput = HEDOutput;
@@ -70947,6 +74003,10 @@ export type GrokImagineImageQualityEditInput = XAIImageEditInput;
 export type GrokImagineImageQualityEditOutput = XAIImageOutput;
 export type GrokImagineImageQualityTextToImageInput = XAIImageInput;
 export type GrokImagineImageQualityTextToImageOutput = XAIImageOutput;
+export type GrokImagineImageV20EditInput = XAIImageEditV2Input;
+export type GrokImagineImageV20EditOutput = XAIImageOutput;
+export type GrokImagineImageV20TextToImageInput = XAIImageV2Input;
+export type GrokImagineImageV20TextToImageOutput = XAIImageOutput;
 export type GrokImagineVideoEditVideoInput = XAIVideoEditInput;
 export type GrokImagineVideoEditVideoOutput = React1Output;
 export type GrokImagineVideoExtendVideoInput = XAIVideoExtensionInput;
@@ -70959,14 +74019,30 @@ export type GrokImagineVideoTextToVideoInput = XAITextToVideoInput;
 export type GrokImagineVideoTextToVideoOutput = React1Output;
 export type GrokImagineVideoV15ImageToVideoInput = XAIImageToVideoV15Input;
 export type GrokImagineVideoV15ImageToVideoOutput = React1Output;
+export type GrokImagineVideoV15ReferenceToVideoInput = XAIReferenceToVideoInput;
+export type GrokImagineVideoV15ReferenceToVideoOutput = React1Output;
+export type GrokImagineVideoV15TextToVideoInput = XAITextToVideoV15Input;
+export type GrokImagineVideoV15TextToVideoOutput = React1Output;
 export type GroupPhotoInput = NextSceneInput;
 export type GroupPhotoOutput = pulidOutput;
-export type H31ImageTo3dOutput = P1TextTo3dOutput;
-export type H31MultiviewTo3dOutput = P1TextTo3dOutput;
-export type H31TextTo3dOutput = P1TextTo3dOutput;
-export type H3ImageToVideoOutput = I2VOutput;
-export type H3ReferenceToVideoOutput = I2VOutput;
-export type H3TextToVideoOutput = I2VOutput;
+export type H31ImageTo3dOutput = Tripo3DOutput;
+export type H31MultiviewTo3dOutput = Tripo3DOutput;
+export type H31TextTo3dOutput = Tripo3DOutput;
+export type H3Flf2vTrainerOutput = Ref2VAOutput;
+export type H3I2vTrainerOutput = Ref2VAOutput;
+export type H3ImageToVideoLoraOutput = H3TextToVideoOutput;
+export type H3ImageToVideoOutput = H3TextToVideoOutput;
+export type H3MaxImageToVideoOutput = H3MaxTextToVideoOutput;
+export type H3MaxTurboImageToVideoInput = H3MaxImageToVideoInput;
+export type H3MaxTurboImageToVideoOutput = H3MaxTextToVideoOutput;
+export type H3MaxTurboTextToVideoInput = H3MaxTextToVideoInput;
+export type H3MaxTurboTextToVideoOutput = H3MaxTextToVideoOutput;
+export type H3Ref2vaTrainerOutput = Ref2VAOutput;
+export type H3ReferenceToVideoLoraOutput = H3TextToVideoOutput;
+export type H3ReferenceToVideoOutput = H3TextToVideoOutput;
+export type H3T2vTrainerInput = H3I2vTrainerInput;
+export type H3T2vTrainerOutput = Ref2VAOutput;
+export type H3TextToVideoLoraOutput = H3TextToVideoOutput;
 export type HairChangeInput = TimeOfDayInput;
 export type HairChangeOutput = pulidOutput;
 export type HappyHorse15ImageToVideoInput = HappyHorseImageToVideoInput;
@@ -70981,7 +74057,6 @@ export type HappyHorseV11ReferenceToVideoOutput = lynxOutput;
 export type HappyHorseV11TextToVideoInput = HappyHorse15TextToVideoInput;
 export type HappyHorseV11TextToVideoOutput = lynxOutput;
 export type HappyHorseVideoEditOutput = lynxOutput;
-export type HdrStyleOutput = AuraFlowOutput;
 export type HeadshotOutput = BlurOutput;
 export type HeygenAvatar3DigitalTwinOutput = I2VOutput;
 export type HeygenAvatar4DigitalTwinOutput = I2VOutput;
@@ -70991,10 +74066,26 @@ export type HeygenV2TranslatePrecisionInput = HeygenV2TranslateSpeedInput;
 export type HeygenV2TranslatePrecisionOutput = AvatarVOutput;
 export type HeygenV2TranslateSpeedOutput = AvatarVOutput;
 export type HeygenV2VideoAgentOutput = I2VOutput;
+export type HeygenV3FillerWordRemovalOutput = FillerWordRemovalOutput;
 export type HeygenV3LipsyncPrecisionInput = HeygenV3LipsyncSpeedInput;
 export type HeygenV3LipsyncPrecisionOutput = AvatarVOutput;
 export type HeygenV3LipsyncSpeedOutput = AvatarVOutput;
 export type HeygenV3VideoAgentOutput = I2VOutput;
+export type Hi3dImageTo3dOutput = Hitem3DOutput;
+export type Hi3dImageToReliefInput = ReliefInput;
+export type Hi3dImageToReliefOutput = ReliefOutput;
+export type Hi3dMulticolorInput = MulticolorInput;
+export type Hi3dMulticolorOutput = Hitem3DOutput;
+export type Hi3dMultiViewTo3dInput = MultiViewTo3DInput;
+export type Hi3dMultiViewTo3dOutput = Hitem3DOutput;
+export type Hi3dSplitInput = SplitInput;
+export type Hi3dSplitOutput = Hitem3DOutput;
+export type Hi3dTextureInput = TextureInput;
+export type Hi3dTextureOutput = Hitem3DOutput;
+export type Hi3dV30ImageTo3dInput = V3ImageTo3DInput;
+export type Hi3dV30ImageTo3dOutput = Hitem3DOutput;
+export type Hi3dV30MultiViewTo3dInput = V3MultiViewTo3DInput;
+export type Hi3dV30MultiViewTo3dOutput = Hitem3DOutput;
 export type HidreamI1DevOutput = unoOutput;
 export type HidreamI1FastInput = HidreamI1DevInput;
 export type HidreamI1FastOutput = unoOutput;
@@ -71136,7 +74227,6 @@ export type ImageAppsV2RelightingOutput = BlurOutput;
 export type ImageAppsV2StyleTransferOutput = BlurOutput;
 export type ImageAppsV2TextureTransformInput = TextureTransformInput;
 export type ImageAppsV2TextureTransformOutput = BlurOutput;
-export type ImageAppsV2VirtualTryOnInput = VirtualTryOnInput;
 export type ImageAppsV2VirtualTryOnOutput = BlurOutput;
 export type ImageEditingAgeProgressionInput = TimeOfDayInput;
 export type ImageEditingAgeProgressionOutput = pulidOutput;
@@ -71213,10 +74303,13 @@ export type ImagePreprocessorsZoeInput = ZoeInput;
 export type ImagePreprocessorsZoeOutput = HEDOutput;
 export type ImageProcessingInput = PostProcessingInput;
 export type ImagesToVideoOutput = I2VOutput;
+export type ImageToImageOutput = V16Output;
+export type ImageToVideoAudioInput = H3I2vTrainerInput;
 export type ImageToVideoHailuo02FastOutput = I2VOutput;
 export type ImageToVideoHailuo02Output = I2VOutput;
 export type ImageToVideoHailuo03Input = H3ImageToVideoInput;
-export type ImageToVideoHailuo03Output = I2VOutput;
+export type ImageToVideoHailuo03LoRAInput = H3ImageToVideoLoraInput;
+export type ImageToVideoHailuo03Output = H3TextToVideoOutput;
 export type ImageToVideoOutput = TextToVideoOutput;
 export type ImageToVideoTurboInput = ImageToVideov21Input;
 export type ImageToVideoV21MasterOutput = I2VOutput;
@@ -71247,6 +74340,7 @@ export type Imagineart20EditPreviewImageToImageOutput = BlurOutput;
 export type Imagineart20PreviewTextToImageOutput = BlurOutput;
 export type Img2ImgOutput = unoOutput;
 export type ImpulseResponseOutput = MiniOutput;
+export type IncreaseResolutionOutput = HEDOutput;
 export type IndexTts2TextToSpeechOutput = DiaOutput;
 export type infinitalkOutput = ModifyOutput;
 export type InfinitalkSingleTextInput = AiAvatarSingleTextInput;
@@ -71261,6 +74355,7 @@ export type InstantCharacterOutput = unoOutput;
 export type IntegrateProductInput = NextSceneInput;
 export type IntegrateProductOutput = pulidOutput;
 export type InterleaveVideoOutput = I2VOutput;
+export type InterpolateVideoOutput = I2VOutput;
 export type InworldTtsOutput = DiaOutput;
 export type IpAdapterFaceIdOutput = ccsrOutput;
 export type Isaac01Input = VisionInput;
@@ -71344,6 +74439,11 @@ export type KlingVideoO34kReferenceToVideoInput = O3ProReferenceVideoI2VInput;
 export type KlingVideoO34kReferenceToVideoOutput = I2VOutput;
 export type KlingVideoO34kTextToVideoInput = O3ProTextToVideoInput;
 export type KlingVideoO34kTextToVideoOutput = I2VOutput;
+export type KlingVideoO34kVideoToVideoEditInput = O3ProEditVideoV2VInput;
+export type KlingVideoO34kVideoToVideoEditOutput = I2VOutput;
+export type KlingVideoO34kVideoToVideoReferenceInput =
+  O3ProReferenceVideoV2VInput;
+export type KlingVideoO34kVideoToVideoReferenceOutput = I2VOutput;
 export type KlingVideoO3ProImageToVideoInput = O3ProImageToVideoInput;
 export type KlingVideoO3ProImageToVideoOutput = I2VOutput;
 export type KlingVideoO3ProReferenceToVideoInput = O3ProReferenceVideoI2VInput;
@@ -71740,6 +74840,14 @@ export type Ltx23TrainerV2V2vMaskedOutput = Ltx23TrainerV2A2aOutput;
 export type Ltx23TrainerV2V2vOutput = Ltx23TrainerV2A2aOutput;
 export type LTX23VideoToVideoOutput = LTX2ExtendVideoOutput;
 export type Ltx23VideoTrainerOutput = Ltx23V2vTrainerOutput;
+export type Ltx25AudioToVideoFastInput = Ltx23AudioToVideoInput;
+export type Ltx25AudioToVideoFastOutput = React1Output;
+export type Ltx25AudioToVideoProInput = Ltx23AudioToVideoInput;
+export type Ltx25AudioToVideoProOutput = React1Output;
+export type Ltx25ImageToVideoFastOutput = React1Output;
+export type Ltx25ImageToVideoProOutput = React1Output;
+export type Ltx25TextToVideoFastOutput = React1Output;
+export type Ltx25TextToVideoProOutput = React1Output;
 export type LTX2AudioToVideoOutput = LTX2ExtendVideoOutput;
 export type LTX2ImageToVideoOutput = LTX2ExtendVideoOutput;
 export type LTX2TextToVideoOutput = LTX2ExtendVideoOutput;
@@ -71857,6 +74965,7 @@ export type MeshyV6PreviewTextTo3dOutput = TextTo3DOutput;
 export type MeshyV6TextTo3dInput = TextTo3DInput;
 export type MeshyV6TextTo3dOutput = TextTo3DOutput;
 export type MimicOutput = I2VOutput;
+export type MinimaxH3Output = Ref2VAOutput;
 export type MinimaxHailuo02FastImageToVideoInput =
   FastImageToVideoHailuo02Input;
 export type MinimaxHailuo02FastImageToVideoOutput = I2VOutput;
@@ -71965,6 +75074,9 @@ export type MultiConditioningVideoOutput = ExtendVideoOutput;
 export type MultiImageTo3DOutput = ImageTo3DOutput;
 export type MultipleAnglesOutput = pulidOutput;
 export type MultiViewObjectOutput = Hunyuan3dV2Output;
+export type MuseImageEditOutput = BlurOutput;
+export type MuseImageTextToImageInput = MuseImageInput;
+export type MuseImageTextToImageOutput = BlurOutput;
 export type musetalkOutput = I2VOutput;
 export type MusicCoverOutput = DiaOutput;
 export type MusicGeneratorOutput = StableAudioOutput;
@@ -72059,8 +75171,9 @@ export type OverlayVideoOutput = I2VOutput;
 export type OviImageToVideoOutput = oviOutput;
 export type OvisImageOutput = unoOutput;
 export type P1ImageTo3DInput = P1ImageTo3dInput;
-export type P1ImageTo3dOutput = P1TextTo3dOutput;
+export type P1ImageTo3dOutput = Tripo3DOutput;
 export type P1TextTo3DInput = P1TextTo3dInput;
+export type P1TextTo3dOutput = Tripo3DOutput;
 export type ParabolizeOutput = BlurOutput;
 export type PatinaInput = patinaInput;
 export type PatinaMaterialExtractInput = ExtractTextureInput;
@@ -72244,12 +75357,8 @@ export type QwenImage2512LoraInput = LoraInput;
 export type QwenImage2512LoraOutput = unoOutput;
 export type QwenImage2512Output = unoOutput;
 export type QwenImage2512TrainerOutput = Output;
-export type QwenImage2EditOutput = GenerateOutput;
-export type QwenImage2ProEditInput = QwenImage2EditInput;
-export type QwenImage2ProEditOutput = GenerateOutput;
-export type QwenImage2ProTextToImageInput = QwenImage2TextToImageInput;
-export type QwenImage2ProTextToImageOutput = GenerateOutput;
-export type QwenImage2TextToImageOutput = GenerateOutput;
+export type QwenImage3EditOutput = GenerateOutput;
+export type QwenImage3TextToImageOutput = GenerateOutput;
 export type QwenImageEdit2509LoraGalleryAddBackgroundInput = NextSceneInput;
 export type QwenImageEdit2509LoraGalleryAddBackgroundOutput = pulidOutput;
 export type QwenImageEdit2509LoraGalleryFaceToFullPortraitInput =
@@ -72281,7 +75390,7 @@ export type QwenImageEdit2509TrainerOutput = Output;
 export type QwenImageEdit2511Input = EditImageInput;
 export type QwenImageEdit2511LoraInput = EditImageLoraInput;
 export type QwenImageEdit2511LoraOutput = unoOutput;
-export type QwenImageEdit2511MultipleAnglesOutput = AuraFlowOutput;
+export type QwenImageEdit2511MultipleAnglesOutput = HdrStyleOutput;
 export type QwenImageEdit2511Output = unoOutput;
 export type QwenImageEditImageToImageInput = BaseQwenEditImg2ImgInput;
 export type QwenImageEditImageToImageOutput = unoOutput;
@@ -72322,9 +75431,9 @@ export type QwenImageImageToImageOutput = unoOutput;
 export type QwenImageInpaintOutput = unoOutput;
 export type QwenImageLayeredLoraInput = TextToImageLoRAInput;
 export type QwenImageLayeredLoraOutput = QwenImageLayeredOutput;
-export type QwenImageMaxEditInput = QwenImage2EditInput;
+export type QwenImageMaxEditInput = QwenImage3EditInput;
 export type QwenImageMaxEditOutput = GenerateOutput;
-export type QwenImageMaxTextToImageInput = QwenImage2TextToImageInput;
+export type QwenImageMaxTextToImageInput = QwenImage3TextToImageInput;
 export type QwenImageMaxTextToImageOutput = GenerateOutput;
 export type QwenImageOutput = unoOutput;
 export type Ray2I2VOutput = I2VOutput;
@@ -72344,7 +75453,7 @@ export type RecraftUpscaleCreativeOutput = EvfSamOutput;
 export type RecraftUpscaleCrispInput = UpscaleInput;
 export type RecraftUpscaleCrispOutput = EvfSamOutput;
 export type RecraftV3CreateStyleInput = StyleReferenceInput;
-export type RecraftV3CreateStyleOutput = StyleReferenceOutput;
+export type RecraftV3CreateStyleOutput = V4CreateStyleOutput;
 export type RecraftV3ImageToImageOutput = V16Output;
 export type RecraftV3TextToImageOutput = V16Output;
 export type RecraftV41ProTextToImageInput = RecraftV4TextToImageInput;
@@ -72363,6 +75472,15 @@ export type RecraftV4ProTextToImageInput = RecraftV4TextToImageInput;
 export type RecraftV4ProTextToImageOutput = V16Output;
 export type RecraftV4ProTextToVectorInput = RecraftV4TextToImageInput;
 export type RecraftV4ProTextToVectorOutput = V16Output;
+export type RecraftV4StyleProTextToImageInput = V4StyleTextToImageInput;
+export type RecraftV4StyleProTextToImageOutput = V4StyleTextToImageOutput;
+export type RecraftV4StyleReferenceInput = V4CreateStyleInput;
+export type RecraftV4StyleTextToImageInput = V4StyleTextToImageInput;
+export type RecraftV4StyleTextToImageOutput = V4StyleTextToImageOutput;
+export type RecraftV4StyleVectorProTextToImageInput = V4StyleTextToImageInput;
+export type RecraftV4StyleVectorProTextToImageOutput = V4StyleTextToImageOutput;
+export type RecraftV4StyleVectorTextToImageInput = V4StyleTextToImageInput;
+export type RecraftV4StyleVectorTextToImageOutput = V4StyleTextToImageOutput;
 export type RecraftV4TextToImageOutput = V16Output;
 export type RecraftV4TextToVectorInput = RecraftV4TextToImageInput;
 export type RecraftV4TextToVectorOutput = V16Output;
@@ -72374,8 +75492,10 @@ export type RecraftVectorizeInput = ZoeInput;
 export type RecraftVectorizeOutput = EvfSamOutput;
 export type ReferenceFace = PikaImage;
 export type ReferenceToImageOutput = HEDOutput;
+export type ReferenceToVideoAudioInput = H3Ref2vaTrainerInput;
 export type ReferenceToVideoHailuo03Input = H3ReferenceToVideoInput;
-export type ReferenceToVideoHailuo03Output = I2VOutput;
+export type ReferenceToVideoHailuo03LoRAInput = H3ReferenceToVideoLoraInput;
+export type ReferenceToVideoHailuo03Output = H3TextToVideoOutput;
 export type ReferenceToVideoOutput = TextToVideoOutput;
 export type ReframeOutput = I2VOutput;
 export type ReimagineOutput = pulidOutput;
@@ -72390,22 +75510,12 @@ export type RemoveLightingOutput = pulidOutput;
 export type RemoveObjectInput = ExtractMaskInput;
 export type RemoveObjectOutput = ExtractMaskOutput;
 export type ReplaceObjectInput = BlendingInput;
+export type RestoreImageOutput = EvfSamOutput;
 export type RestoreInput = ZoeInput;
 export type retoucherInput = NafnetInput;
 export type retoucherOutput = ccsrOutput;
 export type RetouchInput = RealismInput;
 export type RetouchOutput = pulidOutput;
-export type ReveCreateOutput = BlurOutput;
-export type ReveEditOutput = BlurOutput;
-export type ReveFastEditInput = ReveEditInput;
-export type ReveFastEditOutput = BlurOutput;
-export type ReveImage2CreateInput = _21TextToImageInput;
-export type ReveImage2CreateOutput = BlurOutput;
-export type ReveImage2EditInput = _21EditInput;
-export type ReveImage2EditOutput = BlurOutput;
-export type ReveImage2RemixInput = _21RemixInput;
-export type ReveImage2RemixOutput = BlurOutput;
-export type ReveRemixOutput = BlurOutput;
 export type ReverseVideoInput = AutoCaptionOutput;
 export type ReverseVideoOutput = I2VOutput;
 export type RIFEImageInput = rifeInput;
@@ -72500,10 +75610,11 @@ export type SanaV1516bOutput = unoOutput;
 export type SanaV1548bInput = sanaInput;
 export type SanaV1548bOutput = unoOutput;
 export type SatelliteViewStyleInput = HdrStyleInput;
-export type SatelliteViewStyleOutput = AuraFlowOutput;
+export type SatelliteViewStyleOutput = HdrStyleOutput;
 export type SceneCompositionInput = TimeOfDayInput;
 export type SceneCompositionOutput = pulidOutput;
 export type ScribbleOutput = HEDOutput;
+export type SdrToHdrVideoOutput = I2VOutput;
 export type SdxlControlnetUnionImageToImageInput =
   ImageToImageControlNetUnionInput;
 export type SdxlControlnetUnionImageToImageOutput = unoOutput;
@@ -72517,7 +75628,6 @@ export type Seedance20FastReferenceToVideoInput = Seedance2R2VFastInput;
 export type Seedance20FastReferenceToVideoOutput = ModifyOutput;
 export type Seedance20FastTextToVideoInput = Seedance2T2VFastInput;
 export type Seedance20FastTextToVideoOutput = ModifyOutput;
-export type Seedance20ImageToVideoInput = Seedance2I2VInput;
 export type Seedance20ImageToVideoOutput = ModifyOutput;
 export type Seedance20MiniImageToVideoInput = Seedance2I2VMiniInput;
 export type Seedance20MiniImageToVideoOutput = ModifyOutput;
@@ -72525,10 +75635,14 @@ export type Seedance20MiniReferenceToVideoInput = Seedance2R2VMiniInput;
 export type Seedance20MiniReferenceToVideoOutput = ModifyOutput;
 export type Seedance20MiniTextToVideoInput = Seedance2T2VMiniInput;
 export type Seedance20MiniTextToVideoOutput = ModifyOutput;
-export type Seedance20ReferenceToVideoInput = Seedance2R2VInput;
 export type Seedance20ReferenceToVideoOutput = ModifyOutput;
-export type Seedance20TextToVideoInput = Seedance2T2VInput;
 export type Seedance20TextToVideoOutput = ModifyOutput;
+export type Seedance25ImageToVideoInput = Seedance2I2VInput;
+export type Seedance25ImageToVideoOutput = ModifyOutput;
+export type Seedance25ReferenceToVideoInput = Seedance2R2VInput;
+export type Seedance25ReferenceToVideoOutput = ModifyOutput;
+export type Seedance25TextToVideoInput = Seedance2T2VInput;
+export type Seedance25TextToVideoOutput = ModifyOutput;
 export type SeedanceFastI2VVideoOutput = ModifyOutput;
 export type SeedanceFastT2VVideoOutput = ModifyOutput;
 export type SeedanceProFastTextToVideoInput = SeedanceProTextToVideoInput;
@@ -72549,6 +75663,8 @@ export type SeedDream50LiteEditOutput = pulidOutput;
 export type SeedDream50LiteT2IOutput = pulidOutput;
 export type SeedDream50ProEditInput = SeedreamV5ProEditInput;
 export type SeedDream50ProEditOutput = BlurOutput;
+export type SeedDream50ProLayerizeInput = SeedreamV5ProLayerizeInput;
+export type SeedDream50ProLayerizeOutput = SeedreamV5ProLayerizeOutput;
 export type SeedDream50ProT2IOutput = BlurOutput;
 export type SeedDreamOutput = pulidOutput;
 export type SeedEditOutput = ccsrOutput;
@@ -72566,7 +75682,7 @@ export type SeedvrUpscaleVideoInput = SeedVRVideoInput;
 export type SeedvrUpscaleVideoOutput = ModifyOutput;
 export type SeedVRVideoOutput = ModifyOutput;
 export type SepiaVintageInput = HdrStyleInput;
-export type SepiaVintageOutput = AuraFlowOutput;
+export type SepiaVintageOutput = HdrStyleOutput;
 export type SetptsVideoOutput = I2VOutput;
 export type Sfx16ExtendAudioInput = ExtendAudioInput;
 export type Sfx16ExtendAudioOutput = ExtendAudioOutput;
@@ -72574,11 +75690,14 @@ export type Sfx16InpaintAudioInput = InpaintAudioInput;
 export type Sfx16InpaintAudioOutput = ExtendAudioOutput;
 export type Sfx16TextToAudioInput = TextToAudioInput;
 export type Sfx16TextToAudioOutput = ExtendAudioOutput;
+export type SfxV15VideoToAudioOutput = ExtendAudioOutput;
 export type SfxV15VideoToVideoInput = SfxV15VideoToAudioInput;
+export type SfxV15VideoToVideoOutput = Sfx16VideoToVideoOutput;
 export type SfxV1VideoToAudioInput = Sfx16VideoToVideoInput;
 export type SfxV1VideoToAudioOutput = ExtendAudioOutput;
 export type SfxV1VideoToVideoInput = Sfx16VideoToVideoInput;
 export type SfxV1VideoToVideoOutput = Sfx16VideoToVideoOutput;
+export type SharpenImageOutput = EvfSamOutput;
 export type SharpenOutput = BlurOutput;
 export type ShirtDesignInput = NextSceneInput;
 export type ShirtDesignOutput = pulidOutput;
@@ -72698,6 +75817,7 @@ export type StartEndToVideoOutput = I2VOutput;
 export type StreamingKlein9BInput = StreamingKleinInput;
 export type StreamingKreaInput = StreamingInput;
 export type StreamingSRPOInput = StreamingInput;
+export type StyleReferenceOutput = V4CreateStyleOutput;
 export type StyleTransferInput = TimeOfDayInput;
 export type StyleTransferOutput = pulidOutput;
 export type SubjectReferenceOutput = I2VOutput;
@@ -72744,6 +75864,7 @@ export type TextToImageControlNetUnionInput = SdxlControlnetUnionInput;
 export type TextToImageInput = FluxLoraInput;
 export type TextToImageLightningInput = FastLightningSdxlInput;
 export type TextToImageLoraInput = V4LoraInput;
+export type TextToImageOutput = V16Output;
 export type TextToImagePlaygroundv25Input = PlaygroundV25Input;
 export type TextToImageTurboInput = cogview4Input;
 export type TextToLottieInput = omnilottieInput;
@@ -72752,9 +75873,11 @@ export type TextToSpeechHD26Output = TextToSpeechOutput;
 export type TextToSpeechHD28Output = TextToSpeechOutput;
 export type TextToSpeechTurbo26Output = TextToSpeechOutput;
 export type TextToSpeechTurbo28Output = TextToSpeechOutput;
+export type TextToVideoAudioInput = H3I2vTrainerInput;
 export type TextToVideoHailuo02Output = I2VOutput;
 export type TextToVideoHailuo03Input = H3TextToVideoInput;
-export type TextToVideoHailuo03Output = I2VOutput;
+export type TextToVideoHailuo03LoRAInput = H3TextToVideoLoraInput;
+export type TextToVideoHailuo03Output = H3TextToVideoOutput;
 export type TextToVideoTurboInput = TextToVideov21Input;
 export type TextToVideoV21MasterOutput = I2VOutput;
 export type TextToVideoV21Output = I2VOutput;
@@ -72768,22 +75891,38 @@ export type TextToVideoV3TurboStandardOutput = I2VOutput;
 export type TextureTransformOutput = BlurOutput;
 export type ThinksoundAudioInput = thinksoundInput;
 export type TimeOfDayOutput = pulidOutput;
-export type TopazUpscaleImageOutput = EvfSamOutput;
-export type TopazUpscaleVideoOutput = I2VOutput;
 export type TransitionOutput = I2VOutput;
 export type Trellis2RetextureOutput = Trellis2Output;
 export type TrellisMultiOutput = trellisOutput;
+export type Tripo3DSegmentationOutput = TripoSegmentOutput;
+export type TripoRemeshInput = RemeshInput;
+export type TripoRemeshOutput = Tripo3DOutput;
+export type TripoSegmentInput = SegmentationInput;
 export type TripoV25ImageTo3dInput = ImageTo3dInput;
+export type TripoV25ImageTo3dOutput = Tripo3dOutput;
 export type TripoV25MultiviewTo3dInput = MultiviewTo3dInput;
-export type TripoV25MultiviewTo3dOutput = TripoV25ImageTo3dOutput;
+export type TripoV25MultiviewTo3dOutput = Tripo3dOutput;
 export type TTSOutput = STSOutput;
 export type TtsV1Output = DiaOutput;
 export type TurboFluxTrainerOutput = Output;
+export type TurboImageToVideoHailuo03Input = H3MaxImageToVideoInput;
+export type TurboImageToVideoHailuo03Output = H3MaxTextToVideoOutput;
 export type TurboImageToVideoOutput = I2VOutput;
+export type TurboReferenceToVideoHailuo03Input = H3MaxReferenceToVideoInput;
+export type TurboReferenceToVideoHailuo03Output = H3MaxReferenceToVideoOutput;
+export type TurboTextToVideoHailuo03Input = H3MaxTextToVideoInput;
+export type TurboTextToVideoHailuo03Output = H3MaxTextToVideoOutput;
 export type TurboTextToVideoOutput = I2VOutput;
 export type U1InfographicUnderstandOutput = BagelUnderstandOutput;
 export type UpscaleCreativeOutput = HEDOutput;
+export type UpscaleImageCreativeOutput = EvfSamOutput;
+export type UpscaleImageGenerativeOutput = EvfSamOutput;
+export type UpscaleImagePrecisionOutput = EvfSamOutput;
+export type UpscaleImageTransparentOutput = EvfSamOutput;
 export type UpscaleOutput = EvfSamOutput;
+export type UpscaleVideoCreativeOutput = I2VOutput;
+export type UpscaleVideoGenerativeOutput = I2VOutput;
+export type UpscaleVideoPrecisionOutput = I2VOutput;
 export type usoOutput = unoOutput;
 export type V11TextToMusicInput = TextToMusicInput;
 export type V11TextToMusicOutput = TrioAudioOutput;
@@ -72823,12 +75962,26 @@ export type V4ImageToImageLoraOutput = v4Output;
 export type V4ImageToImageOutput = v4Output;
 export type V4InstantOutput = v4Output;
 export type V4LoraOutput = v4Output;
+export type V4ProCreateStyleInput = V4CreateStyleInput;
+export type V4ProCreateStyleOutput = V4CreateStyleOutput;
+export type V4StyleProTextToImageInput = V4StyleTextToImageInput;
+export type V4StyleProTextToImageOutput = V4StyleTextToImageOutput;
+export type V4StyleProTextToVectorInput = V4StyleTextToImageInput;
+export type V4StyleProTextToVectorOutput = V4StyleTextToImageOutput;
+export type V4StyleTextToVectorInput = V4StyleTextToImageInput;
+export type V4StyleTextToVectorOutput = V4StyleTextToImageOutput;
 export type V4TilingInput = TilingInput;
 export type V4TilingLoraInput = TilingLoraInput;
 export type V4TilingLoraOutput = v4Output;
 export type V4TilingOutput = v4Output;
 export type V4TrainerInput = Input;
 export type V4TrainerOutput = Output;
+export type V7ImageTo3dInput = ImageTo3DV7Input;
+export type V7ImageTo3dOutput = ImageTo3DOutput;
+export type V7MultiImageTo3dInput = MultiImageTo3DInput;
+export type V7MultiImageTo3dOutput = ImageTo3DOutput;
+export type V7TextTo3dInput = TextTo3DV7Input;
+export type V7TextTo3dOutput = TextTo3DOutput;
 export type VecglypherImageToSvgInput = ImageToSVGInput;
 export type VecglypherImageToSvgOutput = vecglypherOutput;
 export type vecglypherInput = TextToSVGInput;
@@ -72844,6 +75997,8 @@ export type Veo31FastImageToVideoInput = Veo31ImageToVideoInput;
 export type Veo31FastImageToVideoOutput = I2VOutput;
 export type Veo31FastInput = Veo31Input;
 export type Veo31FastOutput = I2VOutput;
+export type Veo31FastReferenceToVideoInput = Veo31ReferenceToVideoInput;
+export type Veo31FastReferenceToVideoOutput = I2VOutput;
 export type Veo31FirstLastFrameToVideoOutput = I2VOutput;
 export type Veo31ImageToVideoOutput = I2VOutput;
 export type Veo31LiteFirstLastFrameToVideoOutput = I2VOutput;
@@ -72867,6 +76022,8 @@ export type VibeVoiceOutput = vibevoiceOutput;
 export type VideoAgentOutput = I2VOutput;
 export type VideoBackgroundRemovalFastInput = GeneralRembgInput;
 export type VideoBackgroundRemovalFastOutput = GeneralRembgOutput;
+export type VideoBackgroundRemovalGreenScreenDespillOutput =
+  VideoBackgroundRemovalV3Output;
 export type VideoBackgroundRemovalGreenScreenInput = GreenScreenRembgInput;
 export type VideoBackgroundRemovalGreenScreenOutput = GeneralRembgOutput;
 export type VideoBackgroundRemovalInput = GeneralRembgInput;
@@ -72879,6 +76036,7 @@ export type VideoEraseKeypointsOutput = VideoEraseMaskOutput;
 export type VideoErasePromptOutput = VideoEraseMaskOutput;
 export type VideoIncreaseResolutionOutput = VideoEraseMaskOutput;
 export type VideoOutput = AudioOutput;
+export type VideoPromptGeneratorOutput = ExpandPromptInput;
 export type VideoSoundEffectsGeneratorOutput = I2VOutput;
 export type VideoToGifOutput = EvfSamOutput;
 export type VideoToMusicOutput = TrioAudioOutput;
@@ -72914,8 +76072,8 @@ export type ViduReferenceToVideoOutput = I2VOutput;
 export type ViduStartEndToVideoOutput = I2VOutput;
 export type ViduTemplateToVideoOutput = I2VOutput;
 export type VignetteOutput = BlurOutput;
-export type VirtualTryonOutput = AuraFlowOutput;
-export type VirtualTryOnOutput = BlurOutput;
+export type VirtualTryonOutput = HdrStyleOutput;
+export type VirtualTryOnOutput = photaOutput;
 export type VisionEnterpriseInput = RouterVisionInput;
 export type VisionOutput = AudioOutput;
 export type VoiceChangerOutput = zonos2Output;
@@ -72933,9 +76091,8 @@ export type Wan22VaceFunA14bOutpaintingInput = WanVace14bOutpaintingInput;
 export type Wan22VaceFunA14bOutpaintingOutput = edittoOutput;
 export type Wan22VaceFunA14bReframeInput = WanVace14bReframeInput;
 export type Wan22VaceFunA14bReframeOutput = edittoOutput;
-export type Wan25PreviewImageToImageOutput = ImageToImageOutput;
+export type Wan25PreviewImageToImageOutput = Wan25PreviewTextToImageOutput;
 export type Wan25PreviewImageToVideoOutput = TextToVideoOutput;
-export type Wan25PreviewTextToImageOutput = ImageToImageOutput;
 export type Wan25PreviewTextToVideoOutput = TextToVideoOutput;
 export type Wan27ImageEditInput = WanV27EditInput;
 export type Wan27ImageEditOutput = GenerateOutput;
@@ -72944,6 +76101,14 @@ export type Wan27ReferenceToVideoOutput = TextToVideoOutput;
 export type Wan27TextToImageOutput = TextToImageWanOutput;
 export type Wan27TextToVideoOutput = TextToVideoOutput;
 export type Wan27VideoEditOutput = TextToVideoOutput;
+export type Wan30ImageToVideoOutput = Wan30TextToVideoOutput;
+export type Wan30PrimeImageToVideoInput = Wan30ImageToVideoInput;
+export type Wan30PrimeImageToVideoOutput = Wan30TextToVideoOutput;
+export type Wan30PrimeReferenceToVideoInput = Wan30ReferenceToVideoInput;
+export type Wan30PrimeReferenceToVideoOutput = Wan30TextToVideoOutput;
+export type Wan30PrimeTextToVideoInput = Wan30TextToVideoInput;
+export type Wan30PrimeTextToVideoOutput = Wan30TextToVideoOutput;
+export type Wan30ReferenceToVideoOutput = Wan30TextToVideoOutput;
 export type WanAnimateSimpleInput = WanMotionInput;
 export type WanAnimateSimpleOutput = WanMotionOutput;
 export type WanEffectsOutput = ModifyOutput;
@@ -73025,6 +76190,7 @@ export type XAIImageEditQualityInput = XAIImageEditInput;
 export type XAIImageQualityInput = XAIImageInput;
 export type XAIImageToVideoOutput = React1Output;
 export type XAIReferenceToVideoOutput = React1Output;
+export type XAIReferenceToVideoV15Input = XAIReferenceToVideoInput;
 export type XAITextToVideoOutput = React1Output;
 export type XAITTSStreamInput = TtsV1Input;
 export type XAIVideoEditOutput = React1Output;
@@ -73094,6 +76260,38 @@ export type EndpointTypeMap = {
     input: QwenAudio3TtsInput;
     output: QwenAudio3TtsOutput;
   };
+  "alibaba/qwen-image-3/edit": {
+    input: QwenImage3EditInput;
+    output: QwenImage3EditOutput;
+  };
+  "alibaba/qwen-image-3/text-to-image": {
+    input: QwenImage3TextToImageInput;
+    output: QwenImage3TextToImageOutput;
+  };
+  "alibaba/wan-3.0-prime/image-to-video": {
+    input: Wan30PrimeImageToVideoInput;
+    output: Wan30PrimeImageToVideoOutput;
+  };
+  "alibaba/wan-3.0-prime/reference-to-video": {
+    input: Wan30PrimeReferenceToVideoInput;
+    output: Wan30PrimeReferenceToVideoOutput;
+  };
+  "alibaba/wan-3.0-prime/text-to-video": {
+    input: Wan30PrimeTextToVideoInput;
+    output: Wan30PrimeTextToVideoOutput;
+  };
+  "alibaba/wan-3.0/image-to-video": {
+    input: Wan30ImageToVideoInput;
+    output: Wan30ImageToVideoOutput;
+  };
+  "alibaba/wan-3.0/reference-to-video": {
+    input: Wan30ReferenceToVideoInput;
+    output: Wan30ReferenceToVideoOutput;
+  };
+  "alibaba/wan-3.0/text-to-video": {
+    input: Wan30TextToVideoInput;
+    output: Wan30TextToVideoOutput;
+  };
   "argil/avatars/audio-to-video": {
     input: AvatarsAudioToVideoInput;
     output: AvatarsAudioToVideoOutput;
@@ -73105,6 +76303,54 @@ export type EndpointTypeMap = {
   "async/tts-pro/v1.0": {
     input: TtsProV10Input;
     output: TtsProV10Output;
+  };
+  "blackforestlabs/flux-3/draft-enhance": {
+    input: Flux3DraftEnhanceInput;
+    output: Flux3DraftEnhanceOutput;
+  };
+  "blackforestlabs/flux-3/extend-video": {
+    input: Flux3ExtendVideoInput;
+    output: Flux3ExtendVideoOutput;
+  };
+  "blackforestlabs/flux-3/extend-video/draft": {
+    input: Flux3ExtendVideoDraftInput;
+    output: Flux3ExtendVideoDraftOutput;
+  };
+  "blackforestlabs/flux-3/first-last-frame-to-video": {
+    input: Flux3FirstLastFrameToVideoInput;
+    output: Flux3FirstLastFrameToVideoOutput;
+  };
+  "blackforestlabs/flux-3/first-last-frame-to-video/draft": {
+    input: Flux3FirstLastFrameToVideoDraftInput;
+    output: Flux3FirstLastFrameToVideoDraftOutput;
+  };
+  "blackforestlabs/flux-3/image-to-video": {
+    input: Flux3ImageToVideoInput;
+    output: Flux3ImageToVideoOutput;
+  };
+  "blackforestlabs/flux-3/image-to-video/draft": {
+    input: Flux3ImageToVideoDraftInput;
+    output: Flux3ImageToVideoDraftOutput;
+  };
+  "blackforestlabs/flux-3/keyframes-to-video": {
+    input: Flux3KeyframesToVideoInput;
+    output: Flux3KeyframesToVideoOutput;
+  };
+  "blackforestlabs/flux-3/keyframes-to-video/draft": {
+    input: Flux3KeyframesToVideoDraftInput;
+    output: Flux3KeyframesToVideoDraftOutput;
+  };
+  "blackforestlabs/flux-3/text-to-video": {
+    input: Flux3TextToVideoInput;
+    output: Flux3TextToVideoOutput;
+  };
+  "blackforestlabs/flux-3/text-to-video/draft": {
+    input: Flux3TextToVideoDraftInput;
+    output: Flux3TextToVideoDraftOutput;
+  };
+  "blackforestlabs/flux-video-upscale": {
+    input: FluxVideoUpscaleInput;
+    output: FluxVideoUpscaleOutput;
   };
   "bria/bria_video_eraser/erase/keypoints": {
     input: BriaVideoEraserEraseKeypointsInput;
@@ -73129,6 +76375,10 @@ export type EndpointTypeMap = {
   "bria/fibo-bbq-preview/generate": {
     input: FiboBbqPreviewGenerateInput;
     output: FiboBbqPreviewGenerateOutput;
+  };
+  "bria/fibo-edit-1.5/edit": {
+    input: FiboEdit15EditInput;
+    output: FiboEdit15EditOutput;
   };
   "bria/fibo-edit/add_object_by_text": {
     input: FiboEditAddObjectByTextInput;
@@ -73182,6 +76432,10 @@ export type EndpointTypeMap = {
     input: FiboEditSketchToColoredImageInput;
     output: FiboEditSketchToColoredImageOutput;
   };
+  "bria/fibo-gen-1.5/text-to-image": {
+    input: FiboGen15TextToImageInput;
+    output: FiboGen15TextToImageOutput;
+  };
   "bria/fibo-lite/generate": {
     input: FiboLiteGenerateInput;
     output: FiboLiteGenerateOutput;
@@ -73202,6 +76456,10 @@ export type EndpointTypeMap = {
     input: GenfillV2Input;
     output: GenfillV2Output;
   };
+  "bria/increase-resolution": {
+    input: IncreaseResolutionInput;
+    output: IncreaseResolutionOutput;
+  };
   "bria/product-dimensions": {
     input: ProductDimensionsInput;
     output: ProductDimensionsOutput;
@@ -73217,6 +76475,10 @@ export type EndpointTypeMap = {
   "bria/video/background-removal": {
     input: VideoBackgroundRemovalInput;
     output: VideoBackgroundRemovalOutput;
+  };
+  "bria/video/background-removal/green-screen-despill": {
+    input: VideoBackgroundRemovalGreenScreenDespillInput;
+    output: VideoBackgroundRemovalGreenScreenDespillOutput;
   };
   "bria/video/background-removal/realtime": {
     input: VideoBackgroundRemovalRealtimeInput;
@@ -73286,6 +76548,18 @@ export type EndpointTypeMap = {
     input: Seedance20TextToVideoInput;
     output: Seedance20TextToVideoOutput;
   };
+  "bytedance/seedance-2.5/image-to-video": {
+    input: Seedance25ImageToVideoInput;
+    output: Seedance25ImageToVideoOutput;
+  };
+  "bytedance/seedance-2.5/reference-to-video": {
+    input: Seedance25ReferenceToVideoInput;
+    output: Seedance25ReferenceToVideoOutput;
+  };
+  "bytedance/seedance-2.5/text-to-video": {
+    input: Seedance25TextToVideoInput;
+    output: Seedance25TextToVideoOutput;
+  };
   "bytedance/seedream/v5/lite/edit": {
     input: SeedreamV5LiteEditInput;
     output: SeedreamV5LiteEditOutput;
@@ -73297,6 +76571,10 @@ export type EndpointTypeMap = {
   "bytedance/seedream/v5/pro/edit": {
     input: SeedreamV5ProEditInput;
     output: SeedreamV5ProEditOutput;
+  };
+  "bytedance/seedream/v5/pro/layerize": {
+    input: SeedreamV5ProLayerizeInput;
+    output: SeedreamV5ProLayerizeOutput;
   };
   "bytedance/seedream/v5/pro/text-to-image": {
     input: SeedreamV5ProTextToImageInput;
@@ -74626,6 +77904,10 @@ export type EndpointTypeMap = {
     input: HeygenV2VideoAgentInput;
     output: HeygenV2VideoAgentOutput;
   };
+  "fal-ai/heygen/v3/filler-word-removal": {
+    input: HeygenV3FillerWordRemovalInput;
+    output: HeygenV3FillerWordRemovalOutput;
+  };
   "fal-ai/heygen/v3/lipsync/precision": {
     input: HeygenV3LipsyncPrecisionInput;
     output: HeygenV3LipsyncPrecisionOutput;
@@ -75293,6 +78575,14 @@ export type EndpointTypeMap = {
   "fal-ai/kling-video/o3/4k/text-to-video": {
     input: KlingVideoO34kTextToVideoInput;
     output: KlingVideoO34kTextToVideoOutput;
+  };
+  "fal-ai/kling-video/o3/4k/video-to-video/edit": {
+    input: KlingVideoO34kVideoToVideoEditInput;
+    output: KlingVideoO34kVideoToVideoEditOutput;
+  };
+  "fal-ai/kling-video/o3/4k/video-to-video/reference": {
+    input: KlingVideoO34kVideoToVideoReferenceInput;
+    output: KlingVideoO34kVideoToVideoReferenceOutput;
   };
   "fal-ai/kling-video/o3/pro/image-to-video": {
     input: KlingVideoO3ProImageToVideoInput;
@@ -76926,22 +80216,6 @@ export type EndpointTypeMap = {
     input: QwenImageInput;
     output: QwenImageOutput;
   };
-  "fal-ai/qwen-image-2/edit": {
-    input: QwenImage2EditInput;
-    output: QwenImage2EditOutput;
-  };
-  "fal-ai/qwen-image-2/pro/edit": {
-    input: QwenImage2ProEditInput;
-    output: QwenImage2ProEditOutput;
-  };
-  "fal-ai/qwen-image-2/pro/text-to-image": {
-    input: QwenImage2ProTextToImageInput;
-    output: QwenImage2ProTextToImageOutput;
-  };
-  "fal-ai/qwen-image-2/text-to-image": {
-    input: QwenImage2TextToImageInput;
-    output: QwenImage2TextToImageOutput;
-  };
   "fal-ai/qwen-image-2512": {
     input: QwenImage2512Input;
     output: QwenImage2512Output;
@@ -77558,14 +80832,6 @@ export type EndpointTypeMap = {
     input: ThinksoundAudioInput;
     output: ThinksoundAudioOutput;
   };
-  "fal-ai/topaz/upscale/image": {
-    input: TopazUpscaleImageInput;
-    output: TopazUpscaleImageOutput;
-  };
-  "fal-ai/topaz/upscale/video": {
-    input: TopazUpscaleVideoInput;
-    output: TopazUpscaleVideoOutput;
-  };
   "fal-ai/trellis": {
     input: trellisInput;
     output: trellisOutput;
@@ -77638,6 +80904,10 @@ export type EndpointTypeMap = {
     input: Veo31FastImageToVideoInput;
     output: Veo31FastImageToVideoOutput;
   };
+  "fal-ai/veo3.1/fast/reference-to-video": {
+    input: Veo31FastReferenceToVideoInput;
+    output: Veo31FastReferenceToVideoOutput;
+  };
   "fal-ai/veo3.1/first-last-frame-to-video": {
     input: Veo31FirstLastFrameToVideoInput;
     output: Veo31FirstLastFrameToVideoOutput;
@@ -77661,6 +80931,10 @@ export type EndpointTypeMap = {
   "fal-ai/veo3.1/reference-to-video": {
     input: Veo31ReferenceToVideoInput;
     output: Veo31ReferenceToVideoOutput;
+  };
+  "fal-ai/vggt-1b": {
+    input: Vggt1bInput;
+    output: Vggt1bOutput;
   };
   "fal-ai/vibevoice": {
     input: vibevoiceInput;
@@ -78126,6 +81400,22 @@ export type EndpointTypeMap = {
     input: GeminiOmniFlashReferenceToVideoInput;
     output: GeminiOmniFlashReferenceToVideoOutput;
   };
+  "google/gemini-omni-flash/v1.1/edit": {
+    input: GeminiOmniFlashV11EditInput;
+    output: GeminiOmniFlashV11EditOutput;
+  };
+  "google/gemini-omni-flash/v1.1/image-to-video": {
+    input: GeminiOmniFlashV11ImageToVideoInput;
+    output: GeminiOmniFlashV11ImageToVideoOutput;
+  };
+  "google/gemini-omni-flash/v1.1/reference-to-video": {
+    input: GeminiOmniFlashV11ReferenceToVideoInput;
+    output: GeminiOmniFlashV11ReferenceToVideoOutput;
+  };
+  "google/gemini-omni-flash/v1.1/text-to-video": {
+    input: GeminiOmniFlashV11TextToVideoInput;
+    output: GeminiOmniFlashV11TextToVideoOutput;
+  };
   "google/nano-banana-2-lite": {
     input: NanoBanana2LiteInput;
     output: NanoBanana2LiteOutput;
@@ -78137,6 +81427,42 @@ export type EndpointTypeMap = {
   "google/nano-banana-lite/edit": {
     input: NanoBananaLiteEditInput;
     output: NanoBananaLiteEditOutput;
+  };
+  "google/virtual-try-on": {
+    input: VirtualTryOnInput;
+    output: VirtualTryOnOutput;
+  };
+  "hitem3d/hi3d/image-to-3d": {
+    input: Hi3dImageTo3dInput;
+    output: Hi3dImageTo3dOutput;
+  };
+  "hitem3d/hi3d/image-to-relief": {
+    input: Hi3dImageToReliefInput;
+    output: Hi3dImageToReliefOutput;
+  };
+  "hitem3d/hi3d/multi-view-to-3d": {
+    input: Hi3dMultiViewTo3dInput;
+    output: Hi3dMultiViewTo3dOutput;
+  };
+  "hitem3d/hi3d/multicolor": {
+    input: Hi3dMulticolorInput;
+    output: Hi3dMulticolorOutput;
+  };
+  "hitem3d/hi3d/split": {
+    input: Hi3dSplitInput;
+    output: Hi3dSplitOutput;
+  };
+  "hitem3d/hi3d/texture": {
+    input: Hi3dTextureInput;
+    output: Hi3dTextureOutput;
+  };
+  "hitem3d/hi3d/v3.0/image-to-3d": {
+    input: Hi3dV30ImageTo3dInput;
+    output: Hi3dV30ImageTo3dOutput;
+  };
+  "hitem3d/hi3d/v3.0/multi-view-to-3d": {
+    input: Hi3dV30MultiViewTo3dInput;
+    output: Hi3dV30MultiViewTo3dOutput;
   };
   "ideogram/v4": {
     input: v4Input;
@@ -78202,6 +81528,30 @@ export type EndpointTypeMap = {
     input: V2MediumTurboTextToImageInput;
     output: V2MediumTurboTextToImageOutput;
   };
+  "lightricks/ltx-2.5/audio-to-video/fast": {
+    input: Ltx25AudioToVideoFastInput;
+    output: Ltx25AudioToVideoFastOutput;
+  };
+  "lightricks/ltx-2.5/audio-to-video/pro": {
+    input: Ltx25AudioToVideoProInput;
+    output: Ltx25AudioToVideoProOutput;
+  };
+  "lightricks/ltx-2.5/image-to-video/fast": {
+    input: Ltx25ImageToVideoFastInput;
+    output: Ltx25ImageToVideoFastOutput;
+  };
+  "lightricks/ltx-2.5/image-to-video/pro": {
+    input: Ltx25ImageToVideoProInput;
+    output: Ltx25ImageToVideoProOutput;
+  };
+  "lightricks/ltx-2.5/text-to-video/fast": {
+    input: Ltx25TextToVideoFastInput;
+    output: Ltx25TextToVideoFastOutput;
+  };
+  "lightricks/ltx-2.5/text-to-video/pro": {
+    input: Ltx25TextToVideoProInput;
+    output: Ltx25TextToVideoProOutput;
+  };
   "luma/agent/ray/v3.2/image-to-video": {
     input: AgentRayV32ImageToVideoInput;
     output: AgentRayV32ImageToVideoOutput;
@@ -78234,6 +81584,26 @@ export type EndpointTypeMap = {
     input: AgentUni1V1TextToImageInput;
     output: AgentUni1V1TextToImageOutput;
   };
+  "meshy/v7/image-to-3d": {
+    input: V7ImageTo3dInput;
+    output: V7ImageTo3dOutput;
+  };
+  "meshy/v7/multi-image-to-3d": {
+    input: V7MultiImageTo3dInput;
+    output: V7MultiImageTo3dOutput;
+  };
+  "meshy/v7/text-to-3d": {
+    input: V7TextTo3dInput;
+    output: V7TextTo3dOutput;
+  };
+  "meta/muse-image/edit": {
+    input: MuseImageEditInput;
+    output: MuseImageEditOutput;
+  };
+  "meta/muse-image/text-to-image": {
+    input: MuseImageTextToImageInput;
+    output: MuseImageTextToImageOutput;
+  };
   "microsoft/mai-image-2.5": {
     input: MaiImage25Input;
     output: MaiImage25Output;
@@ -78250,17 +81620,77 @@ export type EndpointTypeMap = {
     input: MaiImage25EditInput;
     output: MaiImage25EditOutput;
   };
+  "minimax/h3-max-turbo/image-to-video": {
+    input: H3MaxTurboImageToVideoInput;
+    output: H3MaxTurboImageToVideoOutput;
+  };
+  "minimax/h3-max-turbo/text-to-video": {
+    input: H3MaxTurboTextToVideoInput;
+    output: H3MaxTurboTextToVideoOutput;
+  };
+  "minimax/h3-max/image-to-video": {
+    input: H3MaxImageToVideoInput;
+    output: H3MaxImageToVideoOutput;
+  };
+  "minimax/h3-max/reference-to-video": {
+    input: H3MaxReferenceToVideoInput;
+    output: H3MaxReferenceToVideoOutput;
+  };
+  "minimax/h3-max/text-to-video": {
+    input: H3MaxTextToVideoInput;
+    output: H3MaxTextToVideoOutput;
+  };
+  "minimax/h3/flf2v/trainer": {
+    input: H3Flf2vTrainerInput;
+    output: H3Flf2vTrainerOutput;
+  };
+  "minimax/h3/i2v/trainer": {
+    input: H3I2vTrainerInput;
+    output: H3I2vTrainerOutput;
+  };
   "minimax/h3/image-to-video": {
     input: H3ImageToVideoInput;
     output: H3ImageToVideoOutput;
+  };
+  "minimax/h3/image-to-video/lora": {
+    input: H3ImageToVideoLoraInput;
+    output: H3ImageToVideoLoraOutput;
+  };
+  "minimax/h3/ref2va/trainer": {
+    input: H3Ref2vaTrainerInput;
+    output: H3Ref2vaTrainerOutput;
   };
   "minimax/h3/reference-to-video": {
     input: H3ReferenceToVideoInput;
     output: H3ReferenceToVideoOutput;
   };
+  "minimax/h3/reference-to-video/lora": {
+    input: H3ReferenceToVideoLoraInput;
+    output: H3ReferenceToVideoLoraOutput;
+  };
+  "minimax/h3/t2v/trainer": {
+    input: H3T2vTrainerInput;
+    output: H3T2vTrainerOutput;
+  };
   "minimax/h3/text-to-video": {
     input: H3TextToVideoInput;
     output: H3TextToVideoOutput;
+  };
+  "minimax/h3/text-to-video/lora": {
+    input: H3TextToVideoLoraInput;
+    output: H3TextToVideoLoraOutput;
+  };
+  "minimax/music-3": {
+    input: Music3Input;
+    output: Music3Output;
+  };
+  "mirage-api/avatar-x/reference-to-video": {
+    input: AvatarXReferenceToVideoInput;
+    output: AvatarXReferenceToVideoOutput;
+  };
+  "mirage-api/avatar-x/text-to-video": {
+    input: AvatarXTextToVideoInput;
+    output: AvatarXTextToVideoOutput;
   };
   "mirelo-ai/sfx-v1.5/video-to-audio": {
     input: SfxV15VideoToAudioInput;
@@ -78398,6 +81828,30 @@ export type EndpointTypeMap = {
     input: VideoBackgroundRemovalInput;
     output: VideoBackgroundRemovalOutput;
   };
+  "recraft/v4/create-style": {
+    input: V4CreateStyleInput;
+    output: V4CreateStyleOutput;
+  };
+  "recraft/v4/pro/create-style": {
+    input: V4ProCreateStyleInput;
+    output: V4ProCreateStyleOutput;
+  };
+  "recraft/v4/style/pro/text-to-image": {
+    input: V4StyleProTextToImageInput;
+    output: V4StyleProTextToImageOutput;
+  };
+  "recraft/v4/style/pro/text-to-vector": {
+    input: V4StyleProTextToVectorInput;
+    output: V4StyleProTextToVectorOutput;
+  };
+  "recraft/v4/style/text-to-image": {
+    input: V4StyleTextToImageInput;
+    output: V4StyleTextToImageOutput;
+  };
+  "recraft/v4/style/text-to-vector": {
+    input: V4StyleTextToVectorInput;
+    output: V4StyleTextToVectorOutput;
+  };
   "resemble-ai/chatterboxhd/speech-to-speech": {
     input: ChatterboxhdSpeechToSpeechInput;
     output: ChatterboxhdSpeechToSpeechOutput;
@@ -78405,18 +81859,6 @@ export type EndpointTypeMap = {
   "resemble-ai/chatterboxhd/text-to-speech": {
     input: ChatterboxhdTextToSpeechInput;
     output: ChatterboxhdTextToSpeechOutput;
-  };
-  "reve/2.1/edit": {
-    input: _21EditInput;
-    output: _21EditOutput;
-  };
-  "reve/2.1/remix": {
-    input: _21RemixInput;
-    output: _21RemixOutput;
-  };
-  "reve/2.1/text-to-image": {
-    input: _21TextToImageInput;
-    output: _21TextToImageOutput;
   };
   "rundiffusion-fal/juggernaut-flux-lora": {
     input: JuggernautFluxLoraInput;
@@ -78478,6 +81920,70 @@ export type EndpointTypeMap = {
     input: V11VideoToVideoSoundEffectsInput;
     output: V11VideoToVideoSoundEffectsOutput;
   };
+  "topaz/adjust/image": {
+    input: AdjustImageInput;
+    output: AdjustImageOutput;
+  };
+  "topaz/colorize/video": {
+    input: ColorizeVideoInput;
+    output: ColorizeVideoOutput;
+  };
+  "topaz/deblur/video": {
+    input: DeblurVideoInput;
+    output: DeblurVideoOutput;
+  };
+  "topaz/denoise/image": {
+    input: DenoiseImageInput;
+    output: DenoiseImageOutput;
+  };
+  "topaz/denoise/video": {
+    input: DenoiseVideoInput;
+    output: DenoiseVideoOutput;
+  };
+  "topaz/interpolate/video": {
+    input: InterpolateVideoInput;
+    output: InterpolateVideoOutput;
+  };
+  "topaz/restore/image": {
+    input: RestoreImageInput;
+    output: RestoreImageOutput;
+  };
+  "topaz/sdr-to-hdr/video": {
+    input: SdrToHdrVideoInput;
+    output: SdrToHdrVideoOutput;
+  };
+  "topaz/sharpen/image": {
+    input: SharpenImageInput;
+    output: SharpenImageOutput;
+  };
+  "topaz/upscale/image/creative": {
+    input: UpscaleImageCreativeInput;
+    output: UpscaleImageCreativeOutput;
+  };
+  "topaz/upscale/image/generative": {
+    input: UpscaleImageGenerativeInput;
+    output: UpscaleImageGenerativeOutput;
+  };
+  "topaz/upscale/image/precision": {
+    input: UpscaleImagePrecisionInput;
+    output: UpscaleImagePrecisionOutput;
+  };
+  "topaz/upscale/image/transparent": {
+    input: UpscaleImageTransparentInput;
+    output: UpscaleImageTransparentOutput;
+  };
+  "topaz/upscale/video/creative": {
+    input: UpscaleVideoCreativeInput;
+    output: UpscaleVideoCreativeOutput;
+  };
+  "topaz/upscale/video/generative": {
+    input: UpscaleVideoGenerativeInput;
+    output: UpscaleVideoGenerativeOutput;
+  };
+  "topaz/upscale/video/precision": {
+    input: UpscaleVideoPrecisionInput;
+    output: UpscaleVideoPrecisionOutput;
+  };
   "tripo3d/h3.1/image-to-3d": {
     input: H31ImageTo3dInput;
     output: H31ImageTo3dOutput;
@@ -78497,6 +82003,14 @@ export type EndpointTypeMap = {
   "tripo3d/p1/text-to-3d": {
     input: P1TextTo3dInput;
     output: P1TextTo3dOutput;
+  };
+  "tripo3d/tripo/remesh": {
+    input: TripoRemeshInput;
+    output: TripoRemeshOutput;
+  };
+  "tripo3d/tripo/segment": {
+    input: TripoSegmentInput;
+    output: TripoSegmentOutput;
   };
   "tripo3d/tripo/v2.5/image-to-3d": {
     input: TripoV25ImageTo3dInput;
@@ -78594,6 +82108,14 @@ export type EndpointTypeMap = {
     input: GrokImagineImageQualityTextToImageInput;
     output: GrokImagineImageQualityTextToImageOutput;
   };
+  "xai/grok-imagine-image/v2.0/edit": {
+    input: GrokImagineImageV20EditInput;
+    output: GrokImagineImageV20EditOutput;
+  };
+  "xai/grok-imagine-image/v2.0/text-to-image": {
+    input: GrokImagineImageV20TextToImageInput;
+    output: GrokImagineImageV20TextToImageOutput;
+  };
   "xai/grok-imagine-video/edit-video": {
     input: GrokImagineVideoEditVideoInput;
     output: GrokImagineVideoEditVideoOutput;
@@ -78617,6 +82139,14 @@ export type EndpointTypeMap = {
   "xai/grok-imagine-video/v1.5/image-to-video": {
     input: GrokImagineVideoV15ImageToVideoInput;
     output: GrokImagineVideoV15ImageToVideoOutput;
+  };
+  "xai/grok-imagine-video/v1.5/reference-to-video": {
+    input: GrokImagineVideoV15ReferenceToVideoInput;
+    output: GrokImagineVideoV15ReferenceToVideoOutput;
+  };
+  "xai/grok-imagine-video/v1.5/text-to-video": {
+    input: GrokImagineVideoV15TextToVideoInput;
+    output: GrokImagineVideoV15TextToVideoOutput;
   };
   "xai/tts/v1": {
     input: TtsV1Input;
