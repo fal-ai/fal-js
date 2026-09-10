@@ -51,6 +51,29 @@ describe("client.run headers", () => {
     expect(call.headers["x-fal-request-timeout"]).toBeUndefined();
   });
 
+  it("includes the packed tags header when tags are provided", async () => {
+    const client = createFalClient({ credentials: "test-key" });
+    await client.run("fal-ai/fast-sdxl", {
+      input: { prompt: "hello" },
+      tags: { team: "design", env: "prod" },
+    });
+
+    expect(dispatchRequest).toHaveBeenCalledTimes(1);
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-tags"]).toBe("team=design,env=prod");
+  });
+
+  it("omits the tags header when tags are not provided", async () => {
+    const client = createFalClient({ credentials: "test-key" });
+    await client.run("fal-ai/fast-sdxl", {
+      input: { prompt: "hello" },
+    });
+
+    expect(dispatchRequest).toHaveBeenCalledTimes(1);
+    const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
+    expect(call.headers["x-fal-tags"]).toBeUndefined();
+  });
+
   it("throws error when startTimeout is <= 1 second", async () => {
     const client = createFalClient({ credentials: "test-key" });
     await expect(

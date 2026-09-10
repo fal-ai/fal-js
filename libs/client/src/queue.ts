@@ -1,5 +1,6 @@
 import { RequiredConfig } from "./config";
 import {
+  buildTagsHeaders,
   buildTimeoutHeaders,
   QUEUE_PRIORITY_HEADER,
   RUNNER_HINT_HEADER,
@@ -118,10 +119,11 @@ type QueueCommonSubscribeOptions = {
 
   /**
    * Additional HTTP headers to include in the submit request.
-   * Note: `priority`, `hint`, `startTimeout`, and `objectLifecycle` will override the following headers:
+   * Note: `priority`, `hint`, `startTimeout`, `tags`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
    *  - `x-fal-request-timeout`
+   *  - `x-fal-tags`
    *  - `x-fal-object-lifecycle-preference`
    */
   headers?: Record<string, string>;
@@ -169,10 +171,11 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
   /**
    * Additional HTTP headers to include in the submit request.
    *
-   * Note: `priority`, `hint`, `startTimeout`, and `objectLifecycle` will override the following headers:
+   * Note: `priority`, `hint`, `startTimeout`, `tags`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
    *  - `x-fal-request-timeout`
+   *  - `x-fal-tags`
    *  - `x-fal-object-lifecycle-preference`
    */
   headers?: Record<string, string>;
@@ -316,6 +319,7 @@ export const createQueueClient = ({
         priority,
         hint,
         startTimeout,
+        tags,
         headers,
         storageSettings,
         ...runOptions
@@ -342,6 +346,7 @@ export const createQueueClient = ({
           [QUEUE_PRIORITY_HEADER]: priority ?? "normal",
           ...(hint && { [RUNNER_HINT_HEADER]: hint }),
           ...buildTimeoutHeaders(startTimeout),
+          ...buildTagsHeaders(tags),
         },
         input: input as Input,
         config,
