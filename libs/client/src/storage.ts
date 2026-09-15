@@ -136,8 +136,6 @@ export function buildObjectLifecycleHeaders(
 export const MULTIPART_THRESHOLD = 90 * 1024 * 1024;
 
 export const DEFAULT_MULTIPART_CHUNK_SIZE = 10 * 1024 * 1024;
-export const DEFAULT_MULTIPART_CONCURRENCY = 10;
-
 /**
  * Attempts per part, including the first one.
  */
@@ -174,11 +172,6 @@ export type MultipartOptions = {
    * @default 10485760 (10 MB)
    */
   chunkSize?: number;
-  /**
-   * How many parts may be in flight at once.
-   * @default 10
-   */
-  concurrency?: number;
   /**
    * Attempts per part, including the first one. Only transient failures
    * (network errors, 429, 5xx) consume an attempt.
@@ -265,7 +258,7 @@ export interface StorageClient {
    * Upload a file to the server. Returns the URL of the uploaded file.
    *
    * Files over {@link MULTIPART_THRESHOLD} are split into parts and uploaded
-   * with bounded concurrency.
+   * sequentially.
    *
    * @param file the file to upload
    * @param options optional parameters, such as lifecycle configuration,
@@ -435,38 +428,6 @@ async function uploadPart(
   );
 }
 
-/**
- * Runs the tasks with at most `limit` of them in flight. Stops handing out new
- * tasks once one fails and rethrows that first failure.
- */
-async function runWithConcurrency<T>(
-  tasks: Array<() => Promise<T>>,
-  limit: number,
-): Promise<T[]> {
-  const results = new Array<T>(tasks.length);
-  const workerCount = Math.max(1, Math.min(limit, tasks.length));
-  let next = 0;
-  let failure: unknown;
-
-  const worker = async (): Promise<void> => {
-    while (failure === undefined && next < tasks.length) {
-      const index = next++;
-      try {
-        results[index] = await tasks[index]();
-      } catch (error) {
-        failure ??= error;
-      }
-    }
-  };
-
-  await Promise.all(Array.from({ length: workerCount }, () => worker()));
-
-  if (failure !== undefined) {
-    throw failure;
-  }
-  return results;
-}
-
 async function multipartUpload(
   file: Blob,
   config: RequiredConfig,
@@ -492,7 +453,9 @@ async function multipartUpload(
   const parsedUrl = new URL(uploadUrl);
 
   let loaded = 0;
-  const tasks = Array.from({ length: chunks }, (_, i) => async () => {
+  const responses: MultipartObject[] = [];
+
+  for (let i = 0; i < chunks; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, file.size);
 
@@ -502,12 +465,14 @@ async function multipartUpload(
     // {uploadUrl}/{part_number}?uploadUrlParams=...
     const partUploadUrl = `${parsedUrl.origin}${parsedUrl.pathname}/${partNumber}${parsedUrl.search}`;
 
-    const part = await uploadPart(
-      partUploadUrl,
-      chunk,
-      partNumber,
-      config,
-      multipart?.maxAttemptsPerPart ?? DEFAULT_MULTIPART_PART_ATTEMPTS,
+    responses.push(
+      await uploadPart(
+        partUploadUrl,
+        chunk,
+        partNumber,
+        config,
+        multipart?.maxAttemptsPerPart ?? DEFAULT_MULTIPART_PART_ATTEMPTS,
+      ),
     );
 
     loaded += end - start;
@@ -517,13 +482,7 @@ async function multipartUpload(
       partNumber,
       totalParts: chunks,
     });
-    return part;
-  });
-
-  const responses = await runWithConcurrency(
-    tasks,
-    multipart?.concurrency ?? DEFAULT_MULTIPART_CONCURRENCY,
-  );
+  }
 
   // Complete the upload
   const completeUrl = `${parsedUrl.origin}${parsedUrl.pathname}/complete${parsedUrl.search}`;

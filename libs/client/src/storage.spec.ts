@@ -125,7 +125,7 @@ describe("multipart upload", () => {
     });
   });
 
-  it("uploads every part exactly once, honoring the concurrency limit", async () => {
+  it("uploads every part exactly once, one at a time", async () => {
     const attempts: PartAttempt[] = [];
     let inFlight = 0;
     let maxInFlight = 0;
@@ -143,7 +143,8 @@ describe("multipart upload", () => {
       const chunk = init.body as Blob;
       const marker = new Uint8Array(await chunk.slice(0, 1).arrayBuffer())[0];
       attempts.push({ partNumber, size: chunk.size, marker });
-      // Let every worker start before any of them finishes.
+      // Hold the part open long enough that an overlapping upload would show up
+      // in maxInFlight.
       await new Promise((resolve) => setTimeout(resolve, 5));
       inFlight--;
       return jsonResponse({ partNumber, etag: `"etag-${partNumber}"` });
@@ -152,12 +153,10 @@ describe("multipart upload", () => {
     const storage = createStorageClient({
       config: createConfigWith(fetchImpl),
     });
-    const url = await storage.upload(largeFile, {
-      multipart: { concurrency: 3 },
-    });
+    const url = await storage.upload(largeFile);
 
     expect(url).toBe(FILE_URL);
-    expect(maxInFlight).toBe(3);
+    expect(maxInFlight).toBe(1);
     expect(attempts).toHaveLength(EXPECTED_PARTS);
     expect(
       attempts.map((attempt) => attempt.partNumber).sort((a, b) => a - b),
@@ -199,9 +198,7 @@ describe("multipart upload", () => {
       config: createConfigWith(fetchImpl),
     });
 
-    const error = await storage
-      .upload(largeFile, { multipart: { concurrency: 1 } })
-      .catch((e) => e);
+    const error = await storage.upload(largeFile).catch((e) => e);
 
     expect(error).toBeInstanceOf(MultipartUploadError);
     expect(error.partNumber).toBe(1);
