@@ -637,6 +637,20 @@
             </select>
             <button id="refresh-chats">Refresh</button
             ><button id="more-chats" hidden>Load more</button>
+            <div id="conversation-actions" hidden>
+              <label for="conversation-title">Conversation title</label>
+              <input id="conversation-title" maxlength="120" autocomplete="off" />
+              <button id="rename-chat">Save title</button>
+              <button id="delete-chat">Delete conversation…</button>
+              <div id="delete-confirm" hidden>
+                <p>
+                  Delete this conversation and its stored history? Running work
+                  will be stopped. This cannot be undone.
+                </p>
+                <button id="confirm-delete">Delete permanently</button>
+                <button id="keep-chat">Keep conversation</button>
+              </div>
+            </div>
             <p id="history-status" class="hint" role="status">
               Loading conversations…
             </p>

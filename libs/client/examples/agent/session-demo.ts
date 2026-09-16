@@ -54,6 +54,7 @@ let history: AgentConversationItem[] = [];
 let navigation = 0;
 let refreshing = false;
 let historyConnected = true;
+let deletionKey: string | undefined;
 
 type Entry = { time: string; message: string; responseId?: string };
 let events: Entry[] = [];
@@ -135,6 +136,15 @@ function controls() {
       ? "Send follow-up →"
       : presets[test].label;
   button("new-chat").disabled = busy;
+  $("conversation-actions").hidden = !conversationId;
+  for (const id of [
+    "rename-chat",
+    "delete-chat",
+    "confirm-delete",
+    "keep-chat",
+  ])
+    button(id).disabled = busy || !conversationId;
+
   ($("conversation-picker") as HTMLSelectElement).disabled = busy;
   ($("response-picker") as HTMLSelectElement).disabled = busy;
   button("refine").disabled = busy || active || !selected;
@@ -607,6 +617,17 @@ async function refreshHistory() {
     const metadata = await client.agent.conversations.retrieve(id);
     if (version !== navigation || conversationId !== id) return;
     history = entries;
+    const conversations = $("conversation-picker") as HTMLSelectElement;
+    if (![...conversations.options].some((option) => option.value === id))
+      conversations.add(new Option(metadata.title || id, id));
+    conversations.value = id;
+
+    const title = input("conversation-title");
+    if (document.activeElement !== title && title.dataset.conversation !== id) {
+      title.value = metadata.title ?? "";
+      title.dataset.conversation = id;
+    }
+
     const ids = [
       ...new Set([
         ...entries.flatMap((e) => (e.response_id ? [e.response_id] : [])),
@@ -649,6 +670,10 @@ async function refreshHistory() {
 function resetConversation() {
   navigation++;
   historyConnected = true;
+  deletionKey = undefined;
+  $("delete-confirm").hidden = true;
+  input("conversation-title").value = "";
+  delete input("conversation-title").dataset.conversation;
   observer?.abort();
   watching = false;
   current = undefined;
@@ -671,6 +696,65 @@ function resetConversation() {
   controls();
   notice();
 }
+$("rename-chat").onclick = async () => {
+  if (!conversationId || busy) return;
+  busy = true;
+  controls();
+  notice();
+  try {
+    await client.agent.conversations.update(conversationId, {
+      title: input("conversation-title").value.trim(),
+    });
+    await listChats();
+    notice("Title saved.");
+  } catch (error) {
+    report(error);
+  } finally {
+    busy = false;
+    controls();
+  }
+};
+$("delete-chat").onclick = () => {
+  $("delete-confirm").hidden = false;
+};
+$("keep-chat").onclick = () => {
+  $("delete-confirm").hidden = true;
+};
+$("confirm-delete").onclick = async () => {
+  const id = conversationId;
+  if (!id || busy) return;
+  busy = true;
+  observer?.abort();
+  watching = false;
+  historyConnected = false;
+  controls();
+  notice();
+  deletionKey ??= crypto.randomUUID();
+  try {
+    const deadline = Date.now() + 30_000;
+    do {
+      const result = await client.agent.conversations.delete(id, {
+        idempotencyKey: deletionKey,
+      });
+      if (result.deleted) {
+        resetConversation();
+        await listChats();
+        notice("Conversation deleted.");
+        return;
+      }
+      notice("Deletion requested. Waiting for running work to stop…");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } while (Date.now() < deadline);
+    notice(
+      "Deletion is still settling. Click Delete permanently to retry cleanup.",
+    );
+  } catch (error) {
+    report(error);
+  } finally {
+    busy = false;
+    controls();
+  }
+};
 $("new-chat").onclick = resetConversation;
 $("refresh-chats").onclick = () => {
   void listChats().catch(report);
@@ -681,6 +765,7 @@ $("conversation-picker").onchange = () => {
   const id = ($("conversation-picker") as HTMLSelectElement).value;
   resetConversation();
   conversationId = id || undefined;
+  controls();
   ($("conversation-picker") as HTMLSelectElement).value = id;
   void refreshHistory().catch(report);
 };
