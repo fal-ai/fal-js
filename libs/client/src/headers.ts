@@ -25,6 +25,16 @@ export const QUEUE_PRIORITY_HEADER = "x-fal-queue-priority";
 export const RUNNER_HINT_HEADER = "x-fal-runner-hint";
 
 /**
+ * Response header for the request id assigned by fal.
+ */
+export const REQUEST_ID_HEADER = "x-fal-request-id";
+
+/**
+ * Response header for billing units charged for the request.
+ */
+export const BILLABLE_UNITS_HEADER = "x-fal-billable-units";
+
+/**
  * Validates the timeout and returns the header value as a string.
  * Throws an error if the timeout is invalid.
  *

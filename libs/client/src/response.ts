@@ -1,14 +1,34 @@
 import { RequiredConfig } from "./config";
-import { REQUEST_TIMEOUT_TYPE_HEADER } from "./headers";
+import {
+  BILLABLE_UNITS_HEADER,
+  REQUEST_ID_HEADER,
+  REQUEST_TIMEOUT_TYPE_HEADER,
+} from "./headers";
 import { Result, ValidationErrorInfo } from "./types/common";
 
 export type ResponseHandler<Output> = (response: Response) => Promise<Output>;
 
-const REQUEST_ID_HEADER = "x-fal-request-id";
-
 export type ResponseHandlerCreator<Output> = (
   config: RequiredConfig,
 ) => ResponseHandler<Output>;
+
+/**
+ * Parses the `x-fal-billable-units` response header into a number.
+ * Returns `undefined` when the header is missing.
+ */
+export function parseBillableUnits(
+  headers: Headers | { get(name: string): string | null },
+): number | undefined {
+  const raw = headers.get(BILLABLE_UNITS_HEADER);
+  if (raw === null || raw === "") {
+    return undefined;
+  }
+  const value = Number(raw);
+  if (!Number.isFinite(value)) {
+    throw new Error(`Invalid ${BILLABLE_UNITS_HEADER} header: ${raw}`);
+  }
+  return value;
+}
 
 type ApiErrorArgs = {
   message: string;
@@ -16,6 +36,7 @@ type ApiErrorArgs = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
   requestId?: string;
+  billableUnits?: number;
   /**
    * The type of timeout that occurred. If "user", this was a user-specified
    * timeout via startTimeout and should NOT be retried.
@@ -27,13 +48,22 @@ export class ApiError<Body> extends Error {
   public readonly status: number;
   public readonly body: Body;
   public readonly requestId: string;
+  public readonly billableUnits?: number;
   public readonly timeoutType?: string;
-  constructor({ message, status, body, requestId, timeoutType }: ApiErrorArgs) {
+  constructor({
+    message,
+    status,
+    body,
+    requestId,
+    billableUnits,
+    timeoutType,
+  }: ApiErrorArgs) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.body = body;
     this.requestId = requestId || "";
+    this.billableUnits = billableUnits;
     this.timeoutType = timeoutType;
   }
 
@@ -84,6 +114,7 @@ export async function defaultResponseHandler<Output>(
   const { status, statusText } = response;
   const contentType = response.headers.get("Content-Type") ?? "";
   const requestId = response.headers.get(REQUEST_ID_HEADER) || undefined;
+  const billableUnits = parseBillableUnits(response.headers);
   const timeoutType =
     response.headers.get(REQUEST_TIMEOUT_TYPE_HEADER) || undefined;
   if (!response.ok) {
@@ -95,6 +126,7 @@ export async function defaultResponseHandler<Output>(
         status,
         body,
         requestId,
+        billableUnits,
         timeoutType,
       });
     }
@@ -102,6 +134,7 @@ export async function defaultResponseHandler<Output>(
       message: `HTTP ${status}: ${statusText}`,
       status,
       requestId,
+      billableUnits,
       timeoutType,
     });
   }
@@ -125,5 +158,6 @@ export async function resultResponseHandler<Output>(
   return {
     data,
     requestId: response.headers.get(REQUEST_ID_HEADER) || "",
+    billableUnits: parseBillableUnits(response.headers),
   } satisfies Result<Output>;
 }
