@@ -673,7 +673,9 @@
               <button data-preset="question" aria-pressed="false">
                 01 · Question & answer</button
               ><button data-preset="image" aria-pressed="true">
-                02 · Image & refinement
+                02 · Image & refinement</button
+              ><button data-preset="plan" aria-pressed="false">
+                03 · Plan & checkpoints
               </button>
             </div>
             <p id="test-description" class="hint" style="margin-bottom: 16px">
@@ -691,6 +693,34 @@ Generate exactly one square image of a cobalt blue ceramic mug on a pale stone t
               </p>
               <button class="primary" id="run">Run image test →</button>
             </div>
+          </section>
+          <section class="panel" aria-labelledby="plan-heading">
+            <div class="section-head">
+              <h2 id="plan-heading">Plan</h2>
+              <button id="load-plan">Load latest plan</button>
+            </div>
+            <p id="plan-status" class="hint">
+              Ask the agent for a plan, then load it here to edit or run.
+            </p>
+            <fieldset id="plan-editor" hidden>
+              <legend id="plan-title">Plan steps</legend>
+              <div id="plan-steps"></div>
+              <label for="new-plan-step">New step</label
+              ><input
+                id="new-plan-step"
+                maxlength="500"
+                placeholder="Describe the next step"
+              />
+              <button id="add-plan-step">Add step</button>
+              <div class="composer-footer">
+                <button id="save-plan">Save edits</button
+                ><button id="run-plan" class="primary">Run saved plan</button>
+              </div>
+              <p class="hint">
+                Running executes the saved steps. Media steps incur normal
+                charges. Checkpoints pause before their step.
+              </p>
+            </fieldset>
           </section>
           <div id="notice" role="status" hidden></div>
           <section class="panel" aria-labelledby="result-heading">

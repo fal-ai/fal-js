@@ -5,6 +5,9 @@ import {
   type AgentArtifact,
   type AgentConversationItem,
   type AgentInputRequest,
+  type AgentPlanBlock,
+  type AgentPlanChange,
+  type AgentPlanStep,
   type AgentResponseView,
 } from "../../src/index";
 
@@ -18,6 +21,13 @@ const button = (id: string) => $(id) as HTMLButtonElement;
 const terminal = (response: AgentResponseView) =>
   ["completed", "failed", "cancelled", "incomplete"].includes(response.status);
 const presets = {
+  plan: {
+    prompt:
+      "Use render_plan to create a one-step text-only plan: write a one-sentence concept for a blue mug. Put an approval checkpoint before the step. Do not execute the plan yet. Do not generate media or ask questions.",
+    description:
+      "Create a plan, edit its step, then run and approve its checkpoint. This test requests text only.",
+    label: "Create plan →",
+  },
   image: {
     prompt:
       "Generate exactly one square image of a cobalt blue ceramic mug on a pale stone table beside a window, a small orange on the right, cool morning light. Editorial product photography, no text. Use a low-cost image model at standard resolution. Proceed without clarification.",
@@ -55,6 +65,20 @@ let navigation = 0;
 let refreshing = false;
 let historyConnected = true;
 let deletionKey: string | undefined;
+let editingPlan: AgentPlanBlock | undefined;
+let planSteps: AgentPlanStep[] = [];
+let planDirty = false;
+let planRunKey: string | undefined;
+let planEditAttempt:
+  | {
+      input: {
+        conversation: string;
+        expected_revision: number;
+        changes: AgentPlanChange[];
+      };
+      key: string;
+    }
+  | undefined;
 
 type Entry = { time: string; message: string; responseId?: string };
 let events: Entry[] = [];
@@ -128,6 +152,13 @@ function renderTimeline() {
   );
 }
 function controls() {
+  ($("plan-editor") as HTMLFieldSetElement).disabled = busy;
+  button("load-plan").disabled = busy || !conversationId;
+  button("run-plan").disabled = busy || !editingPlan || planDirty;
+  button("run-plan").textContent = planRunKey
+    ? "Reconnect to plan run"
+    : "Run saved plan";
+  button("save-plan").disabled = busy || !editingPlan || !planDirty;
   const active = !!current && !terminal(current);
   button("run").disabled = busy || active;
   button("run").textContent = busy
@@ -155,6 +186,7 @@ function controls() {
 }
 function show(response: AgentResponseView) {
   if (current && current.fal.conversation_id !== response.fal.conversation_id) {
+    resetPlan();
     navigation++;
     history = [];
     gallery.clear();
@@ -469,7 +501,12 @@ for (const preset of document.querySelectorAll<HTMLButtonElement>(
   "[data-preset]",
 ))
   preset.onclick = () => {
-    test = preset.dataset.preset === "question" ? "question" : "image";
+    test =
+      preset.dataset.preset === "plan"
+        ? "plan"
+        : preset.dataset.preset === "question"
+          ? "question"
+          : "image";
     ($("prompt") as HTMLTextAreaElement).value = presets[test].prompt;
     $("test-description").textContent = presets[test].description;
     document
@@ -667,7 +704,18 @@ async function refreshHistory() {
     refreshing = false;
   }
 }
+function resetPlan() {
+  editingPlan = undefined;
+  planSteps = [];
+  planDirty = false;
+  planRunKey = undefined;
+  planEditAttempt = undefined;
+  $("plan-editor").hidden = true;
+  $("plan-status").textContent =
+    "Ask the agent for a plan, then load it here to edit or run.";
+}
 function resetConversation() {
+  resetPlan();
   navigation++;
   historyConnected = true;
   deletionKey = undefined;
@@ -852,3 +900,205 @@ renderTimeline();
 controls();
 // Read-only recovery makes an existing result visible immediately after reload.
 if (savedResponse()) void reconnect(savedResponse());
+
+function renderPlanEditor() {
+  $("plan-editor").hidden = !editingPlan;
+  $("plan-title").textContent = editingPlan?.data.title ?? "Plan steps";
+  $("plan-status").textContent = editingPlan
+    ? `Revision ${editingPlan.revision}${planDirty ? " · unsaved edits" : " · saved"}`
+    : "No plan loaded.";
+  $("plan-steps").replaceChildren(
+    ...planSteps.map((step, index) => {
+      const row = document.createElement("div");
+      row.className = "operation";
+      const label = document.createElement("input");
+      label.value = step.label;
+      label.maxLength = 500;
+      label.setAttribute("aria-label", `Step ${index + 1} label`);
+      label.oninput = () => {
+        step.label = label.value;
+        dirtyPlan();
+      };
+      const model = document.createElement("input");
+      model.value = step.endpoint_id ?? "";
+      model.placeholder = "Optional model endpoint";
+      model.setAttribute("aria-label", `Step ${index + 1} model`);
+      model.oninput = () => {
+        step.endpoint_id = model.value;
+        step.model_pinned = !!model.value;
+        dirtyPlan();
+      };
+      const checkpointLabel = document.createElement("label");
+      const checkpoint = document.createElement("input");
+      checkpoint.type = "checkbox";
+      checkpoint.checked = step.requires_approval === true;
+      checkpoint.onchange = () => {
+        step.requires_approval = checkpoint.checked;
+        dirtyPlan();
+      };
+      checkpointLabel.append(checkpoint, " Approve before this step");
+      row.append(label, model, checkpointLabel);
+      for (const [text, offset] of [
+        ["Move up", -1],
+        ["Move down", 1],
+        ["Remove", 0],
+      ] as const) {
+        const action = document.createElement("button");
+        action.textContent = text;
+        action.setAttribute("aria-label", `${text} step ${index + 1}`);
+        action.disabled = offset
+          ? index + offset < 0 || index + offset >= planSteps.length
+          : planSteps.length === 1;
+        action.onclick = () => {
+          if (!offset) planSteps.splice(index, 1);
+          else
+            [planSteps[index], planSteps[index + offset]] = [
+              planSteps[index + offset],
+              planSteps[index],
+            ];
+          dirtyPlan();
+          renderPlanEditor();
+        };
+        row.append(action);
+      }
+      return row;
+    }),
+  );
+  controls();
+}
+function dirtyPlan() {
+  planDirty = true;
+  planRunKey = undefined;
+  planEditAttempt = undefined;
+  $("plan-status").textContent =
+    `Revision ${editingPlan?.revision} · unsaved edits`;
+  controls();
+}
+$("load-plan").onclick = async () => {
+  if (!conversationId || busy) return;
+  busy = true;
+  controls();
+  notice();
+  try {
+    await refreshHistory();
+    const outputs = history.flatMap((e) =>
+      e.type === "output" ? [e.item] : [],
+    );
+    if (current && !history.some((e) => e.response_id === current.id))
+      outputs.push(...current.output);
+    const blocks = outputs.flatMap((item) =>
+      item.type === "message"
+        ? item.content.filter(
+            (p) => p.type === "fal.block" && p.kind === "plan",
+          )
+        : [],
+    );
+    const candidate = blocks.at(-1);
+    if (!candidate || candidate.type !== "fal.block")
+      throw new Error("No plan in this conversation yet.");
+    editingPlan = await client.agent.plans.retrieve(candidate.id, {
+      conversation: conversationId,
+    });
+    planSteps = editingPlan.data.steps.map((s) => ({ ...s }));
+    planDirty = false;
+    planRunKey = undefined;
+    planEditAttempt = undefined;
+    renderPlanEditor();
+  } catch (error) {
+    report(error);
+  } finally {
+    busy = false;
+    controls();
+  }
+};
+$("add-plan-step").onclick = () => {
+  const label = input("new-plan-step").value.trim();
+  if (!label || !editingPlan) return;
+  // New steps are saved immediately so the server supplies their stable IDs.
+  void savePlan([{ type: "add_step", step: { label } }]);
+};
+async function savePlan(explicit?: AgentPlanChange[]) {
+  if (!editingPlan || !conversationId || busy) return;
+  if (explicit && planDirty) {
+    notice("Save your current edits before adding a step.");
+    return;
+  }
+  const changes: AgentPlanChange[] = explicit ?? [];
+  if (!explicit) {
+    const before = editingPlan.data.steps;
+    for (const step of before)
+      if (!planSteps.some((s) => s.id === step.id))
+        changes.push({ type: "remove_step", step_id: step.id });
+    changes.push({
+      type: "reorder_steps",
+      step_ids: planSteps.map((s) => s.id),
+    });
+    for (const step of planSteps) {
+      const old = before.find((s) => s.id === step.id)!;
+      if (old.label !== step.label)
+        changes.push({
+          type: "rename_step",
+          step_id: step.id,
+          label: step.label,
+        });
+      if (old.requires_approval !== step.requires_approval)
+        changes.push({
+          type: "set_checkpoint",
+          step_id: step.id,
+          requires_approval: step.requires_approval === true,
+        });
+      if (old.endpoint_id !== step.endpoint_id) {
+        changes.push({
+          type: "pin_model",
+          step_id: step.id,
+          endpoint_id: step.endpoint_id || null,
+        });
+      }
+    }
+  }
+  const request = {
+    conversation: conversationId,
+    expected_revision: editingPlan.revision,
+    changes,
+  };
+  if (JSON.stringify(planEditAttempt?.input) !== JSON.stringify(request))
+    planEditAttempt = { input: request, key: crypto.randomUUID() };
+  busy = true;
+  controls();
+  notice();
+  try {
+    editingPlan = await client.agent.plans.update(
+      editingPlan.id,
+      planEditAttempt!.input,
+      { idempotencyKey: planEditAttempt!.key },
+    );
+    planSteps = editingPlan.data.steps.map((s) => ({ ...s }));
+    planDirty = false;
+    planEditAttempt = undefined;
+    planRunKey = undefined;
+    input("new-plan-step").value = "";
+    renderPlanEditor();
+    notice("Plan saved.");
+  } catch (error) {
+    report(error);
+  } finally {
+    busy = false;
+    controls();
+  }
+}
+$("save-plan").onclick = () => void savePlan();
+$("run-plan").onclick = () => {
+  if (!editingPlan || !conversationId || planDirty || busy) return;
+  const plan = editingPlan;
+  const conversation = conversationId;
+  planRunKey ??= crypto.randomUUID();
+  return mutate(
+    () =>
+      client.agent.plans.run(
+        plan.id,
+        { conversation, expected_revision: plan.revision },
+        { idempotencyKey: planRunKey },
+      ),
+    "Plan queued",
+  );
+};
