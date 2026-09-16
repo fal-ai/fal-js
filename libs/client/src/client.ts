@@ -1,3 +1,4 @@
+import { createAgentClient, type AgentClient } from "./agent/client";
 import { Config, createConfig } from "./config";
 import { buildTimeoutHeaders } from "./headers";
 import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
@@ -20,6 +21,8 @@ import { Result, RunOptions } from "./types/common";
  * @see createFalClient
  */
 export interface FalClient {
+  /** Experimental durable Agent client; configure agent.baseUrl to opt in. */
+  readonly agent: AgentClient;
   /**
    * The queue client to interact with the queue API.
    */
@@ -98,6 +101,7 @@ export function createFalClient(userConfig: Config = {}): FalClient {
   const streaming = createStreamingClient({ config, storage });
   const realtime = createRealtimeClient({ config, getClient: () => client });
   const client: FalClient = {
+    agent: createAgentClient(config),
     queue,
     realtime,
     storage,

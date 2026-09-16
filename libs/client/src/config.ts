@@ -1,3 +1,4 @@
+import type { AgentConfig } from "./agent/types";
 import {
   withMiddleware,
   withProxy,
@@ -40,6 +41,8 @@ export function resolveDefaultFetch(): FetchType {
 }
 
 export type Config = {
+  /** Experimental Agent API configuration. No production endpoint is assumed. */
+  agent?: AgentConfig;
   /**
    * The credentials to use for the fal client. When using the
    * client in the browser, it's recommended to use a proxy server to avoid

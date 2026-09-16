@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>fal Agent SDK Playground</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1c211e;
+        --muted: #606961;
+        --line: #dfe4dc;
+        --green: #d8ef87;
+        --surface: #fff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f4f6f2;
+        color: var(--ink);
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button,
+      a,
+      input,
+      textarea {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: white;
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-size: 14px;
+        font-weight: 550;
+      }
+      button:hover:not(:disabled) {
+        background: #edf1e8;
+        border-color: #a7b19f;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+      :focus-visible {
+        outline: 3px solid #769c30;
+        outline-offset: 3px;
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 3px;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: 20px;
+        letter-spacing: -0.7px;
+      }
+      h2 {
+        font-size: 17px;
+        letter-spacing: -0.3px;
+      }
+      h3 {
+        font-size: 15px;
+      }
+      .muted,
+      .hint {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 32px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .logo {
+        font-weight: 800;
+        font-size: 28px;
+        letter-spacing: -2px;
+      }
+      .divider {
+        width: 1px;
+        height: 25px;
+        background: var(--line);
+      }
+      .tag {
+        font-size: 12px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        background: #eef2e9;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 24px;
+        max-width: 1450px;
+        margin: 0 auto;
+        padding: 28px 32px;
+        align-items: start;
+      }
+      .workspace {
+        min-width: 0;
+        display: grid;
+        gap: 20px;
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 22px;
+        min-width: 0;
+      }
+      .section-head,
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .section-head {
+        margin-bottom: 16px;
+      }
+      .eyebrow {
+        font:
+          12px ui-monospace,
+          monospace;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .primary {
+        background: var(--green);
+        border-color: var(--green);
+      }
+      .primary:hover:not(:disabled) {
+        background: #cbe471;
+      }
+      .dark {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: white;
+      }
+      .dark:hover:not(:disabled) {
+        background: #354031;
+      }
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfcfa;
+        color: var(--ink);
+      }
+      textarea {
+        resize: vertical;
+        min-height: 115px;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 550;
+        margin-bottom: 8px;
+      }
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .presets button {
+        font-size: 14px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        flex: 1;
+      }
+      .presets button[aria-pressed="true"] {
+        background: #eaf3d4;
+        border-color: #9ab563;
+      }
+      .composer-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-top: 12px;
+      }
+      .status-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .badge {
+        font-size: 13px;
+        font-weight: 650;
+        padding: 4px 9px;
+        background: #edf1e8;
+        border-radius: 20px;
+      }
+      .badge[data-status="completed"] {
+        background: #e6f4c5;
+        color: #365018;
+      }
+      .badge[data-status="failed"] {
+        background: #fee6e2;
+        color: #a02821;
+      }
+      .badge[data-status="in_progress"],
+      .badge[data-status="queued"] {
+        background: #fff1cd;
+        color: #805500;
+      }
+      #messages {
+        white-space: pre-wrap;
+        margin-top: 14px;
+      }
+      #messages:empty,
+      #operations:empty,
+      #answer:empty {
+        display: none;
+      }
+      #operations {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .operation {
+        font-size: 14px;
+        background: #f5f7f2;
+        border-radius: 6px;
+        padding: 10px;
+        overflow-wrap: anywhere;
+      }
+      #notice {
+        padding: 12px 16px;
+        background: #fff1cd;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      #notice[hidden] {
+        display: none;
+      }
+      .empty {
+        min-height: 235px;
+        display: grid;
+        place-content: center;
+        text-align: center;
+        gap: 8px;
+        padding: 25px;
+        border: 1px dashed #cbd3c3;
+        border-radius: 9px;
+        color: var(--muted);
+      }
+      .empty strong {
+        color: var(--ink);
+        font-weight: 550;
+      }
+      .empty button {
+        margin: 8px auto 0;
+      }
+      #artifacts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+        gap: 16px;
+      }
+      .artifact {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #f7f8f5;
+      }
+      .artifact.selected {
+        border-color: #7a983c;
+        box-shadow: 0 0 0 2px #d8ef87;
+      }
+      .artifact img,
+      .artifact video {
+        display: block;
+        width: 100%;
+        height: 330px;
+        object-fit: contain;
+        background: #eff1eb;
+      }
+      .artifact audio {
+        width: 100%;
+      }
+      .artifact-body {
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+      }
+      .artifact-meta {
+        font-size: 12px;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+      .artifact-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .artifact-actions a {
+        font-size: 13px;
+      }
+      #refine-section {
+        border-top: 1px solid var(--line);
+        margin-top: 22px;
+        padding-top: 20px;
+      }
+      #refine-section[hidden] {
+        display: none;
+      }
+      #refinement {
+        min-height: 85px;
+        margin-top: 10px;
+      }
+      #answer form {
+        margin-top: 16px;
+        border: 1px solid #c8df91;
+        border-radius: 8px;
+        background: #f8fced;
+        padding: 16px;
+      }
+      fieldset {
+        margin: 12px 0;
+        border: 0;
+        padding: 0;
+      }
+      legend {
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      fieldset label {
+        font-weight: 400;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      fieldset input[type="text"] {
+        margin-top: 8px;
+      }
+      .inspector {
+        position: sticky;
+        top: 20px;
+        padding: 0;
+        overflow: hidden;
+      }
+      .inspector-section {
+        padding: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      .segmented {
+        display: flex;
+        padding: 3px;
+        border-radius: 8px;
+        background: #edf0e9;
+        margin: 12px 0 8px;
+      }
+      .segmented label {
+        flex: 1;
+        margin: 0;
+        position: relative;
+      }
+      .segmented input {
+        position: absolute;
+        opacity: 0;
+      }
+      .segmented span {
+        display: block;
+        text-align: center;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .segmented input:checked + span {
+        background: white;
+        box-shadow: 0 1px 3px #00000015;
+      }
+      .segmented input:focus-visible + span {
+        outline: 3px solid #769c30;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .controls button {
+        flex: 1;
+        padding: 8px;
+      }
+      #cancel {
+        color: #9d362a;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        padding: 12px 14px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .tabs button {
+        border: 0;
+        border-radius: 0;
+        background: none;
+        padding: 9px 10px 12px;
+        color: var(--muted);
+        border-bottom: 2px solid transparent;
+      }
+      .tabs button[aria-selected="true"] {
+        color: var(--ink);
+        border-bottom-color: #698b2b;
+      }
+      .inspector-body {
+        padding: 18px 20px;
+      }
+      .tab-panel[hidden] {
+        display: none;
+      }
+      #timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 360px;
+        overflow: auto;
+      }
+      #timeline li {
+        position: relative;
+        padding: 0 0 16px 19px;
+        margin-left: 4px;
+        border-left: 1px solid #d5ddcc;
+      }
+      #timeline li::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #799a38;
+        position: absolute;
+        left: -4px;
+        top: 6px;
+      }
+      #timeline time {
+        font:
+          12px ui-monospace,
+          monospace;
+        color: var(--muted);
+      }
+      #timeline p {
+        font-size: 14px;
+        overflow-wrap: anywhere;
+        margin-top: 3px;
+      }
+      #output {
+        max-height: 440px;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font:
+          12px/1.6 ui-monospace,
+          monospace;
+        margin: 0;
+      }
+      dl {
+        margin: 0;
+        display: grid;
+        gap: 12px;
+      }
+      dt {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      dd {
+        font:
+          13px/1.6 ui-monospace,
+          monospace;
+        margin: 3px 0 0;
+        overflow-wrap: anywhere;
+      }
+      .restore {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .restore input {
+        min-width: 0;
+        font:
+          12px ui-monospace,
+          monospace;
+      }
+      .restore button {
+        flex-shrink: 0;
+      }
+      .connection {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .footer {
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+        padding: 8px 24px 24px;
+      }
+      @media (max-width: 1050px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr) 330px;
+          padding: 20px;
+          gap: 16px;
+        }
+        .panel {
+          padding: 18px;
+        }
+        .inspector {
+          padding: 0;
+        }
+      }
+      @media (max-width: 760px) {
+        .layout {
+          grid-template-columns: 1fr;
+          padding: 14px;
+        }
+        .header {
+          padding: 16px;
+        }
+        .header .tag {
+          display: none;
+        }
+        .inspector {
+          position: static;
+        }
+        .composer-footer {
+          align-items: flex-start;
+        }
+        .artifact img {
+          height: 300px;
+        }
+      }
+      .playground-tabs {
+        display: flex;
+        gap: 8px;
+        padding: 12px 32px;
+        border-bottom: 1px solid var(--line);
+        background: white;
+      }
+      .playground-tabs [aria-selected="true"] {
+        background: var(--green);
+        border-color: #b7ce80;
+      }
+      [role="tabpanel"][hidden] {
+        display: none !important;
+      }
+      @media (max-width: 760px) {
+        .playground-tabs {
+          padding: 12px 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <span class="logo">fal</span><span class="divider"></span>
+        <h1>Agent SDK Playground</h1>
+        <span class="tag">Local runtime</span>
+      </div>
+      <a class="hint" href="/agent" target="_blank" rel="noopener"
+        >Open Agent ↗</a
+      >
+    </header>
+    <nav
+      class="playground-tabs"
+      role="tablist"
+      aria-label="Playground sections"
+    >
+      <button
+        id="playground-tab-api"
+        role="tab"
+        aria-selected="true"
+        aria-controls="playground-panel-api"
+      >
+        API tests
+      </button>
+      <button
+        id="playground-tab-agent"
+        role="tab"
+        aria-selected="false"
+        aria-controls="playground-panel-agent"
+        tabindex="-1"
+      >
+        Agent experience
+      </button>
+    </nav>
+    <section
+      id="playground-panel-api"
+      role="tabpanel"
+      aria-labelledby="playground-tab-api"
+    >
+      <main class="layout">
+        <div class="workspace">
+          <section class="panel" aria-labelledby="create-heading">
+            <div class="section-head">
+              <h2 id="create-heading">Choose a test</h2>
+              <span class="eyebrow">01 / Prompt</span>
+            </div>
+            <div class="presets" aria-label="Choose a test">
+              <button data-preset="question" aria-pressed="false">
+                01 · Question & answer</button
+              ><button data-preset="image" aria-pressed="true">
+                02 · Image & refinement
+              </button>
+            </div>
+            <p id="test-description" class="hint" style="margin-bottom: 16px">
+              Generate one image, preview the result, then refine it by artifact
+              ID.
+            </p>
+            <label class="hint" for="prompt">Describe your task</label>
+            <textarea id="prompt">
+Generate exactly one square image of a cobalt blue ceramic mug on a pale stone table beside a window, a small orange on the right, cool morning light. Editorial product photography, no text. Use a low-cost image model at standard resolution. Proceed without clarification.</textarea
+            >
+            <div class="composer-footer">
+              <p class="hint">
+                Uses your signed-in fal session.<br />New generations incur
+                normal charges.
+              </p>
+              <button class="primary" id="run">Run image test →</button>
+            </div>
+          </section>
+          <div id="notice" role="status" hidden></div>
+          <section class="panel" aria-labelledby="result-heading">
+            <div class="section-head">
+              <h2 id="result-heading">Result</h2>
+              <span id="artifact-count" class="hint">No artifacts yet</span>
+            </div>
+            <div class="status-bar" aria-live="polite">
+              <span class="badge" id="status" data-status="ready">Ready</span
+              ><span class="hint" id="phase"
+                >Run a prompt or reconnect to a saved result.</span
+              >
+            </div>
+            <div id="messages"></div>
+            <div id="operations"></div>
+            <div id="answer"></div>
+            <div style="height: 18px"></div>
+            <div id="empty" class="empty">
+              <strong>Your images will appear here.</strong>
+              <p class="hint">
+                Run the image prompt above, or load your last result.
+              </p>
+              <button id="load-saved">Load last result</button>
+            </div>
+            <div id="artifacts"></div>
+            <section
+              id="refine-section"
+              hidden
+              aria-labelledby="refine-heading"
+            >
+              <div class="section-head">
+                <h3 id="refine-heading">Refine the selected image</h3>
+                <span id="selected-label" class="hint"></span>
+              </div>
+              <label for="refinement" class="hint">What should change?</label
+              ><textarea id="refinement">
+Make this image warmer, with golden afternoon lighting. Preserve the subject and composition. Generate exactly one edited image.</textarea
+              >
+              <div class="composer-footer">
+                <p class="hint">
+                  Uses the selected artifact directly. No re-upload.
+                </p>
+                <button class="dark" id="refine">Refine image →</button>
+              </div>
+            </section>
+          </section>
+        </div>
+        <aside class="panel inspector" aria-label="Response inspector">
+          <div class="inspector-section">
+            <div class="section-head">
+              <h2>Inspector</h2>
+              <span class="eyebrow">Live</span>
+            </div>
+            <fieldset style="margin: 0">
+              <legend class="hint">Receive updates</legend>
+              <div class="segmented">
+                <label
+                  ><input
+                    type="radio"
+                    name="mode"
+                    value="stream"
+                    checked
+                  /><span>Streaming</span></label
+                >
+                <label
+                  ><input type="radio" name="mode" value="poll" /><span
+                    >Polling</span
+                  ></label
+                >
+              </div>
+            </fieldset>
+            <p class="hint" id="mode-help">
+              Live snapshots over a persistent connection.
+            </p>
+            <p class="connection" id="connection" aria-live="polite">
+              Not connected
+            </p>
+            <div class="controls">
+              <button id="disconnect" disabled>Disconnect</button
+              ><button id="cancel" disabled>Cancel execution</button>
+            </div>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Inspect response">
+            <button
+              id="tab-json"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panel-json"
+              tabindex="0"
+            >
+              JSON response
+            </button>
+            <button
+              id="tab-lifecycle"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-lifecycle"
+              tabindex="-1"
+            >
+              Lifecycle
+            </button>
+          </div>
+          <div class="inspector-body">
+            <section
+              id="panel-json"
+              class="tab-panel"
+              role="tabpanel"
+              aria-labelledby="tab-json"
+              tabindex="0"
+            >
+              <p class="hint" style="margin-bottom: 12px">
+                The latest response object returned by the Agent API.
+              </p>
+              <pre id="output">No response yet.</pre>
+            </section>
+            <section
+              id="panel-lifecycle"
+              class="tab-panel"
+              role="tabpanel"
+              aria-labelledby="tab-lifecycle"
+              tabindex="0"
+              hidden
+            >
+              <p class="hint" id="timeline-empty">
+                Run a task to see its lifecycle here.
+              </p>
+              <ol id="timeline" aria-label="Observed lifecycle"></ol>
+            </section>
+          </div>
+          <div
+            class="inspector-section"
+            style="border-top: 1px solid var(--line); border-bottom: 0"
+          >
+            <label for="response-id">Reconnect to a response</label>
+            <p class="hint">
+              Loads existing work without starting a new generation.
+            </p>
+            <div class="restore">
+              <input
+                type="text"
+                id="response-id"
+                placeholder="resp_…"
+                spellcheck="false"
+              /><button id="resume">Load</button>
+            </div>
+          </div>
+        </aside>
+      </main>
+      <footer class="footer">
+        Experimental SDK · Disconnect stops updates. Cancel requests that
+        execution stops.
+      </footer>
+    </section>
+    <section
+      id="playground-panel-agent"
+      role="tabpanel"
+      aria-labelledby="playground-tab-agent"
+      hidden
+    >
+      <div id="agent-workspace-host"></div>
+    </section>
+    <!-- AGENT_WORKSPACE_TEMPLATE -->
+    <script type="module" src="./session-demo.js"></script>
+    <script type="module" src="./playground-tabs.js"></script>
+  </body>
+</html>

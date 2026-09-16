@@ -21,6 +21,15 @@ fal.config({
 
 **Note:** Ensure you've reviewed the [fal.ai getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
 
+## Experimental Agent SDK
+
+The new `fal.agent` namespace supports durable response handles, questions and
+approvals, typed artifacts, streaming/recovery, and conversation history against
+the draft Agent protocol. It requires an explicitly configured compatible backend;
+this release does not assume a deployed production Agent endpoint.
+
+See the [Agent SDK guide and local reference example](src/agent/README.md).
+
 ## Running functions with `fal.run`
 
 The `fal.run` method is the simplest way to execute a function. It returns a promise that resolves to the function's result:
