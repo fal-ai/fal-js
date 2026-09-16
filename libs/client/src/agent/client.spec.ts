@@ -540,10 +540,28 @@ describe("experimental Agent client", () => {
       "https://agent.example/v1/conversations/conv%2F1/items?cursor=a%2Bb%26c&limit=10",
     );
     await agent.plans.update("plan_1", {
+      conversation: "conv_1",
       expected_revision: 2,
       changes: [{ type: "rename_step", step_id: "s1", label: "Hero" }],
     });
-    expect(JSON.parse(fetch.mock.calls[1][1].body).expected_revision).toBe(2);
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({
+      conversation: "conv_1",
+      expected_revision: 2,
+    });
+    await agent.plans.retrieve("plan/1", { conversation: "conv/1" });
+    expect(fetch.mock.calls[2][0]).toBe(
+      "https://agent.example/v1/agent/plans/plan%2F1?conversation=conv%2F1",
+    );
+    fetch.mockResolvedValueOnce(json(response()));
+    await agent.plans.run(
+      "plan_1",
+      { conversation: "conv_1", expected_revision: 3 },
+      { idempotencyKey: "run-once" },
+    );
+    expect(fetch.mock.calls[3][0]).toBe(
+      "https://agent.example/v1/agent/plans/plan_1/run",
+    );
+    expect(fetch.mock.calls[3][1].headers["Idempotency-Key"]).toBe("run-once");
   });
 });
 

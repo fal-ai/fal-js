@@ -85,9 +85,22 @@ export interface AgentClient {
     };
   };
   readonly plans: {
+    retrieve(
+      id: string,
+      options: AgentRequestOptions & { conversation: string },
+    ): Promise<AgentPlanBlock>;
+    run(
+      id: string,
+      input: { conversation: string; expected_revision: number },
+      options?: AgentRequestOptions,
+    ): Promise<AgentResponseView>;
     update(
       id: string,
-      change: { expected_revision: number; changes: AgentPlanChange[] },
+      change: {
+        conversation: string;
+        expected_revision: number;
+        changes: AgentPlanChange[];
+      },
       options?: AgentRequestOptions,
     ): Promise<AgentPlanBlock>;
   };
@@ -415,6 +428,20 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
       },
     },
     plans: {
+      retrieve: (id, options) =>
+        read(
+          `/agent/plans/${segment(id)}?conversation=${encodeURIComponent(options.conversation)}`,
+          options,
+        ),
+      run: async (id, input, options) =>
+        agentResponseView(
+          await mutate<AgentResponse>(
+            "POST",
+            `/agent/plans/${segment(id)}/run`,
+            input,
+            options,
+          ),
+        ),
       update: (id, change, options) =>
         mutate("PATCH", `/agent/plans/${segment(id)}`, change, options),
     },

@@ -261,7 +261,7 @@ export type AgentPlanChange =
       step: Omit<AgentPlanStep, "id">;
     }
   | { type: "set_checkpoint"; step_id: string; requires_approval: boolean }
-  | { type: "pin_model"; step_id: string; endpoint_id: string };
+  | { type: "pin_model"; step_id: string; endpoint_id: string | null };
 
 export type AgentOperationChange =
   | { type: "rename"; label: string }
