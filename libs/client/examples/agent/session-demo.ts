@@ -1,7 +1,9 @@
 import { secureFetch } from "@fal-sdk-demo/session-fetch";
 import {
+  AgentRequestError,
   createFalClient,
   type AgentArtifact,
+  type AgentConversationItem,
   type AgentInputRequest,
   type AgentResponseView,
 } from "../../src/index";
@@ -46,6 +48,13 @@ type SavedArtifact = {
 };
 const gallery = new Map<string, SavedArtifact>();
 let selected: string | undefined;
+let conversationId: string | undefined;
+let conversationCursor: string | null = null;
+let history: AgentConversationItem[] = [];
+let navigation = 0;
+let refreshing = false;
+let historyConnected = true;
+
 type Entry = { time: string; message: string; responseId?: string };
 let events: Entry[] = [];
 try {
@@ -120,7 +129,14 @@ function renderTimeline() {
 function controls() {
   const active = !!current && !terminal(current);
   button("run").disabled = busy || active;
-  button("run").textContent = busy ? "Working…" : presets[test].label;
+  button("run").textContent = busy
+    ? "Working…"
+    : conversationId
+      ? "Send follow-up →"
+      : presets[test].label;
+  button("new-chat").disabled = busy;
+  ($("conversation-picker") as HTMLSelectElement).disabled = busy;
+  ($("response-picker") as HTMLSelectElement).disabled = busy;
   button("refine").disabled = busy || active || !selected;
   button("cancel").disabled = busy || !active;
   button("disconnect").disabled = !watching;
@@ -129,11 +145,15 @@ function controls() {
 }
 function show(response: AgentResponseView) {
   if (current && current.fal.conversation_id !== response.fal.conversation_id) {
+    navigation++;
+    history = [];
     gallery.clear();
     selected = undefined;
     lastGallery = "";
   }
   current = response;
+  conversationId = response.fal.conversation_id;
+  renderHistory();
   persist("fal-sdk-response", response.id);
   input("response-id").value = response.id;
   $("status").textContent = response.status.replaceAll("_", " ");
@@ -459,7 +479,11 @@ $("run").onclick = () => {
     return;
   }
   return mutate(
-    () => client.agent.responses.create({ input: prompt }),
+    () =>
+      client.agent.responses.create({
+        input: prompt,
+        ...(conversationId ? { conversation: conversationId } : {}),
+      }),
     "New test accepted",
   );
 };
@@ -491,7 +515,185 @@ $("refine").onclick = () => {
     "Refinement accepted",
   );
 };
+function renderHistory() {
+  $("history").replaceChildren(
+    ...history.flatMap((entry) => {
+      let text = "";
+      if (entry.type === "input")
+        text =
+          "You: " +
+          (typeof entry.input === "string"
+            ? entry.input
+            : entry.input
+                .flatMap((m) =>
+                  m.content.map((p) =>
+                    p.type === "input_text"
+                      ? p.text
+                      : p.type === "input_file"
+                        ? `[File: ${p.file_url}]`
+                        : p.type === "input_image"
+                          ? `[Image: ${p.image_url}]`
+                          : `[Artifact: ${p.artifact_id}]`,
+                  ),
+                )
+                .join("\n"));
+      else if (entry.type === "answer")
+        text = "Answer: " + JSON.stringify(entry.answer);
+      else if (entry.response_id !== current?.id) {
+        if (entry.item.type === "message")
+          text =
+            "Agent: " +
+            entry.item.content
+              .map((p) => (p.type === "output_text" ? p.text : p.fallback_text))
+              .join("\n");
+        else if (entry.item.type === "fal.input_request")
+          text = `${entry.item.prompt} (${entry.item.status})`;
+        else if (entry.item.type === "fal.operation")
+          text = `${entry.item.name}: ${entry.item.status}`;
+        else text = `Artifact: ${entry.item.id}`;
+      }
+      if (!text) return [];
+      const li = document.createElement("li");
+      li.textContent = text;
+      return [li];
+    }),
+  );
+}
+async function listChats(more = false) {
+  const picker = $("conversation-picker") as HTMLSelectElement;
+  const page = await client.agent.conversations.list({
+    ...(more && conversationCursor ? { cursor: conversationCursor } : {}),
+    limit: 20,
+  });
+  if (!more) picker.replaceChildren(new Option("Choose a conversation", ""));
+  for (const chat of page.data)
+    picker.add(new Option(chat.title || chat.id, chat.id));
+  if (conversationId) picker.value = conversationId;
+  conversationCursor = page.next_cursor;
+  $("more-chats").hidden = !conversationCursor;
+  $("history-status").textContent =
+    page.data.length || more
+      ? "Choose a conversation to restore its history."
+      : "No conversations yet.";
+}
+async function refreshHistory() {
+  const id = conversationId;
+  const version = navigation;
+  if (!id || refreshing) return;
+  refreshing = true;
+  try {
+    let entries: AgentConversationItem[] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      entries = [];
+      try {
+        let cursor: string | undefined;
+        do {
+          const page = await client.agent.conversations.items.list(id, {
+            limit: 100,
+            ...(cursor ? { cursor } : {}),
+          });
+          entries.push(...page.data);
+          cursor = page.next_cursor ?? undefined;
+        } while (cursor && version === navigation);
+        break;
+      } catch (error) {
+        if (
+          !(error instanceof AgentRequestError && error.status === 409) ||
+          attempt === 2
+        )
+          throw error;
+      }
+    }
+    const metadata = await client.agent.conversations.retrieve(id);
+    if (version !== navigation || conversationId !== id) return;
+    history = entries;
+    const ids = [
+      ...new Set([
+        ...entries.flatMap((e) => (e.response_id ? [e.response_id] : [])),
+        ...metadata.active_response_ids,
+      ]),
+    ];
+    const picker = $("response-picker") as HTMLSelectElement;
+    picker.replaceChildren(
+      ...ids.map(
+        (r) =>
+          new Option(
+            `${metadata.active_response_ids.includes(r) ? "Active · " : ""}${r}`,
+            r,
+          ),
+      ),
+    );
+    for (const entry of entries)
+      if (entry.type === "output" && entry.item.type === "fal.artifact")
+        gallery.set(entry.item.id, {
+          artifact: entry.item,
+          conversation: id,
+          responseId: entry.response_id ?? "",
+        });
+    renderHistory();
+    renderGallery();
+    $("history-status").textContent =
+      `${entries.length} history items · ${metadata.active_response_ids.length} active responses`;
+    const target =
+      current?.fal.conversation_id === id
+        ? current.id
+        : (metadata.active_response_ids.at(-1) ?? ids.at(-1));
+    if (target) {
+      picker.value = target;
+      if (!current || current.id !== target) void observe(target).catch(report);
+    }
+  } finally {
+    refreshing = false;
+  }
+}
+function resetConversation() {
+  navigation++;
+  historyConnected = true;
+  observer?.abort();
+  watching = false;
+  current = undefined;
+  conversationId = undefined;
+  history = [];
+  gallery.clear();
+  selected = undefined;
+  lastGallery = "";
+  lastQuestions = "";
+  for (const id of ["messages", "operations", "answer", "output"])
+    $(id).replaceChildren();
+  $("status").textContent = "Ready";
+  $("phase").textContent = "Start a new conversation.";
+  input("response-id").value = "";
+  persist("fal-sdk-response", "");
+  ($("conversation-picker") as HTMLSelectElement).value = "";
+  ($("response-picker") as HTMLSelectElement).replaceChildren();
+  renderHistory();
+  renderGallery();
+  controls();
+  notice();
+}
+$("new-chat").onclick = resetConversation;
+$("refresh-chats").onclick = () => {
+  void listChats().catch(report);
+  void refreshHistory().catch(report);
+};
+$("more-chats").onclick = () => void listChats(true).catch(report);
+$("conversation-picker").onchange = () => {
+  const id = ($("conversation-picker") as HTMLSelectElement).value;
+  resetConversation();
+  conversationId = id || undefined;
+  ($("conversation-picker") as HTMLSelectElement).value = id;
+  void refreshHistory().catch(report);
+};
+$("response-picker").onchange = () =>
+  void reconnect(($("response-picker") as HTMLSelectElement).value);
+// Discover responses created by another client too; snapshot replacement prevents duplication.
+setInterval(() => {
+  if (!busy && historyConnected) void refreshHistory().catch(report);
+}, 5000);
+void listChats().catch(report);
+
 async function reconnect(id: string | null) {
+  historyConnected = true;
   if (!id) {
     notice("No saved response yet. Run either test to begin.");
     return;
@@ -507,6 +709,7 @@ $("resume").onclick = () =>
   reconnect(input("response-id").value.trim() || savedResponse());
 $("load-saved").onclick = () => reconnect(savedResponse());
 $("disconnect").onclick = () => {
+  historyConnected = false;
   observer?.abort();
   watching = false;
   $("connection").textContent = "Disconnected · server execution is unchanged";

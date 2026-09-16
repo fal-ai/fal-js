@@ -626,6 +626,30 @@
     >
       <main class="layout">
         <div class="workspace">
+          <section class="panel" aria-labelledby="conversations-heading">
+            <div class="section-head">
+              <h2 id="conversations-heading">Conversations</h2>
+              <button id="new-chat">New conversation</button>
+            </div>
+            <label for="conversation-picker">Open a conversation</label>
+            <select id="conversation-picker">
+              <option value="">Choose a conversation</option>
+            </select>
+            <button id="refresh-chats">Refresh</button
+            ><button id="more-chats" hidden>Load more</button>
+            <p id="history-status" class="hint" role="status">
+              Loading conversations…
+            </p>
+            <label for="response-picker">Response to inspect</label>
+            <select id="response-picker">
+              <option value="">No response selected</option>
+            </select>
+            <ol
+              id="history"
+              aria-label="Conversation history"
+              style="white-space: pre-wrap; overflow-wrap: anywhere"
+            ></ol>
+          </section>
           <section class="panel" aria-labelledby="create-heading">
             <div class="section-head">
               <h2 id="create-heading">Choose a test</h2>
