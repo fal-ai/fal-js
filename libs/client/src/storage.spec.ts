@@ -394,13 +394,20 @@ describe("single-shot upload", () => {
     expect(initiateUrl).not.toContain("initiate-multipart");
   });
 
-  it("uploads an empty file and reports a zero total", async () => {
-    // A consumer dividing loaded by total needs to know this case reports 0/0
-    // rather than throwing or reporting a sentinel size.
+  it("surfaces the server's rejection of an empty file", async () => {
+    // fal-cdn-v3 refuses a zero-length body with
+    // 411 "Content length appears to be zero - refusing to proceed",
+    // so the upload must reject rather than report a 0/0 success. Progress is
+    // only emitted after the response is accepted, so no event fires here.
     const file = new Blob([], { type: "application/octet-stream" });
     const fetchImpl = jest.fn(
       async () =>
-        new Response("{}", { headers: { "Content-Type": "application/json" } }),
+        new Response(
+          "Content length appears to be zero - refusing to proceed",
+          {
+            status: 411,
+          },
+        ),
     ) as unknown as typeof fetch;
 
     const events: UploadProgress[] = [];
@@ -408,13 +415,13 @@ describe("single-shot upload", () => {
       config: createConfig({ credentials: "test-key", fetch: fetchImpl }),
     });
 
-    await expect(
-      storage.upload(file, {
-        onUploadProgress: (progress) => events.push(progress),
-      }),
-    ).resolves.toBe(FILE_URL);
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
-    expect(events).toEqual([{ loaded: 0, total: 0 }]);
+    const error = await storage
+      .upload(file, { onUploadProgress: (progress) => events.push(progress) })
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(411);
+    expect(events).toEqual([]);
   });
 
   it("works without any options", async () => {
