@@ -23,9 +23,9 @@ const terminal = (response: AgentResponseView) =>
 const presets = {
   plan: {
     prompt:
-      "Use render_plan to create a one-step text-only plan: write a one-sentence concept for a blue mug. Put an approval checkpoint before the step. Do not execute the plan yet. Do not generate media or ask questions.",
+      "Use render_plan to create exactly two text-only steps. Step 1: write a single sentence concept for a cobalt blue mug, using no tools. Step 2: write a single sentence caption based on that concept, using no tools. Put an approval checkpoint before step 2 only. Do not execute the plan yet. Do not generate media or ask questions.",
     description:
-      "Create a plan, edit its step, then run and approve its checkpoint. This test requests text only.",
+      "Create a two-step text plan, edit it, then run the concept and approve the caption step. This test requests text only.",
     label: "Create plan →",
   },
   image: {
