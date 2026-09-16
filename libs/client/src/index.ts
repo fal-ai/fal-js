@@ -46,6 +46,10 @@ export {
   MULTIPART_THRESHOLD,
   MultipartUploadError,
   type MultipartOptions,
+  type StorageACL,
+  type StorageACLRule,
+  type StorageClient,
+  type StorageSettings,
   type UploadOptions,
   type UploadProgress,
 } from "./storage";
