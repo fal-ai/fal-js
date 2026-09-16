@@ -362,6 +362,61 @@ describe("single-shot upload", () => {
     expect(events).toEqual([{ loaded: file.size, total: file.size }]);
   });
 
+  it("takes the single-shot path at exactly the threshold", async () => {
+    // The comparison is `file.size > MULTIPART_THRESHOLD`, so a file of exactly
+    // the threshold must NOT be split into parts.
+    const file = new Blob([new Uint8Array(MULTIPART_THRESHOLD)], {
+      type: "application/octet-stream",
+    });
+    const fetchImpl = jest.fn(
+      async () =>
+        new Response("{}", { headers: { "Content-Type": "application/json" } }),
+    ) as unknown as typeof fetch;
+
+    const events: UploadProgress[] = [];
+    const storage = createStorageClient({
+      config: createConfig({ credentials: "test-key", fetch: fetchImpl }),
+    });
+
+    await expect(
+      storage.upload(file, {
+        onUploadProgress: (progress) => events.push(progress),
+      }),
+    ).resolves.toBe(FILE_URL);
+    // One PUT, and no part or complete requests.
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(events).toEqual([
+      { loaded: MULTIPART_THRESHOLD, total: MULTIPART_THRESHOLD },
+    ]);
+    const initiateUrl = (dispatchRequest as jest.Mock).mock.calls[0][0]
+      .targetUrl as string;
+    expect(initiateUrl).toContain("/storage/upload/initiate?");
+    expect(initiateUrl).not.toContain("initiate-multipart");
+  });
+
+  it("uploads an empty file and reports a zero total", async () => {
+    // A consumer dividing loaded by total needs to know this case reports 0/0
+    // rather than throwing or reporting a sentinel size.
+    const file = new Blob([], { type: "application/octet-stream" });
+    const fetchImpl = jest.fn(
+      async () =>
+        new Response("{}", { headers: { "Content-Type": "application/json" } }),
+    ) as unknown as typeof fetch;
+
+    const events: UploadProgress[] = [];
+    const storage = createStorageClient({
+      config: createConfig({ credentials: "test-key", fetch: fetchImpl }),
+    });
+
+    await expect(
+      storage.upload(file, {
+        onUploadProgress: (progress) => events.push(progress),
+      }),
+    ).resolves.toBe(FILE_URL);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(events).toEqual([{ loaded: 0, total: 0 }]);
+  });
+
   it("works without any options", async () => {
     const file = new Blob(["hello world"], { type: "text/plain" });
     const fetchImpl = jest.fn(
