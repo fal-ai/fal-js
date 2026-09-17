@@ -382,3 +382,56 @@ test("unknown blocks stay readable and handled operation failures preserve parti
     h.close();
   }
 });
+
+test("library cards restore real previews and identity without inventing generated artifacts", async () => {
+  const blocks = [
+    {
+      kind: "asset",
+      data: {
+        assetRecordId: "catalog-1",
+        url: "https://fal.media/reference.png",
+        type: "image",
+      },
+    },
+    {
+      kind: "collection",
+      data: {
+        collectionId: "collection-1",
+        assetCount: 2,
+        previewAssets: [{ url: "https://fal.media/clip.mp4", type: "video" }],
+      },
+    },
+    { kind: "media", data: { url: "javascript:alert(1)", type: "image" } },
+  ].map((block, i) => ({
+    ...block,
+    id: `library-${i}`,
+    type: "fal.block",
+    revision: 1,
+    fallback_text: "Library card",
+  }));
+  const h = await host({
+    saved: {
+      turns: [{ id: "r1", prompt: "Show my references", receipts: [] }],
+    },
+    retrieve: async () => response("r1", [{ ...message(""), content: blocks }]),
+  });
+  try {
+    const thread = h.document.getElementById("thread");
+    assert.equal(
+      thread.querySelector("img").src,
+      "https://fal.media/reference.png",
+    );
+    assert.equal(
+      thread.querySelector("video").src,
+      "https://fal.media/clip.mp4",
+    );
+    assert.match(thread.textContent, /catalog-1/);
+    assert.match(thread.textContent, /collection-1/);
+    assert.match(thread.textContent, /2 assets/);
+    assert.equal(thread.querySelectorAll("img").length, 1);
+    assert.equal(thread.querySelectorAll(".artifact").length, 0);
+    assert.equal(thread.querySelectorAll('a[href^="javascript:"]').length, 0);
+  } finally {
+    h.close();
+  }
+});

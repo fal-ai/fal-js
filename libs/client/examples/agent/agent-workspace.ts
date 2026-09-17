@@ -217,6 +217,50 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
         list,
         node("small", "Plan preview · editing is not connected yet."),
       );
+    } else if (
+      ["asset", "media", "collection"].includes(block.kind) &&
+      data &&
+      typeof data === "object" &&
+      !Array.isArray(data)
+    ) {
+      if (block.kind === "collection" && typeof data.assetCount === "number")
+        card.append(node("p", `${data.assetCount} assets`, "muted"));
+      if (typeof data.prompt === "string") card.append(node("p", data.prompt));
+      const previews =
+        block.kind === "collection"
+          ? typeof data.coverImageUrl === "string"
+            ? [{ url: data.coverImageUrl, type: "image" }]
+            : Array.isArray(data.previewAssets)
+              ? data.previewAssets.slice(0, 4)
+              : []
+          : [data];
+      for (const preview of previews) {
+        if (!preview || typeof preview !== "object" || Array.isArray(preview))
+          continue;
+        const url =
+          typeof preview.url === "string" ? safeUrl(preview.url) : undefined;
+        if (!url) continue;
+        if (preview.type === "image") {
+          const image = node("img");
+          image.src = url;
+          image.alt = block.fallback_text || "Library image";
+          image.loading = "lazy";
+          card.append(image);
+        } else if (preview.type === "video" || preview.type === "audio") {
+          const media = node(preview.type);
+          media.src = url;
+          media.controls = true;
+          card.append(media);
+        }
+        const link = node("a", "Open media ↗");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        card.append(link);
+      }
+      const id =
+        block.kind === "collection" ? data.collectionId : data.assetRecordId;
+      if (typeof id === "string") card.append(node("small", id));
     } else {
       const details = node("details");
       details.append(
