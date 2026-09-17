@@ -61,8 +61,9 @@ resolve the normal local app setup first.
 
 ## Small code examples
 
-See [SDK recipes](./recipes/README.md) for short TypeScript files you can inspect
-in an IDE, plus a local runner that uses synthetic responses and no paid calls.
+Start with [direct SDK examples](./simple/README.md) for short TypeScript scripts
+without wrapper functions or sign-in code. [Integration recipes](./recipes/README.md)
+cover the host application. Both include local runners with no paid calls.
 
 ## 3. Playground tabs
 

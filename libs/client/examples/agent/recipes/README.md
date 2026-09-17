@@ -1,8 +1,11 @@
 <!-- cspell:words idempotency -->
 
-# Agent SDK: small examples you can open in an IDE
+# Agent SDK: integration recipes
 
-Start with [01-run.ts](./01-run.ts). Each numbered file is a small exported
+For the simplest SDK calls without wrappers or sign-in setup, start with the
+[direct examples](../simple/README.md). This folder covers host integration.
+
+Each numbered file is a small exported
 function, with real SDK types, comments and no playground UI code.
 
 | File                                           | What to inspect                                                  |
