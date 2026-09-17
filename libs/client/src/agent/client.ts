@@ -1,6 +1,7 @@
 import type { RequiredConfig } from "../config";
 import { AgentProtocolError, AgentRequestError } from "./errors";
 import { createAgentProjectsClient } from "./projects";
+import { createAgentQueueClient } from "./queue";
 import { reduceAgentEvent } from "./reducer";
 import { agentResponseView, isAgentStopped } from "./response";
 import { createAgentSettingsClient } from "./settings";
@@ -55,6 +56,8 @@ export interface AgentResponsesClient {
 }
 
 export interface AgentClient {
+  readonly queue: ReturnType<typeof createAgentQueueClient>["queue"];
+  readonly runs: ReturnType<typeof createAgentQueueClient>["runs"];
   readonly models: ReturnType<typeof createAgentSettingsClient>["models"];
   readonly settings: ReturnType<typeof createAgentSettingsClient>["settings"];
   readonly preferences: ReturnType<
@@ -360,6 +363,7 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
     responses,
     projects: createAgentProjectsClient(request),
     ...createAgentSettingsClient(request),
+    ...createAgentQueueClient(request),
     async run(input, options = {}) {
       const scope = observation(options);
       let accepted: AgentResponseView | undefined;

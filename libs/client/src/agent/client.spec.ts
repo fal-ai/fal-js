@@ -572,6 +572,38 @@ describe("experimental Agent client", () => {
   });
 });
 
+describe("Agent queue and runs", () => {
+  it("scopes queue actions and surfaces ambiguous paid retries without resubmitting", async () => {
+    const fetch = jest
+      .fn()
+      .mockImplementation(() => Promise.resolve(json({ success: true })));
+    const agent = setup(fetch);
+    await agent.queue.setApproval("chat/1", "turn/1", {
+      requiresApproval: false,
+      approveCheckpoints: true,
+    });
+    expect(fetch.mock.calls[0][0]).toBe(
+      "https://agent.example/v1/agent/queues/chat%2F1/turns/turn%2F1/approval",
+    );
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+      requiresApproval: false,
+      approveCheckpoints: true,
+    });
+    await agent.runs.retrieve("run/1", "chat/1");
+    expect(fetch.mock.calls[1][0]).toBe(
+      "https://agent.example/v1/agent/runs/run%2F1?conversation=chat%2F1",
+    );
+    fetch.mockClear();
+    fetch.mockImplementation(() =>
+      Promise.resolve(json({ error: { message: "Unavailable" } }, 503)),
+    );
+    await expect(agent.runs.retry("run/1", "chat/1")).rejects.toBeInstanceOf(
+      AgentRequestError,
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("Agent settings", () => {
   it("encodes model queries and forwards scoped optimistic settings updates", async () => {
     const fetch = jest.fn().mockImplementation(() => Promise.resolve(json({})));

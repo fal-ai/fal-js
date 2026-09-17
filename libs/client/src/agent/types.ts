@@ -533,3 +533,33 @@ export type AgentPreferences = {
   preferredModels?: Partial<Record<AgentGenerationTask, string>>;
   generationPreferences?: AgentGenerationPreferences;
 };
+
+export type AgentQueueItem = {
+  turnId: string;
+  qlane: "user" | "drawer";
+  kind: "prompt" | "continuation";
+  prompt?: string;
+  stepLabel?: string;
+  position: number;
+  requiresApproval: boolean;
+  parked: boolean;
+  halted: boolean;
+  planStep?: {
+    planBlockId: string;
+    planExecutionId: string;
+    planStepId: string;
+    planStepOrder: number;
+  };
+};
+export type AgentQueueDispatch = {
+  promoted: boolean;
+  turnId?: string;
+  assistantMessageId?: string;
+  requeued?: boolean;
+  reason?: string;
+};
+export type AgentRunView = {
+  operation: AgentOperation;
+  artifacts: AgentArtifact[];
+  input_requests: AgentInputRequest[];
+};
