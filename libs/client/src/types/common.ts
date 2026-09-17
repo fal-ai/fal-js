@@ -47,6 +47,20 @@ export type RunOptions<Input> = {
    * This will be sent as the `x-fal-request-timeout` header.
    */
   readonly startTimeout?: number;
+
+  /**
+   * Tags to attribute the request's usage and cost to your own dimensions,
+   * e.g. `{ team: "design", env: "prod" }`. Keys are lowercased, and both keys
+   * and values are limited (at most 10 pairs, 1 KB in total).
+   *
+   * Values cannot contain commas, which separate pairs. Surrounding whitespace
+   * is stripped from keys and values before they are recorded.
+   *
+   * This will be sent as a single packed `x-fal-tags` header. Realtime
+   * requests are WebSocket-based and carry no headers, so they cannot be
+   * tagged.
+   */
+  readonly tags?: Record<string, string>;
 };
 
 export type UrlOptions = {
