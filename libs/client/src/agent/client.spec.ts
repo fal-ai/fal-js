@@ -572,6 +572,44 @@ describe("experimental Agent client", () => {
   });
 });
 
+describe("Agent project resources", () => {
+  it("encodes project resource IDs and does not retry ambiguous native mutations", async () => {
+    const fetch = jest
+      .fn()
+      .mockImplementation(() => Promise.resolve(json({ success: true })));
+    const agent = setup(fetch);
+    await agent.projects.documents.attach("project/1", {
+      url: "https://fal.media/brief.txt",
+      fileName: "brief.txt",
+      contentType: "text/plain",
+      sizeBytes: 5,
+      text: "Brief",
+    });
+    expect(fetch.mock.calls[0][0]).toBe(
+      "https://agent.example/v1/agent/projects/project%2F1/documents",
+    );
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({
+      text: "Brief",
+      fileName: "brief.txt",
+    });
+    await agent.projects.conversations.setMemoryPrivacy(
+      "project/1",
+      "chat/1",
+      true,
+    );
+    expect(fetch.mock.calls[1][0]).toBe(
+      "https://agent.example/v1/agent/projects/project%2F1/conversations/chat%2F1/memory",
+    );
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ excluded: true });
+    fetch.mockClear();
+    fetch.mockResolvedValue(json({ error: { message: "Unavailable" } }, 503));
+    await expect(
+      agent.projects.create({ name: "Campaign" }),
+    ).rejects.toBeInstanceOf(AgentRequestError);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("Agent server errors", () => {
   it("preserves the runtime API's useful error message", async () => {
     const fetch = jest.fn().mockResolvedValueOnce(

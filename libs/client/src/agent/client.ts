@@ -1,5 +1,6 @@
 import type { RequiredConfig } from "../config";
 import { AgentProtocolError, AgentRequestError } from "./errors";
+import { createAgentProjectsClient } from "./projects";
 import { reduceAgentEvent } from "./reducer";
 import { agentResponseView, isAgentStopped } from "./response";
 import { agentEvents } from "./stream";
@@ -53,6 +54,7 @@ export interface AgentResponsesClient {
 }
 
 export interface AgentClient {
+  readonly projects: ReturnType<typeof createAgentProjectsClient>;
   run(
     request: AgentRequest,
     options?: AgentRunOptions,
@@ -350,6 +352,7 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
 
   const client: AgentClient = {
     responses,
+    projects: createAgentProjectsClient(request),
     async run(input, options = {}) {
       const scope = observation(options);
       let accepted: AgentResponseView | undefined;

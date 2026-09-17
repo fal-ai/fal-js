@@ -281,3 +281,83 @@ export interface AgentEvent {
   part?: AgentText | AgentBlock;
   delta?: string;
 }
+
+/** Resource mutations are sent once; reconcile uncertain results before retrying. */
+export type AgentResourceOptions = Pick<
+  AgentRequestOptions,
+  "signal" | "timeoutMs"
+>;
+export interface AgentProject {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+export interface AgentProjectConversation {
+  id: string;
+  title: string | null;
+  mediaCount: number;
+  updatedAt: string;
+}
+export interface AgentProjectResources {
+  attachedMedia: Array<{
+    id: string;
+    assetId: string;
+    vectorId: string | null;
+    type: string;
+    source: string;
+    url: string;
+    title: string | null;
+    prompt: string | null;
+    createdAt: string;
+  }>;
+  collections: Array<Record<string, AgentJson>>;
+  characters: Array<Record<string, AgentJson>>;
+  smartEntities: Array<Record<string, AgentJson>>;
+  generatedMedia: Array<Record<string, AgentJson>>;
+}
+export interface AgentProjectDocumentInput {
+  url: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  /** Extracted text, using the same upload/extraction flow as the Agent. */
+  text: string;
+  pageCount?: number | null;
+  truncated?: boolean;
+}
+export interface AgentProjectDocument {
+  id: string;
+  assetId: string;
+  fileName: string;
+  slug: string;
+  url: string;
+  contentType: string;
+  sizeBytes: number;
+  charCount: number;
+  pageCount: number | null;
+  truncated: boolean;
+  summary: string | null;
+  status: string;
+  error: string | null;
+  chunkCount: number;
+  createdAt: string;
+}
+export type AgentMemoryKind =
+  | "decision"
+  | "fact"
+  | "preference"
+  | "style"
+  | "entity";
+export interface AgentProjectMemory {
+  primer: string | null;
+  primerUpdatedAt: string | null;
+  notes: Array<{
+    id: string;
+    kind: AgentMemoryKind;
+    content: string;
+    pinned: boolean;
+    sourceChatId: string | null;
+    createdAt: string;
+  }>;
+}

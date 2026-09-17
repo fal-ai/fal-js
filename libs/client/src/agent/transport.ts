@@ -96,6 +96,7 @@ export function createAgentTransport(config: RequiredConfig) {
     options: AgentRequestOptions,
     responseId?: string,
     stream = false,
+    retry = true,
   ): Promise<T> {
     const base = config.agent?.baseUrl;
     if (!base)
@@ -163,6 +164,7 @@ export function createAgentTransport(config: RequiredConfig) {
           });
         } catch (error) {
           if (
+            !retry ||
             scope.signal?.aborted ||
             attempt >= config.retry.maxRetries ||
             !isRetryableError(error, config.retry.retryableStatusCodes)
