@@ -19,6 +19,7 @@ import type {
   AgentArtifact,
   AgentConversation,
   AgentConversationItem,
+  AgentGenerationSummary,
   AgentOperation,
   AgentOperationChange,
   AgentPage,
@@ -35,6 +36,12 @@ import type {
 } from "./types";
 
 export interface AgentResponsesClient {
+  /** Select completed response artifacts as deliverables; does not rerun or reopen execution. */
+  selectFinalArtifacts(
+    id: string,
+    input: { artifact_ids: string[]; expected_sequence_number: number },
+    options?: AgentResourceOptions,
+  ): Promise<AgentResponseView>;
   create(
     request: AgentRequest,
     options?: AgentRequestOptions,
@@ -79,6 +86,10 @@ export interface AgentClient {
       input?: { title?: string | null },
       options?: AgentResourceOptions,
     ): Promise<AgentConversation>;
+    generationSummary(
+      id: string,
+      options?: AgentResourceOptions,
+    ): Promise<AgentGenerationSummary>;
     list(options?: AgentPageOptions): Promise<AgentPage<AgentConversation>>;
     retrieve(
       id: string,
@@ -266,6 +277,22 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
       }
     },
     retrieve: snapshot,
+    async selectFinalArtifacts(id, input, options = {}) {
+      const view = agentResponseView(
+        await request<AgentResponse>(
+          "PATCH",
+          `/responses/${segment(id)}/final-artifacts`,
+          input,
+          options,
+          id,
+          false,
+          false,
+        ),
+      );
+      if (view.id !== id)
+        throw new AgentProtocolError("Updated response has a different ID");
+      return view;
+    },
     async answer(id, input, options = {}) {
       return mutateResponse(id, "input", input, options);
     },
@@ -441,6 +468,8 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
           false,
           false,
         ),
+      generationSummary: (id, options) =>
+        read(`/conversations/${segment(id)}/generation-summary`, options),
       list: (options = {}) =>
         read(`/conversations${pageQuery(options)}`, options),
       retrieve: (id, options) => read(`/conversations/${segment(id)}`, options),

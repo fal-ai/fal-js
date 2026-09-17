@@ -24,6 +24,14 @@ export function createAgentSettingsClient(
     `/agent/settings/defaults?${new URLSearchParams(target)}`;
   return {
     models: {
+      listAgentModels: (options?: AgentResourceOptions) =>
+        read<
+          Array<{
+            id: string;
+            label: string;
+            tag?: "recommended" | "experimental";
+          }>
+        >("/agent/models/agent", options),
       list: (
         filter: {
           keywords?: string;

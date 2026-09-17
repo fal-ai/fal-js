@@ -490,6 +490,36 @@
             tab; server history is not wired yet.
           </p>
         </details>
+        <details>
+          <summary>Generation costs</summary>
+          <button id="generation-summary">
+            Load billed generation summary
+          </button>
+          <p id="summary-result" class="text" role="status"></p>
+        </details>
+        <details>
+          <summary>SDK resources</summary>
+          <label for="resource-kind">Inspect</label>
+          <select id="resource-kind">
+            <option value="projects">Projects</option>
+            <option value="context">
+              Project resources, documents and memory
+            </option>
+            <option value="models">Model catalog</option>
+            <option value="preferences">Agent preferences</option>
+            <option value="settings">Conversation settings</option>
+            <option value="queue">Conversation queue</option>
+          </select>
+          <label for="resource-id"
+            >Project or conversation ID (model search for catalog)</label
+          >
+          <input
+            id="resource-id"
+            placeholder="Uses current conversation when empty"
+          />
+          <button id="load-resource">Load SDK resource</button>
+          <pre id="resource-result" role="status"></pre>
+        </details>
         <pre id="json">Send a message to inspect its response.</pre>
         <ol id="lifecycle" hidden></ol>
       </aside>

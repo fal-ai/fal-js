@@ -435,3 +435,86 @@ test("library cards restore real previews and identity without inventing generat
     h.close();
   }
 });
+
+test("exports retain download warnings and final selection uses the current revision", async () => {
+  const artifact = {
+    id: "artifact",
+    type: "fal.artifact",
+    kind: "media",
+    media_type: "image",
+    revision: 1,
+    files: [
+      {
+        role: "primary",
+        url: "https://fal.media/result.png",
+        mime_type: "image/png",
+      },
+    ],
+  };
+  let r = response("r1", [
+    artifact,
+    {
+      ...message(""),
+      content: [
+        {
+          id: "export",
+          type: "fal.block",
+          kind: "export",
+          revision: 1,
+          fallback_text: "Export",
+          data: {
+            zipName: "deliverables.zip",
+            url: "https://fal.media/result.zip",
+            files: [{ path: "images/result.png" }],
+            failedCount: 1,
+            truncatedCount: 2,
+          },
+        },
+      ],
+    },
+  ]);
+  const h = await host({
+    saved: { turns: [{ id: "r1", prompt: "Export", receipts: [] }] },
+    retrieve: async () => r,
+  });
+  try {
+    const selections = [];
+    h.w.fixtureAgent.responses.selectFinalArtifacts = async (id, input) => {
+      selections.push({ id, input });
+      r = {
+        ...r,
+        fal: {
+          ...r.fal,
+          final_artifact_ids: input.artifact_ids,
+          sequence_number: r.fal.sequence_number + 1,
+        },
+      };
+      return r;
+    };
+    assert.equal(
+      h.document.querySelector(".block a").href,
+      "https://fal.media/result.zip",
+    );
+    assert.match(
+      h.document.getElementById("thread").textContent,
+      /1 failed · 2 excluded/,
+    );
+    const finalButton = () =>
+      [...h.document.querySelectorAll(".artifact button")].find((b) =>
+        b.textContent.includes("final deliverable"),
+      );
+    finalButton().click();
+    await tick();
+    assert.deepEqual(JSON.parse(JSON.stringify(selections[0])), {
+      id: "r1",
+      input: { artifact_ids: ["artifact"], expected_sequence_number: 1 },
+    });
+    assert.equal(finalButton().getAttribute("aria-pressed"), "true");
+    finalButton().click();
+    await tick();
+    assert.equal(selections[1].input.expected_sequence_number, 2);
+    assert.equal(finalButton().getAttribute("aria-pressed"), "false");
+  } finally {
+    h.close();
+  }
+});

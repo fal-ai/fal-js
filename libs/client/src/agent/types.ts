@@ -574,3 +574,26 @@ export type AgentRunView = {
   artifacts: AgentArtifact[];
   input_requests: AgentInputRequest[];
 };
+
+/** Billed generation costs only. Unpriced requests and LLM usage are not included in totals. */
+export type AgentGenerationSummary = {
+  counts: { image: number; video: number; audio: number; model3d: number };
+  costsNanoUsd: {
+    image: number;
+    video: number;
+    audio: number;
+    model3d: number;
+  };
+  models: Array<{
+    endpointId: string;
+    modality: "image" | "video" | "audio" | "model3d" | null;
+    count: number;
+    costNanoUsd: number;
+    title: string | null;
+    modelLabId: string | null;
+  }>;
+  totalCount: number;
+  totalCostNanoUsd: number;
+  pricedRequestCount: number;
+  unpricedRequestCount: number;
+};

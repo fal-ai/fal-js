@@ -150,7 +150,10 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
       field("prompt").focus();
     }
   }
-  function renderArtifact(artifact: AgentArtifact) {
+  function renderArtifact(
+    artifact: AgentArtifact,
+    response: AgentResponseView,
+  ) {
     const card = node("section", "", "artifact");
     card.append(node("h3", `${artifact.media_type ?? artifact.kind} result`));
     for (const file of artifact.files ?? []) {
@@ -188,6 +191,40 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
     use.type = "button";
     use.onclick = () => reference(artifact);
     card.append(use);
+    if (terminal(response)) {
+      const selected = response.fal.final_artifact_ids.includes(artifact.id);
+      const final = node(
+        "button",
+        selected
+          ? "Remove from final deliverables"
+          : "Mark as final deliverable",
+      );
+      final.type = "button";
+      final.setAttribute("aria-pressed", String(selected));
+      final.onclick = async () => {
+        final.disabled = true;
+        try {
+          show(
+            await agent.responses.selectFinalArtifacts(response.id, {
+              artifact_ids: selected
+                ? response.fal.final_artifact_ids.filter(
+                    (id) => id !== artifact.id,
+                  )
+                : [...response.fal.final_artifact_ids, artifact.id],
+              expected_sequence_number: response.fal.sequence_number,
+            }),
+          );
+          notice("Final deliverables saved.");
+        } catch (error) {
+          notice(
+            `${error instanceof Error ? error.message : String(error)} Reconnect to load the latest response before retrying.`,
+          );
+        } finally {
+          final.disabled = false;
+        }
+      };
+      card.append(final);
+    }
     return card;
   }
   function renderBlock(block: AgentBlock) {
@@ -261,6 +298,45 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
       const id =
         block.kind === "collection" ? data.collectionId : data.assetRecordId;
       if (typeof id === "string") card.append(node("small", id));
+    } else if (
+      block.kind === "export" &&
+      data &&
+      typeof data === "object" &&
+      !Array.isArray(data)
+    ) {
+      const url = typeof data.url === "string" ? safeUrl(data.url) : undefined;
+      if (url) {
+        const link = node(
+          "a",
+          typeof data.zipName === "string"
+            ? `Download ${data.zipName}`
+            : "Download ZIP",
+        );
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        card.append(link);
+      }
+      if (Array.isArray(data.files)) {
+        const files = node("ul");
+        for (const file of data.files)
+          if (
+            file &&
+            typeof file === "object" &&
+            !Array.isArray(file) &&
+            typeof file.path === "string"
+          )
+            files.append(node("li", file.path));
+        card.append(files);
+      }
+      if (data.failedCount || data.truncatedCount)
+        card.append(
+          node(
+            "p",
+            `${data.failedCount ?? 0} failed · ${data.truncatedCount ?? 0} excluded by size limit`,
+            "notice",
+          ),
+        );
     } else {
       const details = node("details");
       details.append(
@@ -443,7 +519,11 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
       );
       children.push(head);
       for (const item of r.output) {
-        const serialized = JSON.stringify(item);
+        const serialized = JSON.stringify(
+          item.type === "fal.artifact"
+            ? { item, status: r.status, final: r.fal.final_artifact_ids }
+            : item,
+        );
         const previous = old.get(item.id);
         if (previous?.dataset.signature === serialized) {
           children.push(previous);
@@ -458,7 +538,7 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
                 ? node("p", part.text, "text")
                 : renderBlock(part),
             );
-        } else if (item.type === "fal.artifact") el = renderArtifact(item);
+        } else if (item.type === "fal.artifact") el = renderArtifact(item, r);
         else if (item.type === "fal.input_request")
           el = renderDecision(item, r.id);
         else {
@@ -691,6 +771,62 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
         $(`${t}-tab`).setAttribute("aria-pressed", String(t === tab));
       }
     };
+  $("load-resource").onclick = async () => {
+    const kind = field("resource-kind").value;
+    const id =
+      field("resource-id").value.trim() || current()?.fal.conversation_id;
+    button("load-resource").disabled = true;
+    $("resource-result").textContent = "Loading…";
+    try {
+      let result: unknown;
+      if (kind === "projects") result = await agent.projects.list();
+      else if (kind === "models")
+        result = await agent.models.list({
+          keywords: field("resource-id").value.trim(),
+          limit: 10,
+        });
+      else if (kind === "preferences")
+        result = await agent.preferences.retrieve();
+      else {
+        if (!id) throw new Error("Enter an ID or start a conversation first.");
+        if (kind === "context") {
+          const [resources, documents, memory] = await Promise.all([
+            agent.projects.resources(id),
+            agent.projects.documents.list(id),
+            agent.projects.memory.retrieve(id),
+          ]);
+          result = { resources, documents, memory };
+        } else if (kind === "settings")
+          result = await agent.settings.defaults.retrieve({
+            scope: "chat",
+            chatId: id,
+          });
+        else result = await agent.queue.retrieve(id);
+      }
+      $("resource-result").textContent = JSON.stringify(result, null, 2);
+    } catch (error) {
+      $("resource-result").textContent =
+        error instanceof Error ? error.message : String(error);
+    } finally {
+      button("load-resource").disabled = false;
+    }
+  };
+  $("generation-summary").onclick = async () => {
+    const conversation = current()?.fal.conversation_id;
+    if (!conversation) return notice("Start a conversation first.");
+    button("generation-summary").disabled = true;
+    $("summary-result").textContent = "Loading billed generation costs…";
+    try {
+      const summary = await agent.conversations.generationSummary(conversation);
+      $("summary-result").textContent =
+        `${summary.totalCount} completed generations · $${(summary.totalCostNanoUsd / 1e9).toFixed(4)} billed\n${summary.pricedRequestCount} priced requests · ${summary.unpricedRequestCount} still unpriced\nExcludes LLM usage and requests not yet billed.`;
+    } catch (error) {
+      $("summary-result").textContent =
+        error instanceof Error ? error.message : String(error);
+    } finally {
+      button("generation-summary").disabled = false;
+    }
+  };
   $("new-chat").onclick = () => {
     if (button("new-chat").disabled) return;
     disconnect();
@@ -702,6 +838,7 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
     reference();
     field("prompt").value = "";
     field("image-url").value = "";
+    $("summary-result").textContent = "";
     $("thread").replaceChildren();
     $("intro").hidden = false;
     save();

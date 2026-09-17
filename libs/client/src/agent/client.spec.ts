@@ -572,6 +572,37 @@ describe("experimental Agent client", () => {
   });
 });
 
+describe("Agent deliverables", () => {
+  it("selects only explicit finals and exposes generation summaries without changing response usage", async () => {
+    const completed = response(3, "done");
+    completed.fal.final_artifact_ids = [artifact.id];
+    const fetch = jest
+      .fn()
+      .mockResolvedValueOnce(json(completed))
+      .mockResolvedValueOnce(
+        json({ unpricedRequestCount: 2, totalCostNanoUsd: 0 }),
+      );
+    const agent = setup(fetch);
+    const selected = await agent.responses.selectFinalArtifacts(completed.id, {
+      artifact_ids: [artifact.id],
+      expected_sequence_number: 2,
+    });
+    expect(selected.final_artifacts).toEqual([artifact]);
+    expect(selected.usage).toBeNull();
+    expect(selected.id).toBe(completed.id);
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+      artifact_ids: [artifact.id],
+      expected_sequence_number: 2,
+    });
+    expect(await agent.conversations.generationSummary("chat/1")).toMatchObject(
+      { unpricedRequestCount: 2 },
+    );
+    expect(fetch.mock.calls[1][0]).toBe(
+      "https://agent.example/v1/conversations/chat%2F1/generation-summary",
+    );
+  });
+});
+
 describe("Agent queue and runs", () => {
   it("scopes queue actions and surfaces ambiguous paid retries without resubmitting", async () => {
     const fetch = jest
