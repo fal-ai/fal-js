@@ -1,0 +1,86 @@
+name: Update Endpoint Types
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Set npm version
+        run: npm install -g npm@11.15.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch endpoint types
+        env:
+          TYPES_URL: ${{ secrets.TYPES_SOURCE_URL }}
+          TYPES_TOKEN: ${{ secrets.TYPES_SOURCE_TOKEN }}
+          TARGET_FILE: libs/client/src/types/endpoints.ts
+        run: |
+          set -euo pipefail
+
+          if [ -z "${TYPES_URL:-}" ]; then
+            echo "::error::TYPES_SOURCE_URL secret is not set."
+            exit 1
+          fi
+
+          if ! curl \
+            --fail \
+            --silent \
+            --location \
+            --retry 3 \
+            --retry-delay 5 \
+            --header "Authorization: Bearer ${TYPES_TOKEN}" \
+            --output "${TARGET_FILE}" \
+            "${TYPES_URL}" 2>/dev/null; then
+            echo "::error::Could not fetch endpoint types."
+            exit 1
+          fi
+
+          if [ ! -s "${TARGET_FILE}" ]; then
+            echo "::error::Fetched file is empty."
+            exit 1
+          fi
+          if ! grep -q "export type" "${TARGET_FILE}"; then
+            echo "::error::Fetched file does not look like endpoint type definitions."
+            exit 1
+          fi
+
+      - name: Format
+        run: npx prettier --write libs/client/src/types/endpoints.ts
+
+      - name: Secret scan fetched file
+        run: npx secretlint "libs/client/src/types/endpoints.ts"
+
+      - name: Generate reference docs
+        run: npm run docs:typedoc
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          commit-message: "chore(client): update endpoint types"
+          title: "chore(client): update endpoint types"
+          body: |
+            Automated update of endpoint type definitions and reference docs.
+
+            Triggered manually via the **Update Endpoint Types** workflow.
+          branch: chore/update-endpoint-types
+          delete-branch: true
+          add-paths: |
+            libs/client/src/types/endpoints.ts
+            docs/reference/**
