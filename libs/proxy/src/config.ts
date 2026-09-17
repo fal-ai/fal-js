@@ -20,8 +20,6 @@ export const DEFAULT_ALLOWED_URL_PATTERNS = [
   `${FAL_REST_API_URL}/storage/upload/initiate\\?storage_type=fal-cdn-v3`,
   `${FAL_REST_API_URL}/storage/upload/initiate-multipart\\?storage_type=fal-cdn-v3`,
   `${FAL_REST_API_URL}/storage/upload/complete-multipart\\?storage_type=fal-cdn-v3`,
-  // Short-lived realtime token, requested with a trailing slash and no query.
-  `${FAL_REST_API_URL}/tokens/`,
 ];
 
 /**

@@ -116,17 +116,6 @@ describe("isAllowedUrl with default patterns", () => {
       expect(isAllowedUrl(url)).toBe(true);
     });
 
-    it("should allow the realtime token URL", () => {
-      // fal.realtime.connect() and client-mode fal.stream() POST this through
-      // the proxy when no tokenProvider is supplied.
-      expect(isAllowedUrl(`${FAL_REST_API_URL}/tokens/`)).toBe(true);
-    });
-
-    it("should NOT allow other rest.fal.ai paths", () => {
-      expect(isAllowedUrl(`${FAL_REST_API_URL}/tokens/../admin`)).toBe(false);
-      expect(isAllowedUrl(`${FAL_REST_API_URL}/users/me`)).toBe(false);
-    });
-
     it("should allow storage upload complete-multipart URL", () => {
       const url = `${FAL_REST_API_URL}/storage/upload/complete-multipart?storage_type=fal-cdn-v3`;
       expect(isAllowedUrl(url)).toBe(true);
