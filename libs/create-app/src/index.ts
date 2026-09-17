@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-import { input } from "@inquirer/prompts";
-import select from "@inquirer/select";
+import { input, select } from "@inquirer/prompts";
 import chalk from "chalk";
 import childProcess from "child_process";
 import { Command } from "commander";
