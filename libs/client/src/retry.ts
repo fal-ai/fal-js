@@ -51,6 +51,9 @@ const RETRYABLE_NETWORK_ERROR_CODES = new Set([
  * DNS hiccups, socket timeouts, etc.). Mirrors the Python client's behavior
  * of retrying `httpx.TransportError` and `httpx.TimeoutException`.
  */
+const TRANSPORT_FAILURE_MESSAGE =
+  /fetch failed|failed to fetch|load failed|networkerror when attempting to fetch/i;
+
 export function isRetryableNetworkError(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
@@ -79,13 +82,17 @@ export function isRetryableNetworkError(error: unknown): boolean {
     return true;
   }
 
-  // Generic Node `fetch` failure (`TypeError: fetch failed`) without a
-  // recognised `.code` — still a transport-layer problem, treat it as
-  // retryable like httpx.TransportError does.
+  // A `fetch` rejection with no recognised `.code` is still a transport-layer
+  // problem, so treat it as retryable like httpx.TransportError does. Each
+  // runtime words it differently and none of them expose a status:
+  //   Node            TypeError: fetch failed
+  //   Chrome/Firefox  TypeError: Failed to fetch
+  //   Safari          TypeError: Load failed
+  //   older Firefox   TypeError: NetworkError when attempting to fetch resource.
   if (
     error instanceof TypeError &&
     typeof (error as { message?: unknown }).message === "string" &&
-    /fetch failed/i.test((error as { message: string }).message)
+    TRANSPORT_FAILURE_MESSAGE.test((error as { message: string }).message)
   ) {
     return true;
   }
