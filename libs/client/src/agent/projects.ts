@@ -8,6 +8,7 @@ import type {
   AgentProjectDocumentInput,
   AgentProjectMemory,
   AgentProjectResources,
+  AgentProjectSummary,
   AgentResourceOptions,
 } from "./types";
 
@@ -27,7 +28,7 @@ export function createAgentProjectsClient(
   type Success = { success: true };
   return {
     list: (options?: AgentResourceOptions) =>
-      read<AgentProject[]>("/agent/projects", options),
+      read<AgentProjectSummary[]>("/agent/projects", options),
     create: (
       input: { name: string; color?: string },
       options?: AgentResourceOptions,

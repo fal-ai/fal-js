@@ -293,6 +293,17 @@ export interface AgentProject {
   color: string;
   createdAt: string;
 }
+export interface AgentProjectSummary extends AgentProject {
+  chatCount: number;
+  assetCount: number;
+  attachedAssetCount: number;
+  attachedCollectionCount: number;
+  attachedCharacterCount: number;
+  attachedResourceCount: number;
+  assetsByType: { image: number; video: number; audio: number; "3d": number };
+  updatedAt: string;
+  coverMedia: Array<{ id: string; type: string; url: string }>;
+}
 export interface AgentProjectConversation {
   id: string;
   title: string | null;

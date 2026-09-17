@@ -27,6 +27,7 @@ import type {
   AgentPlanChange,
   AgentRequest,
   AgentRequestOptions,
+  AgentResourceOptions,
   AgentResponse,
   AgentResponseView,
   AgentRunOptions,
@@ -74,6 +75,10 @@ export interface AgentClient {
   ): AsyncIterable<AgentResponseView>;
   readonly responses: AgentResponsesClient;
   readonly conversations: {
+    create(
+      input?: { title?: string | null },
+      options?: AgentResourceOptions,
+    ): Promise<AgentConversation>;
     list(options?: AgentPageOptions): Promise<AgentPage<AgentConversation>>;
     retrieve(
       id: string,
@@ -426,6 +431,16 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
       }
     },
     conversations: {
+      create: (input = {}, options = {}) =>
+        request(
+          "POST",
+          "/conversations",
+          input,
+          options,
+          undefined,
+          false,
+          false,
+        ),
       list: (options = {}) =>
         read(`/conversations${pageQuery(options)}`, options),
       retrieve: (id, options) => read(`/conversations/${segment(id)}`, options),
