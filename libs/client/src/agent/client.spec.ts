@@ -542,11 +542,18 @@ describe("experimental Agent client", () => {
     await agent.plans.update("plan_1", {
       conversation: "conv_1",
       expected_revision: 2,
-      changes: [{ type: "rename_step", step_id: "s1", label: "Hero" }],
+      changes: [
+        { type: "rename_plan", title: "Campaign" },
+        { type: "rename_step", step_id: "s1", label: "Hero" },
+      ],
     });
     expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({
       conversation: "conv_1",
       expected_revision: 2,
+      changes: [
+        { type: "rename_plan", title: "Campaign" },
+        { type: "rename_step", step_id: "s1", label: "Hero" },
+      ],
     });
     await agent.plans.retrieve("plan/1", { conversation: "conv/1" });
     expect(fetch.mock.calls[2][0]).toBe(

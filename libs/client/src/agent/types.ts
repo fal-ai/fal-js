@@ -252,13 +252,14 @@ export type AgentConversationItem = {
 );
 
 export type AgentPlanChange =
+  | { type: "rename_plan"; title: string }
   | { type: "rename_step"; step_id: string; label: string }
   | { type: "remove_step"; step_id: string }
   | { type: "reorder_steps"; step_ids: string[] }
   | {
       type: "add_step";
       after_step_id?: string;
-      step: Omit<AgentPlanStep, "id">;
+      step: Omit<AgentPlanStep, "id" | "detail">;
     }
   | { type: "set_checkpoint"; step_id: string; requires_approval: boolean }
   | { type: "pin_model"; step_id: string; endpoint_id: string | null };

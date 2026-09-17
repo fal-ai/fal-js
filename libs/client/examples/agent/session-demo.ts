@@ -904,6 +904,7 @@ if (savedResponse()) void reconnect(savedResponse());
 function renderPlanEditor() {
   $("plan-editor").hidden = !editingPlan;
   $("plan-title").textContent = editingPlan?.data.title ?? "Plan steps";
+  if (!planDirty) input("plan-name").value = editingPlan?.data.title ?? "";
   $("plan-status").textContent = editingPlan
     ? `Revision ${editingPlan.revision}${planDirty ? " · unsaved edits" : " · saved"}`
     : "No plan loaded.";
@@ -1011,6 +1012,7 @@ $("load-plan").onclick = async () => {
     controls();
   }
 };
+$("plan-name").oninput = dirtyPlan;
 $("add-plan-step").onclick = () => {
   const label = input("new-plan-step").value.trim();
   if (!label || !editingPlan) return;
@@ -1025,6 +1027,8 @@ async function savePlan(explicit?: AgentPlanChange[]) {
   }
   const changes: AgentPlanChange[] = explicit ?? [];
   if (!explicit) {
+    if (input("plan-name").value !== (editingPlan.data.title ?? ""))
+      changes.push({ type: "rename_plan", title: input("plan-name").value });
     const before = editingPlan.data.steps;
     for (const step of before)
       if (!planSteps.some((s) => s.id === step.id))
