@@ -361,3 +361,175 @@ export interface AgentProjectMemory {
     createdAt: string;
   }>;
 }
+
+export type AgentGenerationTask =
+  | "text-to-image"
+  | "text-to-video"
+  | "image-to-video"
+  | "music"
+  | "text-to-speech"
+  | "sound-effects"
+  | "image-to-3d";
+export type AgentGenerationPreferences = {
+  aspect_ratio?:
+    | "1:1"
+    | "16:9"
+    | "9:16"
+    | "4:3"
+    | "3:4"
+    | "3:2"
+    | "2:3"
+    | "21:9";
+  resolution?: "720p" | "1080p" | "2K" | "4K";
+  duration?: number;
+  generate_audio?: boolean;
+};
+export type AgentGenerationDefaults = {
+  preferences: {
+    [K in keyof AgentGenerationPreferences]?:
+      | AgentGenerationPreferences[K]
+      | null;
+  };
+  preferredModels: Partial<Record<AgentGenerationTask, string | null>>;
+};
+export type AgentGenerationSettings = {
+  version: 1;
+  revision: number;
+  groups: Partial<
+    Record<
+      AgentGenerationTask,
+      {
+        model?: string;
+        fields: Record<
+          string,
+          {
+            value:
+              | string
+              | number
+              | boolean
+              | string[]
+              | { width: number; height: number };
+            sourceEndpointId: string;
+            label: string;
+          }
+        >;
+      }
+    >
+  >;
+  preferences?: AgentGenerationPreferences;
+  preferredModels?: Partial<Record<AgentGenerationTask, string>>;
+  preferredModelOverrides?: AgentGenerationDefaults["preferredModels"];
+  defaults?: AgentGenerationDefaults;
+  reviewBeforeGenerating: boolean;
+};
+export type AgentDefaultsTarget =
+  | { scope: "personal" }
+  | { scope: "project"; projectId: string }
+  | { scope: "chat"; chatId: string };
+export type AgentDefaultsUpdate = {
+  changes?: AgentGenerationDefaults;
+  inherit?: {
+    preferences?: Array<keyof AgentGenerationPreferences>;
+    preferredModels?: AgentGenerationTask[];
+  };
+  expectedLocal: AgentGenerationDefaults;
+};
+export type AgentDefaultsSource =
+  | "personal"
+  | "project"
+  | "chat"
+  | "generation"
+  | "auto";
+export type AgentDefaultsSources = {
+  preferences: Partial<
+    Record<keyof AgentGenerationPreferences, AgentDefaultsSource>
+  >;
+  preferredModels: Partial<Record<AgentGenerationTask, AgentDefaultsSource>>;
+};
+export type AgentDefaultsView = {
+  local: AgentGenerationDefaults;
+  inherited: AgentGenerationSettings;
+  effective: AgentGenerationSettings;
+  sources: AgentDefaultsSources;
+  inheritedSources: AgentDefaultsSources;
+  revision: number;
+  projectId: string | null;
+};
+export type AgentModel = {
+  id: string;
+  modelId: string;
+  title: string;
+  category: string;
+  shortDescription: string;
+  thumbnailUrl: string | null;
+  modelLabId?: string;
+  isFavorited: boolean;
+};
+export type AgentModelCapabilities = {
+  endpointId: string;
+  label: string;
+  category: string;
+  modelLabId?: string;
+  fields: Array<{
+    name: string;
+    label: string;
+    type: AgentJson;
+    description: string;
+    required: boolean;
+    defaultValue?: string | number | boolean;
+    [key: string]: AgentJson | undefined;
+  }>;
+};
+export type AgentPreferences = {
+  general: {
+    preferredName: string;
+    profession:
+      | "product_management"
+      | "engineering"
+      | "human_resources"
+      | "finance"
+      | "marketing"
+      | "sales"
+      | "operations"
+      | "data_science"
+      | "design"
+      | "legal"
+      | "other"
+      | null;
+    defaultModel: string | null;
+    liveVoice?:
+      | "quartz"
+      | "ripple"
+      | "vesper"
+      | "willow"
+      | "stone"
+      | "gleam"
+      | "meridian"
+      | "bossa"
+      | "tempo"
+      | "beacon"
+      | "delta"
+      | "cinder"
+      | null;
+    sequencerEnabled?: boolean;
+    knowledgeEnabled?: boolean;
+  };
+  cost: {
+    confirmImage: boolean;
+    confirmVideo: boolean;
+    confirmAudio: boolean;
+    confirm3d: boolean;
+    alwaysConfirmAudio: boolean;
+    alwaysConfirm3d: boolean;
+    safetyCapUsd: number;
+  };
+  skills: {
+    enabled: boolean;
+    disabledPresetNames: string[];
+    disabledFalSkillIds: string[];
+    disabledSkillIds: string[];
+  };
+  notifications: { turnComplete: boolean };
+  preferredModels?: Partial<Record<AgentGenerationTask, string>>;
+  generationPreferences?: AgentGenerationPreferences;
+};

@@ -3,6 +3,7 @@ import { AgentProtocolError, AgentRequestError } from "./errors";
 import { createAgentProjectsClient } from "./projects";
 import { reduceAgentEvent } from "./reducer";
 import { agentResponseView, isAgentStopped } from "./response";
+import { createAgentSettingsClient } from "./settings";
 import { agentEvents } from "./stream";
 import {
   createAgentTransport,
@@ -54,6 +55,11 @@ export interface AgentResponsesClient {
 }
 
 export interface AgentClient {
+  readonly models: ReturnType<typeof createAgentSettingsClient>["models"];
+  readonly settings: ReturnType<typeof createAgentSettingsClient>["settings"];
+  readonly preferences: ReturnType<
+    typeof createAgentSettingsClient
+  >["preferences"];
   readonly projects: ReturnType<typeof createAgentProjectsClient>;
   run(
     request: AgentRequest,
@@ -353,6 +359,7 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
   const client: AgentClient = {
     responses,
     projects: createAgentProjectsClient(request),
+    ...createAgentSettingsClient(request),
     async run(input, options = {}) {
       const scope = observation(options);
       let accepted: AgentResponseView | undefined;

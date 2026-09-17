@@ -572,6 +572,36 @@ describe("experimental Agent client", () => {
   });
 });
 
+describe("Agent settings", () => {
+  it("encodes model queries and forwards scoped optimistic settings updates", async () => {
+    const fetch = jest.fn().mockImplementation(() => Promise.resolve(json({})));
+    const agent = setup(fetch);
+    await agent.models.capabilities("fal-ai/model/edit");
+    expect(fetch.mock.calls[0][0]).toBe(
+      "https://agent.example/v1/agent/settings/capabilities?endpointId=fal-ai%2Fmodel%2Fedit",
+    );
+    await agent.settings.defaults.update(
+      { scope: "chat", chatId: "chat/1" },
+      {
+        expectedLocal: { preferences: {}, preferredModels: {} },
+        changes: { preferences: { resolution: "2K" }, preferredModels: {} },
+      },
+    );
+    expect(fetch.mock.calls[1][0]).toBe(
+      "https://agent.example/v1/agent/settings/defaults?scope=chat&chatId=chat%2F1",
+    );
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({
+      expectedLocal: { preferences: {}, preferredModels: {} },
+      changes: { preferences: { resolution: "2K" } },
+    });
+    expect(fetch.mock.calls[1][1].headers["Idempotency-Key"]).toBeUndefined();
+    await agent.preferences.update("cost", { confirmVideo: true });
+    expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({
+      confirmVideo: true,
+    });
+  });
+});
+
 describe("Agent project resources", () => {
   it("encodes project resource IDs and does not retry ambiguous native mutations", async () => {
     const fetch = jest
