@@ -110,6 +110,24 @@ describe("Retry functionality", () => {
       expect(isRetryableNetworkError(top)).toBe(true);
     });
 
+    it.each([
+      ["Node", "fetch failed"],
+      ["Chrome/Firefox", "Failed to fetch"],
+      ["Safari", "Load failed"],
+      ["older Firefox", "NetworkError when attempting to fetch resource."],
+    ])(
+      "should retry a bare %s transport failure with no status or code",
+      (_runtime, message) => {
+        expect(isRetryableNetworkError(new TypeError(message))).toBe(true);
+      },
+    );
+
+    it("should not retry an unrelated TypeError", () => {
+      expect(
+        isRetryableNetworkError(new TypeError("x is not a function")),
+      ).toBe(false);
+    });
+
     it("should return false for user-specified timeout (504 with timeoutType: user)", () => {
       const error = new ApiError({
         message: "Request timed out",

@@ -1,6 +1,8 @@
 import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
-import { isPlainObject } from "./utils";
+import { ApiError } from "./response";
+import { calculateBackoffDelay, isRetryableError } from "./retry";
+import { isPlainObject, sleep } from "./utils";
 
 type ObjectExpiration =
   | "never"
@@ -129,6 +131,56 @@ export function buildObjectLifecycleHeaders(
 }
 
 /**
+ * Files larger than this are uploaded in parts.
+ */
+export const MULTIPART_THRESHOLD = 90 * 1024 * 1024;
+
+export const DEFAULT_MULTIPART_CHUNK_SIZE = 10 * 1024 * 1024;
+/**
+ * Attempts per part, including the first one.
+ */
+export const DEFAULT_MULTIPART_PART_ATTEMPTS = 3;
+
+/**
+ * Progress of an upload, reported as bytes the server has acknowledged.
+ */
+export type UploadProgress = {
+  /**
+   * Bytes acknowledged by the server so far.
+   */
+  loaded: number;
+  /**
+   * Total size of the file in bytes.
+   */
+  total: number;
+  /**
+   * The part that just completed. Only set for multipart uploads.
+   */
+  partNumber?: number;
+  /**
+   * How many parts the file was split into. Only set for multipart uploads.
+   */
+  totalParts?: number;
+};
+
+/**
+ * Tuning for the multipart path, used for files over {@link MULTIPART_THRESHOLD}.
+ */
+export type MultipartOptions = {
+  /**
+   * Size of each part in bytes.
+   * @default 10485760 (10 MB)
+   */
+  chunkSize?: number;
+  /**
+   * Attempts per part, including the first one. Only transient failures
+   * (network errors, 429, 5xx) consume an attempt.
+   * @default 3
+   */
+  maxAttemptsPerPart?: number;
+};
+
+/**
  * Options for uploading a file.
  */
 export type UploadOptions = {
@@ -137,7 +189,64 @@ export type UploadOptions = {
    * This object will be sent as the X-Fal-Object-Lifecycle header.
    */
   lifecycle?: StorageSettings;
+
+  /**
+   * Called as the upload progresses. Single-shot uploads report once, on
+   * completion; multipart uploads report once per part. Anything thrown here
+   * is ignored so a listener cannot fail the upload.
+   */
+  onUploadProgress?: (progress: UploadProgress) => void;
+
+  /**
+   * Tuning for the multipart path. Ignored for files under
+   * {@link MULTIPART_THRESHOLD}.
+   */
+  multipart?: MultipartOptions;
 };
+
+/**
+ * Raised when an upload of a file split into parts cannot complete. The
+ * failure that caused it is kept in `cause`, and its status and body are
+ * summarized in the message.
+ */
+export class MultipartUploadError extends Error {
+  public readonly cause: unknown;
+  /**
+   * The part that failed, or undefined when the failure was not part-specific.
+   */
+  public readonly partNumber?: number;
+
+  constructor(message: string, cause: unknown, partNumber?: number) {
+    super(`${message}: ${describeError(cause)}`);
+    this.name = "MultipartUploadError";
+    this.cause = cause;
+    this.partNumber = partNumber;
+  }
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof ApiError) {
+    const body =
+      typeof error.body === "string" ? error.body : JSON.stringify(error.body);
+    const details = body && body !== "undefined" ? ` ${body}` : "";
+    return `HTTP ${error.status} ${error.message}${details}`;
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+function reportProgress(
+  onUploadProgress: ((progress: UploadProgress) => void) | undefined,
+  progress: UploadProgress,
+): void {
+  if (!onUploadProgress) {
+    return;
+  }
+  try {
+    onUploadProgress(progress);
+  } catch {
+    // A progress listener is observational and must never fail the upload.
+  }
+}
 
 /**
  * File support for the client. This interface establishes the contract for
@@ -147,8 +256,13 @@ export type UploadOptions = {
 export interface StorageClient {
   /**
    * Upload a file to the server. Returns the URL of the uploaded file.
+   *
+   * Files over {@link MULTIPART_THRESHOLD} are split into parts and uploaded
+   * sequentially.
+   *
    * @param file the file to upload
-   * @param options optional parameters, such as lifecycle configuration
+   * @param options optional parameters, such as lifecycle configuration,
+   * a progress listener and multipart tuning
    * @returns the URL of the uploaded file
    */
   upload: (file: Blob, options?: UploadOptions) => Promise<string>;
@@ -255,46 +369,90 @@ type MultipartObject = {
   etag: string;
 };
 
-async function partUploadRetries(
+/**
+ * Uploads a single part, retrying only failures that can succeed on a repeat
+ * (network errors and the configured retryable statuses). A client error is
+ * surfaced immediately instead of consuming the remaining attempts.
+ */
+async function uploadPart(
   uploadUrl: string,
   chunk: Blob,
+  partNumber: number,
   config: RequiredConfig,
-  tries = 3,
+  maxAttempts: number,
 ): Promise<MultipartObject> {
-  if (tries === 0) {
-    throw new Error("Part upload failed, retries exhausted");
+  const { fetch, responseHandler, retry } = config;
+  const attempts = Math.max(1, maxAttempts);
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const response = await fetch(uploadUrl, {
+        method: "PUT",
+        body: chunk,
+      });
+      const part = (await responseHandler(response)) as
+        | Partial<MultipartObject>
+        | undefined;
+      // The CDN returns the etag in the body and repeats it as a header; a
+      // proxy or a custom response handler may leave only the header.
+      const etag = part?.etag ?? response.headers.get("etag") ?? undefined;
+      if (!etag) {
+        throw new Error("the response carried no etag");
+      }
+      return { partNumber, etag };
+    } catch (error) {
+      lastError = error;
+      if (
+        attempt === attempts - 1 ||
+        !isRetryableError(error, retry.retryableStatusCodes)
+      ) {
+        break;
+      }
+      await sleep(
+        calculateBackoffDelay(
+          attempt,
+          retry.baseDelay,
+          retry.maxDelay,
+          retry.backoffMultiplier,
+          retry.enableJitter,
+        ),
+      );
+    }
   }
 
-  const { fetch, responseHandler } = config;
-
-  try {
-    const response = await fetch(uploadUrl, {
-      method: "PUT",
-      body: chunk,
-    });
-
-    return (await responseHandler(response)) as MultipartObject;
-  } catch (error) {
-    return await partUploadRetries(uploadUrl, chunk, config, tries - 1);
-  }
+  throw new MultipartUploadError(
+    `Upload of part ${partNumber} failed`,
+    lastError,
+    partNumber,
+  );
 }
 
 async function multipartUpload(
   file: Blob,
   config: RequiredConfig,
-  lifecycle?: StorageSettings,
+  options?: UploadOptions,
 ): Promise<string> {
   const { fetch, responseHandler } = config;
+  const { onUploadProgress, multipart } = options ?? {};
   const contentType = file.type || "application/octet-stream";
   const { upload_url: uploadUrl, file_url: url } =
-    await initiateMultipartUpload(file, config, contentType, lifecycle);
+    await initiateMultipartUpload(
+      file,
+      config,
+      contentType,
+      options?.lifecycle,
+    );
 
-  // Break the file into 10MB chunks
-  const chunkSize = 10 * 1024 * 1024;
+  const chunkSize = Math.max(
+    1,
+    multipart?.chunkSize ?? DEFAULT_MULTIPART_CHUNK_SIZE,
+  );
   const chunks = Math.ceil(file.size / chunkSize);
 
   const parsedUrl = new URL(uploadUrl);
 
+  let loaded = 0;
   const responses: MultipartObject[] = [];
 
   for (let i = 0; i < chunks; i++) {
@@ -307,24 +465,47 @@ async function multipartUpload(
     // {uploadUrl}/{part_number}?uploadUrlParams=...
     const partUploadUrl = `${parsedUrl.origin}${parsedUrl.pathname}/${partNumber}${parsedUrl.search}`;
 
-    responses.push(await partUploadRetries(partUploadUrl, chunk, config));
+    responses.push(
+      await uploadPart(
+        partUploadUrl,
+        chunk,
+        partNumber,
+        config,
+        multipart?.maxAttemptsPerPart ?? DEFAULT_MULTIPART_PART_ATTEMPTS,
+      ),
+    );
+
+    loaded += end - start;
+    reportProgress(onUploadProgress, {
+      loaded,
+      total: file.size,
+      partNumber,
+      totalParts: chunks,
+    });
   }
 
   // Complete the upload
   const completeUrl = `${parsedUrl.origin}${parsedUrl.pathname}/complete${parsedUrl.search}`;
-  const response = await fetch(completeUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      parts: responses.map((mpart) => ({
-        partNumber: mpart.partNumber,
-        etag: mpart.etag,
-      })),
-    }),
-  });
-  await responseHandler(response);
+  try {
+    const response = await fetch(completeUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        parts: responses.map((mpart) => ({
+          partNumber: mpart.partNumber,
+          etag: mpart.etag,
+        })),
+      }),
+    });
+    await responseHandler(response);
+  } catch (error) {
+    throw new MultipartUploadError(
+      `Completing the upload of ${chunks} parts failed`,
+      error,
+    );
+  }
 
   return url;
 }
@@ -341,11 +522,8 @@ export function createStorageClient({
 }: StorageClientDependencies): StorageClient {
   const ref: StorageClient = {
     upload: async (file: Blob, options?: UploadOptions) => {
-      const lifecycle = options?.lifecycle;
-
-      // Check for 90+ MB file size to do multipart upload
-      if (file.size > 90 * 1024 * 1024) {
-        return await multipartUpload(file, config, lifecycle);
+      if (file.size > MULTIPART_THRESHOLD) {
+        return await multipartUpload(file, config, options);
       }
 
       const contentType = file.type || "application/octet-stream";
@@ -355,7 +533,7 @@ export function createStorageClient({
         file,
         config,
         contentType,
-        lifecycle,
+        options?.lifecycle,
       );
       const response = await fetch(uploadUrl, {
         method: "PUT",
@@ -365,6 +543,12 @@ export function createStorageClient({
         },
       });
       await responseHandler(response);
+      // `fetch` exposes no send-side progress, so a single-shot upload can only
+      // be reported once the server has acknowledged the whole body.
+      reportProgress(options?.onUploadProgress, {
+        loaded: file.size,
+        total: file.size,
+      });
       return url;
     },
 
