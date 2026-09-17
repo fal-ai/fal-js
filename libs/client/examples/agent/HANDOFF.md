@@ -59,6 +59,11 @@ needed. Re-run the demo build after changing SDK/demo source. Backend edits use
 the usual dev reload. Ctrl+C stops the launcher. If `/agent` itself cannot run,
 resolve the normal local app setup first.
 
+## Small code examples
+
+See [SDK recipes](./recipes/README.md) for short TypeScript files you can inspect
+in an IDE, plus a local runner that uses synthetic responses and no paid calls.
+
 ## 3. Playground tabs
 
 **API tests** contains the question and image tests below. **Agent experience**
