@@ -142,7 +142,7 @@ Use existing `fal.storage.upload(file)` for uploads, followed by `input_image` o
   response before settlement. Call `wait` or `retrieve` to observe the outcome.
 - Breaking iteration, AbortSignal, deadline expiry, or a disconnected client
   stops local observation **only**. No cancel request is implicitly sent.
-- Each logical mutation gets one random idempotency key, reused on transport
+- Response create, answer, and cancel commands get an idempotency key, reused on transport
   retries. Supply `idempotencyKey` to recover the same mutation after restart.
   New method invocations normally mean new work. Keys are not content caching.
 - Backoff uses existing client retry settings and is locally abortable. HTTP
@@ -161,6 +161,14 @@ Native and native Swift/Kotlin runtimes have not been validated by this change.
   ordering, model pins, and checkpoints.
 - `operations.update` for advertised queued-work rename/reorder controls.
 - `artifacts.retrieve(id, { revision? })` to resolve metadata/authorized URLs.
+- `library.assets` and `library.collections` for native library browsing and
+  management. Library mutations use catalog `assetRecordId`, not artifact IDs.
+
+Native library, project, settings, and queue writes are not automatically retried.
+After a lost acknowledgement, read current state before repeating a write.
+The session runtime does not advertise editable operations; use plans and queues
+for supported edits. It also rejects request-level `instructions` and `fal`
+budget options; use native generation settings and cost approvals there.
 
 Conversation pages have `{ data, next_cursor }`. They include user input,
 input-answer receipts, and response output, rather than pretending a single

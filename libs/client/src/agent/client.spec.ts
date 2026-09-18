@@ -703,6 +703,39 @@ describe("Agent project resources", () => {
   });
 });
 
+describe("Agent library", () => {
+  it("preserves search filters and record identities without retrying uncertain writes", async () => {
+    const fetch = jest
+      .fn()
+      .mockImplementation(() => Promise.resolve(json({ success: true })));
+    const agent = setup(fetch);
+    const input = {
+      collectionId: "collection/1",
+      mediaTypes: ["image" as const],
+      limit: 2,
+      cursor: "a+b",
+    };
+    await agent.library.assets.list(input);
+    expect(
+      JSON.parse(new URL(fetch.mock.calls[0][0]).searchParams.get("input")!),
+    ).toEqual(input);
+    await agent.library.collections.addAsset("collection/1", "record/1");
+    expect(fetch.mock.calls[1][0]).toBe(
+      "https://agent.example/v1/agent/library/collections/collection%2F1/assets/record%2F1",
+    );
+    expect(fetch.mock.calls[1][1].method).toBe("PUT");
+    await agent.library.assets.setFavorite("record/1", true);
+    expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({ favorite: true });
+    expect(fetch.mock.calls[2][1].headers["Idempotency-Key"]).toBeUndefined();
+    fetch.mockClear();
+    fetch.mockRejectedValue(new TypeError("Connection lost after commit"));
+    await expect(
+      agent.library.collections.create({ name: "Test" }),
+    ).rejects.toThrow("Connection lost after commit");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("Agent server errors", () => {
   it("preserves the runtime API's useful error message", async () => {
     const fetch = jest.fn().mockResolvedValueOnce(
