@@ -15,6 +15,20 @@ export function mountResourceActions(
   const field = (id: string) => root.getElementById(id) as HTMLInputElement;
   const agent = client.agent;
   const templates = {
+    "library.assets.list": { limit: 10 },
+    "library.assets.retrieve": {},
+    "library.assets.register": { url: "", type: "image" },
+    "library.assets.setFavorite": { favorite: true },
+    "library.assets.updatePrompt": { prompt: "Updated description" },
+    "library.assets.delete": {},
+    "library.collections.list": { includeCharacters: false },
+    "library.collections.create": { name: "SDK library test" },
+    "library.collections.update": { name: "SDK library test renamed" },
+    "library.collections.move": { parentCollectionId: null },
+    "library.collections.setFavorite": { favorite: true },
+    "library.collections.delete": {},
+    "library.collections.addAsset": { assetRecordId: "" },
+    "library.collections.removeAsset": { assetRecordId: "" },
     "projects.list": {},
     "projects.create": { name: "SDK acceptance test", color: "sky" },
     "projects.context": {},
@@ -112,6 +126,69 @@ export function mountResourceActions(
             : { scope: "chat" as const, chatId: conversation() };
         let result: unknown;
         switch (action) {
+          case "library.assets.list":
+            result = await agent.library.assets.list(input);
+            break;
+          case "library.assets.retrieve":
+            result = await agent.library.assets.retrieve(item());
+            break;
+          case "library.assets.register":
+            result = await agent.library.assets.register(input);
+            break;
+          case "library.assets.setFavorite":
+            result = await agent.library.assets.setFavorite(
+              item(),
+              input.favorite,
+            );
+            break;
+          case "library.assets.updatePrompt":
+            result = await agent.library.assets.updatePrompt(
+              item(),
+              input.prompt,
+            );
+            break;
+          case "library.assets.delete":
+            result = await agent.library.assets.delete(item());
+            break;
+          case "library.collections.list":
+            result = await agent.library.collections.list(input);
+            break;
+          case "library.collections.create": {
+            const created = await agent.library.collections.create(input);
+            field("sdk-item").value = created.id;
+            result = created;
+            break;
+          }
+          case "library.collections.update":
+            result = await agent.library.collections.update(item(), input);
+            break;
+          case "library.collections.move":
+            result = await agent.library.collections.move(
+              item(),
+              input.parentCollectionId,
+            );
+            break;
+          case "library.collections.setFavorite":
+            result = await agent.library.collections.setFavorite(
+              item(),
+              input.favorite,
+            );
+            break;
+          case "library.collections.delete":
+            result = await agent.library.collections.delete(item());
+            break;
+          case "library.collections.addAsset":
+            result = await agent.library.collections.addAsset(
+              item(),
+              required(input.assetRecordId, "a library asset record ID"),
+            );
+            break;
+          case "library.collections.removeAsset":
+            result = await agent.library.collections.removeAsset(
+              item(),
+              required(input.assetRecordId, "a library asset record ID"),
+            );
+            break;
           case "projects.list":
             result = await agent.projects.list();
             break;
