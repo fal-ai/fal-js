@@ -1,5 +1,5 @@
 import { fakeExtensionContext } from "./testing";
-import { wma } from "./wma";
+import { wma, type WmaOptions } from "./wma";
 
 /** A peer connection just real enough to drive the raw-path handshake. */
 function fakePeer() {
@@ -50,6 +50,23 @@ describe("wma", () => {
     const { peer, channel } = fakePeer();
     global.RTCPeerConnection = jest.fn(() => peer) as never;
     return { peer, channel };
+  }
+
+  async function openWithPeer(options: WmaOptions) {
+    const { peer } = install();
+    const context = fakeExtensionContext({
+      endpointId: "me/media",
+      run: (async () => ({
+        data: { ice_servers: [{ urls: "stun:x" }] },
+        requestId: "r",
+      })) as never,
+      fetch: async () =>
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+    });
+    await wma().open(context, options);
+    return peer;
   }
 
   it("rejects a stopped direction before creating a peer", async () => {
@@ -916,6 +933,69 @@ describe("wma", () => {
     expect(peer.addTransceiver).toHaveBeenCalledWith("video", {
       direction: "recvonly",
     });
+  });
+
+  it("offers explicit output-only audio and video receive tracks", async () => {
+    const peer = await openWithPeer({ receive: ["video", "audio"] });
+
+    expect(peer.addTransceiver.mock.calls).toEqual([
+      ["video", { direction: "recvonly" }],
+      ["audio", { direction: "recvonly" }],
+    ]);
+  });
+
+  it("uses sendrecv for matched local tracks and recvonly for unmatched outputs", async () => {
+    const audioTrack = { kind: "audio", stop: jest.fn() };
+    const stream = {
+      getTracks: () => [audioTrack],
+    } as unknown as MediaStream;
+    const peer = await openWithPeer({
+      localStream: stream,
+      receive: ["video", "audio"],
+    });
+
+    expect(peer.addTransceiver.mock.calls).toEqual([
+      ["video", { direction: "recvonly" }],
+      [
+        audioTrack,
+        {
+          direction: "sendrecv",
+          streams: [stream],
+        },
+      ],
+    ]);
+  });
+
+  it("uses sendonly for local tracks without a matching receive slot", async () => {
+    const videoTrack = { kind: "video", stop: jest.fn() };
+    const stream = {
+      getTracks: () => [videoTrack],
+    } as unknown as MediaStream;
+    const peer = await openWithPeer({ localStream: stream, receive: [] });
+
+    expect(peer.addTransceiver).toHaveBeenCalledTimes(1);
+    expect(peer.addTransceiver).toHaveBeenCalledWith(videoTrack, {
+      direction: "sendonly",
+      streams: [stream],
+    });
+  });
+
+  it("supports a data-channel-only session with an empty receive list", async () => {
+    const peer = await openWithPeer({ receive: [] });
+
+    expect(peer.addTransceiver).not.toHaveBeenCalled();
+  });
+
+  it("rejects receive tracks combined with a legacy direction override", async () => {
+    install();
+    await expect(
+      wma("me/world").open(fakeExtensionContext(), {
+        receive: ["audio"],
+        direction: "recvonly",
+      }),
+    ).rejects.toThrow(
+      "WMA receive tracks cannot be combined with an explicit direction.",
+    );
   });
 
   it("publishes inbound media and data through the KERNEL, not its own options", async () => {
