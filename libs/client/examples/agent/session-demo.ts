@@ -62,7 +62,7 @@ let conversationId: string | undefined;
 let conversationCursor: string | null = null;
 let history: AgentConversationItem[] = [];
 let navigation = 0;
-let refreshing = false;
+let historyRefresh: { navigation: number; promise: Promise<void> } | undefined;
 let historyConnected = true;
 let deletionKey: string | undefined;
 let editingPlan: AgentPlanBlock | undefined;
@@ -623,85 +623,88 @@ async function listChats(more = false) {
       ? "Choose a conversation to restore its history."
       : "No conversations yet.";
 }
-async function refreshHistory() {
+function refreshHistory(): Promise<void> {
   const id = conversationId;
   const version = navigation;
-  if (!id || refreshing) return;
-  refreshing = true;
-  try {
-    let entries: AgentConversationItem[] = [];
-    for (let attempt = 0; attempt < 3; attempt++) {
-      entries = [];
-      try {
-        let cursor: string | undefined;
-        do {
-          const page = await client.agent.conversations.items.list(id, {
-            limit: 100,
-            ...(cursor ? { cursor } : {}),
-          });
-          entries.push(...page.data);
-          cursor = page.next_cursor ?? undefined;
-        } while (cursor && version === navigation);
-        break;
-      } catch (error) {
-        if (
-          !(error instanceof AgentRequestError && error.status === 409) ||
-          attempt === 2
-        )
-          throw error;
-      }
-    }
-    const metadata = await client.agent.conversations.retrieve(id);
-    if (version !== navigation || conversationId !== id) return;
-    history = entries;
-    const conversations = $("conversation-picker") as HTMLSelectElement;
-    if (![...conversations.options].some((option) => option.value === id))
-      conversations.add(new Option(metadata.title || id, id));
-    conversations.value = id;
-
-    const title = input("conversation-title");
-    if (document.activeElement !== title && title.dataset.conversation !== id) {
-      title.value = metadata.title ?? "";
-      title.dataset.conversation = id;
-    }
-
-    const ids = [
-      ...new Set([
-        ...entries.flatMap((e) => (e.response_id ? [e.response_id] : [])),
-        ...metadata.active_response_ids,
-      ]),
-    ];
-    const picker = $("response-picker") as HTMLSelectElement;
-    picker.replaceChildren(
-      ...ids.map(
-        (r) =>
-          new Option(
-            `${metadata.active_response_ids.includes(r) ? "Active · " : ""}${r}`,
-            r,
-          ),
-      ),
-    );
-    for (const entry of entries)
-      if (entry.type === "output" && entry.item.type === "fal.artifact")
-        gallery.set(entry.item.id, {
-          artifact: entry.item,
-          conversation: id,
-          responseId: entry.response_id ?? "",
+  if (!id) return Promise.resolve();
+  if (historyRefresh?.navigation === version) return historyRefresh.promise;
+  const promise = loadHistory(id, version).finally(() => {
+    if (historyRefresh?.promise === promise) historyRefresh = undefined;
+  });
+  historyRefresh = { navigation: version, promise };
+  return promise;
+}
+async function loadHistory(id: string, version: number) {
+  let entries: AgentConversationItem[] = [];
+  for (let attempt = 0; attempt < 3; attempt++) {
+    entries = [];
+    try {
+      let cursor: string | undefined;
+      do {
+        const page = await client.agent.conversations.items.list(id, {
+          limit: 100,
+          ...(cursor ? { cursor } : {}),
         });
-    renderHistory();
-    renderGallery();
-    $("history-status").textContent =
-      `${entries.length} history items · ${metadata.active_response_ids.length} active responses`;
-    const target =
-      current?.fal.conversation_id === id
-        ? current.id
-        : (metadata.active_response_ids.at(-1) ?? ids.at(-1));
-    if (target) {
-      picker.value = target;
-      if (!current || current.id !== target) void observe(target).catch(report);
+        entries.push(...page.data);
+        cursor = page.next_cursor ?? undefined;
+      } while (cursor && version === navigation);
+      break;
+    } catch (error) {
+      if (
+        !(error instanceof AgentRequestError && error.status === 409) ||
+        attempt === 2
+      )
+        throw error;
     }
-  } finally {
-    refreshing = false;
+  }
+  const metadata = await client.agent.conversations.retrieve(id);
+  if (version !== navigation || conversationId !== id) return;
+  history = entries;
+  const conversations = $("conversation-picker") as HTMLSelectElement;
+  if (![...conversations.options].some((option) => option.value === id))
+    conversations.add(new Option(metadata.title || id, id));
+  conversations.value = id;
+
+  const title = input("conversation-title");
+  if (document.activeElement !== title && title.dataset.conversation !== id) {
+    title.value = metadata.title ?? "";
+    title.dataset.conversation = id;
+  }
+
+  const ids = [
+    ...new Set([
+      ...entries.flatMap((e) => (e.response_id ? [e.response_id] : [])),
+      ...metadata.active_response_ids,
+    ]),
+  ];
+  const picker = $("response-picker") as HTMLSelectElement;
+  picker.replaceChildren(
+    ...ids.map(
+      (r) =>
+        new Option(
+          `${metadata.active_response_ids.includes(r) ? "Active · " : ""}${r}`,
+          r,
+        ),
+    ),
+  );
+  for (const entry of entries)
+    if (entry.type === "output" && entry.item.type === "fal.artifact")
+      gallery.set(entry.item.id, {
+        artifact: entry.item,
+        conversation: id,
+        responseId: entry.response_id ?? "",
+      });
+  renderHistory();
+  renderGallery();
+  $("history-status").textContent =
+    `${entries.length} history items · ${metadata.active_response_ids.length} active responses`;
+  const target =
+    current?.fal.conversation_id === id
+      ? current.id
+      : (metadata.active_response_ids.at(-1) ?? ids.at(-1));
+  if (target) {
+    picker.value = target;
+    if (!current || current.id !== target) void observe(target).catch(report);
   }
 }
 function resetPlan() {
