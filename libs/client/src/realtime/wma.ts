@@ -31,7 +31,6 @@ import { countTurnServers } from "./ice";
 
 const WMA_URL = "https://wma.fal.run";
 const ICE_DISCOVERY_TIMEOUT_MS = 5_000;
-const SESSION_NEGOTIATION_TIMEOUT_MS = 120_000;
 const HEARTBEAT_INTERVAL_MS = 5_000;
 const HEARTBEAT_TIMEOUT_MS = 4_000;
 // Reserved control-channel vocabulary for the session-affine network query: the request reaches
@@ -53,6 +52,14 @@ export type WmaReceiveTrackKind = "audio" | "video";
 
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaOptions {
+  /**
+   * How long to wait for the WMA bridge to acquire a runner and return its SDP answer.
+   *
+   * By default there is no client-side deadline, so an application may wait for capacity. The
+   * caller can still cancel through `abortSignal` or by closing the session. Set a positive number
+   * to impose an application-specific deadline.
+   */
+  negotiationTimeoutMs?: number | null;
   /**
    * Media direction. Sessions without a local stream default to `"recvonly"`; sessions with local
    * tracks preserve addTrack's `"sendrecv"` behavior. Pass an explicit direction for other flows.
@@ -596,6 +603,15 @@ export function wma(endpointId?: string) {
     id: "fal/wma",
     defaultEndpoint: endpointId,
     async open(context, options) {
+      if (
+        options.negotiationTimeoutMs != null &&
+        (!Number.isFinite(options.negotiationTimeoutMs) ||
+          options.negotiationTimeoutMs <= 0)
+      ) {
+        throw new Error(
+          "WMA negotiationTimeoutMs must be a positive, finite number.",
+        );
+      }
       if (options.direction === "stopped") {
         throw new Error('WMA direction cannot be "stopped".');
       }
@@ -959,10 +975,13 @@ export function wma(endpointId?: string) {
             once: true,
           });
         }
-        const sessionTimeout = setTimeout(
-          () => sessionController.abort(),
-          SESSION_NEGOTIATION_TIMEOUT_MS,
-        );
+        const sessionTimeout =
+          options.negotiationTimeoutMs == null
+            ? undefined
+            : setTimeout(
+                () => sessionController.abort(),
+                options.negotiationTimeoutMs,
+              );
         let answer: {
           session_id: string;
           sdp: string;
@@ -970,8 +989,8 @@ export function wma(endpointId?: string) {
         };
         try {
           // Auth comes from the client's configured credentials rather than a pasted key. The child
-          // signal preserves caller cancellation while bounding a bridge that accepts but never
-          // answers the negotiation request.
+          // signal preserves caller cancellation. Applications that want a bounded capacity wait
+          // can opt into negotiationTimeoutMs; by default the bridge may wait for a runner.
           const response = await context.fetch(`${WMA_URL}/session`, {
             method: "POST",
             signal: sessionController.signal,
@@ -985,7 +1004,7 @@ export function wma(endpointId?: string) {
           if (!response.ok) throw new Error(await readErrorMessage(response));
           answer = (await response.json()) as typeof answer;
         } finally {
-          clearTimeout(sessionTimeout);
+          if (sessionTimeout !== undefined) clearTimeout(sessionTimeout);
           context.signal.removeEventListener("abort", abortSession);
         }
 
