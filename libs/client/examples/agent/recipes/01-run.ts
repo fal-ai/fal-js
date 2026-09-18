@@ -1,6 +1,6 @@
 import type { AgentClient } from "@fal-ai/client";
 
-/** One call: submit, then poll until finished OR a user decision is needed. */
+/** Submit and poll until finished or a user decision is needed. */
 export async function runTask(
   agent: AgentClient,
   prompt: string,
@@ -11,7 +11,6 @@ export async function runTask(
     { onAccepted: ({ id }) => saveResponseId(id) },
   );
 
-  // A resolved promise does not necessarily mean "completed".
   if (response.fal.phase === "waiting_for_input") {
     console.log("Needs an answer:", response.pending_inputs);
   } else if (response.status === "failed") {

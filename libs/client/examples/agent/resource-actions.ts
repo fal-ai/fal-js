@@ -1,6 +1,5 @@
 import type { AgentResponseView, FalClient } from "../../src/index";
 
-/** Deliberately explicit: this panel exercises public SDK methods, never raw HTTP. */
 export function mountResourceActions(
   root: Document,
   client: FalClient,

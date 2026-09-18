@@ -37,7 +37,7 @@ import type {
 } from "./types";
 
 export interface AgentResponsesClient {
-  /** Select completed response artifacts as deliverables; does not rerun or reopen execution. */
+  /** Select completed artifacts as final deliverables. */
   selectFinalArtifacts(
     id: string,
     input: { artifact_ids: string[]; expected_sequence_number: number },

@@ -1,16 +1,13 @@
 import type { AgentClient, AgentRequest } from "@fal-ai/client";
 
-/** Persist this command BEFORE sending it, including the exact input and key. */
+/** Save the exact input and key before sending. */
 export type SavedCommand = { request: AgentRequest; idempotencyKey: string };
 
+// Reuse the saved command after an uncertain failure; use a new key for new work.
 export function submitOrRetry(agent: AgentClient, command: SavedCommand) {
   return agent.responses.create(command.request, {
     idempotencyKey: command.idempotencyKey,
   });
-  // Reuse the SAME command after an uncertain network failure.
-  // A new intentional request gets a new key: crypto.randomUUID().
-  // Errors can be AgentRequestError (transport/auth/validation), separate from
-  // an accepted response whose status is "failed". Do not blindly retry 4xx.
 }
 
 /** Loading a saved response does not repeat the original execution. */

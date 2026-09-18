@@ -157,7 +157,7 @@ Native and native Swift/Kotlin runtimes have not been validated by this change.
 ## Additional surfaces
 
 - `conversations.list`, `retrieve`, `update`, `delete`, and `items.list`.
-- `plans.update(id, { expected_revision, changes })` for typed step edits,
+- `plans.update(id, { conversation, expected_revision, changes })` for typed step edits,
   ordering, model pins, and checkpoints.
 - `operations.update` for advertised queued-work rename/reorder controls.
 - `artifacts.retrieve(id, { revision? })` to resolve metadata/authorized URLs.
