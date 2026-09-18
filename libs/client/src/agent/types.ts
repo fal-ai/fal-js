@@ -365,7 +365,7 @@ export interface AgentProjectMemory {
   primerUpdatedAt: string | null;
   notes: Array<{
     id: string;
-    kind: AgentMemoryKind;
+    kind: AgentMemoryKind | null;
     content: string;
     pinned: boolean;
     sourceChatId: string | null;

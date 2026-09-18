@@ -124,7 +124,7 @@ export function createAgentLibraryClient(
         read<{
           items: AgentLibraryAsset[];
           nextCursor: string | null;
-          totalCount: number;
+          totalCount: number | null;
           scopeTruncated: boolean;
         }>(`${assets}${query(input)}`, options),
       retrieve: (id: string, options?: AgentResourceOptions) =>
