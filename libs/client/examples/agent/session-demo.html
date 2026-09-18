@@ -668,6 +668,37 @@
               style="white-space: pre-wrap; overflow-wrap: anywhere"
             ></ol>
           </section>
+          <details class="panel">
+            <summary>SDK resource actions</summary>
+            <p>
+              Exercises public SDK methods on the conversation selected above.
+              Creates real project data. Runs and retries can incur charges.
+            </p>
+            <fieldset id="sdk-fields">
+              <legend>Resource controls</legend>
+              <label for="sdk-project">Project ID</label
+              ><input id="sdk-project" type="text" />
+              <label for="sdk-item"
+                >Asset, collection, document, memory note, queue turn or run
+                ID</label
+              ><input id="sdk-item" type="text" />
+              <label for="sdk-scope">Settings scope</label
+              ><select id="sdk-scope">
+                <option value="chat">Conversation</option>
+                <option value="project">Project</option>
+              </select>
+              <label for="sdk-action">SDK action</label
+              ><select id="sdk-action"></select>
+              <label for="sdk-input">Action input (JSON)</label
+              ><textarea id="sdk-input" spellcheck="false"></textarea>
+              <button id="sdk-execute">Run SDK action</button>
+            </fieldset>
+            <pre
+              id="sdk-result"
+              role="status"
+              style="white-space: pre-wrap; overflow-wrap: anywhere"
+            ></pre>
+          </details>
           <section class="panel" aria-labelledby="create-heading">
             <div class="section-head">
               <h2 id="create-heading">Choose a test</h2>

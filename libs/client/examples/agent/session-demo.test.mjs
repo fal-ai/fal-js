@@ -108,7 +108,13 @@ async function host(list = async () => planHistory) {
       $("conversation-picker").value = id;
       $("conversation-picker").dispatchEvent(new w.Event("change"));
     },
-
+    action: async (name, input) => {
+      $("sdk-action").value = name;
+      $("sdk-action").dispatchEvent(new w.Event("change"));
+      if (input) $("sdk-input").value = JSON.stringify(input);
+      $("sdk-execute").click();
+      await tick();
+    },
   };
 }
 
@@ -154,6 +160,111 @@ test("navigation starts its own history load and ignores the older result", asyn
     assert.equal(h.$("history").textContent, "");
   } finally {
     gate.resolve(planHistory);
+    h.close();
+  }
+});
+
+test("document attachment retains the upload on error and never automatically repeats mutations", async () => {
+  const h = await host();
+  let uploads = 0,
+    attachments = 0;
+  try {
+    h.w.fixtureClient.storage.upload = async () => {
+      uploads++;
+      return "https://fal.media/brief.txt";
+    };
+    h.w.fixtureClient.agent.projects = {
+      documents: {
+        attach: async (_id, input) => {
+          attachments++;
+          assert.equal(input.url, "https://fal.media/brief.txt");
+          assert.equal(input.contentType, "text/plain");
+          assert.equal(input.sizeBytes, 5);
+          throw new Error("lost acknowledgement");
+        },
+      },
+    };
+    h.$("sdk-project").value = "project-a";
+    await h.action("projects.documents.attach", {
+      text: "hello",
+      fileName: "brief.txt",
+    });
+    assert.equal(attachments, 1);
+    assert.match(h.$("sdk-result").textContent, /No automatic retry/);
+    h.$("sdk-execute").click();
+    await tick();
+    assert.equal(uploads, 1);
+    assert.equal(attachments, 2);
+  } finally {
+    h.close();
+  }
+});
+
+test("settings use the loaded revision and refuse to reuse another target's snapshot", async () => {
+  const h = await host();
+  const local = { preferences: { aspect_ratio: "1:1" }, preferredModels: {} };
+  let updates = 0;
+  try {
+    h.w.fixtureClient.agent.settings = {
+      defaults: {
+        retrieve: async () => ({ local }),
+        update: async (target, input) => {
+          updates++;
+          assert.equal(target.projectId, "project-a");
+          assert.deepEqual(
+            JSON.parse(JSON.stringify(input.expectedLocal)),
+            local,
+          );
+          return { local: input.changes };
+        },
+      },
+    };
+    h.$("sdk-scope").value = "project";
+    h.$("sdk-project").value = "project-a";
+    await h.action("settings.load");
+    h.$("sdk-project").value = "project-b";
+    await h.action("settings.save");
+    assert.equal(updates, 0);
+    assert.match(
+      h.$("sdk-result").textContent,
+      /Load settings for this target/,
+    );
+    h.$("sdk-project").value = "project-a";
+    await h.action("settings.save");
+    assert.equal(updates, 1);
+  } finally {
+    h.close();
+  }
+});
+
+test("generation settings advance the saved revision and stay scoped to their target", async () => {
+  const h = await host();
+  const revisions = [];
+  try {
+    h.w.fixtureClient.agent.settings = {
+      projects: {
+        retrieve: async () => ({ revision: 7, groups: {} }),
+        update: async (id, input) => {
+          assert.equal(id, "project-a");
+          revisions.push(input.expectedRevision);
+          return { ...input.settings, revision: input.expectedRevision + 1 };
+        },
+      },
+    };
+    h.$("sdk-scope").value = "project";
+    h.$("sdk-project").value = "project-a";
+    await h.action("settings.generation.load");
+    await h.action("settings.generation.save");
+    await h.action("settings.generation.save");
+    assert.deepEqual(revisions, [7, 8]);
+    h.$("sdk-project").value = "project-b";
+    await h.action("settings.generation.save");
+    assert.deepEqual(revisions, [7, 8]);
+    assert.match(
+      h.$("sdk-result").textContent,
+      /Load generation settings for this target/,
+    );
+  } finally {
     h.close();
   }
 });

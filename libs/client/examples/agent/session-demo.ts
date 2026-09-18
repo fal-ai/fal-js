@@ -10,6 +10,7 @@ import {
   type AgentPlanStep,
   type AgentResponseView,
 } from "../../src/index";
+import { mountResourceActions } from "./resource-actions";
 
 const client = createFalClient({
   agent: { baseUrl: `${location.origin}/api/agent-v2/sdk` },
@@ -152,6 +153,7 @@ function renderTimeline() {
   );
 }
 function controls() {
+  ($("sdk-fields") as HTMLFieldSetElement).disabled = busy;
   ($("plan-editor") as HTMLFieldSetElement).disabled = busy;
   button("load-plan").disabled = busy || !conversationId;
   button("run-plan").disabled = busy || !editingPlan || planDirty;
@@ -1109,3 +1111,37 @@ $("run-plan").onclick = () => {
     "Plan queued",
   );
 };
+
+mountResourceActions(
+  document,
+  {
+    ...client,
+    storage: createFalClient({
+      proxyUrl: `${location.origin}/api/fal/proxy`,
+      fetch: secureFetch,
+    }).storage,
+  },
+  {
+    conversation: () => conversationId,
+    response: () => current,
+    useResponse: show,
+    useConversation: (id) => {
+      resetConversation();
+      conversationId = id;
+      controls();
+      void listChats().catch(report);
+    },
+    run: async (action) => {
+      if (busy) return;
+      busy = true;
+      controls();
+      try {
+        await action();
+      } finally {
+        busy = false;
+        controls();
+        void refreshHistory().catch(report);
+      }
+    },
+  },
+);
