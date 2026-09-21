@@ -1,145 +1,115 @@
-<!-- cspell:words apek dogfood -->
+# Test the Agent SDK
 
-# Lucas — fal Agent SDK handoff
+This is the setup and acceptance guide for the experimental Agent SDK. The SDK
+uses the real fal Agent runtime through a signed-in browser session. It is not a
+public FAL_KEY API. Use matching SDK and runtime checkouts; rebuild the playground
+after SDK edits.
 
-September 16, 2026 · Local experimental integration
-
-## What you're testing
-
-A TypeScript SDK (`createFalClient(...).agent`) connected to the real Agent
-runtime through the existing signed-in fal session. The playground exercises the
-SDK itself: questions, answers, text, generation, artifacts, refinement and
-reconnection. It does not need a public Agent API key.
-
-| Repository                                          | Working branch           |
-| --------------------------------------------------- | ------------------------ |
-| [fal-ai/fal-js](https://github.com/fal-ai/fal-js)   | `apek/agent-sdk-v1`      |
-| [fal-ai/web-app](https://github.com/fal-ai/web-app) | `apek/agent-sdk-runtime` |
-
-## 1. Check out both branches
-
-Clone the two repositories into sibling directories:
-
-```sh
-git clone --branch apek/agent-sdk-v1 https://github.com/fal-ai/fal-js.git fal-js-sdk
-git clone --branch apek/agent-sdk-runtime https://github.com/fal-ai/web-app.git web-app-sdk-runtime
-```
-
-For existing checkouts, fetch origin and check out the matching branch in each
-repo. Use these branches instead of applying the older handoff ZIP's patches.
-The branches include the newer tabbed Agent experience and its findings.
-
-## 2. Prepare and launch
+## 1. Run the free checks first
 
 Use Node 22.22+, npm 11.15+ for fal-js, and pnpm 11.25+ for web-app.
-You need the team's normal working local Agent environment: database/schema and
-model registry, backend credentials, and a signed-in account with Agent access.
-Copy **your own** `apps/web/.env.local` and `apps/api/.env.local` from a working
-web-app checkout into the corresponding paths in this checkout. Include a local
-`CSRF_SECRET`; see the repo's example env file. This adapter adds no DB migration.
-
-From the parent directory containing both checkouts:
+From the fal-js checkout:
 
 ```sh
-(cd fal-js-sdk && npm ci)
-(cd web-app-sdk-runtime && pnpm install --frozen-lockfile)
-(cd web-app-sdk-runtime && pnpm exec turbo run build:compile --filter='@fal-ai/serverless-web-app^...' --concurrency=1)
-(cd fal-js-sdk && node libs/client/examples/agent/build-session-demo.mjs ../web-app-sdk-runtime)
-bash fal-js-sdk/libs/client/examples/agent/start-local.sh "$PWD/web-app-sdk-runtime"
+npm ci
+npm run test:agent
+npm run typecheck:agent
 ```
 
-The launcher starts web on **3020** and API on **3021**. Those ports must be free.
-Use the normal registered development login origin; the supplied script uses
-`http://127.0.0.1:3020`. Sign in at `/agent`, then open:
+`test:agent` runs SDK unit tests, playground host tests, and both sets of executable
+examples against the loopback HTTP/SSE fixture. No sign-in, database, LLM, or paid
+provider call is involved. This checks SDK behavior, not production authentication
+or provider reliability.
 
-**http://127.0.0.1:3020/agent-sdk-demo/index.html**
+From the matching web-app checkout:
 
-The demo bundles SDK source directly; no npm publication or package linking is
-needed. Re-run the demo build after changing SDK/demo source. Backend edits use
-the usual dev reload. Ctrl+C stops the launcher. If `/agent` itself cannot run,
-resolve the normal local app setup first.
+```sh
+pnpm install --frozen-lockfile
+pnpm run check:local
+pnpm run build:compile --concurrency=1 --filter='./packages/*'
+pnpm run test:agent-sdk:local
+pnpm run typecheck:web:local
+```
 
-## Small code examples
+The runtime test command covers the adapter and affected native execution paths.
+Database tests are skipped unless explicitly enabled. With the local PostgreSQL
+instance running at `localhost:54320/fal-web`:
 
-Start with [direct SDK examples](./simple/README.md) for short TypeScript scripts
-without wrapper functions or sign-in code. [Integration recipes](./recipes/README.md)
-cover the host application. Both include local runners with no paid calls.
+```sh
+AGENT_SDK_DATABASE_TEST=1 pnpm run test:web:local src/lib/agent-sdk/state.integration.test.ts
+```
 
-## 3. Playground tabs
+That test uses a random disposable schema and removes it afterward. It does not
+load `.env` or connect to a remote database. It covers ownership, retention,
+concurrent readers, recovery hashes, plan guards, deletion fences, and final picks.
 
-**API tests** contains the question and image tests below. **Agent experience**
-builds a multi-turn chat using the same SDK, with questions, plans, media,
-refinement, JSON inspection and recovery. Switching tabs preserves each view.
-See [workspace findings](./WORKSPACE_FINDINGS.md) for verified behavior and gaps.
+## 2. Prepare the signed-in runtime
 
-### API tests
+Use the team's normal local Agent setup, including database, model registry,
+backend credentials, and an account with Agent access. Configure your own
+`apps/web/.env.local` and `apps/api/.env.local`; the web environment needs a local
+`CSRF_SECRET`. Do not copy another person's credentials into a bundle or script.
 
-### Question & answer
+**Apply the runtime migrations before enabling the adapter.** Migration
+`0162_agent_chat_deletions.sql` adds the deletion table and insertion fences.
+From web-app, with `DATABASE_URL` targeting your local development database:
 
-1. Select **01 · Question & answer**, then **Run question test**.
-2. Wait for the question. Its accompanying text should appear **before** you
-   answer. The response remains `in_progress`, phase `waiting_for_input` once
-   the producer finishes writing.
-3. Select an option and send the answer. The **same response ID** continues and
-   finishes with an acknowledgement. No media is requested by this test.
+```sh
+pnpm run db:migrate
+```
 
-### Image & refinement
+Do not renumber an already applied migration or edit the database migration ledger
+by hand. If this database previously applied the experimental `0159_agent_chat_deletions`
+migration, recreate a disposable development database or coordinate its migration
+history before using the rebased branch.
 
-1. Select **02 · Image & refinement**, then **Run image test**.
-2. Observe an operation in progress, then an image artifact with a usable URL.
-   Fast queue transitions may fall between snapshots. Normal generation charges
-   apply.
-3. Select the image, describe a change, and click **Refine image**. This creates
-   a new response in the same conversation, using the artifact ID without a
-   re-upload. Previous images stay visible for comparison within this view.
-4. Try a warmth edit and an object replacement. The runtime may choose a sandbox
-   edit for the first and a generative model for the second.
+Build the demo from fal-js (substitute the actual runtime checkout path):
 
-Repeat with **Streaming** and **Polling**. **JSON response** is the default
-inspector tab: it is the full current API response object. **Lifecycle** is a
-local log of observed changes, not a separate API resource or complete server
-trace. Switching transport reconnects observation without resubmitting work.
+```sh
+node libs/client/examples/agent/build-session-demo.mjs ../web-app-agent-sdk
+bash libs/client/examples/agent/start-local.sh ../web-app-agent-sdk
+```
 
-**Disconnect** only stops observation. **Load** or a page refresh recovers the
-saved response. **Cancel execution** requests server cancellation. The saved
-response ID is local to this browser tab; history/gallery is not a full persisted
-conversation UI. Apek's response IDs won't work against your separate local DB.
+The launcher uses web port 3020 and API port 3021. If a compatible server already
+runs with `AGENT_SDK_ENABLED=1`, reuse it and only rebuild the demo into that checkout.
+Otherwise, ensure those ports are free. Sign in at
+<http://127.0.0.1:3020/agent>, then open
+<http://127.0.0.1:3020/agent-sdk-demo/index.html>.
 
-## What to look for / send back
+## 3. Walk through acceptance
 
-- Missing or late text around a question; answer lost during updates.
-- Duplicate work after reconnect/retry, or a response stuck in progress.
-- Queued work incorrectly presented as an artifact before it has a result.
-- Lost image references, failed refinements, or incomplete cancellation.
-- SDK steps that feel unnecessarily complicated for a host app.
+| Check                           | Action                                                                                                     | Expected result                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Question, free of media charges | API tests → Question & answer; run, then answer                                                            | Trailing text appears before handoff; the same response ID resumes and completes.              |
+| Approval                        | Create the two-step text plan, load it, edit/save, run, approve step two                                   | Revision advances; the checkpoint resumes once. Also exercise approval in Agent experience.    |
+| Recovery                        | Disconnect while running, reload, load/reconnect                                                           | Existing work returns without creating another response.                                       |
+| Cancellation                    | Cancel while waiting for an answer                                                                         | Response and pending question become cancelled. Disconnect alone must not cancel.              |
+| Conversations                   | Create, rename, reopen, paginate, delete                                                                   | History is restored; deleted conversations cannot be read or resumed.                          |
+| Resources                       | Use the SDK action panel for projects, documents, memory, settings, queues, and library assets/collections | Changes are reflected when read back; stale settings/plan revisions are rejected.              |
+| Media, paid                     | Image & refinement; generate, select the artifact, describe an edit                                        | New response in the same conversation; the artifact ID is reused without uploading it again.   |
+| Results, paid                   | Mark/unmark a completed artifact as final; load generation summary                                         | Explicit final selection persists; generation costs distinguish priced from unpriced requests. |
 
-Include the test/prompt, transport, response ID, expected vs actual behavior,
-and the relevant JSON/lifecycle excerpt. Redact credentials and private inputs.
+Repeat observation with Streaming and Polling. Text-only runs still invoke the
+Agent model; “free” above means no media generation, not a billing guarantee.
+Provider cancellation, provider failures, and concurrent duplicate paid submissions
+need deliberate live testing before a public release. The historical reports in
+this folder are dated evidence, not verification of the current checkout.
 
-## Current boundaries
+## Report a failure
 
-- First-party session auth only; no public FAL_KEY or native-mobile auth yet.
-- SSE delivers full snapshots, approximately once per second; not token deltas.
-- `usage` is null; `final_artifact_ids` is empty. Use `response.artifacts` for
-  available outputs. No per-response spending guarantee.
-- Conversation history/list/edit/delete, plan edits and operation edits are
-  not connected (501). Unsupported instructions/budgets are rejected (400).
-- General file/composition exports need more adapters. Blueprints/bake are out.
-- Provider cancellation, provider failure and concurrent duplicate paid requests
-  still need live testing. Cancel-while-waiting, real image generation, two kinds
-  of refinement, and disconnect/recovery have been exercised locally.
+Include both commit IDs, test/prompt, transport, response/conversation ID, expected
+versus actual result, and the relevant JSON/lifecycle excerpt. Exclude credentials
+and private inputs. For uncertain submissions, retain the exact request and
+idempotency key; creating a new key starts new work.
 
-Latest fixes cover unnamed attachments, sandbox image MIME inference, and early
-question handoff dropping trailing text. Streaming and polling were both checked
-with text visible beside an unanswered question. Focused regression tests,
-whole-web TypeScript and lint/format checks passed; no production build/deploy.
+## Where the documentation lives
 
-## Code map / deeper notes
+- [SDK reference](../../src/agent/README.md): current API, lifecycle, limits.
+- [Direct examples](./simple/README.md): short runnable SDK calls.
+- [Integration recipes](./recipes/README.md): host persistence and delegation.
+- web-app `docs/agent/SDK_SESSION_ADAPTER.md`: runtime setup, persistence, migrations.
+- [Historical workspace findings](./WORKSPACE_FINDINGS.md): earlier live sessions.
 
-- SDK: `fal-js/libs/client/src/agent/` and its `README.md`.
-- Playground: `fal-js/libs/client/examples/agent/session-demo.{html,ts}`.
-- Adapter: `web-app/apps/web/src/lib/agent-sdk/`.
-- HTTP route: `/api/agent-v2/sdk` (enabled by `AGENT_SDK_ENABLED=1`).
-- Persistence: `web-app/packages/data/src/db/entities/agent-sdk-response.ts`.
-- Integration details: `web-app/docs/agent/SDK_SESSION_ADAPTER.md`.
-- Earlier media test findings: `web-app/docs/agent/SDK_MEDIA_DOGFOOD_2026-09-16.md`.
+When behavior changes, update the reference and relevant example in the same
+change. Keep setup and acceptance steps here instead of copying capability lists
+into multiple handoffs.

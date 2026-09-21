@@ -13,6 +13,12 @@ The fal JavaScript/TypeScript Client is a robust and user-friendly library desig
 
 The `@fal-ai/client` library serves as a client for fal apps hosted on fal. For guidance on consuming and creating apps, refer to the [quickstart guide](https://fal.ai/docs).
 
+### Experimental Agent SDK
+
+Start with the [local testing guide](libs/client/examples/agent/HANDOFF.md) and
+[API reference](libs/client/src/agent/README.md). This draft uses the signed-in
+Agent runtime and requires matching SDK and web-app checkouts.
+
 ### Client Library
 
 This client library is crafted as a lightweight layer atop platform standards like `fetch`. This ensures a hassle-free integration into your existing codebase. Moreover, it addresses platform disparities, guaranteeing flawless operation across various JavaScript runtimes.

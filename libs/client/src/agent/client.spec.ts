@@ -307,28 +307,31 @@ describe("experimental Agent client", () => {
     );
   });
 
-  it("reconciles deltas without mutating old snapshots, skips replay, then resolves an artifact", async () => {
+  it("replaces snapshots without mutating previous output and skips replay", async () => {
     const initial = { ...response(), output: [message] };
-    const delta = {
-      type: "response.output_text.delta",
-      response_id: "resp_1",
-      sequence_number: 1,
-      output_index: 0,
-      item_id: "msg_1",
-      content_index: 0,
-      delta: "Café 🎬",
+    const next: AgentResponse = {
+      ...response(1),
+      output: [
+        {
+          ...message,
+          content: [{ type: "output_text", text: "Café 🎬", annotations: [] }],
+        },
+      ],
     };
     const done = response(2, "done");
     const fetch = jest
       .fn()
       .mockResolvedValueOnce(json(initial))
-      .mockResolvedValueOnce(sse([delta, delta, snapshotEvent(done)]));
+      .mockResolvedValueOnce(
+        sse([snapshotEvent(next), snapshotEvent(next), snapshotEvent(done)]),
+      );
     const snapshots = await collect(setup(fetch).responses.stream("resp_1"));
-    expect(snapshots).toHaveLength(3);
-    expect(snapshots[0].output_text).toBe("");
-    expect(snapshots[1].output_text).toBe("Café 🎬");
+    expect(snapshots.map((snapshot) => snapshot.output_text)).toEqual([
+      "",
+      "Café 🎬",
+      "",
+    ]);
     expect(snapshots[2].artifacts[0].id).toBe("asset_1");
-    expect(fetch.mock.calls[1][0]).toContain("starting_after=0");
   });
 
   it("closes observation at required input", async () => {
@@ -542,17 +545,27 @@ describe("experimental Agent client", () => {
     await agent.plans.update("plan_1", {
       conversation: "conv_1",
       expected_revision: 2,
-      changes: [
-        { type: "rename_plan", title: "Campaign" },
-        { type: "rename_step", step_id: "s1", label: "Hero" },
+      title: "Campaign",
+      steps: [
+        {
+          id: "s1",
+          label: "Hero",
+          model_pinned: false,
+          requires_approval: true,
+        },
       ],
     });
     expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({
       conversation: "conv_1",
       expected_revision: 2,
-      changes: [
-        { type: "rename_plan", title: "Campaign" },
-        { type: "rename_step", step_id: "s1", label: "Hero" },
+      title: "Campaign",
+      steps: [
+        {
+          id: "s1",
+          label: "Hero",
+          model_pinned: false,
+          requires_approval: true,
+        },
       ],
     });
     await agent.plans.retrieve("plan/1", { conversation: "conv/1" });

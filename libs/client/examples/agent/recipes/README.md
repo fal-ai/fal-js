@@ -58,5 +58,5 @@ Real image runs incur normal generation charges.
 - Persist the accepted ID for recovery. For uncertain submissions, persist and
   reuse the exact command and idempotency key. These recipes inject persistence
   callbacks; choosing durable storage is the host application's responsibility.
-- The current runtime leaves `usage` null and `final_artifact_ids` empty. Use
-  `artifacts` to inspect available results; do not infer settled costs or final picks.
+- `usage` remains null. Generation summaries report billed media costs separately;
+  final artifacts are explicitly selected. See the [SDK reference](../../../src/agent/README.md).

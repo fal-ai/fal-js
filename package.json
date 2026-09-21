@@ -12,7 +12,9 @@
     "test": "nx test",
     "lint:staged": "lint-staged",
     "docs:typedoc": "typedoc --tsconfig libs/client/tsconfig.lib.json",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test:agent": "jest --config libs/client/jest.config.ts --runInBand libs/client/src/agent && node --test libs/client/examples/agent/agent-workspace.test.mjs libs/client/examples/agent/session-demo.test.mjs && node libs/client/examples/agent/recipes/run.mjs && node libs/client/examples/agent/simple/run.mjs all",
+    "typecheck:agent": "tsc --noEmit -p libs/client/tsconfig.lib.json && tsc -p libs/client/examples/agent/recipes/tsconfig.json && tsc -p libs/client/examples/agent/simple/tsconfig.json"
   },
   "private": true,
   "lint-staged": {

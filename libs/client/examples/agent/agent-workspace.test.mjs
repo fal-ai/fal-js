@@ -518,3 +518,45 @@ test("exports retain download warnings and final selection uses the current revi
     h.close();
   }
 });
+
+test("approval buttons send only the runtime-supported decision fields", async () => {
+  const approval = {
+    id: "approval_1",
+    type: "fal.input_request",
+    kind: "approval",
+    status: "pending",
+    prompt: "Continue?",
+    target: { item_id: "next", revision: 1 },
+    accepted_answers: ["approve", "reject"],
+  };
+  const calls = [];
+  const h = await host({
+    saved: { turns: [{ id: "r1", prompt: "Make a plan", receipts: [] }] },
+    retrieve: async () =>
+      response("r1", [approval], "in_progress", "waiting_for_input"),
+    answer: async (id, input) => {
+      calls.push({ id, input });
+      return response("r1");
+    },
+  });
+  try {
+    const submitter = h.document.querySelector(
+      '.question button[value="approve"]',
+    );
+    const event = new h.w.Event("submit", { cancelable: true });
+    Object.defineProperty(event, "submitter", { value: submitter });
+    h.document.querySelector(".question").dispatchEvent(event);
+    await tick();
+    assert.deepEqual(JSON.parse(JSON.stringify(calls)), [
+      {
+        id: "r1",
+        input: {
+          input_request_id: "approval_1",
+          answer: { kind: "approval", decision: "approve" },
+        },
+      },
+    ]);
+  } finally {
+    h.close();
+  }
+});

@@ -111,6 +111,11 @@ describe("isAllowedUrl with default patterns", () => {
       expect(isAllowedUrl(url)).toBe(true);
     });
 
+    it("should allow storage upload initiate-multipart URL", () => {
+      const url = `${FAL_REST_API_URL}/storage/upload/initiate-multipart?storage_type=fal-cdn-v3`;
+      expect(isAllowedUrl(url)).toBe(true);
+    });
+
     it("should allow storage upload complete-multipart URL", () => {
       const url = `${FAL_REST_API_URL}/storage/upload/complete-multipart?storage_type=fal-cdn-v3`;
       expect(isAllowedUrl(url)).toBe(true);

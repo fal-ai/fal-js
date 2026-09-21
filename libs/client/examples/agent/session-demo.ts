@@ -6,8 +6,8 @@ import {
   type AgentConversationItem,
   type AgentInputRequest,
   type AgentPlanBlock,
-  type AgentPlanChange,
   type AgentPlanStep,
+  type AgentPlanUpdate,
   type AgentResponseView,
 } from "../../src/index";
 import { mountResourceActions } from "./resource-actions";
@@ -72,11 +72,7 @@ let planDirty = false;
 let planRunKey: string | undefined;
 let planEditAttempt:
   | {
-      input: {
-        conversation: string;
-        expected_revision: number;
-        changes: AgentPlanChange[];
-      };
+      input: AgentPlanUpdate;
       key: string;
     }
   | undefined;
@@ -1022,53 +1018,28 @@ $("add-plan-step").onclick = () => {
   const label = input("new-plan-step").value.trim();
   if (!label || !editingPlan) return;
   // New steps are saved immediately so the server supplies their stable IDs.
-  void savePlan([{ type: "add_step", step: { label } }]);
+  void savePlan({ label, model_pinned: false, requires_approval: false });
 };
-async function savePlan(explicit?: AgentPlanChange[]) {
+async function savePlan(added?: AgentPlanUpdate["steps"][number]) {
   if (!editingPlan || !conversationId || busy) return;
-  if (explicit && planDirty) {
+  if (added && planDirty) {
     notice("Save your current edits before adding a step.");
     return;
   }
-  const changes: AgentPlanChange[] = explicit ?? [];
-  if (!explicit) {
-    if (input("plan-name").value !== (editingPlan.data.title ?? ""))
-      changes.push({ type: "rename_plan", title: input("plan-name").value });
-    const before = editingPlan.data.steps;
-    for (const step of before)
-      if (!planSteps.some((s) => s.id === step.id))
-        changes.push({ type: "remove_step", step_id: step.id });
-    changes.push({
-      type: "reorder_steps",
-      step_ids: planSteps.map((s) => s.id),
-    });
-    for (const step of planSteps) {
-      const old = before.find((s) => s.id === step.id)!;
-      if (old.label !== step.label)
-        changes.push({
-          type: "rename_step",
-          step_id: step.id,
-          label: step.label,
-        });
-      if (old.requires_approval !== step.requires_approval)
-        changes.push({
-          type: "set_checkpoint",
-          step_id: step.id,
-          requires_approval: step.requires_approval === true,
-        });
-      if (old.endpoint_id !== step.endpoint_id) {
-        changes.push({
-          type: "pin_model",
-          step_id: step.id,
-          endpoint_id: step.endpoint_id || null,
-        });
-      }
-    }
-  }
-  const request = {
+  const request: AgentPlanUpdate = {
     conversation: conversationId,
     expected_revision: editingPlan.revision,
-    changes,
+    title: input("plan-name").value || undefined,
+    steps: [
+      ...planSteps.map((step) => ({
+        id: step.id,
+        label: step.label,
+        endpoint_id: step.endpoint_id || null,
+        model_pinned: step.model_pinned === true,
+        requires_approval: step.requires_approval === true,
+      })),
+      ...(added ? [added] : []),
+    ],
   };
   if (JSON.stringify(planEditAttempt?.input) !== JSON.stringify(request))
     planEditAttempt = { input: request, key: crypto.randomUUID() };

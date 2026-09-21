@@ -21,12 +21,10 @@ import type {
   AgentConversation,
   AgentConversationItem,
   AgentGenerationSummary,
-  AgentOperation,
-  AgentOperationChange,
   AgentPage,
   AgentPageOptions,
   AgentPlanBlock,
-  AgentPlanChange,
+  AgentPlanUpdate,
   AgentRequest,
   AgentRequestOptions,
   AgentResourceOptions,
@@ -125,20 +123,9 @@ export interface AgentClient {
     ): Promise<AgentResponseView>;
     update(
       id: string,
-      change: {
-        conversation: string;
-        expected_revision: number;
-        changes: AgentPlanChange[];
-      },
+      change: AgentPlanUpdate,
       options?: AgentRequestOptions,
     ): Promise<AgentPlanBlock>;
-  };
-  readonly operations: {
-    update(
-      id: string,
-      change: { expected_revision: number; changes: AgentOperationChange[] },
-      options?: AgentRequestOptions,
-    ): Promise<AgentOperation>;
   };
   readonly artifacts: {
     retrieve(
@@ -505,10 +492,6 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
         ),
       update: (id, change, options) =>
         mutate("PATCH", `/agent/plans/${segment(id)}`, change, options),
-    },
-    operations: {
-      update: (id, change, options) =>
-        mutate("PATCH", `/agent/operations/${segment(id)}`, change, options),
     },
     artifacts: {
       retrieve: (id, options = {}) => {

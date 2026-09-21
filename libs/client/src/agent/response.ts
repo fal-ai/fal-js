@@ -87,7 +87,7 @@ export function validateAgentResponse(
     if (
       item?.type !== "fal.input_request" ||
       item.status !== "pending" ||
-      !["clarification", "approval", "selection"].includes(item.kind)
+      !["clarification", "approval"].includes(item.kind)
     ) {
       throw new AgentProtocolError(
         "Unsupported or missing pending input request",

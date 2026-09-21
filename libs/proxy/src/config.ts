@@ -18,6 +18,7 @@ export const DEFAULT_ALLOWED_URL_PATTERNS = [
   "queue.fal.run/**",
   // Storage upload endpoints (exact matches, ? is escaped for literal match)
   `${FAL_REST_API_URL}/storage/upload/initiate\\?storage_type=fal-cdn-v3`,
+  `${FAL_REST_API_URL}/storage/upload/initiate-multipart\\?storage_type=fal-cdn-v3`,
   `${FAL_REST_API_URL}/storage/upload/complete-multipart\\?storage_type=fal-cdn-v3`,
 ];
 

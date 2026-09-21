@@ -43,11 +43,16 @@ export { ApiError, ValidationError } from "./response";
 export type { ResponseHandler } from "./response";
 export { isRetryableError } from "./retry";
 export type { RetryOptions } from "./retry";
-export type {
-  StorageACL,
-  StorageACLRule,
-  StorageClient,
-  StorageSettings,
+export {
+  MULTIPART_THRESHOLD,
+  MultipartUploadError,
+  type MultipartOptions,
+  type StorageACL,
+  type StorageACLRule,
+  type StorageClient,
+  type StorageSettings,
+  type UploadOptions,
+  type UploadProgress,
 } from "./storage";
 export type { FalStream, StreamingClient } from "./streaming";
 export type { OutputType } from "./types/client";

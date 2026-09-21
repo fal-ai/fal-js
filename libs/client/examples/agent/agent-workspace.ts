@@ -252,7 +252,7 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
         }
       card.append(
         list,
-        node("small", "Plan preview · editing is not connected yet."),
+        node("small", "Plan preview · use API tests to edit or run this plan."),
       );
     } else if (
       ["asset", "media", "collection"].includes(block.kind) &&
@@ -386,22 +386,7 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
         }
         fields.append(group);
       }
-    if (request.kind === "selection")
-      for (const id of request.artifact_ids) {
-        const label = node("label", "", "option");
-        const choice = node("input");
-        choice.type = request.multiple ? "checkbox" : "radio";
-        choice.name = "artifact";
-        choice.value = id;
-        label.append(choice, document.createTextNode(id));
-        fields.append(label);
-      }
     if (request.kind === "approval") {
-      const reason = node("textarea");
-      reason.name = "reason";
-      reason.placeholder = "Optional feedback";
-      reason.setAttribute("aria-label", "Approval feedback");
-      fields.append(reason);
       for (const decision of request.accepted_answers) {
         const action = node("button", decision.replaceAll("_", " "));
         action.type = "submit";
@@ -433,22 +418,13 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
       } else if (request.kind === "approval") {
         const decision = (e.submitter as HTMLButtonElement | null)?.value as
           | "approve"
-          | "reject"
-          | "request_changes";
+          | "reject";
         if (!request.accepted_answers.includes(decision)) return;
         answer = {
           kind: "approval",
           decision,
-          text: String(data.get("reason") ?? ""),
         };
-      } else {
-        const ids = data.getAll("artifact").map(String);
-        if (!ids.length) {
-          error.textContent = "Choose a result.";
-          return;
-        }
-        answer = { kind: "selection", artifact_ids: ids };
-      }
+      } else return;
       const label =
         answer.kind === "answers" && request.kind === "clarification"
           ? answer.answers
@@ -467,7 +443,7 @@ export function mountAgentWorkspace(root: Document | ShadowRoot) {
               .join(" · ")
           : answer.kind === "approval"
             ? answer.decision
-            : "Results selected";
+            : "Answered";
       void mutate({
         kind: "answer",
         id: responseId,

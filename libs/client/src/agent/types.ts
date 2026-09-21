@@ -112,9 +112,8 @@ export type AgentInputRequest = InputRequestBase &
     | {
         kind: "approval";
         target: { item_id: string; revision: number };
-        accepted_answers: Array<"approve" | "reject" | "request_changes">;
+        accepted_answers: Array<"approve" | "reject">;
       }
-    | { kind: "selection"; artifact_ids: string[]; multiple: boolean }
   );
 
 export type AgentAnswer =
@@ -128,10 +127,8 @@ export type AgentAnswer =
     }
   | {
       kind: "approval";
-      decision: "approve" | "reject" | "request_changes";
-      text?: string;
-    }
-  | { kind: "selection"; artifact_ids: string[] };
+      decision: "approve" | "reject";
+    };
 
 export type AgentOutputItem =
   | AgentMessage
@@ -251,22 +248,18 @@ export type AgentConversationItem = {
   | { type: "output"; item: AgentOutputItem }
 );
 
-export type AgentPlanChange =
-  | { type: "rename_plan"; title: string }
-  | { type: "rename_step"; step_id: string; label: string }
-  | { type: "remove_step"; step_id: string }
-  | { type: "reorder_steps"; step_ids: string[] }
-  | {
-      type: "add_step";
-      after_step_id?: string;
-      step: Omit<AgentPlanStep, "id" | "detail">;
-    }
-  | { type: "set_checkpoint"; step_id: string; requires_approval: boolean }
-  | { type: "pin_model"; step_id: string; endpoint_id: string | null };
-
-export type AgentOperationChange =
-  | { type: "rename"; label: string }
-  | { type: "move_after"; operation_id: string | null };
+export type AgentPlanUpdate = {
+  conversation: string;
+  expected_revision: number;
+  title?: string;
+  steps: Array<{
+    id?: string;
+    label: string;
+    endpoint_id?: string | null;
+    model_pinned: boolean;
+    requires_approval: boolean;
+  }>;
+};
 
 /** Draft SSE wire envelope; unknown events trigger authoritative resync. */
 export interface AgentEvent {
@@ -274,12 +267,6 @@ export interface AgentEvent {
   sequence_number: number;
   response_id: string;
   response?: AgentResponse;
-  item?: AgentOutputItem;
-  output_index?: number;
-  item_id?: string;
-  content_index?: number;
-  part?: AgentText | AgentBlock;
-  delta?: string;
 }
 
 /** Resource mutations are sent once; reconcile uncertain results before retrying. */
