@@ -93,7 +93,7 @@ export function createAgentTransport(config: RequiredConfig) {
     method: string,
     path: string,
     input: unknown,
-    options: AgentRequestOptions,
+    options: AgentRequestOptions = {},
     responseId?: string,
     stream = false,
     retry = true,

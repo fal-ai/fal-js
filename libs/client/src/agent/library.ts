@@ -3,6 +3,29 @@ import type { AgentResourceOptions } from "./types";
 
 export type AgentLibraryMediaType = "image" | "video" | "audio" | "3d";
 
+export interface AgentLibraryTag {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
+export interface AgentCharacterInput {
+  name: string;
+  description: string;
+  /** One to twenty fal-hosted image URLs or existing asset targets. */
+  referenceImages: string[];
+  coverImageUrl?: string | null;
+}
+
+export interface AgentCharacterReference {
+  assetRecordId: string | null;
+  assetId: string | null;
+  url: string;
+  /** Display-only cover. Exclude this entry when saving referenceImages. */
+  isCover?: boolean;
+}
+
 export interface AgentLibraryAsset {
   /** Catalog identity. Use this for library mutations, not artifact or media IDs. */
   assetRecordId?: string | null;
@@ -40,6 +63,7 @@ export interface AgentLibraryAssetQuery {
   endpoints?: string[];
   collectionId?: string | null;
   recursive?: boolean;
+  characterSearchIdentifiers?: string[];
   assetRecordIds?: string[];
   tagIds?: string[];
   tagMode?: "any" | "all";
@@ -103,6 +127,8 @@ export function createAgentLibraryClient(
 ) {
   const assets = "/agent/library/assets";
   const collections = "/agent/library/collections";
+  const characters = "/agent/library/characters";
+  const tags = "/agent/library/tags";
   const read = <T>(url: string, options: AgentResourceOptions = {}) =>
     request<T>("GET", url, undefined, options);
   const query = (input: object) =>
@@ -116,7 +142,71 @@ export function createAgentLibraryClient(
   ) => request<T>(method, url, input, options, undefined, false, false);
   type Success = { success: true };
   return {
+    tags: {
+      list: (options?: AgentResourceOptions) =>
+        read<AgentLibraryTag[]>(tags, options),
+      create: (
+        input: { name: string; color?: string },
+        options?: AgentResourceOptions,
+      ) => write<AgentLibraryTag>("POST", tags, input, options),
+      update: (
+        id: string,
+        input: { name?: string; color?: string },
+        options?: AgentResourceOptions,
+      ) =>
+        write<AgentLibraryTag>(
+          "PATCH",
+          `${tags}/${segment(id)}`,
+          input,
+          options,
+        ),
+      delete: (id: string, options?: AgentResourceOptions) =>
+        write<Success>("DELETE", `${tags}/${segment(id)}`, undefined, options),
+    },
+    characters: {
+      create: (
+        input: AgentCharacterInput & { identifier?: string },
+        options?: AgentResourceOptions,
+      ) => write<AgentLibraryCollection>("POST", characters, input, options),
+      update: (
+        id: string,
+        input: AgentCharacterInput,
+        options?: AgentResourceOptions,
+      ) =>
+        write<AgentLibraryCollection>(
+          "PATCH",
+          `${characters}/${segment(id)}`,
+          input,
+          options,
+        ),
+      references: (id: string, options?: AgentResourceOptions) =>
+        read<AgentCharacterReference[]>(
+          `${characters}/${segment(id)}/references`,
+          options,
+        ),
+      checkIdentifier: (identifier: string, options?: AgentResourceOptions) =>
+        read<{ identifier: string; available: boolean }>(
+          `${characters}/identifier${query({ identifier })}`,
+          options,
+        ),
+    },
     assets: {
+      tags: (id: string, options?: AgentResourceOptions) =>
+        read<AgentLibraryTag[]>(`${assets}/${segment(id)}/tags`, options),
+      assignTag: (id: string, tagId: string, options?: AgentResourceOptions) =>
+        write<Success>(
+          "PUT",
+          `${assets}/${segment(id)}/tags/${segment(tagId)}`,
+          undefined,
+          options,
+        ),
+      removeTag: (id: string, tagId: string, options?: AgentResourceOptions) =>
+        write<Success>(
+          "DELETE",
+          `${assets}/${segment(id)}/tags/${segment(tagId)}`,
+          undefined,
+          options,
+        ),
       list: (
         input: AgentLibraryAssetQuery = {},
         options?: AgentResourceOptions,

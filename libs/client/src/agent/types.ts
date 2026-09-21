@@ -136,6 +136,27 @@ export type AgentOutputItem =
   | AgentArtifact
   | AgentInputRequest;
 
+/** Visible activity from the response's runtime turns. IDs remain stable on replay. */
+export type AgentActivity = {
+  id: string;
+  turn_id: string;
+  label: string;
+  status: "running" | "completed";
+  /** Unix time in milliseconds. */
+  started_at: number;
+  ended_at?: number;
+  duration_ms?: number;
+} & (
+  | {
+      kind: "tool";
+      node: string;
+      name?: string;
+      arguments?: AgentJson;
+      output?: AgentJson;
+    }
+  | { kind: "reasoning"; content: string }
+);
+
 export interface AgentResponse {
   id: string;
   status: AgentStatus;
@@ -163,6 +184,10 @@ export interface AgentResponse {
     sequence_number: number;
     pending_input_ids: string[];
     final_artifact_ids: string[];
+    /** Present on runtimes that expose visible tool and reasoning activity. */
+    activities?: AgentActivity[];
+    /** Skills actually loaded during these turns, including inherited active skills. */
+    activated_skills?: string[];
   };
 }
 
@@ -182,10 +207,10 @@ export type AgentInputContent =
 
 export type AgentRequest = {
   input: string | Array<{ role: "user"; content: AgentInputContent[] }>;
-  instructions?: string;
   fal?: {
-    max_cost_usd?: number;
-    on_ambiguity?: "ask" | "assume" | "fail";
+    on_ambiguity?: "ask";
+    /** Activate available skills by name. Activations persist in the conversation. */
+    skills?: string[];
   };
 } & (
   | { conversation?: string; previous_response_id?: never }

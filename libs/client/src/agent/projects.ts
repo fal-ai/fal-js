@@ -1,4 +1,6 @@
-import { createAgentTransport, segment } from "./transport";
+import type { RequiredConfig } from "../config";
+import { createStorageClient } from "../storage";
+import { createAgentTransport, segment, throwIfAborted } from "./transport";
 import type {
   AgentConversation,
   AgentMemoryKind,
@@ -12,8 +14,16 @@ import type {
   AgentResourceOptions,
 } from "./types";
 
+export interface AgentProjectDocumentImport {
+  url: string;
+  fileName: string;
+  /** Optional MIME type. Inferred from the file extension when omitted. */
+  contentType?: string;
+}
+
 export function createAgentProjectsClient(
   request: ReturnType<typeof createAgentTransport>,
+  config: RequiredConfig,
 ) {
   const path = (id: string) => `/agent/projects/${segment(id)}`;
   const read = <T>(url: string, options: AgentResourceOptions = {}) =>
@@ -130,6 +140,34 @@ export function createAgentProjectsClient(
         ),
     },
     documents: {
+      upload: async (
+        id: string,
+        file: File,
+        options: AgentResourceOptions = {},
+      ) => {
+        throwIfAborted(options.signal);
+        if (file.size > 25 * 1024 * 1024)
+          throw new Error("Documents must be 25 MiB or smaller");
+        const url = await createStorageClient({ config }).upload(file);
+        throwIfAborted(options.signal);
+        return write<AgentProjectDocument>(
+          "POST",
+          `${path(id)}/documents/import`,
+          { url, fileName: file.name, contentType: file.type || undefined },
+          options,
+        );
+      },
+      import: (
+        id: string,
+        input: AgentProjectDocumentImport,
+        options?: AgentResourceOptions,
+      ) =>
+        write<AgentProjectDocument>(
+          "POST",
+          `${path(id)}/documents/import`,
+          input,
+          options,
+        ),
       list: (id: string, options?: AgentResourceOptions) =>
         read<AgentProjectDocument[]>(`${path(id)}/documents`, options),
       attach: (

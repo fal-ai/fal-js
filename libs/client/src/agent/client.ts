@@ -1,4 +1,5 @@
 import type { RequiredConfig } from "../config";
+import { createAgentConversationActionsClient } from "./conversations";
 import { AgentProtocolError, AgentRequestError } from "./errors";
 import { createAgentLibraryClient } from "./library";
 import { createAgentProjectsClient } from "./projects";
@@ -6,6 +7,7 @@ import { createAgentQueueClient } from "./queue";
 import { reduceAgentEvent } from "./reducer";
 import { agentResponseView, isAgentStopped } from "./response";
 import { createAgentSettingsClient } from "./settings";
+import { createAgentSkillsClient } from "./skills";
 import { agentEvents } from "./stream";
 import {
   createAgentTransport,
@@ -63,6 +65,7 @@ export interface AgentResponsesClient {
 }
 
 export interface AgentClient {
+  readonly skills: ReturnType<typeof createAgentSkillsClient>;
   readonly library: ReturnType<typeof createAgentLibraryClient>;
   readonly queue: ReturnType<typeof createAgentQueueClient>["queue"];
   readonly runs: ReturnType<typeof createAgentQueueClient>["runs"];
@@ -81,7 +84,9 @@ export interface AgentClient {
     options?: AgentStreamOptions,
   ): AsyncIterable<AgentResponseView>;
   readonly responses: AgentResponsesClient;
-  readonly conversations: {
+  readonly conversations: ReturnType<
+    typeof createAgentConversationActionsClient
+  > & {
     create(
       input?: { title?: string | null },
       options?: AgentResourceOptions,
@@ -246,11 +251,6 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
         throw new TypeError(
           "Choose conversation or previous_response_id, not both",
         );
-      if (
-        input.fal?.max_cost_usd !== undefined &&
-        (!Number.isFinite(input.fal.max_cost_usd) || input.fal.max_cost_usd < 0)
-      )
-        throw new TypeError("max_cost_usd must be a nonnegative finite number");
       const idempotencyKey = mutationKey(options);
       try {
         return agentResponseView(
@@ -381,8 +381,9 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
   };
 
   const client: AgentClient = {
+    skills: createAgentSkillsClient(request),
     responses,
-    projects: createAgentProjectsClient(request),
+    projects: createAgentProjectsClient(request, config),
     library: createAgentLibraryClient(request),
     ...createAgentSettingsClient(request),
     ...createAgentQueueClient(request),
@@ -448,6 +449,7 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
       }
     },
     conversations: {
+      ...createAgentConversationActionsClient(request),
       create: (input = {}, options = {}) =>
         request(
           "POST",
