@@ -1,4 +1,4 @@
-/** Experimental Agent contract. Requires a backend implementing agent/README.md. */
+/** Experimental Agent contract. Requires a compatible Agent runtime. */
 export type AgentStatus =
   | "queued"
   | "in_progress"
