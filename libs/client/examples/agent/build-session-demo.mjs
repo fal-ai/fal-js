@@ -1,5 +1,5 @@
 import { build } from "esbuild";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
@@ -28,6 +28,21 @@ await build({
   target: "es2022",
   outdir: out,
 });
+// Static page can't reach next/font's hashed URLs, so ship the brand fonts alongside it.
+const fonts = resolve(webApp, "apps/web/src/styles/fonts");
+await mkdir(resolve(out, "fonts"), { recursive: true });
+for (const file of [
+  "public-sans-rounded/PublicSansRounded-Regular.woff2",
+  "public-sans-rounded/PublicSansRounded-Medium.woff2",
+  "public-sans-rounded/PublicSansRounded-SemiBold.woff2",
+  "public-sans-rounded/PublicSansRounded-Bold.woff2",
+  "focal/focal-medium-web.woff2",
+  "focal/focal-bold-web.woff2",
+])
+  await copyFile(
+    resolve(fonts, file),
+    resolve(out, "fonts", file.split("/").pop()),
+  );
 const workspace = await readFile(resolve(here, "agent-workspace.html"), "utf8");
 const style = workspace.match(/<style>([\s\S]*?)<\/style>/)?.[1];
 const body = workspace.match(/<body>([\s\S]*?)<\/body>/)?.[1];

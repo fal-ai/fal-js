@@ -4,58 +4,155 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>fal Agent SDK Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@400;500&display=swap"
+    />
     <style>
+      /* fal design tokens — mirrors apps/web/src/styles/globals.css. */
+      @font-face {
+        font-family: "Public Sans Rounded";
+        font-weight: 400;
+        font-display: swap;
+        src: url(./fonts/PublicSansRounded-Regular.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: "Public Sans Rounded";
+        font-weight: 500;
+        font-display: swap;
+        src: url(./fonts/PublicSansRounded-Medium.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: "Public Sans Rounded";
+        font-weight: 600;
+        font-display: swap;
+        src: url(./fonts/PublicSansRounded-SemiBold.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: "Public Sans Rounded";
+        font-weight: 700;
+        font-display: swap;
+        src: url(./fonts/PublicSansRounded-Bold.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: Focal;
+        font-weight: 500;
+        font-display: swap;
+        src: url(./fonts/focal-medium-web.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: Focal;
+        font-weight: 600;
+        font-display: swap;
+        src: url(./fonts/focal-bold-web.woff2) format("woff2");
+      }
       :root {
-        color-scheme: light;
-        --ink: #1c211e;
-        --muted: #606961;
-        --line: #dfe4dc;
-        --green: #d8ef87;
+        color-scheme: light dark;
+        --font-sans: "Public Sans Rounded", "Public Sans", ui-sans-serif,
+          system-ui, sans-serif;
+        --font-mono: "Chivo Mono", ui-monospace, SFMono-Regular, monospace;
+        --font-heading: Focal, var(--font-sans);
+        --radius-sm: 4px;
+        --radius-lg: 8px;
+        --primary: #762ff8;
+        --primary-hover: #5718c0;
+        --primary-soft: rgb(118 47 248 / 0.1);
+        --focus: #8553ff;
+        --brand: #ec0648;
+        --page: #f4f4f5;
         --surface: #fff;
+        --surface-100: #f4f4f5;
+        --surface-200: #fafafa;
+        --surface-raised: #fff;
+        --surface-alpha-light: rgb(18 18 22 / 0.03);
+        --surface-alpha: rgb(18 18 22 / 0.05);
+        --surface-alpha-strong: rgb(18 18 22 / 0.1);
+        --surface-control: rgb(18 18 22 / 0.05);
+        --surface-control-hover: rgb(18 18 22 / 0.1);
+        --surface-inverse: #202022;
+        --surface-inverse-hover: #494950;
+        --content-inverse: #fafafa;
+        --content-strong: #19191a;
+        --content-base: #202022;
+        --content-light: #494950;
+        --content-lighter: #787881;
+        --content-muted: #a6a6ae;
+        --stroke-light: rgb(18 18 22 / 0.05);
+        --stroke-base: rgb(18 18 22 / 0.1);
+        --stroke-strong: rgb(18 18 22 / 0.15);
+        --stroke-stronger: rgb(18 18 22 / 0.2);
+        --error-fg: #af023e;
+        --error-bg: rgb(255 42 95 / 0.1);
+        --error-bg-hover: rgb(255 42 95 / 0.2);
+        --success-fg: #0c5b20;
+        --success-bg: rgb(14 217 62 / 0.12);
+        --warning-fg: #94360c;
+        --warning-bg: rgb(249 143 7 / 0.12);
+        --info-fg: #1841b5;
+        --info-bg: rgb(51 134 254 / 0.1);
+        --shadow-card: 0 2px 4px -1px rgb(0 0 0 / 0.03),
+          0 4px 6px -1px rgb(0 0 0 / 0.05);
+        --shadow-float: 0 10px 10px -5px rgb(0 0 0 / 0.04),
+          0 20px 25px -5px rgb(0 0 0 / 0.1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #161618;
+          --surface: #19191a;
+          --surface-100: #202022;
+          --surface-200: #161618;
+          --surface-raised: #202022;
+          --surface-alpha-light: rgb(255 255 255 / 0.03);
+          --surface-alpha: rgb(255 255 255 / 0.05);
+          --surface-alpha-strong: rgb(255 255 255 / 0.1);
+          --surface-control: rgb(255 255 255 / 0.1);
+          --surface-control-hover: rgb(255 255 255 / 0.15);
+          --surface-inverse: #fafafa;
+          --surface-inverse-hover: #e4e4e7;
+          --content-inverse: #161618;
+          --content-strong: #fafafa;
+          --content-base: #f4f4f5;
+          --content-light: #a6a6ae;
+          --content-lighter: #787881;
+          --content-muted: #5b5b64;
+          --stroke-light: rgb(255 255 255 / 0.03);
+          --stroke-base: rgb(255 255 255 / 0.05);
+          --stroke-strong: rgb(255 255 255 / 0.1);
+          --stroke-stronger: rgb(255 255 255 / 0.15);
+          --error-fg: #ff6185;
+          --success-fg: #38f062;
+          --warning-fg: #ffb320;
+          --info-fg: #59a9ff;
+        }
       }
       * {
         box-sizing: border-box;
       }
       body {
         margin: 0;
-        background: #f4f6f2;
-        color: var(--ink);
-        font:
-          16px/1.5 system-ui,
-          sans-serif;
+        background: var(--page);
+        color: var(--content-base);
+        font: 14px/1.5 var(--font-sans);
+        -webkit-font-smoothing: antialiased;
       }
       button,
       input,
-      textarea {
+      textarea,
+      select {
         font: inherit;
+        color: inherit;
       }
       button,
       a,
       input,
-      textarea {
+      textarea,
+      select {
         -webkit-tap-highlight-color: transparent;
       }
-      button {
-        cursor: pointer;
-        border: 1px solid var(--line);
-        background: white;
-        color: var(--ink);
-        border-radius: 8px;
-        padding: 9px 14px;
-        font-size: 14px;
-        font-weight: 550;
-      }
-      button:hover:not(:disabled) {
-        background: #edf1e8;
-        border-color: #a7b19f;
-      }
-      button:disabled {
-        cursor: not-allowed;
-        opacity: 0.45;
-      }
       :focus-visible {
-        outline: 3px solid #769c30;
-        outline-offset: 3px;
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
       }
       a {
         color: inherit;
@@ -68,73 +165,291 @@
         margin: 0;
       }
       h1 {
-        font-size: 20px;
-        letter-spacing: -0.7px;
+        font: 500 16px/1.3 var(--font-heading);
+        letter-spacing: -0.01em;
+        color: var(--content-strong);
       }
       h2 {
-        font-size: 17px;
-        letter-spacing: -0.3px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--content-strong);
       }
       h3 {
-        font-size: 15px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--content-strong);
       }
       .muted,
       .hint {
-        color: var(--muted);
-        font-size: 14px;
+        color: var(--content-light);
+        font-size: 13px;
       }
+      /* Controls */
+      button {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 14px;
+        border: 1px solid var(--stroke-strong);
+        background: var(--surface-raised);
+        color: var(--content-base);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        transition:
+          background-color 0.15s,
+          border-color 0.15s;
+      }
+      button:hover:not(:disabled) {
+        background: var(--surface-alpha);
+        border-color: var(--stroke-stronger);
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+      button.primary {
+        background: var(--primary);
+        border-color: transparent;
+        color: #fafafa;
+      }
+      button.primary:hover:not(:disabled) {
+        background: var(--primary-hover);
+        border-color: transparent;
+      }
+      button.solid {
+        background: var(--surface-inverse);
+        border-color: transparent;
+        color: var(--content-inverse);
+      }
+      button.solid:hover:not(:disabled) {
+        background: var(--surface-inverse-hover);
+        border-color: transparent;
+      }
+      button.danger {
+        background: var(--error-bg);
+        border-color: transparent;
+        color: var(--error-fg);
+      }
+      button.danger:hover:not(:disabled) {
+        background: var(--error-bg-hover);
+        border-color: transparent;
+      }
+      button.ghost {
+        background: transparent;
+        border-color: transparent;
+        color: var(--content-light);
+      }
+      button.ghost:hover:not(:disabled) {
+        background: var(--surface-alpha);
+        border-color: transparent;
+        color: var(--content-strong);
+      }
+      button.sm {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+      textarea,
+      input:not([type="checkbox"]):not([type="radio"]),
+      select {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px;
+        border: 1px solid var(--stroke-strong);
+        border-radius: var(--radius-sm);
+        background: var(--surface-alpha-light);
+        color: var(--content-base);
+        font-weight: 500;
+      }
+      textarea::placeholder,
+      input::placeholder {
+        color: var(--content-lighter);
+        font-weight: 400;
+      }
+      textarea:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline-offset: 0;
+        border-color: transparent;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 115px;
+        line-height: 1.5;
+      }
+      select {
+        appearance: none;
+        padding-right: 36px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23787881' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        cursor: pointer;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--content-light);
+        margin-bottom: 6px;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .field label {
+        margin: 0;
+      }
+      .field-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .field-row > select,
+      .field-row > input {
+        flex: 1;
+        min-width: 0;
+      }
+      .field-row > button {
+        flex-shrink: 0;
+      }
+      .stack {
+        display: grid;
+        gap: 16px;
+      }
+      .divider {
+        height: 1px;
+        background: var(--stroke-base);
+        margin: 16px 0;
+      }
+      code,
+      pre,
+      .mono {
+        font-family: var(--font-mono);
+      }
+      /* Header */
       .header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 18px 32px;
-        background: var(--surface);
-        border-bottom: 1px solid var(--line);
+        height: 56px;
+        padding: 0 24px;
+        background: var(--surface-raised);
+        border-bottom: 1px solid var(--stroke-base);
       }
       .brand {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
       }
       .logo {
-        font-weight: 800;
-        font-size: 28px;
-        letter-spacing: -2px;
+        display: inline-flex;
+        width: 22px;
+        height: 22px;
+        color: var(--content-strong);
       }
-      .divider {
+      .logo svg {
+        width: 100%;
+        height: 100%;
+      }
+      .brand-divider {
         width: 1px;
-        height: 25px;
-        background: var(--line);
+        height: 20px;
+        background: var(--stroke-strong);
       }
       .tag {
-        font-size: 12px;
-        letter-spacing: 0.6px;
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        background: #eef2e9;
-        padding: 4px 8px;
-        border-radius: 4px;
       }
+      @media (prefers-color-scheme: dark) {
+        .tag {
+          color: #c0b1ff;
+        }
+      }
+      .header a.hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--stroke-strong);
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        font-weight: 600;
+        color: var(--content-base);
+      }
+      .header a.hint:hover {
+        background: var(--surface-alpha);
+        border-color: var(--stroke-stronger);
+      }
+      /* Top-level tabs */
+      .playground-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--stroke-base);
+        background: var(--surface-raised);
+      }
+      .playground-tabs button {
+        height: 44px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        color: var(--content-light);
+        font-weight: 500;
+        box-shadow: inset 0 -2px 0 transparent;
+      }
+      .playground-tabs button:hover:not(:disabled) {
+        background: none;
+        color: var(--content-strong);
+      }
+      .playground-tabs button[aria-selected="true"] {
+        color: var(--content-strong);
+        font-weight: 600;
+        box-shadow: inset 0 -2px 0 var(--content-strong);
+      }
+      [hidden] {
+        display: none !important;
+      }
+      /* Layout */
       .layout {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 380px;
-        gap: 24px;
-        max-width: 1450px;
+        grid-template-columns: minmax(0, 1fr) 400px;
+        gap: 20px;
+        max-width: 1440px;
         margin: 0 auto;
-        padding: 28px 32px;
+        padding: 24px;
         align-items: start;
       }
       .workspace {
         min-width: 0;
         display: grid;
-        gap: 20px;
+        gap: 16px;
       }
       .panel {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 22px;
+        background: var(--surface-raised);
+        border: 1px solid var(--stroke-base);
+        border-radius: var(--radius-lg);
+        padding: 20px;
         min-width: 0;
+        box-shadow: var(--shadow-card);
       }
       .section-head,
       .row {
@@ -145,65 +460,152 @@
       }
       .section-head {
         margin-bottom: 16px;
+        min-height: 32px;
       }
       .eyebrow {
-        font:
-          12px ui-monospace,
-          monospace;
-        color: var(--muted);
-        letter-spacing: 1px;
+        font: 500 11px var(--font-mono);
+        color: var(--content-lighter);
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
-      .primary {
-        background: var(--green);
-        border-color: var(--green);
+      details.panel > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--content-strong);
+        letter-spacing: -0.01em;
       }
-      .primary:hover:not(:disabled) {
-        background: #cbe471;
+      details.panel > summary::-webkit-details-marker {
+        display: none;
       }
-      .dark {
-        background: var(--ink);
-        border-color: var(--ink);
-        color: white;
+      details.panel > summary::before {
+        content: "";
+        width: 16px;
+        height: 16px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23787881' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 4 4 4-4 4'/%3E%3C/svg%3E")
+          center/contain no-repeat;
+        transition: transform 0.15s;
       }
-      .dark:hover:not(:disabled) {
-        background: #354031;
+      details.panel[open] > summary::before {
+        transform: rotate(90deg);
       }
-      textarea,
-      input[type="text"] {
-        width: 100%;
-        border: 1px solid var(--line);
-        border-radius: 8px;
+      details.panel[open] > summary {
+        margin-bottom: 12px;
+      }
+      .callout {
+        padding: 12px 14px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        background: var(--surface-100);
+        color: var(--content-base);
+      }
+      .callout.warning {
+        background: var(--warning-bg);
+        color: var(--warning-fg);
+      }
+      #conversation-actions {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        margin-top: 12px;
+        border: 1px solid var(--stroke-base);
+        border-radius: var(--radius-sm);
+        background: var(--surface-200);
+      }
+      #conversation-actions[hidden] {
+        display: none;
+      }
+      #delete-confirm {
+        display: grid;
+        gap: 10px;
+      }
+      #delete-confirm[hidden] {
+        display: none;
+      }
+      #delete-confirm .field-row {
+        justify-content: flex-end;
+      }
+      #history {
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+        max-height: 260px;
+        overflow: auto;
+        font-size: 13px;
+      }
+      #history:empty {
+        display: none;
+      }
+      #history li {
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        background: var(--surface-100);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      #sdk-fields {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      #sdk-fields legend {
+        display: none;
+      }
+      #sdk-fields .field.wide {
+        grid-column: 1 / -1;
+      }
+      #sdk-fields .field:has(#sdk-input) textarea {
+        min-height: 88px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      #sdk-fields .actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+      }
+      #sdk-result {
+        margin: 12px 0 0;
         padding: 12px;
-        background: #fbfcfa;
-        color: var(--ink);
+        border-radius: var(--radius-sm);
+        background: var(--surface-100);
+        font: 12px/1.6 var(--font-mono);
+        max-height: 320px;
+        overflow: auto;
       }
-      textarea {
-        resize: vertical;
-        min-height: 115px;
-        line-height: 1.5;
-      }
-      label {
-        display: block;
-        font-size: 14px;
-        font-weight: 550;
-        margin-bottom: 8px;
+      #sdk-result:empty {
+        display: none;
       }
       .presets {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
         margin-bottom: 12px;
       }
       .presets button {
-        font-size: 14px;
-        padding: 10px 14px;
-        border-radius: 8px;
-        flex: 1;
+        height: 40px;
+        justify-content: flex-start;
+        padding: 0 14px;
+        font-weight: 500;
+        color: var(--content-light);
+        background: var(--surface-alpha-light);
+        border-color: var(--stroke-base);
       }
       .presets button[aria-pressed="true"] {
-        background: #eaf3d4;
-        border-color: #9ab563;
+        background: var(--surface-raised);
+        border-color: var(--stroke-stronger);
+        color: var(--content-strong);
+        font-weight: 600;
+        box-shadow: var(--shadow-card);
       }
       .composer-footer {
         display: flex;
@@ -219,28 +621,37 @@
         gap: 10px;
       }
       .badge {
-        font-size: 13px;
-        font-weight: 650;
-        padding: 4px 9px;
-        background: #edf1e8;
-        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--surface-control);
+        color: var(--content-light);
+        font-size: 12px;
+        font-weight: 600;
       }
       .badge[data-status="completed"] {
-        background: #e6f4c5;
-        color: #365018;
+        background: var(--success-bg);
+        color: var(--success-fg);
       }
-      .badge[data-status="failed"] {
-        background: #fee6e2;
-        color: #a02821;
+      .badge[data-status="failed"],
+      .badge[data-status="cancelled"] {
+        background: var(--error-bg);
+        color: var(--error-fg);
       }
       .badge[data-status="in_progress"],
-      .badge[data-status="queued"] {
-        background: #fff1cd;
-        color: #805500;
+      .badge[data-status="queued"],
+      .badge[data-status="waiting_for_input"] {
+        background: var(--warning-bg);
+        color: var(--warning-fg);
       }
       #messages {
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
         margin-top: 14px;
+        font-size: 14px;
+        line-height: 1.6;
       }
       #messages:empty,
       #operations:empty,
@@ -249,65 +660,68 @@
       }
       #operations {
         display: grid;
-        gap: 8px;
+        gap: 6px;
         margin-top: 12px;
       }
       .operation {
-        font-size: 14px;
-        background: #f5f7f2;
-        border-radius: 6px;
-        padding: 10px;
+        font-size: 13px;
+        background: var(--surface-100);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
         overflow-wrap: anywhere;
+        color: var(--content-light);
       }
       #notice {
-        padding: 12px 16px;
-        background: #fff1cd;
-        border-radius: 8px;
-        font-size: 14px;
+        padding: 12px 14px;
+        background: var(--warning-bg);
+        color: var(--warning-fg);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        white-space: pre-wrap;
       }
       #notice[hidden] {
         display: none;
       }
       .empty {
-        min-height: 235px;
+        min-height: 220px;
         display: grid;
         place-content: center;
         text-align: center;
-        gap: 8px;
-        padding: 25px;
-        border: 1px dashed #cbd3c3;
-        border-radius: 9px;
-        color: var(--muted);
+        gap: 6px;
+        padding: 24px;
+        border: 1px dashed var(--stroke-stronger);
+        border-radius: var(--radius-lg);
+        color: var(--content-light);
       }
       .empty strong {
-        color: var(--ink);
-        font-weight: 550;
+        color: var(--content-strong);
+        font-weight: 600;
       }
       .empty button {
-        margin: 8px auto 0;
+        margin: 10px auto 0;
       }
       #artifacts {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-        gap: 16px;
+        gap: 12px;
       }
       .artifact {
-        border: 1px solid var(--line);
-        border-radius: 10px;
+        border: 1px solid var(--stroke-base);
+        border-radius: var(--radius-lg);
         overflow: hidden;
-        background: #f7f8f5;
+        background: var(--surface-raised);
       }
       .artifact.selected {
-        border-color: #7a983c;
-        box-shadow: 0 0 0 2px #d8ef87;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-soft);
       }
       .artifact img,
       .artifact video {
         display: block;
         width: 100%;
-        height: 330px;
+        height: 320px;
         object-fit: contain;
-        background: #eff1eb;
+        background: var(--surface-100);
       }
       .artifact audio {
         width: 100%;
@@ -318,8 +732,8 @@
         gap: 8px;
       }
       .artifact-meta {
-        font-size: 12px;
-        color: var(--muted);
+        font: 12px/1.5 var(--font-mono);
+        color: var(--content-lighter);
         overflow-wrap: anywhere;
       }
       .artifact-actions {
@@ -330,10 +744,16 @@
       }
       .artifact-actions a {
         font-size: 13px;
+        color: var(--content-light);
+      }
+      .artifact-actions button {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
       }
       #refine-section {
-        border-top: 1px solid var(--line);
-        margin-top: 22px;
+        border-top: 1px solid var(--stroke-base);
+        margin-top: 20px;
         padding-top: 20px;
       }
       #refine-section[hidden] {
@@ -341,33 +761,101 @@
       }
       #refinement {
         min-height: 85px;
-        margin-top: 10px;
       }
       #answer form {
         margin-top: 16px;
-        border: 1px solid #c8df91;
-        border-radius: 8px;
-        background: #f8fced;
+        border: 1px solid var(--stroke-base);
+        border-radius: var(--radius-lg);
+        background: var(--surface-200);
         padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+      #answer form button {
+        justify-self: start;
       }
       fieldset {
-        margin: 12px 0;
+        margin: 0;
         border: 0;
         padding: 0;
+        min-width: 0;
       }
       legend {
         font-weight: 600;
+        font-size: 13px;
+        color: var(--content-strong);
         margin-bottom: 8px;
+        padding: 0;
       }
       fieldset label {
         font-weight: 400;
+        color: var(--content-base);
         display: flex;
         gap: 8px;
         align-items: center;
+        margin: 0 0 6px;
       }
       fieldset input[type="text"] {
-        margin-top: 8px;
+        margin-top: 4px;
       }
+      input[type="checkbox"],
+      input[type="radio"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--primary);
+      }
+      #plan-editor {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      #plan-editor[hidden] {
+        display: none;
+      }
+      #plan-editor > legend {
+        margin: 0;
+      }
+      #plan-steps {
+        display: grid;
+        gap: 8px;
+      }
+      #plan-steps:empty {
+        display: none;
+      }
+      #plan-steps .operation {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--stroke-base);
+        background: var(--surface-200);
+        color: var(--content-base);
+      }
+      #plan-steps .operation input:not([type="checkbox"]) {
+        min-height: 36px;
+      }
+      #plan-steps .operation label {
+        grid-column: 1 / -1;
+        margin: 0;
+      }
+      #plan-steps .operation button {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
+        justify-self: start;
+      }
+      #plan-steps .operation button:nth-of-type(1) {
+        grid-column: 1;
+      }
+      #plan-steps .operation button:nth-of-type(2),
+      #plan-steps .operation button:nth-of-type(3) {
+        grid-column: auto;
+      }
+      #plan-editor .composer-footer {
+        justify-content: flex-end;
+      }
+      /* Inspector */
       .inspector {
         position: sticky;
         top: 20px;
@@ -376,16 +864,22 @@
       }
       .inspector-section {
         padding: 20px;
-        border-bottom: 1px solid var(--line);
+        border-bottom: 1px solid var(--stroke-base);
+      }
+      .inspector-section .section-head {
+        margin-bottom: 12px;
       }
       .segmented {
         display: flex;
-        padding: 3px;
-        border-radius: 8px;
-        background: #edf0e9;
-        margin: 12px 0 8px;
+        gap: 2px;
+        padding: 2px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--stroke-light);
+        background: var(--surface-100);
+        margin: 0 0 8px;
       }
       .segmented label {
+        display: block;
         flex: 1;
         margin: 0;
         position: relative;
@@ -393,21 +887,35 @@
       .segmented input {
         position: absolute;
         opacity: 0;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
       }
       .segmented span {
         display: block;
         text-align: center;
-        padding: 8px;
-        border-radius: 6px;
+        height: 30px;
+        line-height: 30px;
+        border-radius: 3px;
+        border: 1px solid transparent;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--content-light);
+      }
+      .segmented span:hover {
+        color: var(--content-strong);
       }
       .segmented input:checked + span {
-        background: white;
-        box-shadow: 0 1px 3px #00000015;
+        background: var(--surface-raised);
+        border-color: var(--stroke-strong);
+        color: var(--content-strong);
+        font-weight: 600;
       }
       .segmented input:focus-visible + span {
-        outline: 3px solid #769c30;
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
       }
       .controls {
         display: flex;
@@ -416,31 +924,41 @@
       }
       .controls button {
         flex: 1;
-        padding: 8px;
+        height: 32px;
+        padding: 0 10px;
+        font-size: 13px;
       }
-      #cancel {
-        color: #9d362a;
+      #cancel:not(:disabled) {
+        color: var(--error-fg);
       }
       .tabs {
         display: flex;
         gap: 4px;
-        padding: 12px 14px 0;
-        border-bottom: 1px solid var(--line);
+        padding: 0 12px;
+        border-bottom: 1px solid var(--stroke-base);
       }
       .tabs button {
         border: 0;
         border-radius: 0;
         background: none;
-        padding: 9px 10px 12px;
-        color: var(--muted);
-        border-bottom: 2px solid transparent;
+        height: 40px;
+        padding: 0 8px;
+        color: var(--content-light);
+        font-weight: 500;
+        font-size: 13px;
+        box-shadow: inset 0 -2px 0 transparent;
+      }
+      .tabs button:hover:not(:disabled) {
+        background: none;
+        color: var(--content-strong);
       }
       .tabs button[aria-selected="true"] {
-        color: var(--ink);
-        border-bottom-color: #698b2b;
+        color: var(--content-strong);
+        font-weight: 600;
+        box-shadow: inset 0 -2px 0 var(--content-strong);
       }
       .inspector-body {
-        padding: 18px 20px;
+        padding: 16px 20px;
       }
       .tab-panel[hidden] {
         display: none;
@@ -454,40 +972,43 @@
       }
       #timeline li {
         position: relative;
-        padding: 0 0 16px 19px;
+        padding: 0 0 14px 18px;
         margin-left: 4px;
-        border-left: 1px solid #d5ddcc;
+        border-left: 1px solid var(--stroke-strong);
+      }
+      #timeline li:last-child {
+        padding-bottom: 0;
       }
       #timeline li::before {
         content: "";
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        background: #799a38;
+        background: var(--primary);
         position: absolute;
         left: -4px;
         top: 6px;
       }
       #timeline time {
-        font:
-          12px ui-monospace,
-          monospace;
-        color: var(--muted);
+        font: 11px var(--font-mono);
+        color: var(--content-lighter);
       }
       #timeline p {
-        font-size: 14px;
+        font-size: 13px;
         overflow-wrap: anywhere;
-        margin-top: 3px;
+        margin-top: 2px;
       }
       #output {
         max-height: 440px;
         overflow: auto;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
-        font:
-          12px/1.6 ui-monospace,
-          monospace;
+        font: 12px/1.6 var(--font-mono);
         margin: 0;
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        background: var(--surface-100);
+        color: var(--content-base);
       }
       dl {
         margin: 0;
@@ -496,62 +1017,65 @@
       }
       dt {
         font-size: 12px;
-        color: var(--muted);
+        color: var(--content-lighter);
       }
       dd {
-        font:
-          13px/1.6 ui-monospace,
-          monospace;
+        font: 13px/1.6 var(--font-mono);
         margin: 3px 0 0;
         overflow-wrap: anywhere;
       }
       .restore {
         display: flex;
-        gap: 6px;
-        margin-top: 8px;
+        gap: 8px;
+        margin-top: 10px;
       }
       .restore input {
         min-width: 0;
-        font:
-          12px ui-monospace,
-          monospace;
+        font: 13px var(--font-mono);
       }
       .restore button {
         flex-shrink: 0;
+        height: 40px;
       }
       .connection {
         font-size: 13px;
-        color: var(--muted);
-        margin-top: 10px;
+        color: var(--content-light);
+        margin-top: 8px;
       }
       .footer {
         font-size: 12px;
-        color: var(--muted);
+        color: var(--content-lighter);
         text-align: center;
-        padding: 8px 24px 24px;
+        padding: 8px 24px 32px;
       }
-      @media (max-width: 1050px) {
+      @media (max-width: 1100px) {
         .layout {
-          grid-template-columns: minmax(0, 1fr) 330px;
+          grid-template-columns: minmax(0, 1fr) 340px;
           padding: 20px;
           gap: 16px;
         }
         .panel {
-          padding: 18px;
+          padding: 16px;
         }
         .inspector {
           padding: 0;
+        }
+        .presets {
+          grid-template-columns: 1fr;
         }
       }
       @media (max-width: 760px) {
         .layout {
           grid-template-columns: 1fr;
-          padding: 14px;
+          padding: 12px;
         }
-        .header {
-          padding: 16px;
+        .header,
+        .playground-tabs {
+          padding-left: 12px;
+          padding-right: 12px;
         }
-        .header .tag {
+        .header .tag,
+        .brand-divider {
           display: none;
         }
         .inspector {
@@ -559,28 +1083,16 @@
         }
         .composer-footer {
           align-items: flex-start;
+          flex-direction: column;
+        }
+        .composer-footer button {
+          align-self: stretch;
+        }
+        #sdk-fields {
+          grid-template-columns: 1fr;
         }
         .artifact img {
-          height: 300px;
-        }
-      }
-      .playground-tabs {
-        display: flex;
-        gap: 8px;
-        padding: 12px 32px;
-        border-bottom: 1px solid var(--line);
-        background: white;
-      }
-      .playground-tabs [aria-selected="true"] {
-        background: var(--green);
-        border-color: #b7ce80;
-      }
-      [role="tabpanel"][hidden] {
-        display: none !important;
-      }
-      @media (max-width: 760px) {
-        .playground-tabs {
-          padding: 12px 16px;
+          height: 260px;
         }
       }
     </style>
@@ -588,7 +1100,23 @@
   <body>
     <header class="header">
       <div class="brand">
-        <span class="logo">fal</span><span class="divider"></span>
+        <a
+          class="logo"
+          href="/agent"
+          aria-label="fal"
+          target="_blank"
+          rel="noopener"
+        >
+          <svg viewBox="0 0 60 60" fill="none" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M38.1096 2C39.0795 2 39.8566 2.78905 39.95 3.75412C40.7773 12.3666 47.6322 19.2215 56.2447 20.0488C57.211 20.141 58 20.9181 58 21.8892V38.1061C58 39.0771 57.211 39.8542 56.2447 39.9464C47.6322 40.7737 40.7773 47.6286 39.95 56.2411C39.8566 57.2062 39.0795 57.9952 38.1096 57.9952H21.8904C20.9205 57.9952 20.1434 57.2062 20.05 56.2411C19.2227 47.6286 12.3678 40.7737 3.75531 39.9464C2.78905 39.8542 2 39.0771 2 38.1061V21.8892C2 20.9181 2.78905 20.141 3.75531 20.0488C12.3678 19.2215 19.2227 12.3666 20.05 3.75412C20.1434 2.78905 20.9205 2 21.8904 2H38.1096ZM13.2443 29.9497C13.2443 39.2663 20.7888 46.8192 30.0958 46.8192C39.4028 46.8192 46.9473 39.2663 46.9473 29.9497C46.9473 20.6331 39.4028 13.0803 30.0958 13.0803C20.7888 13.0803 13.2443 20.6331 13.2443 29.9497Z"
+              fill="currentColor"
+            />
+          </svg>
+        </a>
+        <span class="brand-divider"></span>
         <h1>Agent SDK Playground</h1>
         <span class="tag">Local runtime</span>
       </div>
@@ -618,6 +1146,15 @@
       >
         Agent experience
       </button>
+      <button
+        id="playground-tab-delegation"
+        role="tab"
+        aria-selected="false"
+        aria-controls="playground-panel-delegation"
+        tabindex="-1"
+      >
+        Agent delegation
+      </button>
     </nav>
     <section
       id="playground-panel-api"
@@ -629,75 +1166,98 @@
           <section class="panel" aria-labelledby="conversations-heading">
             <div class="section-head">
               <h2 id="conversations-heading">Conversations</h2>
-              <button id="new-chat">New conversation</button>
+              <button id="new-chat" class="sm">New conversation</button>
             </div>
-            <label for="conversation-picker">Open a conversation</label>
-            <select id="conversation-picker">
-              <option value="">Choose a conversation</option>
-            </select>
-            <button id="refresh-chats">Refresh</button
-            ><button id="more-chats" hidden>Load more</button>
-            <div id="conversation-actions" hidden>
-              <label for="conversation-title">Conversation title</label>
-              <input
-                id="conversation-title"
-                maxlength="120"
-                autocomplete="off"
-              />
-              <button id="rename-chat">Save title</button>
-              <button id="delete-chat">Delete conversation…</button>
-              <div id="delete-confirm" hidden>
-                <p>
-                  Delete this conversation and its stored history? Running work
-                  will be stopped. This cannot be undone.
+            <div class="stack">
+              <div class="field">
+                <label for="conversation-picker">Open a conversation</label>
+                <div class="field-row">
+                  <select id="conversation-picker">
+                    <option value="">Choose a conversation</option>
+                  </select>
+                  <button id="refresh-chats">Refresh</button
+                  ><button id="more-chats" hidden>Load more</button>
+                </div>
+                <p id="history-status" class="hint" role="status">
+                  Loading conversations…
                 </p>
-                <button id="confirm-delete">Delete permanently</button>
-                <button id="keep-chat">Keep conversation</button>
+              </div>
+              <div id="conversation-actions" hidden>
+                <div class="field">
+                  <label for="conversation-title">Conversation title</label>
+                  <div class="field-row">
+                    <input
+                      id="conversation-title"
+                      maxlength="120"
+                      autocomplete="off"
+                    />
+                    <button id="rename-chat">Save title</button>
+                    <button id="delete-chat" class="danger">
+                      Delete conversation…
+                    </button>
+                  </div>
+                </div>
+                <div id="delete-confirm" class="callout warning" hidden>
+                  <p>
+                    Delete this conversation and its stored history? Running
+                    work will be stopped. This cannot be undone.
+                  </p>
+                  <div class="field-row">
+                    <button id="keep-chat" class="sm">Keep conversation</button>
+                    <button id="confirm-delete" class="danger sm">
+                      Delete permanently
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="response-picker">Response to inspect</label>
+                <select id="response-picker">
+                  <option value="">No response selected</option>
+                </select>
               </div>
             </div>
-            <p id="history-status" class="hint" role="status">
-              Loading conversations…
-            </p>
-            <label for="response-picker">Response to inspect</label>
-            <select id="response-picker">
-              <option value="">No response selected</option>
-            </select>
-            <ol
-              id="history"
-              aria-label="Conversation history"
-              style="white-space: pre-wrap; overflow-wrap: anywhere"
-            ></ol>
+            <ol id="history" aria-label="Conversation history"></ol>
           </section>
           <details class="panel">
             <summary>SDK resource actions</summary>
-            <p>
+            <p class="hint" style="margin-bottom: 14px">
               Exercises public SDK methods on the conversation selected above.
               Creates real project data. Runs and retries can incur charges.
             </p>
             <fieldset id="sdk-fields">
               <legend>Resource controls</legend>
-              <label for="sdk-project">Project ID</label
-              ><input id="sdk-project" type="text" />
-              <label for="sdk-item"
-                >Asset, collection, document, memory note, queue turn or run
-                ID</label
-              ><input id="sdk-item" type="text" />
-              <label for="sdk-scope">Settings scope</label
-              ><select id="sdk-scope">
-                <option value="chat">Conversation</option>
-                <option value="project">Project</option>
-              </select>
-              <label for="sdk-action">SDK action</label
-              ><select id="sdk-action"></select>
-              <label for="sdk-input">Action input (JSON)</label
-              ><textarea id="sdk-input" spellcheck="false"></textarea>
-              <button id="sdk-execute">Run SDK action</button>
+              <div class="field">
+                <label for="sdk-project">Project ID</label>
+                <input id="sdk-project" type="text" />
+              </div>
+              <div class="field">
+                <label for="sdk-item"
+                  >Asset, collection, document, memory note, queue turn or run
+                  ID</label
+                >
+                <input id="sdk-item" type="text" />
+              </div>
+              <div class="field">
+                <label for="sdk-scope">Settings scope</label>
+                <select id="sdk-scope">
+                  <option value="chat">Conversation</option>
+                  <option value="project">Project</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="sdk-action">SDK action</label>
+                <select id="sdk-action"></select>
+              </div>
+              <div class="field wide">
+                <label for="sdk-input">Action input (JSON)</label>
+                <textarea id="sdk-input" spellcheck="false"></textarea>
+              </div>
+              <div class="actions">
+                <button id="sdk-execute" class="solid">Run SDK action</button>
+              </div>
             </fieldset>
-            <pre
-              id="sdk-result"
-              role="status"
-              style="white-space: pre-wrap; overflow-wrap: anywhere"
-            ></pre>
+            <pre id="sdk-result" role="status"></pre>
           </details>
           <section class="panel" aria-labelledby="create-heading">
             <div class="section-head">
@@ -717,7 +1277,7 @@
               Generate one image, preview the result, then refine it by artifact
               ID.
             </p>
-            <label class="hint" for="prompt">Describe your task</label>
+            <label for="prompt">Describe your task</label>
             <textarea id="prompt">
 Generate exactly one square image of a cobalt blue ceramic mug on a pale stone table beside a window, a small orange on the right, cool morning light. Editorial product photography, no text. Use a low-cost image model at standard resolution. Proceed without clarification.</textarea
             >
@@ -732,23 +1292,29 @@ Generate exactly one square image of a cobalt blue ceramic mug on a pale stone t
           <section class="panel" aria-labelledby="plan-heading">
             <div class="section-head">
               <h2 id="plan-heading">Plan</h2>
-              <button id="load-plan">Load latest plan</button>
+              <button id="load-plan" class="sm">Load latest plan</button>
             </div>
             <p id="plan-status" class="hint">
               Ask the agent for a plan, then load it here to edit or run.
             </p>
             <fieldset id="plan-editor" hidden>
               <legend id="plan-title">Plan steps</legend>
-              <label for="plan-name">Plan title</label>
-              <input id="plan-name" maxlength="120" />
+              <div class="field">
+                <label for="plan-name">Plan title</label>
+                <input id="plan-name" maxlength="120" />
+              </div>
               <div id="plan-steps"></div>
-              <label for="new-plan-step">New step</label
-              ><input
-                id="new-plan-step"
-                maxlength="500"
-                placeholder="Describe the next step"
-              />
-              <button id="add-plan-step">Add step</button>
+              <div class="field">
+                <label for="new-plan-step">New step</label>
+                <div class="field-row">
+                  <input
+                    id="new-plan-step"
+                    maxlength="500"
+                    placeholder="Describe the next step"
+                  />
+                  <button id="add-plan-step">Add step</button>
+                </div>
+              </div>
               <div class="composer-footer">
                 <button id="save-plan">Save edits</button
                 ><button id="run-plan" class="primary">Run saved plan</button>
@@ -774,13 +1340,13 @@ Generate exactly one square image of a cobalt blue ceramic mug on a pale stone t
             <div id="messages"></div>
             <div id="operations"></div>
             <div id="answer"></div>
-            <div style="height: 18px"></div>
+            <div style="height: 16px"></div>
             <div id="empty" class="empty">
               <strong>Your images will appear here.</strong>
               <p class="hint">
                 Run the image prompt above, or load your last result.
               </p>
-              <button id="load-saved">Load last result</button>
+              <button id="load-saved" class="sm">Load last result</button>
             </div>
             <div id="artifacts"></div>
             <section
@@ -790,9 +1356,9 @@ Generate exactly one square image of a cobalt blue ceramic mug on a pale stone t
             >
               <div class="section-head">
                 <h3 id="refine-heading">Refine the selected image</h3>
-                <span id="selected-label" class="hint"></span>
+                <span id="selected-label" class="hint mono"></span>
               </div>
-              <label for="refinement" class="hint">What should change?</label
+              <label for="refinement">What should change?</label
               ><textarea id="refinement">
 Make this image warmer, with golden afternoon lighting. Preserve the subject and composition. Generate exactly one edited image.</textarea
               >
@@ -800,7 +1366,7 @@ Make this image warmer, with golden afternoon lighting. Preserve the subject and
                 <p class="hint">
                   Uses the selected artifact directly. No re-upload.
                 </p>
-                <button class="dark" id="refine">Refine image →</button>
+                <button class="solid" id="refine">Refine image →</button>
               </div>
             </section>
           </section>
@@ -812,7 +1378,7 @@ Make this image warmer, with golden afternoon lighting. Preserve the subject and
               <span class="eyebrow">Live</span>
             </div>
             <fieldset style="margin: 0">
-              <legend class="hint">Receive updates</legend>
+              <legend>Receive updates</legend>
               <div class="segmented">
                 <label
                   ><input
@@ -889,7 +1455,7 @@ Make this image warmer, with golden afternoon lighting. Preserve the subject and
           </div>
           <div
             class="inspector-section"
-            style="border-top: 1px solid var(--line); border-bottom: 0"
+            style="border-top: 1px solid var(--stroke-base); border-bottom: 0"
           >
             <label for="response-id">Reconnect to a response</label>
             <p class="hint">
@@ -918,6 +1484,14 @@ Make this image warmer, with golden afternoon lighting. Preserve the subject and
       hidden
     >
       <div id="agent-workspace-host"></div>
+    </section>
+    <section
+      id="playground-panel-delegation"
+      role="tabpanel"
+      aria-labelledby="playground-tab-delegation"
+      hidden
+    >
+      <div id="delegation-host"></div>
     </section>
     <!-- AGENT_WORKSPACE_TEMPLATE -->
     <script type="module" src="./session-demo.js"></script>

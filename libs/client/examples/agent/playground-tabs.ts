@@ -1,6 +1,8 @@
 import { mountAgentWorkspace } from "./agent-workspace";
 
-const sections = ["api", "agent"] as const;
+import { mountAgency } from "./agency";
+let delegationMounted = false;
+const sections = ["api", "agent", "delegation"] as const;
 type Section = (typeof sections)[number];
 let mounted = false;
 function activate(section: Section, focus = false) {
@@ -15,6 +17,14 @@ function activate(section: Section, focus = false) {
     mountAgentWorkspace(root);
     mounted = true;
   }
+  if (section === "delegation" && !delegationMounted) {
+    mountAgency(
+      document
+        .getElementById("delegation-host")!
+        .attachShadow({ mode: "open" }),
+    );
+    delegationMounted = true;
+  }
   for (const name of sections) {
     const selected = name === section;
     const tab = document.getElementById(`playground-tab-${name}`)!;
@@ -23,7 +33,7 @@ function activate(section: Section, focus = false) {
     document.getElementById(`playground-panel-${name}`)!.hidden = !selected;
   }
   // URL state supports sharing/reload without navigating or remounting either view.
-  history.replaceState(null, "", section === "agent" ? "#agent" : "#api");
+  history.replaceState(null, "", `#${section}`);
   if (focus) document.getElementById(`playground-tab-${section}`)!.focus();
 }
 for (const [index, section] of sections.entries()) {
@@ -32,11 +42,14 @@ for (const [index, section] of sections.entries()) {
   tab.onkeydown = (event) => {
     const next =
       event.key === "ArrowRight" || event.key === "ArrowLeft"
-        ? sections[1 - index]
+        ? sections[
+            (index + (event.key === "ArrowRight" ? 1 : sections.length - 1)) %
+              sections.length
+          ]
         : event.key === "Home"
           ? "api"
           : event.key === "End"
-            ? "agent"
+            ? "delegation"
             : undefined;
     if (next) {
       event.preventDefault();
@@ -45,6 +58,8 @@ for (const [index, section] of sections.entries()) {
   };
 }
 window.addEventListener("hashchange", () =>
-  activate(location.hash === "#agent" ? "agent" : "api"),
+  activate(
+    sections.find((section) => location.hash === `#${section}`) ?? "api",
+  ),
 );
-activate(location.hash === "#agent" ? "agent" : "api");
+activate(sections.find((section) => location.hash === `#${section}`) ?? "api");
