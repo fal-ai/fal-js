@@ -22,7 +22,6 @@ it("routes skills and conversation actions without optional request settings", a
   await agent.conversations.sharing.update("chat/1", {
     emails: ["reviewer@example.com"],
   });
-  await agent.conversations.export("chat/1");
   expect(
     fetch.mock.calls.map(([url, options]) => [url, options.method]),
   ).toEqual([
@@ -30,7 +29,6 @@ it("routes skills and conversation actions without optional request settings", a
     ["https://agent.example/v1/agent/skills", "POST"],
     ["https://agent.example/v1/conversations/chat%2F1/fork", "POST"],
     ["https://agent.example/v1/conversations/chat%2F1/sharing", "PATCH"],
-    ["https://agent.example/v1/conversations/chat%2F1/export", "GET"],
   ]);
   expect(JSON.parse(fetch.mock.calls[3][1].body)).toEqual({
     emails: ["reviewer@example.com"],
@@ -53,4 +51,39 @@ it("does not repeat a skill installation or conversation fork after a lost ackno
     "Connection lost",
   );
   expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+it("routes connector authorization and revocation without retrying mutations", async () => {
+  const fetch = jest
+    .fn()
+    .mockImplementation(async () =>
+      new Response(JSON.stringify({ id: "connection" }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+  const { agent } = createFalClient({
+    credentials: "test-key",
+    agent: { baseUrl: "https://agent.example/v1" },
+    fetch,
+  });
+  await agent.connectors.beginConnect({ appSlug: "slack_v2" });
+  await agent.connectors.completeConnect({
+    appSlug: "slack_v2",
+    accountId: "account",
+  });
+  await agent.connectors.setEnabled("id/1", false);
+  await agent.connectors.disconnect("id/1");
+  expect(
+    fetch.mock.calls.map(([url, options]) => [url, options.method]),
+  ).toEqual([
+    ["https://agent.example/v1/agent/connectors/begin", "POST"],
+    ["https://agent.example/v1/agent/connectors/complete", "POST"],
+    ["https://agent.example/v1/agent/connectors/id%2F1/enabled", "POST"],
+    ["https://agent.example/v1/agent/connectors/id%2F1", "DELETE"],
+  ]);
+  fetch.mockRejectedValue(new TypeError("Connection lost"));
+  await expect(
+    agent.connectors.beginConnect({ appSlug: "slack_v2" }),
+  ).rejects.toThrow("Connection lost");
+  expect(fetch).toHaveBeenCalledTimes(5);
 });

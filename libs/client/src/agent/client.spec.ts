@@ -145,6 +145,36 @@ function snapshotEvent(value: AgentResponse) {
 }
 
 describe("experimental Agent client", () => {
+  it("stops run, wait and stream when a saved answer needs submission retry", async () => {
+    const blocked = response(1, "question");
+    blocked.fal.phase = "queued";
+    blocked.fal.pending_submission = {
+      input_request_id: "question",
+      action: "retry_input",
+      error: {
+        code: "input_submission_failed",
+        message: "Retry the input with the same idempotency key",
+      },
+    };
+    const fetch = jest
+      .fn()
+      .mockImplementation(
+        async () =>
+          new Response(JSON.stringify(blocked), {
+            headers: { "Content-Type": "application/json" },
+          }),
+      );
+    const agent = setup(fetch);
+    expect(
+      (await agent.run({ input: "hello" })).fal.pending_submission,
+    ).toEqual(blocked.fal.pending_submission);
+    expect(
+      (await agent.responses.wait(blocked.id)).fal.pending_submission,
+    ).toEqual(blocked.fal.pending_submission);
+    expect(await collect(agent.responses.stream(blocked.id))).toHaveLength(1);
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
   it("keeps streaming a visible question until the producer finishes its text", async () => {
     const initial = response(0, "question");
     initial.fal.phase = "running";

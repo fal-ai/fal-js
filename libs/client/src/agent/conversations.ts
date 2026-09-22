@@ -24,13 +24,6 @@ export type AgentConversationSharingInput = {
   expiresAt?: string | null;
 };
 
-export type AgentConversationExport = {
-  filename: string;
-  contentType: "application/json";
-  /** Serialized native chat export, ready to save to a file. */
-  content: string;
-};
-
 export function createAgentConversationActionsClient(
   request: ReturnType<typeof createAgentTransport>,
 ) {
@@ -75,13 +68,5 @@ export function createAgentConversationActionsClient(
           false,
         ),
     },
-    /** Native diagnostic export. Requires developer or full admin access. */
-    export: (id: string, options: AgentResourceOptions = {}) =>
-      request<AgentConversationExport>(
-        "GET",
-        `${path(id)}/export`,
-        undefined,
-        options,
-      ),
   };
 }

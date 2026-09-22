@@ -15,7 +15,9 @@ export function isAgentTerminal(response: AgentResponse): boolean {
 
 export function isAgentStopped(response: AgentResponse): boolean {
   return (
-    isAgentTerminal(response) || response.fal.phase === "waiting_for_input"
+    isAgentTerminal(response) ||
+    response.fal.phase === "waiting_for_input" ||
+    response.fal.pending_submission !== undefined
   );
 }
 

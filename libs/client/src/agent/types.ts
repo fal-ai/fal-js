@@ -78,7 +78,7 @@ export interface AgentArtifact {
   type: "fal.artifact";
   kind: "media" | "file" | "data" | "composition";
   media_type?: "image" | "video" | "audio" | "3d";
-  revision: number;
+  revision: 1;
   produced_by?: string;
   files?: Array<{
     role: string;
@@ -173,6 +173,18 @@ export interface AgentResponse {
     };
   } | null;
   fal: {
+    /** Conversation-model tokens only. Excludes media generation and auxiliary calls. */
+    model_usage?: {
+      scope: "conversation_model";
+      input_tokens?: number;
+      output_tokens?: number;
+    } | null;
+    /** An answer is saved but its execution needs the same input request retried. */
+    pending_submission?: {
+      input_request_id: string;
+      action: "retry_input";
+      error: AgentFailure;
+    };
     conversation_id: string;
     phase:
       | "queued"
@@ -203,11 +215,17 @@ export type AgentInputContent =
   | { type: "input_text"; text: string }
   | { type: "input_image"; image_url: string }
   | { type: "input_file"; file_url: string; mime_type?: string }
-  | { type: "fal.input_artifact"; artifact_id: string; revision?: number };
+  | { type: "fal.input_artifact"; artifact_id: string; revision?: 1 };
 
 export type AgentRequest = {
-  input: string | Array<{ role: "user"; content: AgentInputContent[] }>;
+  /** Agent model ID from agent.models.listAgentModels(). */
+  model?: string;
+  input: string | [{ role: "user"; content: AgentInputContent[] }];
   fal?: {
+    /** Conversation generation settings snapshot. */
+    generation_settings?: AgentGenerationSettings;
+    /** Overrides for this response only. */
+    generation_settings_overrides?: AgentGenerationSettingsOverrides;
     on_ambiguity?: "ask";
     /** Activate available skills by name. Activations persist in the conversation. */
     skills?: string[];
@@ -445,6 +463,32 @@ export type AgentGenerationSettings = {
   defaults?: AgentGenerationDefaults;
   reviewBeforeGenerating: boolean;
 };
+export type AgentGenerationSettingsOverrides = {
+  groups?: Partial<
+    Record<
+      AgentGenerationTask,
+      {
+        model?: string | null;
+        fields?: Record<
+          string,
+          {
+            value:
+              | string
+              | number
+              | boolean
+              | string[]
+              | { width: number; height: number };
+            sourceEndpointId: string;
+            label: string;
+          } | null
+        >;
+      }
+    >
+  >;
+  preferences?: AgentGenerationDefaults["preferences"];
+  preferredModels?: AgentGenerationDefaults["preferredModels"];
+  reviewBeforeGenerating?: boolean;
+};
 export type AgentDefaultsTarget =
   | { scope: "personal" }
   | { scope: "project"; projectId: string }
@@ -535,7 +579,6 @@ export type AgentPreferences = {
       | "cinder"
       | null;
     sequencerEnabled?: boolean;
-    knowledgeEnabled?: boolean;
   };
   cost: {
     confirmImage: boolean;

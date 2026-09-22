@@ -1,4 +1,5 @@
 import type { RequiredConfig } from "../config";
+import { createAgentConnectorsClient } from "./connectors";
 import { createAgentConversationActionsClient } from "./conversations";
 import { AgentProtocolError, AgentRequestError } from "./errors";
 import { createAgentLibraryClient } from "./library";
@@ -65,6 +66,7 @@ export interface AgentResponsesClient {
 }
 
 export interface AgentClient {
+  readonly connectors: ReturnType<typeof createAgentConnectorsClient>;
   readonly skills: ReturnType<typeof createAgentSkillsClient>;
   readonly library: ReturnType<typeof createAgentLibraryClient>;
   readonly queue: ReturnType<typeof createAgentQueueClient>["queue"];
@@ -135,7 +137,7 @@ export interface AgentClient {
   readonly artifacts: {
     retrieve(
       id: string,
-      options?: AgentRequestOptions & { revision?: number },
+      options?: AgentRequestOptions & { revision?: 1 },
     ): Promise<AgentArtifact>;
   };
 }
@@ -381,6 +383,7 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
   };
 
   const client: AgentClient = {
+    connectors: createAgentConnectorsClient(request),
     skills: createAgentSkillsClient(request),
     responses,
     projects: createAgentProjectsClient(request, config),
