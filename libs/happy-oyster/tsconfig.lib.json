@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "rootDir": "src",
+    "outDir": "../../dist/libs/happy-oyster/src",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "importHelpers": false,
+    "paths": {
+      "@fal-ai/client/realtime": ["dist/libs/client/src/realtime/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

@@ -1,0 +1,12 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/node_modules/**"],
+  "overrides": [
+    {
+      "files": ["*.spec.ts"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off"
+      }
+    }
+  ]
+}
