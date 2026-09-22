@@ -239,7 +239,7 @@ export interface AgentStreamOptions extends AgentRunOptions {
 }
 
 export interface AgentConfig {
-  /** Explicit opt-in: URL ending in /v1 of a compatible draft server. */
+  /** Base URL of the Agent API deployment. */
   baseUrl: string;
 }
 
