@@ -1,0 +1,38 @@
+{
+  "name": "happy-oyster",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/happy-oyster/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/libs/happy-oyster"],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": ["client"]
+        }
+      ],
+      "options": {
+        "parallel": false,
+        "commands": [
+          "tsc --project libs/happy-oyster/tsconfig.lib.json",
+          "cp libs/happy-oyster/package.json libs/happy-oyster/README.md LICENSE dist/libs/happy-oyster/"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "libs/happy-oyster/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["libs/happy-oyster/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}
