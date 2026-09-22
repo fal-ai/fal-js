@@ -72,6 +72,7 @@
     "@commitlint/cli": "^17.0.0",
     "@commitlint/config-conventional": "^17.0.0",
     "@excalidraw/excalidraw": "^0.17.0",
+    "@happy-oyster/js-sdk": "0.1.3",
     "@inrupt/jest-jsdom-polyfills": "^3.0.1",
     "@nrwl/express": "16.10.0",
     "@nx/cypress": "16.10.0",
