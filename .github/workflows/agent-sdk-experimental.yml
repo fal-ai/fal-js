@@ -1,0 +1,46 @@
+name: Experimental Agent SDK
+
+on:
+  push:
+    branches: [apek/agent-sdk-v1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      NX_DAEMON: "false"
+      NX_NO_CLOUD: "true"
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm install -g npm@11.15.0
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck:agent
+      - run: npm run test:agent
+      - run: npx nx build client
+      - name: Pack experimental client
+        run: |
+          npm pkg set --prefix dist/libs/client "version=0.0.0-agent-sdk.${GITHUB_RUN_NUMBER}.g${GITHUB_SHA:0:12}"
+          mkdir artifact
+          npm pack ./dist/libs/client --pack-destination artifact
+          printf '%s\n' "$GITHUB_SHA" > artifact/COMMIT.txt
+      - name: Verify the packed client
+        run: |
+          mkdir package-smoke
+          cd package-smoke
+          npm init -y
+          npm install ../artifact/*.tgz --ignore-scripts
+          node -e 'const { createFalClient } = require("@fal-ai/client"); const { agent } = createFalClient({ agent: { baseUrl: "http://localhost:3020/api/agent-v2/sdk" } }); for (const method of [agent.responses.create, agent.skills.list, agent.projects.documents.upload, agent.conversations.fork, agent.library.characters.create]) { if (typeof method !== "function") throw new Error("Missing Agent SDK export"); }'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: fal-agent-sdk-experimental
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 30
