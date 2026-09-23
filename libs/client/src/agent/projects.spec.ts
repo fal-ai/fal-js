@@ -42,3 +42,75 @@ it("uploads documents through shared storage then imports their hosted URL", asy
   ).rejects.toThrow("25 MiB");
   expect(upload).not.toHaveBeenCalled();
 });
+
+it.each(["abort", "timeout"])(
+  "stops document upload on %s without importing the document",
+  async (mode) => {
+    jest
+      .mocked(createStorageClient)
+      .mockImplementation(jest.requireActual("../storage").createStorageClient);
+    const controller = new AbortController();
+    const fetch = jest
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            file_url: "https://fal.media/brief.txt",
+            upload_url: "https://upload.fal.media/brief.txt",
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockImplementationOnce((_url, init) => {
+        const pending = new Promise((_resolve, reject) => {
+          init.signal.addEventListener("abort", () =>
+            reject(init.signal.reason),
+          );
+        });
+        if (mode === "abort") queueMicrotask(() => controller.abort());
+        return pending;
+      });
+    const { agent } = createFalClient({
+      credentials: "test-key",
+      agent: { baseUrl: "https://agent.example/v1" },
+      fetch,
+    });
+    await expect(
+      agent.projects.documents.upload(
+        "project",
+        new File(["Brief"], "brief.txt"),
+        { signal: controller.signal, timeoutMs: 30 },
+      ),
+    ).rejects.toMatchObject({
+      name: mode === "abort" ? "AbortError" : "TimeoutError",
+    });
+    expect(fetch.mock.calls.map(([, init]) => init.method)).toEqual([
+      "POST",
+      "PUT",
+    ]);
+  },
+);
+
+it("surfaces failed upload initiation without retrying or importing", async () => {
+  jest
+    .mocked(createStorageClient)
+    .mockImplementation(jest.requireActual("../storage").createStorageClient);
+  const fetch = jest
+    .fn()
+    .mockImplementation(
+      async () => new Response("Unavailable", { status: 503 }),
+    );
+  const { agent } = createFalClient({
+    credentials: "test-key",
+    agent: { baseUrl: "https://agent.example/v1" },
+    fetch,
+    retry: { maxRetries: 2, baseDelay: 0, maxDelay: 0 },
+  });
+  await expect(
+    agent.projects.documents.upload(
+      "project",
+      new File(["Brief"], "brief.txt"),
+    ),
+  ).rejects.toMatchObject({ status: 503 });
+  expect(fetch).toHaveBeenCalledTimes(1);
+});

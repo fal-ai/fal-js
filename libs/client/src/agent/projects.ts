@@ -1,6 +1,11 @@
 import type { RequiredConfig } from "../config";
 import { createStorageClient } from "../storage";
-import { createAgentTransport, segment, throwIfAborted } from "./transport";
+import {
+  createAgentTransport,
+  observation,
+  segment,
+  throwIfAborted,
+} from "./transport";
 import type {
   AgentConversation,
   AgentMemoryKind,
@@ -145,17 +150,29 @@ export function createAgentProjectsClient(
         file: File,
         options: AgentResourceOptions = {},
       ) => {
-        throwIfAborted(options.signal);
-        if (file.size > 25 * 1024 * 1024)
-          throw new Error("Documents must be 25 MiB or smaller");
-        const url = await createStorageClient({ config }).upload(file);
-        throwIfAborted(options.signal);
-        return write<AgentProjectDocument>(
-          "POST",
-          `${path(id)}/documents/import`,
-          { url, fileName: file.name, contentType: file.type || undefined },
-          options,
-        );
+        const scope = observation(options);
+        try {
+          throwIfAborted(scope.signal);
+          if (file.size > 25 * 1024 * 1024)
+            throw new Error("Documents must be 25 MiB or smaller");
+          const url = await createStorageClient({
+            config: {
+              ...config,
+              retry: { ...config.retry, maxRetries: 0 },
+              fetch: (input, init) =>
+                config.fetch(input, { ...init, signal: scope.signal }),
+            },
+          }).upload(file);
+          throwIfAborted(scope.signal);
+          return await write<AgentProjectDocument>(
+            "POST",
+            `${path(id)}/documents/import`,
+            { url, fileName: file.name, contentType: file.type || undefined },
+            { ...options, signal: scope.signal, timeoutMs: undefined },
+          );
+        } finally {
+          scope.close();
+        }
       },
       import: (
         id: string,

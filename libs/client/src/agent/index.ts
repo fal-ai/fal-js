@@ -10,5 +10,3 @@ export type { AgentProjectDocumentImport } from "./projects";
 export { isAgentStopped, isAgentTerminal } from "./response";
 export type * from "./skills";
 export * from "./types";
-
-export type * from "./connectors";

@@ -1,5 +1,6 @@
 // Runner infrastructure only: the numbered .ts files contain the SDK examples.
 import { build } from "esbuild";
+import { randomUUID } from "node:crypto";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -30,7 +31,7 @@ try {
     const headers = {
       Authorization: "Key local-demo",
       "Content-Type": "application/json",
-      "Idempotency-Key": crypto.randomUUID(),
+      "Idempotency-Key": randomUUID(),
     };
     const created = await fetch(`${server.baseUrl}/responses`, {
       method: "POST",

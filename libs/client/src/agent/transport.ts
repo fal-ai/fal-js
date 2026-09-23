@@ -74,12 +74,9 @@ export function mutationKey(options: AgentRequestOptions): string {
     }
     return options.idempotencyKey;
   }
-  if (!globalThis.crypto?.randomUUID) {
-    throw new Error(
-      "This runtime requires an explicit idempotencyKey or crypto.randomUUID",
-    );
-  }
-  return globalThis.crypto.randomUUID();
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  // Nonsecret idempotency tokens also work on Node 18 without global Web Crypto.
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 }
 
 export function segment(id: string): string {

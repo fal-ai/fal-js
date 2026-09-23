@@ -1,6 +1,7 @@
 // Executed by run.mjs against the local synthetic server, never production.
 import { createFalClient, type AgentResponseView } from "@fal-ai/client";
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { runTask } from "./01-run";
 import { streamTask } from "./02-stream";
 import { answerInput } from "./03-answer";
@@ -62,7 +63,7 @@ export async function demo(baseUrl: string) {
 
   const command = {
     request: { input: "A recoverable request." },
-    idempotencyKey: crypto.randomUUID(),
+    idempotencyKey: randomUUID(),
   };
   const accepted = await submitOrRetry(agent, command);
   const retried = await submitOrRetry(agent, command);

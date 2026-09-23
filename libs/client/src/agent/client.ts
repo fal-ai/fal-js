@@ -1,5 +1,4 @@
 import type { RequiredConfig } from "../config";
-import { createAgentConnectorsClient } from "./connectors";
 import { createAgentConversationActionsClient } from "./conversations";
 import { AgentProtocolError, AgentRequestError } from "./errors";
 import { createAgentLibraryClient } from "./library";
@@ -66,7 +65,6 @@ export interface AgentResponsesClient {
 }
 
 export interface AgentClient {
-  readonly connectors: ReturnType<typeof createAgentConnectorsClient>;
   readonly skills: ReturnType<typeof createAgentSkillsClient>;
   readonly library: ReturnType<typeof createAgentLibraryClient>;
   readonly queue: ReturnType<typeof createAgentQueueClient>["queue"];
@@ -165,7 +163,8 @@ function pageQuery(options: AgentPageOptions): string {
       throw new TypeError("limit must be an integer between 1 and 100");
     query.set("limit", String(options.limit));
   }
-  return query.size ? `?${query}` : "";
+  const encoded = query.toString();
+  return encoded ? `?${encoded}` : "";
 }
 
 function localError(
@@ -269,20 +268,24 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
     },
     retrieve: snapshot,
     async selectFinalArtifacts(id, input, options = {}) {
-      const view = agentResponseView(
-        await request<AgentResponse>(
-          "PATCH",
-          `/responses/${segment(id)}/final-artifacts`,
-          input,
-          options,
-          id,
-          false,
-          false,
-        ),
-      );
-      if (view.id !== id)
-        throw new AgentProtocolError("Updated response has a different ID");
-      return view;
+      try {
+        const view = agentResponseView(
+          await request<AgentResponse>(
+            "PATCH",
+            `/responses/${segment(id)}/final-artifacts`,
+            input,
+            options,
+            id,
+            false,
+            false,
+          ),
+        );
+        if (view.id !== id)
+          throw new AgentProtocolError("Updated response has a different ID");
+        return view;
+      } catch (error) {
+        throw localError(error, undefined, id);
+      }
     },
     async answer(id, input, options = {}) {
       return mutateResponse(id, "input", input, options);
@@ -383,7 +386,6 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
   };
 
   const client: AgentClient = {
-    connectors: createAgentConnectorsClient(request),
     skills: createAgentSkillsClient(request),
     responses,
     projects: createAgentProjectsClient(request, config),
@@ -486,15 +488,21 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
           `/agent/plans/${segment(id)}?conversation=${encodeURIComponent(options.conversation)}`,
           options,
         ),
-      run: async (id, input, options) =>
-        agentResponseView(
-          await mutate<AgentResponse>(
-            "POST",
-            `/agent/plans/${segment(id)}/run`,
-            input,
-            options,
-          ),
-        ),
+      run: async (id, input, options = {}) => {
+        const idempotencyKey = mutationKey(options);
+        try {
+          return agentResponseView(
+            await mutate<AgentResponse>(
+              "POST",
+              `/agent/plans/${segment(id)}/run`,
+              input,
+              { ...options, idempotencyKey },
+            ),
+          );
+        } catch (error) {
+          throw new AgentRequestError(error, { idempotencyKey });
+        }
+      },
       update: (id, change, options) =>
         mutate("PATCH", `/agent/plans/${segment(id)}`, change, options),
     },

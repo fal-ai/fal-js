@@ -156,14 +156,12 @@ describe("experimental Agent client", () => {
         message: "Retry the input with the same idempotency key",
       },
     };
-    const fetch = jest
-      .fn()
-      .mockImplementation(
-        async () =>
-          new Response(JSON.stringify(blocked), {
-            headers: { "Content-Type": "application/json" },
-          }),
-      );
+    const fetch = jest.fn().mockImplementation(
+      async () =>
+        new Response(JSON.stringify(blocked), {
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
     const agent = setup(fetch);
     expect(
       (await agent.run({ input: "hello" })).fal.pending_submission,
@@ -212,26 +210,43 @@ describe("experimental Agent client", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("retries an ambiguous submission with one key and generates a new key for new work", async () => {
-    const fetch = jest
-      .fn()
-      .mockRejectedValueOnce(new TypeError("fetch failed"))
-      .mockImplementation(() => Promise.resolve(json(response())));
-    const agent = setup(fetch);
-    await agent.responses.create({ input: "make something" });
-    await agent.responses.create({ input: "make something" });
-    const keys = fetch.mock.calls.map(
-      ([, init]) => init.headers["Idempotency-Key"],
-    );
-    expect(keys[0]).toBe(keys[1]);
-    expect(keys[2]).not.toBe(keys[0]);
-    expect(fetch.mock.calls[0][0]).toBe("https://agent.example/v1/responses");
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
-      input: "make something",
-      background: true,
-    });
-    expect(fetch.mock.calls[0][1].headers.Authorization).toBe("Key test-key");
-  });
+  it.each([true, false])(
+    "reuses one key across retries and allocates new keys for new work (global crypto: %s)",
+    async (hasCrypto) => {
+      const crypto = Object.getOwnPropertyDescriptor(globalThis, "crypto")!;
+      if (!hasCrypto)
+        Object.defineProperty(globalThis, "crypto", {
+          value: undefined,
+          configurable: true,
+        });
+      try {
+        const fetch = jest
+          .fn()
+          .mockRejectedValueOnce(new TypeError("fetch failed"))
+          .mockImplementation(() => Promise.resolve(json(response())));
+        const agent = setup(fetch);
+        await agent.responses.create({ input: "make something" });
+        await agent.responses.create({ input: "make something" });
+        const keys = fetch.mock.calls.map(
+          ([, init]) => init.headers["Idempotency-Key"],
+        );
+        expect(keys[0]).toBe(keys[1]);
+        expect(keys[2]).not.toBe(keys[0]);
+        expect(fetch.mock.calls[0][0]).toBe(
+          "https://agent.example/v1/responses",
+        );
+        expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+          input: "make something",
+          background: true,
+        });
+        expect(fetch.mock.calls[0][1].headers.Authorization).toBe(
+          "Key test-key",
+        );
+      } finally {
+        if (!hasCrypto) Object.defineProperty(globalThis, "crypto", crypto);
+      }
+    },
+  );
 
   it("preserves the caller key and HTTP conflict; does not retry changed-payload conflicts", async () => {
     const fetch = jest
@@ -534,6 +549,17 @@ describe("experimental Agent client", () => {
     });
   });
 
+  it("retains the generated plan-run key when the acceptance cannot be decoded", async () => {
+    const fetch = jest.fn().mockResolvedValueOnce(json({ id: "resp_1" }));
+    const error = await setup(fetch)
+      .plans.run("plan_1", { conversation: "conv_1", expected_revision: 1 })
+      .catch((cause) => cause);
+    expect(error).toBeInstanceOf(AgentRequestError);
+    expect(error.idempotencyKey).toBe(
+      fetch.mock.calls[0][1].headers["Idempotency-Key"],
+    );
+  });
+
   it("does not lose a question on a newly accepted stream", async () => {
     const fetch = jest
       .fn()
@@ -616,6 +642,22 @@ describe("experimental Agent client", () => {
 });
 
 describe("Agent deliverables", () => {
+  it("retains the response ID when final selection returns an invalid acceptance", async () => {
+    const fetch = jest
+      .fn()
+      .mockResolvedValueOnce(json({ ...response(1, "done"), id: "wrong" }));
+    await expect(
+      setup(fetch).responses.selectFinalArtifacts("resp_1", {
+        artifact_ids: [artifact.id],
+        expected_sequence_number: 0,
+      }),
+    ).rejects.toMatchObject({
+      name: "AgentRequestError",
+      responseId: "resp_1",
+      cause: { name: "AgentProtocolError" },
+    });
+  });
+
   it("selects only explicit finals and exposes generation summaries without changing response usage", async () => {
     const completed = response(3, "done");
     completed.fal.final_artifact_ids = [artifact.id];

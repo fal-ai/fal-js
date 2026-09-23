@@ -14,6 +14,7 @@ export async function* agentEvents(
   const events: AgentEvent[] = [];
   let parsingError: Error | undefined;
   let frame = "";
+  let trailingCR = false;
   const maxFrameSize = 4 * 1024 * 1024;
   const parser = createParser((event) => {
     if (event.type !== "event") return;
@@ -43,20 +44,32 @@ export async function* agentEvents(
       // delimiters across chunks without treating a long healthy connection
       // as a single oversized frame. Slice large chunks before decoding them.
       for (let offset = 0; offset < chunk.value.length; offset += 16384) {
-        frame += decoder.decode(chunk.value.subarray(offset, offset + 16384), {
-          stream: true,
-        });
-        let boundary = /\r\n\r\n|\n\n|\r\r/.exec(frame);
-        while (boundary) {
-          const complete = frame.slice(0, boundary.index);
+        let text = decoder.decode(
+          chunk.value.subarray(offset, offset + 16384),
+          {
+            stream: true,
+          },
+        );
+        if (text) {
+          // Treat CRLF as one line ending, including across network chunks.
+          if (trailingCR && text.startsWith("\n")) text = text.slice(1);
+          trailingCR = text.endsWith("\r");
+          frame += text.replace(/\r\n|\r/g, "\n");
+        }
+        let boundary = frame.indexOf("\n\n");
+        while (boundary !== -1) {
+          const complete = frame.slice(0, boundary);
           if (new TextEncoder().encode(complete).length > maxFrameSize) {
             throw new AgentProtocolError("Agent SSE frame exceeds 4 MiB");
           }
           parser.feed(complete + "\n\n");
-          frame = frame.slice(boundary.index + boundary[0].length);
+          frame = frame.slice(boundary + 2);
           if (parsingError) throw parsingError;
-          while (events.length) yield events.shift() as AgentEvent;
-          boundary = /\r\n\r\n|\n\n|\r\r/.exec(frame);
+          while (events.length) {
+            throwIfAborted(signal);
+            yield events.shift() as AgentEvent;
+          }
+          boundary = frame.indexOf("\n\n");
         }
         if (new TextEncoder().encode(frame).length > maxFrameSize) {
           throw new AgentProtocolError("Agent SSE frame exceeds 4 MiB");
