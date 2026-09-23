@@ -1,4 +1,5 @@
 import { RequiredConfig } from "./config";
+import { DEFAULT_REQUEST_SOURCE, REQUEST_SOURCE_HEADER } from "./headers";
 import { ResponseHandler } from "./response";
 import {
   calculateBackoffDelay,
@@ -66,6 +67,9 @@ export async function dispatchRequest<Input, Output>(
       ...authHeader,
       Accept: "application/json",
       "Content-Type": "application/json",
+      // Default source for direct SDK usage; embedders and per-call headers
+      // override it via requestMiddleware / options.headers (spread after).
+      [REQUEST_SOURCE_HEADER]: DEFAULT_REQUEST_SOURCE,
       ...userAgent,
       ...(headers ?? {}),
     } as HeadersInit;

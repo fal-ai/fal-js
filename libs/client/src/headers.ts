@@ -25,6 +25,17 @@ export const QUEUE_PRIORITY_HEADER = "x-fal-queue-priority";
 export const RUNNER_HINT_HEADER = "x-fal-runner-hint";
 
 /**
+ * Header name for the request source/client (surface classification).
+ */
+export const REQUEST_SOURCE_HEADER = "x-fal-request-source";
+
+/**
+ * Default request source for direct fal-js usage. Apps embedding the client
+ * (and per-call headers) override it via requestMiddleware / options.headers.
+ */
+export const DEFAULT_REQUEST_SOURCE = "sdk";
+
+/**
  * Validates the timeout and returns the header value as a string.
  * Throws an error if the timeout is invalid.
  *
