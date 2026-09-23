@@ -22,6 +22,13 @@ export async function demo(baseUrl: string) {
   const render = (r: AgentResponseView) =>
     console.log("Snapshot:", r.id, r.status, r.fal.phase);
 
+  const stopped = new AbortController();
+  stopped.abort();
+  await assert.rejects(
+    streamTask(agent, "Do not submit this task.", save, render, stopped.signal),
+  );
+  assert.equal(savedId, "");
+
   const first = await runTask(
     agent,
     "Help me choose a visual direction.",

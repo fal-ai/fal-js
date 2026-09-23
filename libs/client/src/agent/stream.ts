@@ -20,8 +20,6 @@ export async function* agentEvents(
     if (event.type !== "event") return;
     if (event.data === "[DONE]") return;
     try {
-      if (events.length >= 1024)
-        throw new AgentProtocolError("Too many buffered Agent events");
       events.push(JSON.parse(event.data));
     } catch (error) {
       parsingError =

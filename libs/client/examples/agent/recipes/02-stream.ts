@@ -8,7 +8,7 @@ export async function streamTask(
   render: (response: AgentResponseView) => void,
   signal?: AbortSignal,
 ) {
-  const accepted = await agent.responses.create({ input: prompt });
+  const accepted = await agent.responses.create({ input: prompt }, { signal });
   saveResponseId(accepted.id);
   render(accepted);
   return watchResponse(agent, accepted.id, render, signal);
