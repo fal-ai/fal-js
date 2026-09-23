@@ -1,6 +1,6 @@
 import { createAgentClient, type AgentClient } from "./agent/client";
 import { Config, createConfig } from "./config";
-import { buildTimeoutHeaders } from "./headers";
+import { buildTagsHeaders, buildTimeoutHeaders } from "./headers";
 import { createQueueClient, QueueClient, QueueSubscribeOptions } from "./queue";
 import { createRealtimeClient, RealtimeClient } from "./realtime";
 import { buildUrl, dispatchRequest } from "./request";
@@ -122,6 +122,7 @@ export function createFalClient(userConfig: Config = {}): FalClient {
         headers: {
           ...buildObjectLifecycleHeaders(options.storageSettings),
           ...buildTimeoutHeaders(options.startTimeout),
+          ...buildTagsHeaders(options.tags),
         },
         config: {
           ...config,
