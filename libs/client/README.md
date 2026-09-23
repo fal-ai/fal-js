@@ -21,6 +21,37 @@ fal.config({
 
 **Note:** Ensure you've reviewed the [fal.ai getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
 
+## Agent SDK preview
+
+Preview builds expose `createFalClient(...).agent` for tasks, streaming,
+approvals, plans, and Agent resources. Use an AGENT preset API key in a
+server-side application and an Agent-enabled runtime endpoint:
+
+```ts
+import { createFalClient } from "@fal-ai/client";
+
+const agent = createFalClient({
+  credentials: process.env.FAL_KEY,
+  agent: { baseUrl: process.env.AGENT_API_URL! },
+}).agent;
+
+const response = await agent.run({ input: "Describe a blue ceramic mug." });
+console.log(response.status, response.output_text, response.pending_inputs);
+```
+
+Set `AGENT_API_URL` to the deployment's full `/api/agent-v2/sdk` URL.
+The runtime must enable the SDK and allow Agent access for your account.
+Keep API keys out of browser code. Requests can incur charges.
+
+The preview is prepared as `1.11.0-agent.0`. Until it is published, install the
+supplied `fal-ai-client-1.11.0-agent.0.tgz` package. After publication, install
+`@fal-ai/client@1.11.0-agent.0` explicitly. The default npm release does not yet
+include this API. The preview contract can change before the stable release.
+
+`run()` can return while waiting for a question or approval. Inspect
+`pending_inputs` and `fal.phase` before treating the task as complete.
+Save the response ID to retrieve or reconnect to existing work.
+
 ## Running functions with `fal.run`
 
 The `fal.run` method is the simplest way to execute a function. It returns a promise that resolves to the function's result:
