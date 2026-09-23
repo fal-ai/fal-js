@@ -1,7 +1,72 @@
 import { createAgentTransport, segment } from "./transport";
-import type { AgentResourceOptions } from "./types";
+import type { AgentJson, AgentResourceOptions } from "./types";
 
 export type AgentLibraryMediaType = "image" | "video" | "audio" | "3d";
+
+export type AgentLibraryEntityType =
+  | "character"
+  | "prop"
+  | "environment"
+  | "style"
+  | "scene";
+
+export interface AgentLibraryEntityReference {
+  assetRecordId: string;
+  url: string;
+}
+
+export interface AgentLibraryEntity {
+  id: string;
+  userId: string;
+  type: AgentLibraryEntityType;
+  name: string;
+  handle: string | null;
+  description: string | null;
+  metadata: AgentJson;
+  thumbnailAssetId: string | null;
+  thumbnailUrl: string | null;
+  isFavorited: boolean;
+  /** Defining images, separate from the associated-media gallery. */
+  references: AgentLibraryEntityReference[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgentLibraryEntityQuery {
+  types?: AgentLibraryEntityType[];
+  /** Case-insensitive substring search across names and @handles. */
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export type AgentLibraryEntityInput = {
+  name: string;
+  handle?: string;
+  /** One to twenty fal-hosted image URLs or existing owned image targets. */
+  referenceImages: string[];
+  coverImageUrl?: string | null;
+} & (
+  | { type: "character"; description: string; metadata?: never }
+  | {
+      type: Exclude<AgentLibraryEntityType, "character">;
+      description?: string | null;
+      metadata?: Record<string, AgentJson> | null;
+    }
+);
+
+export interface AgentLibraryEntityUpdate {
+  name?: string;
+  /** Character handles cannot change. Other entity handles can be cleared. */
+  handle?: string | null;
+  /** Characters require a nonempty description. */
+  description?: string | null;
+  /** Character metadata is managed by the product and cannot be supplied. */
+  metadata?: Record<string, AgentJson> | null;
+  /** Replaces the complete defining reference set; does not edit the gallery. */
+  referenceImages?: string[];
+  coverImageUrl?: string | null;
+}
 
 export interface AgentLibraryTag {
   id: string;
@@ -101,7 +166,7 @@ export interface AgentCollectionInput {
 
 export interface AgentLibraryCollection {
   id: string;
-  type: "manual" | "smart" | "character";
+  type: "manual" | "smart" | AgentLibraryEntityType;
   name: string;
   description: string | null;
   icon: string | null;
@@ -110,6 +175,8 @@ export interface AgentLibraryCollection {
   filters: AgentCollectionFilter | null;
   parentCollectionId: string | null;
   characterIdentifier: string | null;
+  /** Defining image URLs when this collection-shaped result is a smart entity. */
+  referenceImageUrls?: string[];
   isFavorited: boolean;
   createdAt: string;
   updatedAt: string;
@@ -128,6 +195,7 @@ export function createAgentLibraryClient(
   const assets = "/agent/library/assets";
   const collections = "/agent/library/collections";
   const characters = "/agent/library/characters";
+  const entities = "/agent/library/entities";
   const tags = "/agent/library/tags";
   const read = <T>(url: string, options: AgentResourceOptions = {}) =>
     request<T>("GET", url, undefined, options);
@@ -142,6 +210,101 @@ export function createAgentLibraryClient(
   ) => request<T>(method, url, input, options, undefined, false, false);
   type Success = { success: true };
   return {
+    entities: {
+      list: (
+        input: AgentLibraryEntityQuery = {},
+        options?: AgentResourceOptions,
+      ) => read<AgentLibraryEntity[]>(`${entities}${query(input)}`, options),
+      retrieve: (id: string, options?: AgentResourceOptions) =>
+        read<AgentLibraryEntity>(`${entities}/${segment(id)}`, options),
+      resolve: (
+        input: { handles: string[]; types?: AgentLibraryEntityType[] },
+        options?: AgentResourceOptions,
+      ) =>
+        read<AgentLibraryEntity[]>(
+          `${entities}/resolve${query(input)}`,
+          options,
+        ),
+      checkHandle: (
+        input: { handle: string; excludeId?: string },
+        options?: AgentResourceOptions,
+      ) =>
+        read<{ handle: string; available: boolean }>(
+          `${entities}/handle${query(input)}`,
+          options,
+        ),
+      create: (
+        input: AgentLibraryEntityInput,
+        options?: AgentResourceOptions,
+      ) => write<AgentLibraryEntity>("POST", entities, input, options),
+      update: (
+        id: string,
+        input: AgentLibraryEntityUpdate,
+        options?: AgentResourceOptions,
+      ) =>
+        write<AgentLibraryEntity>(
+          "PATCH",
+          `${entities}/${segment(id)}`,
+          input,
+          options,
+        ),
+      delete: (id: string, options?: AgentResourceOptions) =>
+        write<Success>(
+          "DELETE",
+          `${entities}/${segment(id)}`,
+          undefined,
+          options,
+        ),
+      setFavorite: (
+        id: string,
+        favorite: boolean,
+        options?: AgentResourceOptions,
+      ) =>
+        write<AgentLibraryEntity>(
+          "PATCH",
+          `${entities}/${segment(id)}/favorite`,
+          { favorite },
+          options,
+        ),
+      listAssets: (
+        id: string,
+        input: {
+          mediaTypes?: AgentLibraryMediaType[];
+          limit?: number;
+          offset?: number;
+          /** Include reference-only membership as well as linked/generated media. */
+          includeReferences?: boolean;
+        } = {},
+        options?: AgentResourceOptions,
+      ) =>
+        read<{
+          items: AgentLibraryAsset[];
+          nextOffset: number | null;
+          totalCount: number;
+        }>(`${entities}/${segment(id)}/assets${query(input)}`, options),
+      addAsset: (
+        id: string,
+        assetRef: string,
+        options?: AgentResourceOptions,
+      ) =>
+        write<{ smartEntityId: string; assetRecordId: string }>(
+          "PUT",
+          `${entities}/${segment(id)}/assets`,
+          { assetRef },
+          options,
+        ),
+      removeAsset: (
+        id: string,
+        assetRef: string,
+        options?: AgentResourceOptions,
+      ) =>
+        write<Success>(
+          "DELETE",
+          `${entities}/${segment(id)}/assets`,
+          { assetRef },
+          options,
+        ),
+    },
     tags: {
       list: (options?: AgentResourceOptions) =>
         read<AgentLibraryTag[]>(tags, options),
@@ -167,13 +330,19 @@ export function createAgentLibraryClient(
       create: (
         input: AgentCharacterInput & { identifier?: string },
         options?: AgentResourceOptions,
-      ) => write<AgentLibraryCollection>("POST", characters, input, options),
+      ) =>
+        write<AgentLibraryCollection & { type: "character" }>(
+          "POST",
+          characters,
+          input,
+          options,
+        ),
       update: (
         id: string,
         input: AgentCharacterInput,
         options?: AgentResourceOptions,
       ) =>
-        write<AgentLibraryCollection>(
+        write<AgentLibraryCollection & { type: "character" }>(
           "PATCH",
           `${characters}/${segment(id)}`,
           input,
@@ -265,6 +434,8 @@ export function createAgentLibraryClient(
           limit?: number;
           offset?: number;
           includeCharacters?: boolean;
+          /** When true, includes all five types regardless of includeCharacters. */
+          includeSmartEntities?: boolean;
         } = {},
         options?: AgentResourceOptions,
       ) =>
