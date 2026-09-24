@@ -95,23 +95,6 @@ export function createAgentTransport(config: RequiredConfig) {
     stream = false,
     retry = true,
   ): Promise<T> {
-    const base = config.agent?.baseUrl;
-    if (!base)
-      throw new Error(
-        "Agent is experimental: configure agent.baseUrl for a compatible backend",
-      );
-    const url = new URL(base);
-    if (
-      !["https:", "http:"].includes(url.protocol) ||
-      url.username ||
-      url.password ||
-      url.search ||
-      url.hash
-    ) {
-      throw new TypeError(
-        "agent.baseUrl must be an HTTP(S) base URL without credentials, query, or fragment",
-      );
-    }
     // The stream observer owns its deadline and must keep the fetch signal
     // alive until the body is consumed. JSON requests own a local scope.
     const scope = stream
@@ -128,7 +111,7 @@ export function createAgentTransport(config: RequiredConfig) {
         try {
           return await dispatchRequest<unknown, T>({
             method,
-            targetUrl: `${base.replace(/\/$/, "")}${path}`,
+            targetUrl: `https://fal.ai/api/agent-v2/sdk${path}`,
             input,
             config,
             headers: {

@@ -19,9 +19,12 @@ if (!selected.length)
   throw new Error(`Choose 01–06 or all. Available: ${names.join(", ")}`);
 const temp = await mkdtemp(resolve(here, ".run-"));
 let server;
+const nativeFetch = globalThis.fetch;
+const originalKey = process.env.FAL_KEY;
 try {
   server = await startReferenceServer();
-  process.env.AGENT_EXAMPLE_BASE_URL = server.baseUrl;
+  globalThis.fetch = server.fetch;
+  process.env.FAL_KEY = "local-demo";
   console.log(
     "Local synthetic responses only; no sign-in, real keys, LLM calls, or paid media.",
   );
@@ -76,6 +79,9 @@ try {
     await import(pathToFileURL(outfile).href);
   }
 } finally {
+  globalThis.fetch = nativeFetch;
+  if (originalKey === undefined) delete process.env.FAL_KEY;
+  else process.env.FAL_KEY = originalKey;
   await server?.close();
   await rm(temp, { recursive: true, force: true });
 }

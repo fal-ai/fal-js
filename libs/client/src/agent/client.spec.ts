@@ -125,7 +125,6 @@ function sse(events: unknown[], cancel = jest.fn()) {
 function setup(fetch: jest.Mock) {
   return createFalClient({
     credentials: "test-key",
-    agent: { baseUrl: "https://agent.example/v1" },
     fetch,
     retry: { maxRetries: 1, baseDelay: 0, maxDelay: 0 },
   }).agent;
@@ -144,7 +143,7 @@ function snapshotEvent(value: AgentResponse) {
   };
 }
 
-describe("experimental Agent client", () => {
+describe("Agent client", () => {
   it("stops run, wait and stream when a saved answer needs submission retry", async () => {
     const blocked = response(1, "question");
     blocked.fal.phase = "queued";
@@ -201,13 +200,16 @@ describe("experimental Agent client", () => {
     expect(snapshots[1].fal.phase).toBe("waiting_for_input");
   });
 
-  it("requires explicit backend configuration and makes no accidental production call", async () => {
-    const fetch = jest.fn();
-    const agent = createFalClient({ fetch }).agent;
-    await expect(agent.responses.create({ input: "hello" })).rejects.toThrow(
-      "configure agent.baseUrl",
+  it("uses the fal Agent endpoint with the shared API key configuration", async () => {
+    const fetch = jest.fn().mockResolvedValue(json(response(0)));
+    const agent = createFalClient({ credentials: "test-key", fetch }).agent;
+    await agent.responses.create({ input: "hello" });
+    expect(fetch).toHaveBeenCalledWith(
+      "https://fal.ai/api/agent-v2/sdk/responses",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Key test-key" }),
+      }),
     );
-    expect(fetch).not.toHaveBeenCalled();
   });
 
   it.each([true, false])(
@@ -233,7 +235,7 @@ describe("experimental Agent client", () => {
         expect(keys[0]).toBe(keys[1]);
         expect(keys[2]).not.toBe(keys[0]);
         expect(fetch.mock.calls[0][0]).toBe(
-          "https://agent.example/v1/responses",
+          "https://fal.ai/api/agent-v2/sdk/responses",
         );
         expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
           input: "make something",
@@ -288,7 +290,7 @@ describe("experimental Agent client", () => {
     expect(failed.artifacts).toEqual([artifact]);
     expect(failed.final_artifacts).toEqual([]);
     expect(fetch.mock.calls[2][0]).toBe(
-      "https://agent.example/v1/responses/resp_1/input",
+      "https://fal.ai/api/agent-v2/sdk/responses/resp_1/input",
     );
   });
 
@@ -314,7 +316,6 @@ describe("experimental Agent client", () => {
     });
     const agent = createAgentClient(
       createConfig({
-        agent: { baseUrl: "https://agent.example/v1" },
         fetch,
         retry: { maxRetries: 3, baseDelay: 30000 },
       }),
@@ -348,7 +349,7 @@ describe("experimental Agent client", () => {
     const result = await agent.responses.cancel("resp_1");
     expect(result.status).toBe("cancelled");
     expect(fetch.mock.calls[fetch.mock.calls.length - 1][0]).toBe(
-      "https://agent.example/v1/responses/resp_1/cancel",
+      "https://fal.ai/api/agent-v2/sdk/responses/resp_1/cancel",
     );
   });
 
@@ -573,14 +574,13 @@ describe("experimental Agent client", () => {
   it("uses existing proxy middleware for Agent requests", async () => {
     const fetch = jest.fn().mockResolvedValue(json(response()));
     const agent = createFalClient({
-      agent: { baseUrl: "https://agent.example/v1" },
       fetch,
       proxyUrl: { url: "https://app.example/proxy", when: "always" },
     }).agent;
     await agent.responses.retrieve("resp_1");
     expect(fetch.mock.calls[0][0]).toBe("https://app.example/proxy");
     expect(fetch.mock.calls[0][1].headers["x-fal-target-url"]).toBe(
-      "https://agent.example/v1/responses/resp_1",
+      "https://fal.ai/api/agent-v2/sdk/responses/resp_1",
     );
   });
 
@@ -596,7 +596,7 @@ describe("experimental Agent client", () => {
       limit: 10,
     });
     expect(fetch.mock.calls[0][0]).toBe(
-      "https://agent.example/v1/conversations/conv%2F1/items?cursor=a%2Bb%26c&limit=10",
+      "https://fal.ai/api/agent-v2/sdk/conversations/conv%2F1/items?cursor=a%2Bb%26c&limit=10",
     );
     await agent.plans.update("plan_1", {
       conversation: "conv_1",
@@ -626,7 +626,7 @@ describe("experimental Agent client", () => {
     });
     await agent.plans.retrieve("plan/1", { conversation: "conv/1" });
     expect(fetch.mock.calls[2][0]).toBe(
-      "https://agent.example/v1/agent/plans/plan%2F1?conversation=conv%2F1",
+      "https://fal.ai/api/agent-v2/sdk/agent/plans/plan%2F1?conversation=conv%2F1",
     );
     fetch.mockResolvedValueOnce(json(response()));
     await agent.plans.run(
@@ -635,7 +635,7 @@ describe("experimental Agent client", () => {
       { idempotencyKey: "run-once" },
     );
     expect(fetch.mock.calls[3][0]).toBe(
-      "https://agent.example/v1/agent/plans/plan_1/run",
+      "https://fal.ai/api/agent-v2/sdk/agent/plans/plan_1/run",
     );
     expect(fetch.mock.calls[3][1].headers["Idempotency-Key"]).toBe("run-once");
   });
@@ -683,7 +683,7 @@ describe("Agent deliverables", () => {
       { unpricedRequestCount: 2 },
     );
     expect(fetch.mock.calls[1][0]).toBe(
-      "https://agent.example/v1/conversations/chat%2F1/generation-summary",
+      "https://fal.ai/api/agent-v2/sdk/conversations/chat%2F1/generation-summary",
     );
   });
 });
@@ -699,7 +699,7 @@ describe("Agent queue and runs", () => {
       approveCheckpoints: true,
     });
     expect(fetch.mock.calls[0][0]).toBe(
-      "https://agent.example/v1/agent/queues/chat%2F1/turns/turn%2F1/approval",
+      "https://fal.ai/api/agent-v2/sdk/agent/queues/chat%2F1/turns/turn%2F1/approval",
     );
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
       requiresApproval: false,
@@ -707,7 +707,7 @@ describe("Agent queue and runs", () => {
     });
     await agent.runs.retrieve("run/1", "chat/1");
     expect(fetch.mock.calls[1][0]).toBe(
-      "https://agent.example/v1/agent/runs/run%2F1?conversation=chat%2F1",
+      "https://fal.ai/api/agent-v2/sdk/agent/runs/run%2F1?conversation=chat%2F1",
     );
     fetch.mockClear();
     fetch.mockImplementation(() =>
@@ -726,7 +726,7 @@ describe("Agent settings", () => {
     const agent = setup(fetch);
     await agent.models.capabilities("fal-ai/model/edit");
     expect(fetch.mock.calls[0][0]).toBe(
-      "https://agent.example/v1/agent/settings/capabilities?endpointId=fal-ai%2Fmodel%2Fedit",
+      "https://fal.ai/api/agent-v2/sdk/agent/settings/capabilities?endpointId=fal-ai%2Fmodel%2Fedit",
     );
     await agent.settings.defaults.update(
       { scope: "chat", chatId: "chat/1" },
@@ -736,7 +736,7 @@ describe("Agent settings", () => {
       },
     );
     expect(fetch.mock.calls[1][0]).toBe(
-      "https://agent.example/v1/agent/settings/defaults?scope=chat&chatId=chat%2F1",
+      "https://fal.ai/api/agent-v2/sdk/agent/settings/defaults?scope=chat&chatId=chat%2F1",
     );
     expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({
       expectedLocal: { preferences: {}, preferredModels: {} },
@@ -764,7 +764,7 @@ describe("Agent project resources", () => {
       text: "Brief",
     });
     expect(fetch.mock.calls[0][0]).toBe(
-      "https://agent.example/v1/agent/projects/project%2F1/documents",
+      "https://fal.ai/api/agent-v2/sdk/agent/projects/project%2F1/documents",
     );
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({
       text: "Brief",
@@ -776,7 +776,7 @@ describe("Agent project resources", () => {
       true,
     );
     expect(fetch.mock.calls[1][0]).toBe(
-      "https://agent.example/v1/agent/projects/project%2F1/conversations/chat%2F1/memory",
+      "https://fal.ai/api/agent-v2/sdk/agent/projects/project%2F1/conversations/chat%2F1/memory",
     );
     expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ excluded: true });
     fetch.mockClear();
@@ -806,7 +806,7 @@ describe("Agent library", () => {
     ).toEqual(input);
     await agent.library.collections.addAsset("collection/1", "record/1");
     expect(fetch.mock.calls[1][0]).toBe(
-      "https://agent.example/v1/agent/library/collections/collection%2F1/assets/record%2F1",
+      "https://fal.ai/api/agent-v2/sdk/agent/library/collections/collection%2F1/assets/record%2F1",
     );
     expect(fetch.mock.calls[1][1].method).toBe("PUT");
     await agent.library.assets.setFavorite("record/1", true);

@@ -360,8 +360,29 @@ export async function startReferenceServer(port = 0) {
     server.listen(port, "127.0.0.1", resolve);
   });
   base = `http://127.0.0.1:${server.address().port}`;
+  const nativeFetch = globalThis.fetch;
   return {
     baseUrl: `${base}/v1`,
+    // Test transport only: exercise the SDK's fixed URL without any live calls.
+    fetch(input, init) {
+      const url = new URL(input instanceof Request ? input.url : input);
+      if (
+        url.origin === "https://fal.ai" &&
+        url.pathname.startsWith("/api/agent-v2/sdk/")
+      ) {
+        url.pathname = url.pathname.replace("/api/agent-v2/sdk", "/v1");
+        url.protocol = "http:";
+        url.host = new URL(base).host;
+      } else if (url.origin !== base) {
+        throw new Error(
+          `Unexpected fixture request: ${url.origin}${url.pathname}`,
+        );
+      }
+      return nativeFetch(
+        input instanceof Request ? new Request(url, input) : url,
+        init,
+      );
+    },
     async close() {
       for (const timer of timers) clearTimeout(timer);
       for (const { watchers } of responses.values())

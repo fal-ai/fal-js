@@ -23,7 +23,7 @@ try {
   });
   server = await startReferenceServer();
   const { demo } = createRequire(import.meta.url)(outfile);
-  await demo(server.baseUrl);
+  await demo(server.fetch);
 } finally {
   await server?.close();
   await rm(temp, { recursive: true, force: true });

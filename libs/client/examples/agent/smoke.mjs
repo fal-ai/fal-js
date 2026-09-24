@@ -1,17 +1,28 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { startReferenceServer } from "./mock-server.mjs";
 
-const require = createRequire(import.meta.url);
-const {
-  createFalClient,
-} = require("../../../../dist/libs/client/src/index.js");
+const packageDirectory =
+  process.argv[2] ??
+  fileURLToPath(new URL("../../../../dist/libs/client", import.meta.url));
+const require = createRequire(`${packageDirectory}/package.json`);
+const { createFalClient } = require("@fal-ai/client");
 const server = await startReferenceServer();
 try {
   const fal = createFalClient({
     credentials: "local-demo",
-    agent: { baseUrl: server.baseUrl },
+    fetch: server.fetch,
   });
+  for (const method of [
+    fal.agent.skills.list,
+    fal.agent.projects.documents.upload,
+    fal.agent.conversations.fork,
+    fal.agent.library.characters.create,
+    fal.agent.library.entities.create,
+  ]) {
+    assert.equal(typeof method, "function");
+  }
   const options = { timeoutMs: 5000, pollIntervalMs: 10 };
   const first = await fal.agent.run({ input: "Create a campaign." }, options);
   assert.equal(first.fal.phase, "waiting_for_input");
@@ -41,7 +52,7 @@ try {
   // A new client with only a saved ID can retrieve exactly the same result.
   const restored = createFalClient({
     credentials: "local-demo",
-    agent: { baseUrl: server.baseUrl },
+    fetch: server.fetch,
   });
   assert.deepEqual(
     JSON.parse(

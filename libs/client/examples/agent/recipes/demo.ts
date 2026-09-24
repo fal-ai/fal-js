@@ -9,10 +9,10 @@ import { generateImage, refineImage } from "./04-media";
 import { cancelExecution, restoreResponse, submitOrRetry } from "./05-recovery";
 import { delegateToFal } from "./06-agent-to-agent";
 
-export async function demo(baseUrl: string) {
+export async function demo(fetch: typeof globalThis.fetch) {
   const agent = createFalClient({
     credentials: "local-demo", // Fixture token, not a real fal credential.
-    agent: { baseUrl },
+    fetch,
   }).agent;
   let savedId = "";
   const save = (id: string) => {

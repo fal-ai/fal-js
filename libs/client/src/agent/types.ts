@@ -1,4 +1,4 @@
-/** Experimental Agent contract. Requires a compatible Agent runtime. */
+/** Agent API types. */
 export type AgentStatus =
   | "queued"
   | "in_progress"
@@ -254,11 +254,6 @@ export interface AgentStreamOptions extends AgentRunOptions {
   /** Maximum consecutive failed/disconnected observation attempts. */
   maxReconnects?: number;
   reconnectDelayMs?: number;
-}
-
-export interface AgentConfig {
-  /** Base URL of the Agent API deployment. */
-  baseUrl: string;
 }
 
 export interface AgentPage<T> {

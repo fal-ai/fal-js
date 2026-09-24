@@ -183,7 +183,7 @@ function localError(
   });
 }
 
-/** Create the experimental SDK without importing the private Agent runtime. */
+/** Create an Agent client using the shared fal client configuration. */
 export function createAgentClient(config: RequiredConfig): AgentClient {
   const request = createAgentTransport(config);
   const read = <T>(

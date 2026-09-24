@@ -18,14 +18,13 @@ it("uploads documents through shared storage then imports their hosted URL", asy
     );
   const { agent } = createFalClient({
     credentials: "test-key",
-    agent: { baseUrl: "https://agent.example/v1" },
     fetch,
   });
   const file = new File(["Brief"], "brief.txt", { type: "text/plain" });
   await agent.projects.documents.upload("project/1", file);
   expect(upload).toHaveBeenCalledWith(file);
   expect(fetch.mock.calls[0][0]).toBe(
-    "https://agent.example/v1/agent/projects/project%2F1/documents/import",
+    "https://fal.ai/api/agent-v2/sdk/agent/projects/project%2F1/documents/import",
   );
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
     url: "https://fal.media/brief.txt",
@@ -72,7 +71,6 @@ it.each(["abort", "timeout"])(
       });
     const { agent } = createFalClient({
       credentials: "test-key",
-      agent: { baseUrl: "https://agent.example/v1" },
       fetch,
     });
     await expect(
@@ -102,7 +100,6 @@ it("surfaces failed upload initiation without retrying or importing", async () =
     );
   const { agent } = createFalClient({
     credentials: "test-key",
-    agent: { baseUrl: "https://agent.example/v1" },
     fetch,
     retry: { maxRetries: 2, baseDelay: 0, maxDelay: 0 },
   });

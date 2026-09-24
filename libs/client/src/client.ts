@@ -21,7 +21,7 @@ import { Result, RunOptions } from "./types/common";
  * @see createFalClient
  */
 export interface FalClient {
-  /** Experimental durable Agent client; configure agent.baseUrl to opt in. */
+  /** Agent client for durable tasks, streaming, and library resources. */
   readonly agent: AgentClient;
   /**
    * The queue client to interact with the queue API.

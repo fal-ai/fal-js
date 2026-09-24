@@ -21,32 +21,27 @@ fal.config({
 
 **Note:** Ensure you've reviewed the [fal.ai getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
 
-## Agent SDK preview
+## Agent SDK alpha
 
-Preview builds expose `createFalClient(...).agent` for tasks, streaming,
+The alpha exposes `fal.agent` and `createFalClient().agent` for tasks, streaming,
 approvals, plans, and Agent resources. Use an AGENT preset API key in a
-server-side application and an Agent-enabled runtime endpoint:
+server-side application:
 
 ```ts
-import { createFalClient } from "@fal-ai/client";
+import { fal } from "@fal-ai/client";
 
-const agent = createFalClient({
-  credentials: process.env.FAL_KEY,
-  agent: { baseUrl: process.env.AGENT_API_URL! },
-}).agent;
-
-const response = await agent.run({ input: "Describe a blue ceramic mug." });
+// Reads FAL_KEY from the environment.
+const response = await fal.agent.run({ input: "Describe a blue ceramic mug." });
 console.log(response.status, response.output_text, response.pending_inputs);
 ```
 
-Set `AGENT_API_URL` to the deployment's full `/api/agent-v2/sdk` URL.
-The runtime must enable the SDK and allow Agent access for your account.
+The SDK connects to `https://fal.ai/api/agent-v2/sdk` automatically.
 Keep API keys out of browser code. Requests can incur charges.
 
-The preview is prepared as `1.11.0-agent.0`. Until it is published, install the
-supplied `fal-ai-client-1.11.0-agent.0.tgz` package. After publication, install
-`@fal-ai/client@1.11.0-agent.0` explicitly. The default npm release does not yet
-include this API. The preview contract can change before the stable release.
+The alpha is prepared as `1.11.0-alpha.4`. Until it is published, install the
+supplied `fal-ai-client-1.11.0-alpha.4.tgz` package. After publication, install
+`@fal-ai/client@1.11.0-alpha.4` explicitly or use `@fal-ai/client@alpha` for the
+latest alpha. The stable npm release does not yet include this API.
 
 `run()` can return while waiting for a question or approval. Inspect
 `pending_inputs` and `fal.phase` before treating the task as complete.

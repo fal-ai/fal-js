@@ -43,12 +43,11 @@ it.each<AgentLibraryEntityType>([
       ),
     );
     const { library } = createFalClient({
-      agent: { baseUrl: "https://agent.example/v1" },
       fetch,
     }).agent;
     const entity = await library.entities.create(input);
     expect(fetch.mock.calls[0][0]).toBe(
-      "https://agent.example/v1/agent/library/entities",
+      "https://fal.ai/api/agent-v2/sdk/agent/library/entities",
     );
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual(input);
     expect(entity.type).toBe(type);
@@ -65,7 +64,6 @@ it("routes entity discovery and gallery operations separately from defining refe
       }),
   );
   const { library } = createFalClient({
-    agent: { baseUrl: "https://agent.example/v1" },
     fetch,
   }).agent;
   await library.entities.list({
@@ -101,9 +99,9 @@ it("routes entity discovery and gallery operations separately from defining refe
   expect(
     fetch.mock.calls.slice(0, 3).map(([url]) => new URL(url).pathname),
   ).toEqual([
-    "/v1/agent/library/entities",
-    "/v1/agent/library/entities/resolve",
-    "/v1/agent/library/entities/handle",
+    "/api/agent-v2/sdk/agent/library/entities",
+    "/api/agent-v2/sdk/agent/library/entities/resolve",
+    "/api/agent-v2/sdk/agent/library/entities/handle",
   ]);
   fetch.mockClear();
   await library.entities.retrieve("entity/1");
@@ -124,29 +122,37 @@ it("routes entity discovery and gallery operations separately from defining refe
       init.body && JSON.parse(init.body),
     ]),
   ).toEqual([
-    ["/v1/agent/library/entities/entity%2F1", "GET", undefined],
-    ["/v1/agent/library/entities/entity%2F1/assets", "GET", undefined],
+    ["/api/agent-v2/sdk/agent/library/entities/entity%2F1", "GET", undefined],
     [
-      "/v1/agent/library/entities/entity%2F1",
+      "/api/agent-v2/sdk/agent/library/entities/entity%2F1/assets",
+      "GET",
+      undefined,
+    ],
+    [
+      "/api/agent-v2/sdk/agent/library/entities/entity%2F1",
       "PATCH",
       { referenceImages: ["image_2"] },
     ],
     [
-      "/v1/agent/library/entities/entity%2F1/assets",
+      "/api/agent-v2/sdk/agent/library/entities/entity%2F1/assets",
       "PUT",
       { assetRef: "gallery/1" },
     ],
     [
-      "/v1/agent/library/entities/entity%2F1/assets",
+      "/api/agent-v2/sdk/agent/library/entities/entity%2F1/assets",
       "DELETE",
       { assetRef: "gallery/1" },
     ],
     [
-      "/v1/agent/library/entities/entity%2F1/favorite",
+      "/api/agent-v2/sdk/agent/library/entities/entity%2F1/favorite",
       "PATCH",
       { favorite: true },
     ],
-    ["/v1/agent/library/entities/entity%2F1", "DELETE", undefined],
+    [
+      "/api/agent-v2/sdk/agent/library/entities/entity%2F1",
+      "DELETE",
+      undefined,
+    ],
   ]);
   expect(
     JSON.parse(
@@ -174,7 +180,6 @@ it("encodes character and tag identities and never replays uncertain writes", as
   );
   const { library } = createFalClient({
     credentials: "test-key",
-    agent: { baseUrl: "https://agent.example/v1" },
     fetch,
     retry: { maxRetries: 1, baseDelay: 0, maxDelay: 0 },
   }).agent;
@@ -190,12 +195,12 @@ it("encodes character and tag identities and never replays uncertain writes", as
   });
   await library.characters.update("character/1", character);
   expect(fetch.mock.calls[1][0]).toBe(
-    "https://agent.example/v1/agent/library/characters/character%2F1",
+    "https://fal.ai/api/agent-v2/sdk/agent/library/characters/character%2F1",
   );
   expect(fetch.mock.calls[1][1].method).toBe("PATCH");
   await library.characters.references("character/1");
   expect(fetch.mock.calls[2][0]).toBe(
-    "https://agent.example/v1/agent/library/characters/character%2F1/references",
+    "https://fal.ai/api/agent-v2/sdk/agent/library/characters/character%2F1/references",
   );
   await library.characters.checkIdentifier("milo & friends");
   expect(
@@ -203,14 +208,14 @@ it("encodes character and tag identities and never replays uncertain writes", as
   ).toEqual({ identifier: "milo & friends" });
   await library.assets.assignTag("asset/1", "tag/1");
   expect(fetch.mock.calls[4][0]).toBe(
-    "https://agent.example/v1/agent/library/assets/asset%2F1/tags/tag%2F1",
+    "https://fal.ai/api/agent-v2/sdk/agent/library/assets/asset%2F1/tags/tag%2F1",
   );
   expect(fetch.mock.calls[4][1].method).toBe("PUT");
   await library.assets.removeTag("asset/1", "tag/1");
   expect(fetch.mock.calls[5][1].method).toBe("DELETE");
   await library.tags.update("tag/1", { name: "Launch" });
   expect(fetch.mock.calls[6][0]).toBe(
-    "https://agent.example/v1/agent/library/tags/tag%2F1",
+    "https://fal.ai/api/agent-v2/sdk/agent/library/tags/tag%2F1",
   );
   expect(JSON.parse(fetch.mock.calls[6][1].body)).toEqual({ name: "Launch" });
   fetch.mockClear();
