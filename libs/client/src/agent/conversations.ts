@@ -45,7 +45,10 @@ export function createAgentConversationActionsClient(
         false,
       ),
     sharing: {
-      retrieve: (id: string, options: AgentResourceOptions = {}) =>
+      retrieve: (
+        id: string,
+        options: AgentResourceOptions = {},
+      ): Promise<AgentConversationSharePolicy | null> =>
         request<AgentConversationSharePolicy | null>(
           "GET",
           `${path(id)}/sharing`,

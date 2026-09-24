@@ -23,7 +23,10 @@ const request: AgentRequest = { input: "Create a campaign." };
 const response: Promise<AgentResponseView> = agent.responses.create(request);
 const upload: AgentClient["projects"]["documents"]["upload"] =
   fal.agent.projects.documents.upload;
-void [response, upload, AgentRequestError];
+const unshared: Awaited<
+  ReturnType<AgentClient["conversations"]["sharing"]["retrieve"]>
+> = null;
+void [response, upload, unshared, AgentRequestError];
 TS
 
 node node_modules/typescript/bin/tsc --noEmit --strict \
