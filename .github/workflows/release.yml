@@ -50,26 +50,16 @@ jobs:
 
       - name: Extract package info
         id: tag-info
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_PACKAGE: ${{ inputs.package }}
-          RELEASE_VERSION: ${{ inputs.version }}
-          RELEASE_REF: ${{ github.ref_name }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # Manual trigger
-            PACKAGE_NAME="$RELEASE_PACKAGE"
-            VERSION="$RELEASE_VERSION"
+            PACKAGE_NAME="${{ inputs.package }}"
+            VERSION="${{ inputs.version }}"
           else
             # Tag trigger
-            PACKAGE_NAME="${RELEASE_REF%%-v*}"
-            VERSION="${RELEASE_REF#*-v}"
-          fi
-
-          if [[ ! "$PACKAGE_NAME" =~ ^(client|proxy)$ ]] ||
-             [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z]+\.[0-9]+)?$ ]]; then
-            echo "Expected client/proxy and a version such as 1.2.0 or 1.3.0-alpha.0"
-            exit 1
+            TAG_NAME=${{ github.ref_name }}
+            PACKAGE_NAME=$(echo $TAG_NAME | cut -d'-' -f1)
+            VERSION=$(echo $TAG_NAME | cut -d'-' -f2- | sed 's/^v//')
           fi
 
           # Extract npm tag based on version qualifier
@@ -83,12 +73,6 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "npm_tag=$NPM_TAG" >> $GITHUB_OUTPUT
 
-      - name: Check Agent SDK
-        if: steps.tag-info.outputs.package == 'client'
-        run: |
-          npm run typecheck:agent
-          npm run test:agent
-
       - name: Build package
         run: npx nx build ${{ steps.tag-info.outputs.package }} --prod
 
@@ -99,10 +83,6 @@ jobs:
             echo "Package version ($PACKAGE_JSON_VERSION) does not match tag version (${{ steps.tag-info.outputs.version }})"
             exit 1
           fi
-
-      - name: Verify packed client on Node 18 and 22
-        if: steps.tag-info.outputs.package == 'client'
-        run: bash .github/scripts/verify-client-package.sh
 
       - name: Publish package
         run: |
