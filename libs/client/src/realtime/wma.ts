@@ -28,21 +28,10 @@ import {
   type RealtimeSession,
 } from "./extension";
 import { countTurnServers } from "./ice";
-import {
-  applyWmaCodecPreferences,
-  applyWmaOpusPreferences,
-  normalizeWmaReceiveTrack,
-  type WmaReceiveTrack,
-} from "./wma-media";
-export type {
-  WmaOpusReceiveOptions,
-  WmaReceiveTrack,
-  WmaReceiveTrackKind,
-  WmaReceiveTrackOptions,
-} from "./wma-media";
 
 const WMA_URL = "https://wma.fal.run";
 const ICE_DISCOVERY_TIMEOUT_MS = 5_000;
+const SESSION_NEGOTIATION_TIMEOUT_MS = 120_000;
 const HEARTBEAT_INTERVAL_MS = 5_000;
 const HEARTBEAT_TIMEOUT_MS = 4_000;
 // Reserved control-channel vocabulary for the session-affine network query: the request reaches
@@ -62,40 +51,10 @@ export type WmaControlMessage = object;
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaOptions {
   /**
-   * How long to wait for the WMA bridge to acquire a runner and return its SDP answer.
-   *
-   * By default there is no client-side deadline, so an application may wait for capacity. The
-   * caller can still cancel through `abortSignal` or by closing the session. Set a positive number
-   * to impose an application-specific deadline.
-   */
-  negotiationTimeoutMs?: number | null;
-  /**
    * Media direction. Sessions without a local stream default to `"recvonly"`; sessions with local
    * tracks preserve addTrack's `"sendrecv"` behavior. Pass an explicit direction for other flows.
    */
   direction?: RTCRtpTransceiverDirection;
-  /**
-   * Media tracks to receive from the model, in offer order.
-   *
-   * WebRTC answers cannot introduce media sections that were absent from the browser's offer, so
-   * output-only audio and audio-plus-video apps must declare their receive slots before offer
-   * creation. Repeating a kind requests multiple tracks of that kind; an empty array creates no
-   * receive transceivers and is suitable for send-only or data-channel-only sessions.
-   *
-   * When a local track has the same kind as a requested receive slot, one `sendrecv` transceiver is
-   * used for both directions. Remaining local tracks are `sendonly`, and remaining receive slots are
-   * `recvonly`.
-   *
-   * Omit this option to preserve the legacy behavior: local tracks use `direction` (defaulting to
-   * `sendrecv`), while a session without local tracks offers one `recvonly` video transceiver.
-   * Because this option derives directions per track, it cannot be combined with `direction`.
-   *
-   * Object entries optionally tune receive preferences before negotiation. Strings retain defaults.
-   * Opus preferences describe reception; codec ordering may affect both directions on sendrecv
-   * tracks. Close and reopen to change them. These do not set the model's encoder target or
-   * guarantee a negotiated codec/bitrate.
-   */
-  receive?: readonly WmaReceiveTrack[];
   /**
    * Media to send UP, on the same peer connection the output comes back on.
    *
@@ -617,24 +576,9 @@ export function wma(endpointId?: string) {
     id: "fal/wma",
     defaultEndpoint: endpointId,
     async open(context, options) {
-      if (
-        options.negotiationTimeoutMs != null &&
-        (!Number.isFinite(options.negotiationTimeoutMs) ||
-          options.negotiationTimeoutMs <= 0)
-      ) {
-        throw new Error(
-          "WMA negotiationTimeoutMs must be a positive, finite number.",
-        );
-      }
       if (options.direction === "stopped") {
         throw new Error('WMA direction cannot be "stopped".');
       }
-      if (options.receive !== undefined && options.direction !== undefined) {
-        throw new Error(
-          "WMA receive tracks cannot be combined with an explicit direction.",
-        );
-      }
-      const receive = options.receive?.map(normalizeWmaReceiveTrack);
       const iceServers = options.iceServers ?? (await fetchIceServers(context));
       const pc = new RTCPeerConnection({
         iceServers,
@@ -655,34 +599,7 @@ export function wma(endpointId?: string) {
       // A local track is added through a transceiver so the caller's requested direction reaches
       // SDP. Never add a second media transceiver for the same track.
       const localTracks = options.localStream?.getTracks() ?? [];
-      if (receive !== undefined) {
-        const unmatchedLocalTracks = [...localTracks];
-        for (const preferences of receive) {
-          const { kind } = preferences;
-          const localIndex = unmatchedLocalTracks.findIndex(
-            (track) => track.kind === kind,
-          );
-          const transceiver =
-            localIndex === -1
-              ? pc.addTransceiver(kind, { direction: "recvonly" })
-              : pc.addTransceiver(
-                  unmatchedLocalTracks.splice(localIndex, 1)[0],
-                  {
-                    direction: "sendrecv",
-                    streams: [options.localStream!],
-                  },
-                );
-          applyWmaCodecPreferences(transceiver, preferences, (message) =>
-            context.diagnostic({ kind: "warning", message }),
-          );
-        }
-        for (const track of unmatchedLocalTracks) {
-          pc.addTransceiver(track, {
-            direction: "sendonly",
-            streams: [options.localStream!],
-          });
-        }
-      } else if (localTracks.length > 0) {
+      if (localTracks.length > 0) {
         for (const track of localTracks) {
           pc.addTransceiver(track, {
             direction: options.direction ?? "sendrecv",
@@ -953,9 +870,6 @@ export function wma(endpointId?: string) {
 
       try {
         const offer = await pc.createOffer();
-        if (offer.sdp !== undefined && receive !== undefined) {
-          offer.sdp = applyWmaOpusPreferences(offer.sdp, receive);
-        }
         // Attach listeners BEFORE setLocalDescription starts gathering — fast host/srflx
         // candidates otherwise fire before the waiter exists and are never counted.
         // Non-trickle signalling needs the kernel's sufficient-set / quiet-period / hard-bound
@@ -997,13 +911,10 @@ export function wma(endpointId?: string) {
             once: true,
           });
         }
-        const sessionTimeout =
-          options.negotiationTimeoutMs == null
-            ? undefined
-            : setTimeout(
-                () => sessionController.abort(),
-                options.negotiationTimeoutMs,
-              );
+        const sessionTimeout = setTimeout(
+          () => sessionController.abort(),
+          SESSION_NEGOTIATION_TIMEOUT_MS,
+        );
         let answer: {
           session_id: string;
           sdp: string;
@@ -1011,8 +922,8 @@ export function wma(endpointId?: string) {
         };
         try {
           // Auth comes from the client's configured credentials rather than a pasted key. The child
-          // signal preserves caller cancellation. Applications that want a bounded capacity wait
-          // can opt into negotiationTimeoutMs; by default the bridge may wait for a runner.
+          // signal preserves caller cancellation while bounding a bridge that accepts but never
+          // answers the negotiation request.
           const response = await context.fetch(`${WMA_URL}/session`, {
             method: "POST",
             signal: sessionController.signal,
@@ -1026,7 +937,7 @@ export function wma(endpointId?: string) {
           if (!response.ok) throw new Error(await readErrorMessage(response));
           answer = (await response.json()) as typeof answer;
         } finally {
-          if (sessionTimeout !== undefined) clearTimeout(sessionTimeout);
+          clearTimeout(sessionTimeout);
           context.signal.removeEventListener("abort", abortSession);
         }
 

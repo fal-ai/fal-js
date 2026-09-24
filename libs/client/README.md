@@ -21,32 +21,6 @@ fal.config({
 
 **Note:** Ensure you've reviewed the [fal.ai getting started guide](https://fal.ai/docs) to acquire your credentials and register your functions. Also, make sure your credentials are always protected. See the [../proxy](../proxy) package for a secure way to use the client in client-side applications.
 
-## Agent SDK alpha
-
-The alpha exposes `fal.agent` and `createFalClient().agent` for tasks, streaming,
-approvals, plans, and Agent resources. Use an AGENT preset API key in a
-server-side application:
-
-```ts
-import { fal } from "@fal-ai/client";
-
-// Reads FAL_KEY from the environment.
-const response = await fal.agent.run({ input: "Describe a blue ceramic mug." });
-console.log(response.status, response.output_text, response.pending_inputs);
-```
-
-The SDK connects to `https://fal.ai/api/agent-v2/sdk` automatically.
-Keep API keys out of browser code. Requests can incur charges.
-
-The alpha is prepared as `1.11.0-alpha.4`. Until it is published, install the
-supplied `fal-ai-client-1.11.0-alpha.4.tgz` package. After publication, install
-`@fal-ai/client@1.11.0-alpha.4` explicitly or use `@fal-ai/client@alpha` for the
-latest alpha. The stable npm release does not yet include this API.
-
-`run()` can return while waiting for a question or approval. Inspect
-`pending_inputs` and `fal.phase` before treating the task as complete.
-Save the response ID to retrieve or reconnect to existing work.
-
 ## Running functions with `fal.run`
 
 The `fal.run` method is the simplest way to execute a function. It returns a promise that resolves to the function's result:
@@ -174,50 +148,6 @@ An extension that _does_ own a closed set of endpoints can add an optional
 `supports(endpointId)` to reject a stale or mistyped id before negotiation
 starts. It is a guard, not a router; most protocols have no such set and should
 omit it.
-
-### Optional WMA receive preferences
-
-The existing `receive: ["video", "audio"]` syntax keeps browser defaults.
-Object entries opt into preferences for an individual receive slot:
-
-```ts
-import { fal } from "@fal-ai/client";
-import { wma } from "@fal-ai/client/realtime";
-
-const session = fal.realtime.open(wma("my-owner/my-model"), {
-  receive: [
-    { kind: "video", codecPreferences: ["video/H264", "video/VP8"] },
-    {
-      kind: "audio",
-      opus: { stereo: true, maxAverageBitrate: 192_000 },
-    },
-  ],
-  onMedia: (stream) => {
-    videoElement.srcObject = stream;
-  },
-  onError: console.error,
-});
-```
-
-These optional settings apply before negotiation and require reconnecting to
-change. Opus settings describe reception, even when a local track shares the
-slot through `sendrecv`. They do not configure local capture or sender bitrate.
-Codec preferences participate in negotiation and can affect the codec used in
-both directions on a `sendrecv` transceiver.
-
-- `codecPreferences` orders supported codec MIME types without removing
-  browser fallback or repair codecs. Unavailable types produce a diagnostic;
-  if none are available, the browser order is unchanged. A nonempty list
-  requires `setCodecPreferences` support in the browser.
-- `opus.stereo` requests stereo or mono; omission preserves the browser default.
-- `opus.maxAverageBitrate` is a receive ceiling in bits/s (integer 6000–510000),
-  not a target or a guarantee of actual bandwidth. Opus preferences require
-  Opus in the offer but do not force the server to select it.
-
-The model still controls its encoder. For example, Director separately accepts
-`audio_bitrate: 192000` in its initial `configure` message. No model-specific
-configuration is sent automatically by fal-js. Omitting these new options
-preserves existing SDP and behavior.
 
 ### fal's own WebSocket protocol, behind `open()`
 
