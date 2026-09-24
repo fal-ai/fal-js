@@ -1,0 +1,6 @@
+{
+  "extends": "../recipes/tsconfig.json",
+  "compilerOptions": { "module": "esnext" },
+  "include": ["./*.ts"],
+  "exclude": [".run-*"]
+}

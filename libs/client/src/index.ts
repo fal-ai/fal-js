@@ -4,6 +4,7 @@ import { StreamOptions } from "./streaming";
 import { EndpointType, InputType } from "./types/client";
 import { RunOptions } from "./types/common";
 
+export * from "./agent";
 export type { TokenProvider } from "./auth";
 export { createFalClient, type FalClient } from "./client";
 export type { ProxyUrlConfig } from "./config";
@@ -79,6 +80,9 @@ export const fal: SingletonFalClient = (function createSingletonFalClient() {
     },
     get queue() {
       return currentInstance.queue;
+    },
+    get agent() {
+      return currentInstance.agent;
     },
     get realtime() {
       return currentInstance.realtime;
