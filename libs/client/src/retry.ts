@@ -46,58 +46,85 @@ const RETRYABLE_NETWORK_ERROR_CODES = new Set([
   "UND_ERR_SOCKET",
 ]);
 
+const TRANSPORT_FAILURE_MESSAGE =
+  /fetch failed|failed to fetch|load failed|networkerror when attempting to fetch/i;
+
+export type ErrorChain = {
+  /**
+   * True when the chain contains an AbortError or TimeoutError. Those come from
+   * caller cancellation or `AbortSignal.timeout` and express explicit user
+   * intent, so callers must never retry or re-route them.
+   */
+  cancelled: boolean;
+  /**
+   * Every string `code` found on the error or any of its `cause`s, with the
+   * Node `syscall` that raised it when present.
+   */
+  codes: { code: string; syscall?: string }[];
+};
+
+/**
+ * Walks an error and its `cause` chain. Node's `fetch` (undici) wraps the
+ * underlying SystemError inside a `TypeError("fetch failed")` and exposes the
+ * original via `.cause`; other fetch implementations such as `node-fetch`
+ * set `.code` directly on the error.
+ */
+export function inspectErrorChain(error: unknown): ErrorChain {
+  const seen = new Set<unknown>();
+  const codes: ErrorChain["codes"] = [];
+  let current: unknown = error;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    seen.add(current);
+    const { name, code, syscall, cause } = current as {
+      name?: unknown;
+      code?: unknown;
+      syscall?: unknown;
+      cause?: unknown;
+    };
+    if (name === "AbortError" || name === "TimeoutError") {
+      return { cancelled: true, codes };
+    }
+    if (typeof code === "string") {
+      codes.push(typeof syscall === "string" ? { code, syscall } : { code });
+    }
+    current = cause;
+  }
+  return { cancelled: false, codes };
+}
+
+/**
+ * A `fetch` rejection with no `.code` is still a transport-layer problem.
+ * Each runtime words it differently and none of them expose a status:
+ *   Node            TypeError: fetch failed
+ *   Chrome/Firefox  TypeError: Failed to fetch
+ *   Safari          TypeError: Load failed
+ *   older Firefox   TypeError: NetworkError when attempting to fetch resource.
+ */
+export function isTransportFailureMessage(error: unknown): boolean {
+  return (
+    error instanceof TypeError &&
+    typeof error.message === "string" &&
+    TRANSPORT_FAILURE_MESSAGE.test(error.message)
+  );
+}
+
 /**
  * Returns true for transient transport-level failures (connection resets,
  * DNS hiccups, socket timeouts, etc.). Mirrors the Python client's behavior
  * of retrying `httpx.TransportError` and `httpx.TimeoutException`.
  */
-const TRANSPORT_FAILURE_MESSAGE =
-  /fetch failed|failed to fetch|load failed|networkerror when attempting to fetch/i;
-
 export function isRetryableNetworkError(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
   }
-
-  // Walk the cause chain. User cancellation (AbortError) and signal-driven
-  // timeouts (TimeoutError, e.g. AbortSignal.timeout) are explicit user
-  // intent — never retry them, even if buried in a wrapper.
-  const seen = new Set<unknown>();
-  let current: any = error;
-  let sawTransportShape = false;
-  while (current && typeof current === "object" && !seen.has(current)) {
-    seen.add(current);
-    const name = (current as { name?: unknown }).name;
-    if (name === "AbortError" || name === "TimeoutError") {
-      return false;
-    }
-    const code = (current as { code?: unknown }).code;
-    if (typeof code === "string" && RETRYABLE_NETWORK_ERROR_CODES.has(code)) {
-      sawTransportShape = true;
-    }
-    current = (current as { cause?: unknown }).cause;
+  const { cancelled, codes } = inspectErrorChain(error);
+  if (cancelled) {
+    return false;
   }
-
-  if (sawTransportShape) {
+  if (codes.some(({ code }) => RETRYABLE_NETWORK_ERROR_CODES.has(code))) {
     return true;
   }
-
-  // A `fetch` rejection with no recognised `.code` is still a transport-layer
-  // problem, so treat it as retryable like httpx.TransportError does. Each
-  // runtime words it differently and none of them expose a status:
-  //   Node            TypeError: fetch failed
-  //   Chrome/Firefox  TypeError: Failed to fetch
-  //   Safari          TypeError: Load failed
-  //   older Firefox   TypeError: NetworkError when attempting to fetch resource.
-  if (
-    error instanceof TypeError &&
-    typeof (error as { message?: unknown }).message === "string" &&
-    TRANSPORT_FAILURE_MESSAGE.test((error as { message: string }).message)
-  ) {
-    return true;
-  }
-
-  return false;
+  return isTransportFailureMessage(error);
 }
 
 /**

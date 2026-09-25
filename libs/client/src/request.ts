@@ -1,3 +1,4 @@
+import { fetchWithBackupDomain } from "./backup-domain";
 import { RequiredConfig } from "./config";
 import { ResponseHandler } from "./response";
 import {
@@ -75,7 +76,7 @@ export async function dispatchRequest<Input, Output>(
       retry: _,
       ...requestInit
     } = options;
-    const response = await fetch(url, {
+    const response = await fetchWithBackupDomain(fetch, url, {
       ...requestInit,
       method,
       headers: {
