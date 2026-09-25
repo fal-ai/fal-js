@@ -100,6 +100,30 @@ fal.config({
   });
   ```
 
+## Backup domains
+
+When the proxy cannot connect to a fal inference gateway, it retries the
+request once against a backup domain:
+
+| Primary         | Backup             |
+| --------------- | ------------------ |
+| `fal.run`       | `falrun.com`       |
+| `queue.fal.run` | `queue.falrun.com` |
+
+Only DNS and connection-establishment failures trigger the fallback. HTTP
+error responses, failures after the gateway has answered, and caller
+cancellation are passed through unchanged. Node error codes make that
+distinction; edge runtimes report a bare network error for both, so there a
+delivered request that got no response is also retried on the backup host.
+
+The Fetch API has no connect-phase timeout, so with an unreachable primary the
+proxy waits for the runtime's own connect timeout (about 10 seconds in Node)
+before trying the backup.
+
+If your server restricts outbound traffic, allow the backup domains as well.
+Target URLs are validated against the allowlist before any fallback, so the
+backup domains do not need to be in `allowedUrlPatterns`.
+
 ## More information
 
 For a deeper dive into the proxy library and its capabilities, explore the [official documentation](https://fal.ai/docs).
