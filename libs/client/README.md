@@ -149,6 +149,50 @@ An extension that _does_ own a closed set of endpoints can add an optional
 starts. It is a guard, not a router; most protocols have no such set and should
 omit it.
 
+### Optional WMA receive preferences
+
+The existing `receive: ["video", "audio"]` syntax keeps browser defaults.
+Object entries opt into preferences for an individual receive slot:
+
+```ts
+import { fal } from "@fal-ai/client";
+import { wma } from "@fal-ai/client/realtime";
+
+const session = fal.realtime.open(wma("my-owner/my-model"), {
+  receive: [
+    { kind: "video", codecPreferences: ["video/H264", "video/VP8"] },
+    {
+      kind: "audio",
+      opus: { stereo: true, maxAverageBitrate: 192_000 },
+    },
+  ],
+  onMedia: (stream) => {
+    videoElement.srcObject = stream;
+  },
+  onError: console.error,
+});
+```
+
+These optional settings apply before negotiation and require reconnecting to
+change. Opus settings describe reception, even when a local track shares the
+slot through `sendrecv`. They do not configure local capture or sender bitrate.
+Codec preferences participate in negotiation and can affect the codec used in
+both directions on a `sendrecv` transceiver.
+
+- `codecPreferences` orders supported codec MIME types without removing
+  browser fallback or repair codecs. Unavailable types produce a diagnostic;
+  if none are available, the browser order is unchanged. A nonempty list
+  requires `setCodecPreferences` support in the browser.
+- `opus.stereo` requests stereo or mono; omission preserves the browser default.
+- `opus.maxAverageBitrate` is a receive ceiling in bits/s (integer 6000–510000),
+  not a target or a guarantee of actual bandwidth. Opus preferences require
+  Opus in the offer but do not force the server to select it.
+
+The model still controls its encoder. For example, Director separately accepts
+`audio_bitrate: 192000` in its initial `configure` message. No model-specific
+configuration is sent automatically by fal-js. Omitting these new options
+preserves existing SDP and behavior.
+
 ### fal's own WebSocket protocol, behind `open()`
 
 `websocket()` speaks the same wire protocol as `fal.realtime.connect()` —
