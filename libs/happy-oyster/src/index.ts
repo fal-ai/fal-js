@@ -53,6 +53,21 @@ export const ADVENTURE_INTERACTIONS = [
   "None",
 ] as const;
 
+/**
+ * The WMA data-channel messages this adapter exchanges. A client can check
+ * that a deployment's AsyncAPI contract publishes them before connecting.
+ */
+export const HAPPY_OYSTER_MESSAGES = {
+  client: ["configure", "refresh_token", "bind_travel", "travel_ended"],
+  server: [
+    "configured",
+    "token_refreshed",
+    "travel_bound",
+    "travel_released",
+    "error",
+  ],
+} as const;
+
 export type HappyOysterCommand = {
   translation?: (typeof ADVENTURE_TRANSLATIONS)[number];
   rotation?: (typeof ADVENTURE_ROTATIONS)[number];
