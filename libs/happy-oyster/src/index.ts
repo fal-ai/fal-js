@@ -616,6 +616,10 @@ export function happyOyster() {
       if (
         !configured.ticket ||
         !configured.token ||
+        !(
+          Number.isFinite(configured.token_expires_in) &&
+          configured.token_expires_in > 0
+        ) ||
         !configured.model ||
         !HOST_PATTERN.test(configured.api_host ?? "") ||
         configured.world?.encrypted_world_id !== options.worldId ||
