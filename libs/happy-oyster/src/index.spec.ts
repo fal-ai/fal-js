@@ -2,7 +2,7 @@ import { wma, type RealtimeExtensionContext } from "@fal-ai/client/realtime";
 import { HappyOysterEngine } from "@happy-oyster/js-sdk";
 import { createConfig } from "../../client/src/config";
 import { createRealtimeClient } from "../../client/src/realtime";
-import { happyOyster } from "./index";
+import { happyOyster, HappyOysterError } from "./index";
 
 jest.mock("@fal-ai/client/realtime", () => ({
   defineRealtimeExtension: (extension: unknown) => extension,
@@ -11,18 +11,12 @@ jest.mock("@fal-ai/client/realtime", () => ({
 jest.mock("@happy-oyster/js-sdk", () => ({ HappyOysterEngine: jest.fn() }));
 
 const ID = "fal-ai/happy-oyster-wma";
+const LEGACY_ROOT =
+  "https://example.maas.aliyuncs.com/api/v2/apps/happyoyster-1.0";
 const world = {
   encrypted_world_id: "world",
   status: "ready",
   mode: "adventure" as const,
-};
-const configured = {
-  type: "configured",
-  api_base_url: "https://example.maas.aliyuncs.com/api/v2/apps/ho",
-  ticket: "private-ticket",
-  token: "private-token",
-  token_expires_in: 60,
-  world,
 };
 
 async function advanceTime(ms: number) {
@@ -73,21 +67,40 @@ function setup(mode: "adventure" | "directing" = "adventure") {
   const engine = {
     createTravel: jest.fn(() => travel),
     updateToken: jest.fn(),
+    backendService: { apiBaseUrl: LEGACY_ROOT },
   };
   (HappyOysterEngine as unknown as jest.Mock).mockImplementation(() => engine);
   const controlCleanup = jest.fn();
+  const replies: Record<string, (message: Record<string, unknown>) => object> =
+    {
+      configure: () => ({
+        type: "configured",
+        api_host: "example.maas.aliyuncs.com",
+        model: `happyoyster-1.0-${mode}`,
+        ticket: "private-ticket",
+        ticket_expires_in: 1800,
+        token: "private-token",
+        token_expires_in: 120,
+        world: { ...world, mode },
+      }),
+      refresh_token: () => ({
+        type: "token_refreshed",
+        token: "renewed-token",
+        token_expires_in: 120,
+      }),
+      bind_travel: (message) => ({
+        type: "travel_bound",
+        encrypted_travel_id: message.encrypted_travel_id,
+      }),
+      travel_ended: (message) => ({
+        type: "travel_released",
+        encrypted_travel_id: message.encrypted_travel_id,
+        completed: message.completed,
+      }),
+    };
   const send = jest.fn((message: Record<string, unknown>) => {
-    const response =
-      message.type === "configure"
-        ? { ...configured, world: { ...world, mode } }
-        : {
-            type:
-              message.type === "bind_travel"
-                ? "travel_bound"
-                : "travel_released",
-            encrypted_travel_id: message.encrypted_travel_id,
-          };
-    controlContext.data(JSON.stringify(response));
+    const reply = replies[message.type as string];
+    if (reply) controlContext.data(JSON.stringify(reply(message)));
   });
   const open = jest.fn(async (context: RealtimeExtensionContext) => {
     controlContext = context;
@@ -95,14 +108,14 @@ function setup(mode: "adventure" | "directing" = "adventure") {
     return { send, close: jest.fn() };
   });
   (wma as jest.Mock).mockReturnValue({ open });
-  const run = jest.fn(async (endpoint: string) => {
-    const data = endpoint.endsWith("/worlds/build-status")
-      ? { ...world, mode }
-      : endpoint.endsWith("/session/provision")
-        ? { provision_capability: "private-capability", expires_in: 600 }
-        : { token: "renewed-token", expires_in: 60 };
-    return { data, requestId: "request" };
-  });
+  const run = jest.fn(
+    async (endpoint: string, options?: { input?: object }) => {
+      const data = endpoint.endsWith("/worlds/build-status")
+        ? { ...world, mode }
+        : { ...(options?.input ?? {}), accepted: true };
+      return { data, requestId: "request" };
+    },
+  );
   const client = createRealtimeClient({
     config: createConfig({ credentials: "test" }),
     getClient: () => ({ run }) as never,
@@ -111,6 +124,7 @@ function setup(mode: "adventure" | "directing" = "adventure") {
   const onData = jest.fn();
   const onError = jest.fn();
   const onDiagnostic = jest.fn();
+  const onTravelStatus = jest.fn();
   const start = (extra = {}) =>
     client.open(happyOyster(), {
       worldId: "world",
@@ -118,13 +132,17 @@ function setup(mode: "adventure" | "directing" = "adventure") {
       onData,
       onError,
       onDiagnostic,
+      onTravelStatus,
       ...extra,
     });
+  const sent = () => send.mock.calls.map(([message]) => message.type);
   return {
     start,
     run,
     open,
     send,
+    sent,
+    replies,
     travel,
     engine,
     controlCleanup,
@@ -132,6 +150,7 @@ function setup(mode: "adventure" | "directing" = "adventure") {
     onData,
     onError,
     onDiagnostic,
+    onTravelStatus,
     callbacks,
     receive: (msg: object) => controlContext.data(JSON.stringify(msg)),
   };
@@ -145,25 +164,42 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-it("opens data-only WMA, binds exact travel, and keeps credentials private", async () => {
+it("configures data-only WMA, binds the exact travel, and keeps credentials private", async () => {
   const f = setup();
   const handle = f.start();
   const { session } = await handle.ready;
   expect(f.open.mock.calls[0][0].endpointId).toBe(`${ID}/start-session`);
   expect((f.open.mock.calls as unknown[][])[0][1]).toEqual({ receive: [] });
-  expect(f.send.mock.calls.map(([m]) => m.type)).toEqual([
-    "configure",
-    "bind_travel",
-  ]);
+  expect(f.send.mock.calls[0][0]).toEqual({
+    type: "configure",
+    encrypted_world_id: "world",
+  });
+  expect(f.sent()).toEqual(["configure", "bind_travel"]);
   expect(f.send).toHaveBeenCalledWith({
     type: "bind_travel",
     encrypted_travel_id: "travel",
   });
+  expect(HappyOysterEngine).toHaveBeenCalledWith({
+    APIHost: "example.maas.aliyuncs.com",
+    model: "happyoyster-1.0-adventure",
+    token: "private-token",
+    logLevel: "none",
+  });
+  // The SDK request root follows the configured model, not the retired one.
+  expect(f.engine.backendService.apiBaseUrl).toBe(
+    "https://example.maas.aliyuncs.com/api/v2/apps/happyoyster-1.0-adventure",
+  );
+  expect(f.engine.createTravel).toHaveBeenCalledWith({
+    ticket: "private-ticket",
+    videoElement: expect.anything(),
+  });
   expect(handle.state).toBe("live");
   expect(session.mode).toBe("adventure");
+  expect(session.travelId).toBe("travel");
+  expect(session.world.encrypted_world_id).toBe("world");
   expect(f.onData).not.toHaveBeenCalled();
   expect(JSON.stringify(f.onDiagnostic.mock.calls)).not.toMatch(
-    /private-token|private-ticket|private-capability/,
+    /private-token|private-ticket/,
   );
   await handle.close();
   expect(f.travel.end).toHaveBeenCalledTimes(1);
@@ -173,97 +209,182 @@ it("opens data-only WMA, binds exact travel, and keeps credentials private", asy
     completed: false,
   });
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
-  expect(f.off).toHaveBeenCalledTimes(3);
+  expect(f.off).toHaveBeenCalledTimes(4);
   expect(jest.getTimerCount()).toBe(0);
   await handle.close();
   expect(f.travel.end).toHaveBeenCalledTimes(1);
 });
 
-it("gates mode-specific actions and replaces held commands including release", async () => {
+it("forwards an explicit mode and rejects a world of the other mode", async () => {
+  const f = setup("directing");
+  const handle = f.start({ mode: "directing", maxExperienceTimeSec: 90 });
+  await handle.ready;
+  expect(f.run.mock.calls[0][1]).toEqual(
+    expect.objectContaining({
+      input: { encrypted_world_id: "world", mode: "directing" },
+    }),
+  );
+  expect(f.send.mock.calls[0][0]).toEqual({
+    type: "configure",
+    encrypted_world_id: "world",
+    mode: "directing",
+  });
+  expect(f.engine.createTravel).toHaveBeenCalledWith(
+    expect.objectContaining({ maxExperienceTimeSec: 90 }),
+  );
+  await handle.close();
+
+  const g = setup("directing");
+  const mismatched = g.start({ mode: "adventure" });
+  await expect(mismatched.ready).rejects.toThrow(
+    "invalid session configuration",
+  );
+  expect(g.engine.createTravel).not.toHaveBeenCalled();
+  await mismatched.close();
+});
+
+it("holds Adventure commands until they are replaced or released", async () => {
   const f = setup();
   const handle = f.start();
   const { session } = await handle.ready;
   await session.command({ translation: "Front" });
+  expect(f.travel.sendCommand).toHaveBeenLastCalledWith({
+    translation: "Front",
+    rotation: "None",
+    interaction: "None",
+  });
+  await advanceTime(160);
+  expect(f.travel.sendCommand.mock.calls.length).toBeGreaterThanOrEqual(4);
   await session.command({});
+  const calls = f.travel.sendCommand.mock.calls.length;
   expect(f.travel.sendCommand).toHaveBeenLastCalledWith({
     translation: "None",
     rotation: "None",
     interaction: "None",
   });
+  await advanceTime(500);
+  expect(f.travel.sendCommand).toHaveBeenCalledTimes(calls);
+  await expect(session.command({ translation: "Up" as never })).rejects.toThrow(
+    "Unknown Happy Oyster command.",
+  );
   expect(session.can("instruct")).toBe(false);
   await expect(session.instruct("Rain")).rejects.toThrow("unavailable");
   f.travel.can.mockReturnValue(false);
-  await expect(session.command({})).rejects.toThrow("unavailable");
+  // Releasing is always safe; holding needs a running Adventure travel.
+  await session.command({});
+  await expect(session.command({ rotation: "Mouse_Left" })).rejects.toThrow(
+    "unavailable",
+  );
   await handle.close();
   expect(session.can("command")).toBe(false);
+  expect(jest.getTimerCount()).toBe(0);
 });
 
-it("exposes Directing controls without exposing the vendor session", async () => {
+it("stops re-sending a held command once the travel cannot take it", async () => {
+  const f = setup();
+  const handle = f.start();
+  const { session } = await handle.ready;
+  await session.command({ interaction: "Sprint" });
+  f.travel.can.mockReturnValue(false);
+  await advanceTime(60);
+  const calls = f.travel.sendCommand.mock.calls.length;
+  await advanceTime(500);
+  expect(f.travel.sendCommand).toHaveBeenCalledTimes(calls);
+  await handle.close();
+});
+
+it("sends Directing instructions through the moderated fal endpoint", async () => {
   const f = setup("directing");
   const handle = f.start();
   const { session } = await handle.ready;
   expect(session.can("command")).toBe(false);
-  await session.instruct("Rain");
+  await expect(session.instruct("Rain")).resolves.toEqual({ accepted: true });
+  expect(f.run).toHaveBeenLastCalledWith(
+    `${ID}/travels/instruct`,
+    expect.objectContaining({
+      input: { encrypted_travel_id: "travel", content: "Rain" },
+    }),
+  );
+  expect(f.travel.sendInstruct).not.toHaveBeenCalled();
   await session.pause();
   await session.resume();
   await session.rewind(5);
-  expect(f.travel.sendInstruct).toHaveBeenCalledWith({ content: "Rain" });
   expect(f.travel.rewind).toHaveBeenCalledWith({ rewindToSec: 5 });
   await expect(session.rewind(-1)).rejects.toThrow("nonnegative");
   await expect(session.instruct(" ")).rejects.toThrow("1–2000");
-  await handle.close();
-});
-
-it("renews tokens during playback and cancels renewal when closed", async () => {
-  const f = setup();
-  const handle = f.start();
-  await handle.ready;
-  await advanceTime(50_000);
-  expect(f.run).toHaveBeenCalledWith(
-    `${ID}/tokens/issue`,
-    expect.objectContaining({
-      input: { provision_capability: "private-capability" },
+  f.run.mockRejectedValueOnce(
+    Object.assign(new Error("private-token"), {
+      status: 422,
+      body: { detail: [{ msg: "Content policy violation." }] },
     }),
   );
-  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
+  const rejected = session.instruct("Rain again");
+  await expect(rejected).rejects.toThrow("Content policy violation.");
+  await expect(rejected).rejects.toMatchObject({ code: "http", status: 422 });
   await handle.close();
-  const count = f.run.mock.calls.length;
-  await advanceTime(100_000);
-  expect(f.run).toHaveBeenCalledTimes(count);
 });
 
-it("ends both sessions when token renewal fails", async () => {
+it("renews the partner token over WMA and cancels renewal when closed", async () => {
   const f = setup();
   const handle = f.start();
   await handle.ready;
-  f.run.mockRejectedValueOnce(new Error("secret response"));
-  await advanceTime(50_000);
+  await advanceTime(89_000);
+  expect(f.sent()).not.toContain("refresh_token");
+  await advanceTime(1_000);
+  expect(f.sent()).toContain("refresh_token");
+  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
+  await advanceTime(90_000);
+  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(2);
+  expect(handle.state).toBe("live");
+  await handle.close();
+  const count = f.send.mock.calls.length;
+  await advanceTime(300_000);
+  expect(f.send).toHaveBeenCalledTimes(count);
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it("retries a rejected renewal while the token is still valid", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  f.replies.refresh_token = () => ({
+    type: "error",
+    code: "TOKEN_REFRESH_FAILED",
+    message: "Happy Oyster is temporarily unavailable. Try again.",
+    retryable: true,
+  });
+  await advanceTime(90_000);
+  expect(f.engine.updateToken).not.toHaveBeenCalled();
+  f.replies.refresh_token = () => ({
+    type: "token_refreshed",
+    token: "renewed-token",
+    token_expires_in: 120,
+  });
+  await advanceTime(5_000);
+  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
+  expect(handle.state).toBe("live");
+  await handle.close();
+});
+
+it("fails the session when the token expires without a renewal", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  f.replies.refresh_token = () => ({
+    type: "error",
+    code: "TOKEN_REFRESH_FAILED",
+    message: "secret response",
+  });
+  await advanceTime(121_000);
   expect(handle.state).toBe("failed");
   await handle.close();
   expect(f.travel.end).toHaveBeenCalledTimes(1);
-  expect(JSON.stringify(f.onDiagnostic.mock.calls)).not.toContain(
-    "secret response",
-  );
-});
-
-it("bounds a stalled token refresh by the existing token expiry", async () => {
-  const f = setup();
-  const handle = f.start();
-  await handle.ready;
-  f.run.mockReturnValueOnce(new Promise(() => undefined));
-  await advanceTime(60_000);
-  expect(handle.state).toBe("failed");
-  await handle.close();
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
 });
 
 it("waits for the matching bind acknowledgement before reporting live", async () => {
   const f = setup();
-  const original = f.send.getMockImplementation();
-  if (!original) throw new Error("Missing control mock");
-  f.send.mockImplementation((message) => {
-    if (message.type !== "bind_travel") original(message);
-  });
+  delete f.replies.bind_travel;
   const handle = f.start();
   await advanceTime(1);
   f.receive({ type: "travel_bound", encrypted_travel_id: "wrong-travel" });
@@ -273,22 +394,69 @@ it("waits for the matching bind acknowledgement before reporting live", async ()
   await handle.close();
 });
 
-it("cleans up on a rejected bind and never retries that mutation", async () => {
+it("binds from early travel metadata when the SDK reports it", async () => {
   const f = setup();
-  const original = f.send.getMockImplementation();
-  if (!original) throw new Error("Missing control mock");
-  f.send.mockImplementation((message) => {
-    if (message.type === "bind_travel")
-      f.receive({ type: "error", code: "BIND_CONFLICT", message: "secret" });
-    else original(message);
+  const gate = deferred<{ encryptedTravelId: string; mode: number }>();
+  f.travel.start.mockReturnValue(gate.promise);
+  const handle = f.start();
+  await advanceTime(1);
+  f.callbacks.travelInfoReady({ encryptedTravelId: "travel" } as never);
+  await advanceTime(1);
+  expect(f.sent()).toEqual(["configure", "bind_travel"]);
+  gate.resolve({ encryptedTravelId: "travel", mode: 1 });
+  await handle.ready;
+  expect(f.sent().filter((type) => type === "bind_travel")).toHaveLength(1);
+  await handle.close();
+});
+
+it("binds after start when the SDK has no early travel metadata", async () => {
+  const f = setup();
+  const register = f.travel.on.getMockImplementation();
+  if (!register) throw new Error("Missing travel mock");
+  f.travel.on.mockImplementation((event, callback) => {
+    if (event === "travelInfoReady") throw new Error("Unknown event");
+    return register(event, callback);
   });
   const handle = f.start();
-  await expect(handle.ready).rejects.toThrow();
+  await handle.ready;
+  expect(f.sent()).toEqual(["configure", "bind_travel"]);
+  await handle.close();
+  expect(f.off).toHaveBeenCalledTimes(3);
+});
+
+it("reports a rejected configure with the app's code and message", async () => {
+  const f = setup();
+  f.replies.configure = () => ({
+    type: "error",
+    code: "CONFIGURE_REJECTED",
+    message: "Happy Oyster: World is not ready to enter (code 403002)",
+    retryable: false,
+  });
+  const handle = f.start();
+  await expect(handle.ready).rejects.toMatchObject({
+    name: "HappyOysterError",
+    code: "CONFIGURE_REJECTED",
+    message: "Happy Oyster: World is not ready to enter (code 403002)",
+  });
+  expect(f.onError.mock.calls[0][0]).toBeInstanceOf(HappyOysterError);
+  await handle.close();
+  expect(HappyOysterEngine).not.toHaveBeenCalled();
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+});
+
+it("cleans up on a rejected bind and never retries that mutation", async () => {
+  const f = setup();
+  f.replies.bind_travel = () => ({
+    type: "error",
+    code: "BIND_CONFLICT",
+    message: "this WMA session is already bound to another travel",
+  });
+  const handle = f.start();
+  await expect(handle.ready).rejects.toMatchObject({ code: "BIND_CONFLICT" });
   await handle.close();
   expect(f.travel.end).toHaveBeenCalledTimes(1);
-  expect(
-    f.send.mock.calls.filter(([m]) => m.type === "bind_travel"),
-  ).toHaveLength(1);
+  expect(f.sent().filter((type) => type === "bind_travel")).toHaveLength(1);
+  expect(f.sent()).not.toContain("travel_ended");
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
 });
 
@@ -303,11 +471,11 @@ it("cleans up cancelled SDK startup even when start resolves late", async () => 
   await expect(handle.ready).rejects.toThrow();
   await advanceTime(1);
   expect(f.travel.end).toHaveBeenCalledTimes(1);
-  expect(f.send.mock.calls.some(([m]) => m.type === "bind_travel")).toBe(false);
+  expect(f.sent()).not.toContain("bind_travel");
   expect(jest.getTimerCount()).toBe(0);
 });
 
-it("does not provision or open playback after cancelling world polling", async () => {
+it("does not connect or configure after cancelling world polling", async () => {
   const f = setup();
   f.run.mockResolvedValue({
     data: { ...world, status: "generating" },
@@ -319,6 +487,59 @@ it("does not provision or open playback after cancelling world polling", async (
   await expect(handle.ready).rejects.toThrow();
   expect(f.open).not.toHaveBeenCalled();
   expect(f.travel.start).not.toHaveBeenCalled();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it("waits for a generating world, then fails a failed build", async () => {
+  const f = setup();
+  f.run
+    .mockResolvedValueOnce({
+      data: { ...world, status: "generating" },
+      requestId: "request",
+    })
+    .mockResolvedValueOnce({
+      data: { ...world, status: "failed" },
+      requestId: "request",
+    });
+  const handle = f.start();
+  await advanceTime(2_000);
+  await expect(handle.ready).rejects.toMatchObject({ code: "world_failed" });
+  expect(f.run).toHaveBeenCalledTimes(2);
+  expect(f.open).not.toHaveBeenCalled();
+});
+
+it("keeps fal status and the app's 4xx message without raw errors", async () => {
+  const f = setup();
+  f.run.mockRejectedValueOnce(
+    Object.assign(new Error("private-token"), {
+      status: 403,
+      body: { detail: "Happy Oyster isn't enabled for this account." },
+    }),
+  );
+  const handle = f.start();
+  await expect(handle.ready).rejects.toMatchObject({
+    code: "http",
+    status: 403,
+    message: "Happy Oyster isn't enabled for this account.",
+  });
+  const g = setup();
+  g.run.mockRejectedValueOnce(
+    Object.assign(new Error("private-token"), { status: 500, body: {} }),
+  );
+  const failed = g.start();
+  await expect(failed.ready).rejects.toThrow(
+    "Happy Oyster /worlds/build-status failed.",
+  );
+  expect(String(g.onError.mock.calls[0][0])).not.toContain("private-token");
+});
+
+it("bounds a control connection that never opens", async () => {
+  const f = setup();
+  f.open.mockReturnValue(new Promise(() => undefined));
+  const handle = f.start({ connectTimeoutMs: 1_000 });
+  await advanceTime(1_001);
+  await expect(handle.ready).rejects.toThrow("timed out");
+  expect(f.send).not.toHaveBeenCalled();
   expect(jest.getTimerCount()).toBe(0);
 });
 
@@ -336,19 +557,26 @@ it("fails an ambiguous control timeout and closes without replay", async () => {
 it("reports natural completion as closed and releases the bound travel", async () => {
   const f = setup();
   const handle = f.start();
-  await handle.ready;
+  const { session } = await handle.ready;
+  f.callbacks.statusChanged("running" as never);
+  expect(session.travelStatus).toBe("running");
   f.callbacks.statusChanged("completed" as never);
   await handle.close();
   expect(handle.state).toBe("closed");
+  expect(f.onTravelStatus.mock.calls.map(([status]) => status)).toEqual([
+    "running",
+    "completed",
+  ]);
   expect(f.send).toHaveBeenLastCalledWith(
     expect.objectContaining({ type: "travel_ended", completed: true }),
   );
 });
 
 it("derives all HTTP and control routes from a private deployment root", async () => {
-  const f = setup();
+  const f = setup("directing");
   const handle = f.start({ endpointId: "owner/preview" });
-  await handle.ready;
+  const { session } = await handle.ready;
+  await session.instruct("Rain");
   expect(f.open.mock.calls[0][0].endpointId).toBe(
     "owner/preview/start-session",
   );
@@ -402,22 +630,4 @@ it("sanitizes synchronous partner action failures", async () => {
     "Happy Oyster command failed.",
   );
   await handle.close();
-});
-
-it("does not expose provisioning response details in session errors", async () => {
-  const f = setup();
-  const original = f.run.getMockImplementation();
-  if (!original) throw new Error("Missing HTTP mock");
-  f.run.mockImplementation((endpoint) =>
-    endpoint.endsWith("/session/provision")
-      ? Promise.reject(new Error("private-token"))
-      : original(endpoint),
-  );
-  const handle = f.start();
-  await expect(handle.ready).rejects.toThrow(
-    "Happy Oyster /session/provision failed.",
-  );
-  await handle.close();
-  expect(String(f.onError.mock.calls[0][0])).not.toContain("private-token");
-  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
 });
