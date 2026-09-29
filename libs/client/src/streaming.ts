@@ -1,5 +1,6 @@
 import { createParser } from "eventsource-parser";
 import { type TokenProvider, getTemporaryAuthToken } from "./auth";
+import { fetchWithBackupDomain } from "./backup-domain";
 import { RequiredConfig } from "./config";
 import { buildTagsHeaders } from "./headers";
 import { buildUrl, dispatchRequest } from "./request";
@@ -202,16 +203,20 @@ export class FalStream<Input, Output> {
         const { fetch } = this.config;
         const parsedUrl = new URL(this.url);
         parsedUrl.searchParams.set("fal_jwt_token", token);
-        const response = await fetch(parsedUrl.toString(), {
-          method: method.toUpperCase(),
-          headers: {
-            accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
-            "content-type": "application/json",
-            ...buildTagsHeaders(options.tags),
+        const response = await fetchWithBackupDomain(
+          fetch,
+          parsedUrl.toString(),
+          {
+            method: method.toUpperCase(),
+            headers: {
+              accept: options.accept ?? CONTENT_TYPE_EVENT_STREAM,
+              "content-type": "application/json",
+              ...buildTagsHeaders(options.tags),
+            },
+            body: input && method !== "get" ? JSON.stringify(input) : undefined,
+            signal: this.abortController.signal,
           },
-          body: input && method !== "get" ? JSON.stringify(input) : undefined,
-          signal: this.abortController.signal,
-        });
+        );
         this._requestId = response.headers.get("x-fal-request-id");
         return await this.handleResponse(response);
       }

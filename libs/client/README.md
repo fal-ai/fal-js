@@ -301,6 +301,39 @@ the reason TURN was configured.
 who disconnected. Both would arrive as `"closed"`, and those are the two cases a status UI most needs to
 tell apart.
 
+## Backup domains
+
+If a connection to a fal gateway fails, the client retries the request on its
+backup domain:
+
+| Primary         | Backup             |
+| --------------- | ------------------ |
+| `fal.run`       | `falrun.com`       |
+| `queue.fal.run` | `queue.falrun.com` |
+
+This applies to run, queue, and HTTP streaming requests. It does not apply to
+WebSockets, custom hosts, HTTP error responses, failures after the gateway has
+answered, or requests canceled or timed out by your own `AbortSignal`.
+Requests routed through `proxyUrl` go to your proxy as configured;
+`@fal-ai/server-proxy` applies the same fallback when it forwards them to the
+gateway.
+
+Allow the backup domains in your firewall and browser Content Security Policy
+(`connect-src`).
+
+Known limitations:
+
+- The Fetch API has no connect-phase timeout, so with an unreachable primary
+  the client waits for the runtime's own connect timeout (about 10 seconds in
+  Node) before trying the backup. An `AbortSignal.timeout` shorter than that
+  cancels the request instead of triggering the fallback. Revisit if fetch
+  gains a portable connect timeout.
+- In Node, error codes tell connection failures apart from failures after
+  connect. Browsers, edge runtimes and custom `fetch` implementations report a
+  bare network error for both, so there a request that was delivered but got
+  no response is also retried on the backup host, the same way the existing
+  retry policy already retries it on the primary.
+
 ## More features
 
 The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
