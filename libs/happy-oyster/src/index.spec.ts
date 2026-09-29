@@ -2,7 +2,7 @@ import { wma, type RealtimeExtensionContext } from "@fal-ai/client/realtime";
 import { HappyOysterEngine } from "@happy-oyster/js-sdk";
 import { createConfig } from "../../client/src/config";
 import { createRealtimeClient } from "../../client/src/realtime";
-import { happyOyster, HappyOysterError } from "./index";
+import { HAPPY_OYSTER_MESSAGES, happyOyster, HappyOysterError } from "./index";
 
 jest.mock("@fal-ai/client/realtime", () => ({
   defineRealtimeExtension: (extension: unknown) => extension,
@@ -630,4 +630,18 @@ it("sanitizes synchronous partner action failures", async () => {
     "Happy Oyster command failed.",
   );
   await handle.close();
+});
+
+it("publishes the message names it exchanges", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  await handle.close();
+  const types = new Set(f.sent());
+  expect(
+    HAPPY_OYSTER_MESSAGES.client.filter((type) => !types.has(type)),
+  ).toEqual(["refresh_token"]);
+  expect(HAPPY_OYSTER_MESSAGES.server).toEqual(
+    expect.arrayContaining(["configured", "travel_bound", "travel_released"]),
+  );
 });
