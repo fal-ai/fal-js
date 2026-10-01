@@ -819,7 +819,9 @@ export function happyOyster() {
             // held control is re-sent until it changes.
             holdTimer = setInterval(() => {
               if (!can("command")) return stopHold();
-              void player.sendCommand(held).catch(() => undefined);
+              void Promise.resolve()
+                .then(() => player.sendCommand(held))
+                .catch(() => undefined);
             }, COMMAND_REPEAT_MS);
           }
           await perform("command", () => player.sendCommand(command));
