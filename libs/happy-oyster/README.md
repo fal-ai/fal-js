@@ -92,7 +92,9 @@ element for each concurrent session.
 
 The partner token is renewed over the WMA connection before it expires, and a
 failed renewal is retried while the token is still valid; expiry fails the
-session. Credentials are kept inside the adapter rather than exposed through
+session. Initial and renewed token deadlines include credential request
+latency, so a delayed reply cannot extend a token's lifetime. Credentials are
+kept inside the adapter rather than exposed through
 its data/diagnostic callbacks. Billing is per session second from
 configuration to release, handled by the app.
 
