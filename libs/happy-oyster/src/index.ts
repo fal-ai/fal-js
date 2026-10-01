@@ -178,6 +178,8 @@ const WORLD_POLL_MS = 2_000;
 const COMMAND_REPEAT_MS = 50;
 const TOKEN_RETRY_MS = 5_000;
 const HOST_PATTERN = /^[a-z0-9.-]+(:\d+)?$/i;
+/** The partner SDK shares one RTC engine across players in a browser page. */
+let activePlaybackLease: object | undefined;
 
 function positive(value: number, name: string): number {
   if (!Number.isFinite(value) || value <= 0)
@@ -375,7 +377,12 @@ export function happyOyster() {
       let binding: Promise<void> | undefined;
       let bound = false;
       let closing = false;
+      let controlTimedOut = false;
       let completed = false;
+      const playbackLease = {};
+      let ending: Promise<unknown> | undefined;
+      let endSettled = false;
+      let controlCleanupComplete = false;
       let travelStatus: HappyOysterTravelStatus = "prepare";
       let refreshTimer: ReturnType<typeof setTimeout> | undefined;
       let expiryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -396,6 +403,7 @@ export function happyOyster() {
       let queue: Promise<unknown> = Promise.resolve();
 
       function receive(raw: string) {
+        if (controlTimedOut) return;
         let message: Message;
         try {
           message = JSON.parse(raw);
@@ -432,6 +440,11 @@ export function happyOyster() {
         cleanup = false,
       ): Promise<Message> {
         const run = queue.then(async () => {
+          if (controlTimedOut)
+            throw new HappyOysterError(
+              "Happy Oyster control channel timed out.",
+              { code: "control" },
+            );
           if (!control)
             throw new HappyOysterError(
               "Happy Oyster control channel is not available.",
@@ -469,6 +482,18 @@ export function happyOyster() {
               );
             }
             return await result;
+          } catch (error) {
+            if (
+              !cleanup &&
+              error instanceof HappyOysterError &&
+              error.code === "timeout"
+            ) {
+              // Replies have no request IDs. Reusing this channel could assign
+              // a late reply to a different request, so disconnect instead.
+              controlTimedOut = true;
+              void context.fail("Happy Oyster control request timed out.");
+            }
+            throw error;
           } finally {
             if (pending === current) pending = undefined;
           }
@@ -482,6 +507,15 @@ export function happyOyster() {
         holdTimer = undefined;
       }
 
+      function releasePlaybackLease() {
+        if (
+          controlCleanupComplete &&
+          (!ending || endSettled) &&
+          activePlaybackLease === playbackLease
+        )
+          activePlaybackLease = undefined;
+      }
+
       context.addCleanup(async () => {
         closing = true;
         clearTimeout(refreshTimer);
@@ -491,14 +525,23 @@ export function happyOyster() {
         pending = undefined;
         unsubscribe.splice(0).forEach((off) => off());
         try {
-          if (travel)
+          if (travel) {
+            ending ??= Promise.resolve().then(() => travel?.end());
+            const settled = () => {
+              endSettled = true;
+              releasePlaybackLease();
+            };
+            // A bounded wait does not cancel vendor work. A late end can still
+            // disconnect the shared RTC engine, so retain its lease until settled.
+            void ending.then(settled, settled);
             await within(
-              Promise.resolve().then(() => travel?.end()),
+              ending,
               CLEANUP_TIMEOUT_MS,
               "Happy Oyster travel cleanup",
             ).catch(() => undefined);
+          }
           if (binding) await binding.catch(() => undefined);
-          if (bound && travelId && control) {
+          if (bound && travelId && control && !controlTimedOut) {
             await request(
               {
                 type: "travel_ended",
@@ -510,11 +553,16 @@ export function happyOyster() {
             ).catch(() => undefined);
           }
         } finally {
-          controlController.abort();
-          for (const cleanup of controlCleanups.splice(0).reverse()) {
-            await Promise.resolve()
-              .then(cleanup)
-              .catch(() => undefined);
+          try {
+            controlController.abort();
+            for (const cleanup of controlCleanups.splice(0).reverse()) {
+              await Promise.resolve()
+                .then(cleanup)
+                .catch(() => undefined);
+            }
+          } finally {
+            controlCleanupComplete = true;
+            releasePlaybackLease();
           }
         }
       });
@@ -576,6 +624,12 @@ export function happyOyster() {
 
       active(context.signal);
 
+      if (activePlaybackLease)
+        throw new HappyOysterError(
+          "Another Happy Oyster session is active or still cleaning up on this page. Close it or wait for cleanup before retrying; reload the page or use another tab if cleanup stalls.",
+          { code: "busy" },
+        );
+      activePlaybackLease = playbackLease;
       // Fail an unavailable SDK before any billable work.
       const sdk = await import("@happy-oyster/js-sdk");
       active(context.signal);
@@ -673,7 +727,8 @@ export function happyOyster() {
             scheduleRefresh(refreshedAt, fresh.token_expires_in);
           } catch {
             // Retry while the current token is still valid; expiry fails the session.
-            if (!closing) refreshTimer = setTimeout(refresh, TOKEN_RETRY_MS);
+            if (!closing && !controlTimedOut)
+              refreshTimer = setTimeout(refresh, TOKEN_RETRY_MS);
           }
         };
         refreshTimer = setTimeout(

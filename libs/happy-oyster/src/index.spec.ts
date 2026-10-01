@@ -215,6 +215,133 @@ it("configures data-only WMA, binds the exact travel, and keeps credentials priv
   expect(f.travel.end).toHaveBeenCalledTimes(1);
 });
 
+it("rejects a concurrent opening before configure and allows one after closing", async () => {
+  const f = setup();
+  const configured = f.replies.configure({});
+  delete f.replies.configure;
+  const first = f.start();
+  await advanceTime(1);
+  expect(f.sent()).toEqual(["configure"]);
+  expect(first.state).toBe("opening");
+
+  const g = setup();
+  const blocked = g.start();
+  await expect(blocked.ready).rejects.toMatchObject({ code: "busy" });
+  await blocked.close();
+  expect(g.open).not.toHaveBeenCalled();
+  expect(g.send).not.toHaveBeenCalled();
+  expect(g.engine.createTravel).not.toHaveBeenCalled();
+  expect(f.travel.end).not.toHaveBeenCalled();
+
+  // Restore the first opening's player factory after preparing the other mock.
+  (HappyOysterEngine as unknown as jest.Mock).mockImplementation(
+    () => f.engine,
+  );
+  f.receive(configured);
+  await first.ready;
+  expect(first.state).toBe("live");
+  await first.close();
+
+  const h = setup();
+  const next = h.start();
+  await next.ready;
+  await next.close();
+});
+
+it("holds the playback lease through both player and control cleanup", async () => {
+  const f = setup();
+  const first = f.start();
+  await first.ready;
+  const end = deferred<undefined>();
+  f.travel.end.mockReturnValue(end.promise);
+  delete f.replies.travel_ended;
+  const closing = first.close();
+  await advanceTime(1);
+
+  const g = setup();
+  const duringPlayerCleanup = g.start();
+  await expect(duringPlayerCleanup.ready).rejects.toMatchObject({
+    code: "busy",
+  });
+  await duringPlayerCleanup.close();
+  expect(g.send).not.toHaveBeenCalled();
+
+  end.resolve(undefined);
+  await advanceTime(1);
+  expect(f.sent()).toContain("travel_ended");
+  const h = setup();
+  const duringControlCleanup = h.start();
+  await expect(duringControlCleanup.ready).rejects.toMatchObject({
+    code: "busy",
+  });
+  await duringControlCleanup.close();
+  expect(h.send).not.toHaveBeenCalled();
+
+  f.receive({ type: "travel_released", encrypted_travel_id: "travel" });
+  await closing;
+  const i = setup();
+  const next = i.start();
+  await next.ready;
+  await next.close();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it.each(["resolve", "reject"] as const)(
+  "keeps a timed-out player cleanup quarantined until its actual end settles (%s)",
+  async (outcome) => {
+    const f = setup();
+    const first = f.start();
+    await first.ready;
+    const end = deferred<undefined>();
+    f.travel.end.mockReturnValue(end.promise);
+    const closing = first.close();
+    await advanceTime(5_000);
+    await closing;
+    expect(first.state).toBe("closed");
+    expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+
+    // The public close is bounded, but the old player can still affect RTC.
+    await advanceTime(300_000);
+    const g = setup();
+    const blocked = g.start();
+    await expect(blocked.ready).rejects.toMatchObject({ code: "busy" });
+    await blocked.close();
+    expect(g.open).not.toHaveBeenCalled();
+    expect(g.engine.createTravel).not.toHaveBeenCalled();
+
+    if (outcome === "resolve") end.resolve(undefined);
+    else end.reject(new Error("Late partner cleanup failure."));
+    await advanceTime(1);
+    const h = setup();
+    const next = h.start();
+    await next.ready;
+    await next.close();
+    expect(f.travel.end).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+  },
+);
+
+it("releases the playback lease after failed setup", async () => {
+  const f = setup();
+  f.replies.configure = () => ({
+    type: "error",
+    code: "CONFIGURE_FAILED",
+    message: "Configuration failed.",
+  });
+  const failed = f.start();
+  await expect(failed.ready).rejects.toMatchObject({
+    code: "CONFIGURE_FAILED",
+  });
+  await failed.close();
+
+  const g = setup();
+  const next = g.start();
+  await next.ready;
+  await next.close();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("forwards an explicit mode and rejects a world of the other mode", async () => {
   const f = setup("directing");
   const handle = f.start({ mode: "directing", maxExperienceTimeSec: 90 });
@@ -381,6 +508,64 @@ it("retries a rejected renewal while the token is still valid", async () => {
   expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
   expect(handle.state).toBe("live");
   await handle.close();
+});
+
+it("closes an ambiguous renewal timeout before a late reply can extend its token deadline", async () => {
+  const f = setup();
+  delete f.replies.refresh_token;
+  const handle = f.start({ controlTimeoutMs: 1_000 });
+  await handle.ready;
+  const end = deferred<undefined>();
+  f.travel.end.mockReturnValue(end.promise);
+  await advanceTime(90_000);
+  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(1);
+
+  await advanceTime(1_000);
+  expect(handle.state).toBe("failed");
+  await advanceTime(5_000);
+  f.receive({
+    type: "token_refreshed",
+    token: "late-token",
+    token_expires_in: 120,
+  });
+  await advanceTime(120_000);
+  expect(f.engine.updateToken).not.toHaveBeenCalled();
+  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(1);
+  expect(f.sent()).not.toContain("travel_ended");
+  await handle.close();
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  expect(jest.getTimerCount()).toBe(0);
+  end.resolve(undefined);
+  await advanceTime(1);
+});
+
+it("does not send a bind that a late renewal error could reject after its timeout", async () => {
+  const f = setup();
+  delete f.replies.refresh_token;
+  delete f.replies.bind_travel;
+  const gate = deferred<{ encryptedTravelId: string; mode: number }>();
+  f.travel.start.mockReturnValue(gate.promise);
+  const handle = f.start({ controlTimeoutMs: 1_000 });
+
+  await advanceTime(90_000);
+  expect(f.sent()).toEqual(["configure", "refresh_token"]);
+  await advanceTime(1_000);
+  expect(handle.state).toBe("failed");
+  await expect(handle.ready).rejects.toThrow("control request timed out");
+  gate.resolve({ encryptedTravelId: "travel", mode: 1 });
+  await advanceTime(1_000);
+  f.receive({
+    type: "error",
+    code: "TOKEN_REFRESH_FAILED",
+    message: "The earlier renewal failed.",
+    retryable: true,
+  });
+  await handle.close();
+  expect(f.sent()).not.toContain("bind_travel");
+  expect(f.onError).toHaveBeenCalledTimes(1);
+  expect(f.travel.end).toHaveBeenCalledTimes(1);
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  expect(jest.getTimerCount()).toBe(0);
 });
 
 it("fails the session when the token expires without a renewal", async () => {
@@ -571,6 +756,20 @@ it("fails an ambiguous control timeout and closes without replay", async () => {
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
 });
 
+it("settles a timed-out binding before disconnect cleanup completes", async () => {
+  const f = setup();
+  delete f.replies.bind_travel;
+  const handle = f.start({ controlTimeoutMs: 20 });
+  await advanceTime(21);
+  await expect(handle.ready).rejects.toThrow("control request timed out");
+  await handle.close();
+  expect(handle.state).toBe("failed");
+  expect(f.travel.end).toHaveBeenCalledTimes(1);
+  expect(f.sent()).toEqual(["configure", "bind_travel"]);
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("reports natural completion as closed and releases the bound travel", async () => {
   const f = setup();
   const handle = f.start();
@@ -621,7 +820,8 @@ it("bounds stalled partner cleanup and falls back to disconnect on a lost releas
   const f = setup();
   const handle = f.start();
   await handle.ready;
-  f.travel.end.mockReturnValue(new Promise(() => undefined));
+  const end = deferred<undefined>();
+  f.travel.end.mockReturnValue(end.promise);
   f.send.mockImplementation(() => undefined);
   const closing = handle.close();
   await advanceTime(5000);
@@ -632,6 +832,8 @@ it("bounds stalled partner cleanup and falls back to disconnect on a lost releas
   await closing;
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
   expect(jest.getTimerCount()).toBe(0);
+  end.resolve(undefined);
+  await advanceTime(1);
 });
 
 it("contains synchronous failures while repeating a held command", async () => {
