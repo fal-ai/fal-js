@@ -343,6 +343,23 @@ it("renews the partner token over WMA and cancels renewal when closed", async ()
   expect(jest.getTimerCount()).toBe(0);
 });
 
+it("counts a delayed configure reply against the initial token lifetime", async () => {
+  const f = setup();
+  const configured = f.replies.configure({});
+  delete f.replies.configure;
+  const handle = f.start();
+  await advanceTime(1);
+  expect(f.sent()).toEqual(["configure"]);
+  await advanceTime(10_000);
+  f.receive(configured);
+  await handle.ready;
+  await advanceTime(80_000);
+  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
+  expect(handle.state).toBe("live");
+  await handle.close();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("retries a rejected renewal while the token is still valid", async () => {
   const f = setup();
   const handle = f.start();

@@ -605,6 +605,9 @@ export function happyOyster() {
       active(context.signal);
       context.diagnostic({ kind: "progress", phase: "configuring" });
       // Billing starts once the app answers with credentials.
+      // Count the request's latency against the token lifetime, as we do
+      // for renewal; receipt of a delayed reply does not mint a new token.
+      const configuredAt = Date.now();
       const configured = (await request(
         {
           type: "configure",
@@ -681,7 +684,7 @@ export function happyOyster() {
           ),
         );
       }
-      scheduleRefresh(Date.now(), configured.token_expires_in);
+      scheduleRefresh(configuredAt, configured.token_expires_in);
 
       const bind = (id: string): Promise<void> => {
         binding ??= request(
