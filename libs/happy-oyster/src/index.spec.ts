@@ -168,7 +168,7 @@ it("configures data-only WMA, binds the exact travel, and keeps credentials priv
   const f = setup();
   const handle = f.start();
   const { session } = await handle.ready;
-  expect(f.open.mock.calls[0][0].endpointId).toBe(`${ID}/start-session`);
+  expect(f.open.mock.calls[0][0].endpointId).toBe(ID);
   expect((f.open.mock.calls as unknown[][])[0][1]).toEqual({ receive: [] });
   expect(f.send.mock.calls[0][0]).toEqual({
     type: "configure",
@@ -577,9 +577,7 @@ it("derives all HTTP and control routes from a private deployment root", async (
   const handle = f.start({ endpointId: "owner/preview" });
   const { session } = await handle.ready;
   await session.instruct("Rain");
-  expect(f.open.mock.calls[0][0].endpointId).toBe(
-    "owner/preview/start-session",
-  );
+  expect(f.open.mock.calls[0][0].endpointId).toBe("owner/preview");
   expect(
     f.run.mock.calls.every(([endpoint]) =>
       endpoint.startsWith("owner/preview/"),
