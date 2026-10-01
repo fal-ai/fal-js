@@ -41,7 +41,9 @@ const connection = fal.realtime.open(happyOyster(), {
   worldId: world.encrypted_world_id,
   videoElement: video,
   onTravelStatus: (status) => console.log(status),
-  onError: (error) => console.error(error.message),
+  onError: (error) => {
+    if (error instanceof Error) console.error(error.message);
+  },
 });
 
 const { session } = await connection.ready;
@@ -76,9 +78,11 @@ an absolute position in seconds. Use `session.can(action)` before enabling a
 control: availability depends on both mode and the player's current state.
 Calls that are unavailable reject.
 
-Failures are `HappyOysterError`s with a `code` — the app's control error code
+Operation rejections can be `HappyOysterError`s with a `code` — the app's control error code
 (for example `CONFIGURE_REJECTED`), or `http` with the fal `status` — and a
-client-safe message.
+client-safe message. Managed lifecycle failures (including `onError` and
+opening/control timeouts) can be plain `Error`; narrow callback values before
+reading their message rather than assuming every failure has a typed code.
 
 ## Connection ownership
 
@@ -87,13 +91,23 @@ connection, sends `configure`, and starts partner playback with the returned
 credentials. It reports readiness only after binding the exact partner travel
 ID to the WMA session (as soon as the partner SDK reports it). Media flows
 directly between Alibaba and the browser. The vendor player owns the supplied
-video element; this adapter does not emit `onMedia` tracks. Use a different
-element for each concurrent session.
+video element; this adapter does not emit `onMedia` tracks. The partner SDK
+shares one RTC engine per browser page, so only one session can be opening,
+playing, or cleaning up there. A concurrent opening rejects with
+`HappyOysterError` code `busy` before configuration or billing. Await the first
+connection's `close()` before opening another; separate browser tabs have
+separate player contexts. If vendor cleanup exceeds the bounded close wait,
+`close()` still returns, but the page remains busy until the vendor's actual
+cleanup settles. Wait and retry, reload the page, or use another tab if it
+stalls; allowing another player sooner could let old cleanup disconnect it.
 
-The partner token is renewed over the WMA connection before it expires, and a
-failed renewal is retried while the token is still valid; expiry fails the
-session. Initial and renewed token deadlines include credential request
-latency, so a delayed reply cannot extend a token's lifetime. Credentials are
+The partner token is renewed over the WMA connection before it expires, and an
+explicit rejected renewal is retried while the token is still valid; expiry
+fails the session. A control acknowledgement timeout fails and disconnects the
+session: the protocol has no request IDs, so a late reply cannot safely be
+assigned to another request. Timed-out channels accept no further replies or
+requests; disconnect cleanup ends any bound travel on the server. Initial and
+renewed token deadlines include credential request latency. Credentials are
 kept inside the adapter rather than exposed through
 its data/diagnostic callbacks. Billing is per session second from
 configuration to release, handled by the app.
