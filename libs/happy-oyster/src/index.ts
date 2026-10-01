@@ -582,7 +582,8 @@ export function happyOyster() {
       context.diagnostic({ kind: "progress", phase: "control-connecting" });
       const childContext: RealtimeExtensionContext = {
         ...context,
-        endpointId: `${context.endpointId}/start-session`,
+        // WMA receives the app root; the bridge appends /start-session itself.
+        endpointId: context.endpointId,
         signal: controlController.signal,
         addCleanup: (cleanup) => {
           if (closing) {
