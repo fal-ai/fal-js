@@ -619,6 +619,20 @@ it("bounds stalled partner cleanup and falls back to disconnect on a lost releas
   expect(jest.getTimerCount()).toBe(0);
 });
 
+it("contains synchronous failures while repeating a held command", async () => {
+  const f = setup();
+  const handle = f.start();
+  const { session } = await handle.ready;
+  await session.command({ translation: "Front" });
+  f.travel.sendCommand.mockImplementation(() => {
+    throw new Error("private-token");
+  });
+  await expect(advanceTime(100)).resolves.toBeUndefined();
+  expect(f.travel.sendCommand).toHaveBeenCalledTimes(3);
+  await handle.close();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("sanitizes synchronous partner action failures", async () => {
   const f = setup();
   const handle = f.start();
