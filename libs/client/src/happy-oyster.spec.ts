@@ -1,10 +1,14 @@
-import { wma, type RealtimeExtensionContext } from "@fal-ai/client/realtime";
 import { HappyOysterEngine } from "@happy-oyster/js-sdk";
-import { createConfig } from "../../client/src/config";
-import { createRealtimeClient } from "../../client/src/realtime";
-import { HAPPY_OYSTER_MESSAGES, happyOyster, HappyOysterError } from "./index";
+import { createConfig } from "./config";
+import {
+  HAPPY_OYSTER_MESSAGES,
+  happyOyster,
+  HappyOysterError,
+} from "./happy-oyster";
+import { createRealtimeClient } from "./realtime";
+import { wma, type RealtimeExtensionContext } from "./realtime/index";
 
-jest.mock("@fal-ai/client/realtime", () => ({
+jest.mock("./realtime/index", () => ({
   defineRealtimeExtension: (extension: unknown) => extension,
   wma: jest.fn(),
 }));

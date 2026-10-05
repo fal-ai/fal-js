@@ -5,19 +5,26 @@ Experimental browser adapter for the fal Happy Oyster WMA app
 and send controls; they do not need to import or initialize Alibaba's player
 themselves.
 
-This package requires the realtime extension API and data-only WMA support
-(`receive: []`) in `@fal-ai/client` 1.11.0-alpha.1 or later. It is not
+This entrypoint requires `@fal-ai/client` 1.11.0-alpha.5 or later. It is not
 published yet. Do not use it against the legacy REST-only
 `alibaba/happy-oyster` app.
 
 ## Quickstart
 
-After compatible releases are published, install `@fal-ai/client` and
-`@fal-ai/happy-oyster`. In the browser:
+After a compatible client release is published:
+
+```sh
+npm install @fal-ai/client@alpha @happy-oyster/js-sdk@0.1.4
+```
+
+The vendor SDK is an optional peer dependency pinned to the tested version.
+Installing the fal client alone does not install it. The Happy Oyster adapter
+initializes and manages it for you; you do not import the vendor SDK directly.
+In the browser:
 
 ```ts
 import { fal } from "@fal-ai/client";
-import { happyOyster } from "@fal-ai/happy-oyster";
+import { happyOyster } from "@fal-ai/client/happy-oyster";
 
 // Configure this route on your server using @fal-ai/server-proxy.
 // Keep FAL_KEY on the server; never embed it in browser code.
@@ -121,9 +128,12 @@ closing a session does not delete the world.
 The player SDK is loaded lazily on opening a session. `@happy-oyster/js-sdk`
 0.1.x ignores its documented `model` option, so the adapter points the SDK's
 request root at the model the app returns; SDK builds that honor `model` are
-left untouched. This package's wrapper is MIT licensed; `@happy-oyster/js-sdk`
-is a separately licensed Alibaba dependency. Installing this package opts into
-that dependency; the core fal client does not load or depend on it.
+left untouched. This wrapper is MIT licensed;
+`@happy-oyster/js-sdk` is a separately licensed Alibaba optional peer dependency.
+Only Happy Oyster users install it. Neither the client root nor other realtime
+entrypoints load it. Importing `@fal-ai/client/happy-oyster` is safe without it;
+opening a Happy Oyster session without it rejects with `sdk_unavailable` and
+installation instructions before any billable session configuration.
 
 ## Development
 
@@ -131,9 +141,10 @@ From the repository root:
 
 ```sh
 npm ci
-npx nx build happy-oyster
-npx nx test happy-oyster
-npx nx lint happy-oyster
+npx nx build client
+npx nx test client --runInBand
+npx nx lint client
+node scripts/verify-happy-oyster-package.cjs
 ```
 
 Tests exercise the real fal realtime lifecycle with mocked partner playback and
