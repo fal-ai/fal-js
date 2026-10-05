@@ -13,6 +13,9 @@ jest.mock("./realtime/index", () => ({
   wma: jest.fn(),
 }));
 jest.mock("@happy-oyster/js-sdk", () => ({ HappyOysterEngine: jest.fn() }));
+jest.mock("./happy-oyster-sdk.cjs", () => ({
+  loadHappyOysterSdk: () => import("@happy-oyster/js-sdk"),
+}));
 
 const ID = "fal-ai/happy-oyster-wma";
 const LEGACY_ROOT =

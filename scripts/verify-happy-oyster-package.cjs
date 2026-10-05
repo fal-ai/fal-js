@@ -1,7 +1,13 @@
 /** Verify the built client in an isolated npm consumer without its optional peer. */
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
-const { mkdtempSync, existsSync, writeFileSync, rmSync } = require("node:fs");
+const {
+  mkdtempSync,
+  mkdirSync,
+  existsSync,
+  writeFileSync,
+  rmSync,
+} = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 
@@ -78,6 +84,37 @@ try {
   `,
   );
   execFileSync(process.execPath, [join(consumer, "check.cjs")], {
+    cwd: consumer,
+    stdio: "inherit",
+  });
+  // Match the vendor's import-only export. A require() rewrite cannot load it.
+  const vendor = join(consumer, "node_modules/@happy-oyster/js-sdk");
+  mkdirSync(vendor, { recursive: true });
+  writeFileSync(
+    join(vendor, "package.json"),
+    JSON.stringify({
+      name: "@happy-oyster/js-sdk",
+      version: "0.1.4",
+      type: "module",
+      exports: { ".": { import: "./index.js" } },
+    }),
+  );
+  writeFileSync(
+    join(vendor, "index.js"),
+    "export class HappyOysterEngine {}\n",
+  );
+  writeFileSync(
+    join(consumer, "check-installed-peer.cjs"),
+    `
+    const assert = require('node:assert/strict');
+    const { loadHappyOysterSdk } = require('./node_modules/@fal-ai/client/src/happy-oyster-sdk.cjs');
+    loadHappyOysterSdk().then(sdk => {
+      assert.equal(typeof sdk.HappyOysterEngine, 'function');
+      console.log('PASS: packed CommonJS loader imports an ESM-only peer');
+    }).catch(error => { console.error(error); process.exitCode = 1; });
+  `,
+  );
+  execFileSync(process.execPath, [join(consumer, "check-installed-peer.cjs")], {
     cwd: consumer,
     stdio: "inherit",
   });

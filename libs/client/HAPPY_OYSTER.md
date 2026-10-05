@@ -151,3 +151,8 @@ Tests exercise the real fal realtime lifecycle with mocked partner playback and
 WMA transport, including cancellation, binding, token renewal, held commands,
 and cleanup. They do not validate live Alibaba playback, account entitlements,
 or billing.
+
+The client build is CommonJS, while Alibaba's SDK exposes only an ESM import.
+`happy-oyster-sdk.cjs` is copied unchanged into the package to preserve native
+dynamic `import()` and keep SDK loading lazy. The packed consumer check covers
+both a missing peer and an installed peer with an import-only export.
