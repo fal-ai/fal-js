@@ -1,16 +1,16 @@
-import {
-  defineRealtimeExtension,
-  wma,
-  type RealtimeExtensionContext,
-  type RealtimeSession,
-  type WmaRealtimeSession,
-} from "@fal-ai/client/realtime";
 import type {
   HappyOysterEngine,
   SDKConfig,
   Travel,
   TravelStatus,
 } from "@happy-oyster/js-sdk";
+import {
+  defineRealtimeExtension,
+  wma,
+  type RealtimeExtensionContext,
+  type RealtimeSession,
+  type WmaRealtimeSession,
+} from "./realtime/index";
 
 export type HappyOysterMode = "adventure" | "directing";
 export type HappyOysterAction =
@@ -631,7 +631,12 @@ export function happyOyster() {
         );
       activePlaybackLease = playbackLease;
       // Fail an unavailable SDK before any billable work.
-      const sdk = await import("@happy-oyster/js-sdk");
+      const sdk = await import("@happy-oyster/js-sdk").catch(() => {
+        throw new HappyOysterError(
+          "Happy Oyster SDK is unavailable. Install @happy-oyster/js-sdk@0.1.4.",
+          { code: "sdk_unavailable" },
+        );
+      });
       active(context.signal);
       context.diagnostic({ kind: "progress", phase: "control-connecting" });
       const childContext: RealtimeExtensionContext = {

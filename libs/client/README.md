@@ -1,3 +1,5 @@
+<!-- cspell:ignore falrun -->
+
 # fal.ai JavaScript/TypeScript client library
 
 ![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=%40fal-ai%2Fclient&style=flat-square)
@@ -381,3 +383,9 @@ Known limitations:
 ## More features
 
 The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
+
+## Happy Oyster
+
+The opt-in `@fal-ai/client/happy-oyster` entrypoint manages Happy Oyster playback.
+Install its optional peer with `npm install @happy-oyster/js-sdk@0.1.4` when using
+this extension. See [the Happy Oyster guide](./HAPPY_OYSTER.md) for setup and lifecycle details.
