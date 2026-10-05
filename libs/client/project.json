@@ -16,7 +16,12 @@
           "LICENSE",
           "CODE_OF_CONDUCT.md",
           "libs/client/README.md",
-          "libs/client/HAPPY_OYSTER.md"
+          "libs/client/HAPPY_OYSTER.md",
+          {
+            "input": "libs/client/src",
+            "glob": "happy-oyster-sdk.*",
+            "output": "src"
+          }
         ]
       }
     },

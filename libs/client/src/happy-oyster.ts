@@ -4,6 +4,7 @@ import type {
   Travel,
   TravelStatus,
 } from "@happy-oyster/js-sdk";
+import { loadHappyOysterSdk } from "./happy-oyster-sdk.cjs";
 import {
   defineRealtimeExtension,
   wma,
@@ -631,7 +632,7 @@ export function happyOyster() {
         );
       activePlaybackLease = playbackLease;
       // Fail an unavailable SDK before any billable work.
-      const sdk = await import("@happy-oyster/js-sdk").catch(() => {
+      const sdk = await loadHappyOysterSdk().catch(() => {
         throw new HappyOysterError(
           "Happy Oyster SDK is unavailable. Install @happy-oyster/js-sdk@0.1.4.",
           { code: "sdk_unavailable" },
