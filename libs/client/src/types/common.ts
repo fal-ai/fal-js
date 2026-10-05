@@ -44,7 +44,7 @@ export type RunOptions<Input> = {
    * before processing starts (includes queue wait, retries, and routing).
    * Does not apply once the application begins processing.
    *
-   * This will be sent as the `x-fal-request-timeout` header.
+   * This will be sent as the `x-fal-request-start-timeout` header.
    */
   readonly startTimeout?: number;
 
