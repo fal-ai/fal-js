@@ -99,7 +99,7 @@ type QueueCommonSubscribeOptions = {
    * before processing starts (includes queue wait, retries, and routing).
    * Does not apply once the application begins processing.
    *
-   * This will be sent as the `x-fal-request-timeout` header.
+   * This will be sent as the `x-fal-request-start-timeout` header.
    */
   startTimeout?: number;
 
@@ -122,7 +122,7 @@ type QueueCommonSubscribeOptions = {
    * Note: `priority`, `hint`, `startTimeout`, `tags`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
-   *  - `x-fal-request-timeout`
+   *  - `x-fal-request-start-timeout`
    *  - `x-fal-tags`
    *  - `x-fal-object-lifecycle-preference`
    */
@@ -164,7 +164,7 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * before processing starts (includes queue wait, retries, and routing).
    * Does not apply once the application begins processing.
    *
-   * This will be sent as the `x-fal-request-timeout` header.
+   * This will be sent as the `x-fal-request-start-timeout` header.
    */
   startTimeout?: number;
 
@@ -174,7 +174,7 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * Note: `priority`, `hint`, `startTimeout`, `tags`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
-   *  - `x-fal-request-timeout`
+   *  - `x-fal-request-start-timeout`
    *  - `x-fal-tags`
    *  - `x-fal-object-lifecycle-preference`
    */
