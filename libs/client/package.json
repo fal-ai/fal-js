@@ -1,7 +1,7 @@
 {
   "name": "@fal-ai/client",
   "description": "The fal.ai client for JavaScript and TypeScript",
-  "version": "1.11.0-alpha.3",
+  "version": "1.11.0-alpha.6",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
     "./realtime/lucy": "./src/realtime/lucy.js",
     "./realtime/testing": "./src/realtime/testing.js",
     "./realtime/websocket": "./src/realtime/websocket.js",
-    "./realtime/wma": "./src/realtime/wma.js"
+    "./realtime/wma": "./src/realtime/wma.js",
+    "./happy-oyster": "./src/happy-oyster.js"
   },
   "typesVersions": {
     "*": {
@@ -51,6 +52,9 @@
       ],
       "realtime/wma": [
         "src/realtime/wma.d.ts"
+      ],
+      "happy-oyster": [
+        "src/happy-oyster.d.ts"
       ]
     }
   },
@@ -64,5 +68,13 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@happy-oyster/js-sdk": "0.1.4"
+  },
+  "peerDependenciesMeta": {
+    "@happy-oyster/js-sdk": {
+      "optional": true
+    }
   }
 }
