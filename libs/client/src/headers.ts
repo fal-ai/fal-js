@@ -7,7 +7,7 @@ export const MIN_REQUEST_TIMEOUT_SECONDS = 1;
 /**
  * Header name for server-side request timeout.
  */
-export const REQUEST_TIMEOUT_HEADER = "x-fal-request-start-timeout";
+export const REQUEST_TIMEOUT_HEADER = "x-fal-request-timeout";
 
 /**
  * Header name for timeout type (user vs infrastructure).

@@ -37,7 +37,7 @@ describe("client.run headers", () => {
 
     expect(dispatchRequest).toHaveBeenCalledTimes(1);
     const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
-    expect(call.headers["x-fal-request-start-timeout"]).toBe("30");
+    expect(call.headers["x-fal-request-timeout"]).toBe("30");
   });
 
   it("omits startTimeout header when not provided", async () => {
@@ -48,7 +48,7 @@ describe("client.run headers", () => {
 
     expect(dispatchRequest).toHaveBeenCalledTimes(1);
     const call = (dispatchRequest as jest.Mock).mock.calls[0][0];
-    expect(call.headers["x-fal-request-start-timeout"]).toBeUndefined();
+    expect(call.headers["x-fal-request-timeout"]).toBeUndefined();
   });
 
   it("includes the packed tags header when tags are provided", async () => {
