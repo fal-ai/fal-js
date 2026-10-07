@@ -74,7 +74,7 @@ function setup(mode: "adventure" | "directing" = "adventure") {
   const engine = {
     createTravel: jest.fn(() => travel),
     updateToken: jest.fn(),
-    backendService: { apiBaseUrl: LEGACY_ROOT },
+    backendService: { apiBaseUrl: LEGACY_ROOT, startTravel: jest.fn() },
   };
   (HappyOysterEngine as unknown as jest.Mock).mockImplementation(() => engine);
   const controlCleanup = jest.fn();
@@ -84,11 +84,26 @@ function setup(mode: "adventure" | "directing" = "adventure") {
         type: "configured",
         api_host: "example.maas.aliyuncs.com",
         model: `happyoyster-1.0-${mode}`,
-        ticket: "private-ticket",
-        ticket_expires_in: 1800,
         token: "private-token",
         token_expires_in: 120,
         world: { ...world, mode },
+        travel: {
+          encrypted_travel_id: "travel",
+          encrypted_world_id: "world",
+          mode: mode === "adventure" ? 1 : 2,
+          creation_model: "simple",
+          first_frame: null,
+          bgm_url: null,
+          version: mode === "adventure" ? "wanderV2" : "storyV2",
+          no_stream_auto_end_timeout_sec: 30,
+          max_experience_time_sec: mode === "adventure" ? 60 : null,
+          rtc_config: {
+            channel_id: "channel",
+            user_id: "user",
+            app_id: "app",
+            token: "private-rtc-token",
+          },
+        },
       }),
       refresh_token: () => ({
         type: "token_refreshed",
@@ -197,7 +212,7 @@ it("configures data-only WMA, binds the exact travel, and keeps credentials priv
     "https://example.maas.aliyuncs.com/api/v2/apps/happyoyster-1.0-adventure",
   );
   expect(f.engine.createTravel).toHaveBeenCalledWith({
-    ticket: "private-ticket",
+    ticket: "travel",
     videoElement: expect.anything(),
   });
   expect(handle.state).toBe("live");
@@ -206,7 +221,7 @@ it("configures data-only WMA, binds the exact travel, and keeps credentials priv
   expect(session.world.encrypted_world_id).toBe("world");
   expect(f.onData).not.toHaveBeenCalled();
   expect(JSON.stringify(f.onDiagnostic.mock.calls)).not.toMatch(
-    /private-token|private-ticket/,
+    /private-token|private-rtc-token/,
   );
   await handle.close();
   expect(f.travel.end).toHaveBeenCalledTimes(1);
@@ -216,7 +231,7 @@ it("configures data-only WMA, binds the exact travel, and keeps credentials priv
     completed: false,
   });
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
-  expect(f.off).toHaveBeenCalledTimes(4);
+  expect(f.off).toHaveBeenCalledTimes(3);
   expect(jest.getTimerCount()).toBe(0);
   await handle.close();
   expect(f.travel.end).toHaveBeenCalledTimes(1);
@@ -362,6 +377,7 @@ it("forwards an explicit mode and rejects a world of the other mode", async () =
     type: "configure",
     encrypted_world_id: "world",
     mode: "directing",
+    max_experience_time_sec: 90,
   });
   expect(f.engine.createTravel).toHaveBeenCalledWith(
     expect.objectContaining({ maxExperienceTimeSec: 90 }),
@@ -546,16 +562,16 @@ it("closes an ambiguous renewal timeout before a late reply can extend its token
   await advanceTime(1);
 });
 
-it("does not send a bind that a late renewal error could reject after its timeout", async () => {
+it("does not replay an acknowledged bind after a startup renewal timeout", async () => {
   const f = setup();
   delete f.replies.refresh_token;
-  delete f.replies.bind_travel;
   const gate = deferred<{ encryptedTravelId: string; mode: number }>();
   f.travel.start.mockReturnValue(gate.promise);
   const handle = f.start({ controlTimeoutMs: 1_000 });
 
+  await advanceTime(1);
   await advanceTime(90_000);
-  expect(f.sent()).toEqual(["configure", "refresh_token"]);
+  expect(f.sent()).toEqual(["configure", "bind_travel", "refresh_token"]);
   await advanceTime(1_000);
   expect(handle.state).toBe("failed");
   await expect(handle.ready).rejects.toThrow("control request timed out");
@@ -568,7 +584,7 @@ it("does not send a bind that a late renewal error could reject after its timeou
     retryable: true,
   });
   await handle.close();
-  expect(f.sent()).not.toContain("bind_travel");
+  expect(f.sent().filter((type) => type === "bind_travel")).toHaveLength(1);
   expect(f.onError).toHaveBeenCalledTimes(1);
   expect(f.travel.end).toHaveBeenCalledTimes(1);
   expect(f.controlCleanup).toHaveBeenCalledTimes(1);
@@ -603,13 +619,11 @@ it("waits for the matching bind acknowledgement before reporting live", async ()
   await handle.close();
 });
 
-it("binds from early travel metadata when the SDK reports it", async () => {
+it("acknowledges the runner travel before playback can start or fail", async () => {
   const f = setup();
   const gate = deferred<{ encryptedTravelId: string; mode: number }>();
   f.travel.start.mockReturnValue(gate.promise);
   const handle = f.start();
-  await advanceTime(1);
-  f.callbacks.travelInfoReady({ encryptedTravelId: "travel" } as never);
   await advanceTime(1);
   expect(f.sent()).toEqual(["configure", "bind_travel"]);
   gate.resolve({ encryptedTravelId: "travel", mode: 1 });
@@ -618,16 +632,21 @@ it("binds from early travel metadata when the SDK reports it", async () => {
   await handle.close();
 });
 
-it("binds after start when the SDK has no early travel metadata", async () => {
+it("joins the existing travel once without exchanging a browser ticket", async () => {
   const f = setup();
-  const register = f.travel.on.getMockImplementation();
-  if (!register) throw new Error("Missing travel mock");
-  f.travel.on.mockImplementation((event, callback) => {
-    if (event === "travelInfoReady") throw new Error("Unknown event");
-    return register(event, callback);
-  });
+  const originalEntry = f.engine.backendService.startTravel;
   const handle = f.start();
   await handle.ready;
+  const entry = f.engine.backendService.startTravel;
+  await expect(entry("wrong")).rejects.toMatchObject({ code: "invalid" });
+  await expect(entry("travel")).resolves.toMatchObject({
+    encryptedTravelId: "travel",
+    encryptedWorldId: "world",
+    mode: 1,
+    rtcConfig: { channelId: "channel", token: "private-rtc-token" },
+  });
+  await expect(entry("travel")).rejects.toMatchObject({ code: "invalid" });
+  expect(originalEntry).not.toHaveBeenCalled();
   expect(f.sent()).toEqual(["configure", "bind_travel"]);
   await handle.close();
   expect(f.off).toHaveBeenCalledTimes(3);
@@ -680,7 +699,12 @@ it("cleans up cancelled SDK startup even when start resolves late", async () => 
   await expect(handle.ready).rejects.toThrow();
   await advanceTime(1);
   expect(f.travel.end).toHaveBeenCalledTimes(1);
-  expect(f.sent()).not.toContain("bind_travel");
+  expect(f.sent()).toEqual(["configure", "bind_travel", "travel_ended"]);
+  expect(f.send).toHaveBeenLastCalledWith({
+    type: "travel_ended",
+    encrypted_travel_id: "travel",
+    completed: false,
+  });
   expect(jest.getTimerCount()).toBe(0);
 });
 

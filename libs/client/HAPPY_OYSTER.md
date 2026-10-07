@@ -5,7 +5,7 @@ Experimental browser adapter for the fal Happy Oyster WMA app
 and send controls; they do not need to import or initialize Alibaba's player
 themselves.
 
-This entrypoint requires `@fal-ai/client` 1.11.0-alpha.5 or later. It is not
+This runner-created-travel protocol requires `@fal-ai/client` 1.11.0-alpha.6 or later. It is not
 published yet. Do not use it against the legacy REST-only
 `alibaba/happy-oyster` app.
 
@@ -95,9 +95,18 @@ reading their message rather than assuming every failure has a typed code.
 
 The adapter waits for the world to build, opens a data-only WMA control
 connection, sends `configure`, and starts partner playback with the returned
-credentials. It reports readiness only after binding the exact partner travel
-ID to the WMA session (as soon as the partner SDK reports it). Media flows
-directly between Alibaba and the browser. The vendor player owns the supplied
+credentials for a travel the runner has already created. The runner consumes
+the one-time ticket and retains Alibaba's actual ID before sending the
+configuration; the browser receives no usable entry ticket. The extension
+acknowledges that ID before playback starts and reports readiness after RTC
+starts. A client-supplied different ID cannot replace server cleanup. Media flows
+directly between Alibaba and the browser. SDK 0.1.4 has no public existing-travel
+join API, so the adapter replaces its private `backendService.startTravel`
+hook with a one-use return of the validated runner snapshot. The ID passed
+to `createTravel` as `ticket` is a local placeholder and is never exchanged
+with Alibaba. The hook must exist or opening fails closed. This is why the
+optional peer is pinned to the tested version; a future public join API can
+replace this compatibility adapter. The vendor player owns the supplied
 video element; this adapter does not emit `onMedia` tracks. The partner SDK
 shares one RTC engine per browser page, so only one session can be opening,
 playing, or cleaning up there. A concurrent opening rejects with
