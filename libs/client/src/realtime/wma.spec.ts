@@ -25,7 +25,9 @@ function fakePeer() {
       createDataChannel: jest.fn(() => channel),
       addTrack: jest.fn(),
       createOffer: jest.fn(async () => ({ sdp: "local-offer", type: "offer" })),
-      setLocalDescription: jest.fn(async () => undefined),
+      setLocalDescription: jest.fn<Promise<void>, [RTCSessionDescriptionInit]>(
+        async () => undefined,
+      ),
       setRemoteDescription: jest.fn(async () => undefined),
       close: jest.fn(),
       addEventListener: (type: string, fn: (event: unknown) => void) => {
@@ -1002,6 +1004,70 @@ describe("wma", () => {
       ["video", { direction: "recvonly" }],
       ["audio", { direction: "recvonly" }],
     ]);
+  });
+
+  it.each([false, true])(
+    "applies per-slot preferences before local SDP and sends the gathered offer (local audio: %p)",
+    async (sendAudio) => {
+      const { peer } = install();
+      const offered =
+        "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=fmtp:111 useinbandfec=1\r\n";
+      peer.createOffer.mockResolvedValue({ type: "offer", sdp: offered });
+      peer.setLocalDescription.mockImplementation(async (description) => {
+        // Stand in for ICE gathering adding candidates to the tuned local offer.
+        peer.localDescription = {
+          type: description.type,
+          sdp: description.sdp + "a=candidate:gathered\r\n",
+        };
+      });
+      const fetch = jest.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ session_id: "s", sdp: "answer", type: "answer" }),
+          ),
+      );
+      const track = { kind: "audio", stop: jest.fn() };
+      const stream = { getTracks: () => [track] } as unknown as MediaStream;
+      const session = await wma().open(fakeExtensionContext({ fetch }), {
+        iceServers: [],
+        localStream: sendAudio ? stream : null,
+        receive: [
+          { kind: "audio", opus: { stereo: true, maxAverageBitrate: 192000 } },
+        ],
+      });
+      expect(peer.addTransceiver).toHaveBeenCalledWith(
+        sendAudio ? track : "audio",
+        sendAudio
+          ? { direction: "sendrecv", streams: [stream] }
+          : { direction: "recvonly" },
+      );
+      expect(peer.setLocalDescription).toHaveBeenCalledWith({
+        type: "offer",
+        sdp: offered.replace(
+          "useinbandfec=1",
+          "useinbandfec=1;stereo=1;maxaveragebitrate=192000",
+        ),
+      });
+      const request = fetch.mock.calls[0] as unknown as [string, RequestInit];
+      expect(JSON.parse(String(request[1].body)).sdp).toBe(
+        peer.localDescription.sdp,
+      );
+      expect(track.stop).not.toHaveBeenCalled();
+      session.close();
+    },
+  );
+
+  it("rejects invalid preferences before ICE discovery or peer creation", async () => {
+    const PeerConnection = jest.fn();
+    global.RTCPeerConnection = PeerConnection as never;
+    const fetch = jest.fn();
+    await expect(
+      wma().open(fakeExtensionContext({ fetch }), {
+        receive: [{ kind: "audio", opus: { maxAverageBitrate: 0 } }],
+      }),
+    ).rejects.toThrow("maxAverageBitrate");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(PeerConnection).not.toHaveBeenCalled();
   });
 
   it("uses sendrecv for matched local tracks and recvonly for unmatched outputs", async () => {
