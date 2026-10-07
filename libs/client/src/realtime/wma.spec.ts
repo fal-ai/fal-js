@@ -378,7 +378,54 @@ describe("wma", () => {
     );
   });
 
-  it("times out a stalled session negotiation request", async () => {
+  it("waits beyond the legacy 120-second deadline by default", async () => {
+    jest.useFakeTimers();
+    try {
+      install();
+      const sessionSignals: AbortSignal[] = [];
+      let answerSession!: (response: Response) => void;
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fetch: async (url: string, init?: RequestInit) => {
+          if (url.endsWith("/ice")) {
+            return new Response(
+              JSON.stringify({
+                ice_servers: [{ urls: "stun:example" }],
+                status: "stun_only",
+              }),
+            );
+          }
+          sessionSignals.push(init?.signal as AbortSignal);
+          return new Promise<Response>((resolve) => {
+            answerSession = resolve;
+          });
+        },
+      });
+
+      const opening = wma().open(context, {
+        iceServers: [{ urls: "stun:example" }],
+      });
+      for (let turn = 0; turn < 10 && sessionSignals.length === 0; turn++) {
+        await Promise.resolve();
+      }
+      expect(sessionSignals).toHaveLength(1);
+
+      jest.advanceTimersByTime(120_001);
+      expect(sessionSignals[0].aborted).toBe(false);
+
+      answerSession(
+        new Response(
+          JSON.stringify({ session_id: "s", sdp: "a", type: "answer" }),
+        ),
+      );
+      const session = await opening;
+      session.close();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("honors an application-supplied session negotiation timeout", async () => {
     jest.useFakeTimers();
     try {
       install();
@@ -408,6 +455,7 @@ describe("wma", () => {
 
       const opening = wma().open(context, {
         iceServers: [{ urls: "stun:example" }],
+        negotiationTimeoutMs: 120_000,
       });
       for (let turn = 0; turn < 10 && sessionSignals.length === 0; turn++) {
         await Promise.resolve();
@@ -420,6 +468,18 @@ describe("wma", () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it("rejects invalid session negotiation timeouts before creating a peer", async () => {
+    const PeerConnection = jest.fn();
+    global.RTCPeerConnection = PeerConnection as never;
+
+    await expect(
+      wma("me/world").open(fakeExtensionContext(), {
+        negotiationTimeoutMs: 0,
+      }),
+    ).rejects.toThrow("negotiationTimeoutMs must be a positive, finite number");
+    expect(PeerConnection).not.toHaveBeenCalled();
   });
 
   it("does not create a bridge session after cancellation during ICE gathering", async () => {
