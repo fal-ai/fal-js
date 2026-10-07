@@ -153,10 +153,31 @@ type Message = Record<string, unknown>;
 type Configured = {
   api_host: string;
   model: string;
-  ticket: string;
   token: string;
   token_expires_in: number;
   world: HappyOysterWorld;
+  travel: {
+    encrypted_travel_id: string;
+    encrypted_world_id: string;
+    mode: 1 | 2;
+    creation_model: "simple" | "scriptlist";
+    first_frame: string | null;
+    bgm_url: string | null;
+    version: string;
+    no_stream_auto_end_timeout_sec: number;
+    max_experience_time_sec: 60 | 90 | 120 | null;
+    rtc_config: {
+      channel_id: string;
+      user_id: string;
+      app_id: string;
+      token: string;
+      nonce?: string | null;
+      role?: "pub" | "sub" | "relay" | null;
+      username?: string | null;
+      timestamp?: number | null;
+      expire_at?: string | null;
+    };
+  };
 };
 type TokenRefreshed = { token: string; token_expires_in: number };
 
@@ -289,18 +310,59 @@ function requestError(path: string, error: unknown): HappyOysterError {
   });
 }
 
-/**
- * @happy-oyster/js-sdk 0.1.x ignores its documented `model` option and routes
- * every request to the retired combined model. Point the engine's request root
- * at the configured model; SDK builds that honor `model` already match, and
- * builds without this field are left alone.
- */
-function routeToModel(engine: object, host: string, model: string): void {
-  const service = (engine as { backendService?: { apiBaseUrl?: unknown } })
-    .backendService;
-  if (!service || typeof service.apiBaseUrl !== "string") return;
-  const root = `https://${host}/api/v2/apps/${encodeURIComponent(model)}`;
-  if (service.apiBaseUrl !== root) service.apiBaseUrl = root;
+/** Route SDK 0.1.4 to the configured model and join its runner-created travel. */
+function configureSdkTravel(engine: object, configured: Configured): void {
+  const service = (
+    engine as {
+      backendService?: { apiBaseUrl?: unknown; startTravel?: unknown };
+    }
+  ).backendService;
+  if (
+    !service ||
+    typeof service.apiBaseUrl !== "string" ||
+    typeof service.startTravel !== "function"
+  )
+    throw new HappyOysterError(
+      "Happy Oyster SDK cannot join a runner-created travel. Install @happy-oyster/js-sdk@0.1.4.",
+      { code: "sdk_unavailable" },
+    );
+  service.apiBaseUrl = `https://${configured.api_host}/api/v2/apps/${encodeURIComponent(configured.model)}`;
+  // SDK 0.1.4 has no public existing-travel API. Its private entry hook
+  // supplies the runner snapshot without a second, browser-side exchange.
+  let joined = false;
+  service.startTravel = async (id: string) => {
+    const travel = configured.travel;
+    if (joined || id !== travel.encrypted_travel_id)
+      throw new HappyOysterError(
+        "Happy Oyster travel can only be joined once.",
+        { code: "invalid" },
+      );
+    joined = true;
+    const rtc = travel.rtc_config;
+    return {
+      encryptedTravelId: travel.encrypted_travel_id,
+      encryptedWorldId: travel.encrypted_world_id,
+      mode: travel.mode,
+      creationModel: travel.creation_model,
+      firstFrame: travel.first_frame,
+      playUrl: null,
+      bgmUrl: travel.bgm_url,
+      version: travel.version,
+      noStreamAutoEndTimeoutSec: travel.no_stream_auto_end_timeout_sec,
+      maxExperienceTimeSec: travel.max_experience_time_sec,
+      rtcConfig: {
+        channelId: rtc.channel_id,
+        userId: rtc.user_id,
+        appId: rtc.app_id,
+        token: rtc.token,
+        nonce: rtc.nonce ?? undefined,
+        role: rtc.role ?? undefined,
+        username: rtc.username ?? undefined,
+        timestamp: rtc.timestamp ?? undefined,
+        expireAt: rtc.expire_at ?? undefined,
+      },
+    };
+  };
 }
 
 function isRelease(command: Required<HappyOysterCommand>): boolean {
@@ -673,12 +735,20 @@ export function happyOyster() {
           type: "configure",
           encrypted_world_id: options.worldId,
           ...(options.mode ? { mode: options.mode } : {}),
+          ...(options.maxExperienceTimeSec
+            ? { max_experience_time_sec: options.maxExperienceTimeSec }
+            : {}),
         },
         "configured",
       )) as unknown as Configured;
       const mode = configured.world?.mode;
       if (
-        !configured.ticket ||
+        !configured.travel?.encrypted_travel_id ||
+        configured.travel.encrypted_world_id !== options.worldId ||
+        configured.travel.mode !== MODE_CODES[mode as HappyOysterMode] ||
+        !configured.travel.rtc_config?.channel_id ||
+        !configured.travel.rtc_config?.user_id ||
+        !configured.travel.rtc_config?.token ||
         !configured.token ||
         !(
           Number.isFinite(configured.token_expires_in) &&
@@ -701,7 +771,7 @@ export function happyOyster() {
           token: configured.token,
           logLevel: "none",
         } as SDKConfig);
-        routeToModel(created, configured.api_host, configured.model);
+        configureSdkTravel(created, configured);
         return created;
       });
 
@@ -760,7 +830,7 @@ export function happyOyster() {
 
       const player = initializePlayer(() =>
         engine.createTravel({
-          ticket: configured.ticket,
+          ticket: configured.travel.encrypted_travel_id,
           videoElement: options.videoElement,
           ...(options.maxExperienceTimeSec
             ? { maxExperienceTimeSec: options.maxExperienceTimeSec }
@@ -801,24 +871,7 @@ export function happyOyster() {
           if (!closing) void context.fail("Happy Oyster playback failed.");
         }),
       );
-      try {
-        // SDK builds that report travel metadata before RTC connects let the
-        // app end a travel whose playback never starts.
-        const early = player as unknown as {
-          on(
-            event: "travelInfoReady",
-            handler: (info: { encryptedTravelId?: unknown }) => void,
-          ): () => void;
-        };
-        unsubscribe.push(
-          early.on("travelInfoReady", (info) => {
-            if (!closing && typeof info?.encryptedTravelId === "string")
-              void bind(info.encryptedTravelId).catch(() => undefined);
-          }),
-        );
-      } catch {
-        // Older SDK builds reject unknown events; bind after start() instead.
-      }
+      await bind(configured.travel.encrypted_travel_id);
       context.diagnostic({ kind: "progress", phase: "playback-connecting" });
       const started = await within(
         Promise.resolve().then(() => player.start()),
@@ -827,7 +880,10 @@ export function happyOyster() {
         context.signal,
       );
       active(context.signal);
-      if (!started.encryptedTravelId || started.mode !== MODE_CODES[mode])
+      if (
+        started.encryptedTravelId !== configured.travel.encrypted_travel_id ||
+        started.mode !== MODE_CODES[mode]
+      )
         throw new HappyOysterError("Happy Oyster returned an invalid travel.", {
           code: "invalid",
         });
