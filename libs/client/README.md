@@ -313,7 +313,8 @@ backup domain:
 
 This applies to run, queue, and HTTP streaming requests. It does not apply to
 WebSockets, custom hosts, HTTP error responses, failures after the gateway has
-answered, or requests canceled or timed out by your own `AbortSignal`.
+answered, requests canceled or timed out by your own `AbortSignal`, or when
+retries are disabled (`retry: { maxRetries: 0 }`).
 Requests routed through `proxyUrl` go to your proxy as configured;
 `@fal-ai/server-proxy` applies the same fallback when it forwards them to the
 gateway.

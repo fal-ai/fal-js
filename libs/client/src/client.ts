@@ -130,6 +130,7 @@ export function createFalClient(userConfig: Config = {}): FalClient {
             maxRetries: 3,
             baseDelay: 500,
             maxDelay: 15000,
+            ...config.retryOverrides,
           },
         },
       });
