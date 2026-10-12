@@ -524,6 +524,91 @@ it("routes SDK HTTP operations through the active WMA connection", async () => {
   ).rejects.toThrow("closed");
 });
 
+it("waits through stale PAUSED status after resume without changing provider data", async () => {
+  const f = setup("directing");
+  const handle = f.start();
+  await handle.ready;
+  const backend = f.engine.backendService;
+  await backend.post("/openapi/v1/travels/resume", {
+    encryptedTravelId: "travel",
+  });
+  let rtcStatus = "PAUSED";
+  f.replies.travel_request = () => ({
+    type: "travel_response",
+    data: { status: "running", rtc_status: rtcStatus },
+  });
+  const resolved = jest.fn();
+  const pending = backend
+    .get("/openapi/v1/travels/status?encryptedTravelId=travel")
+    .then(resolved);
+  await advanceTime(500);
+  expect(resolved).not.toHaveBeenCalled();
+  rtcStatus = "STREAMING";
+  await advanceTime(500);
+  await pending;
+  expect(resolved).toHaveBeenCalledWith({
+    status: "running",
+    rtcStatus: "STREAMING",
+  });
+  // A later real pause is never hidden by the old resume transition.
+  rtcStatus = "PAUSED";
+  await expect(
+    backend.get("/openapi/v1/travels/status?encryptedTravelId=travel"),
+  ).resolves.toMatchObject({ rtcStatus: "PAUSED" });
+  await handle.close();
+});
+
+it("bounds the resume transition and immediately preserves terminal status", async () => {
+  const f = setup("directing");
+  const handle = f.start();
+  await handle.ready;
+  const backend = f.engine.backendService;
+  await backend.post("/openapi/v1/travels/resume", {
+    encryptedTravelId: "travel",
+  });
+  f.replies.travel_request = () => ({
+    type: "travel_response",
+    data: { status: "running", rtc_status: "PAUSED" },
+  });
+  const pending = backend.get(
+    "/openapi/v1/travels/status?encryptedTravelId=travel",
+  );
+  await advanceTime(15_000);
+  await expect(pending).resolves.toMatchObject({ rtcStatus: "PAUSED" });
+  await backend.post("/openapi/v1/travels/resume", {
+    encryptedTravelId: "travel",
+  });
+  f.replies.travel_request = () => ({
+    type: "travel_response",
+    data: { status: "completed", rtc_status: "PAUSED" },
+  });
+  await expect(
+    backend.get("/openapi/v1/travels/status?encryptedTravelId=travel"),
+  ).resolves.toMatchObject({ status: "completed" });
+  await handle.close();
+});
+
+it("cancels a pending resume status wait when the session closes", async () => {
+  const f = setup("directing");
+  const handle = f.start();
+  await handle.ready;
+  const backend = f.engine.backendService;
+  await backend.post("/openapi/v1/travels/resume", {
+    encryptedTravelId: "travel",
+  });
+  f.replies.travel_request = () => ({
+    type: "travel_response",
+    data: { status: "running", rtc_status: "PAUSED" },
+  });
+  const pending = backend.get(
+    "/openapi/v1/travels/status?encryptedTravelId=travel",
+  );
+  const rejected = expect(pending).rejects.toThrow("closed");
+  await advanceTime(0);
+  await handle.close();
+  await rejected;
+});
+
 it("rejects unexpected vendor routes and other travel identities", async () => {
   const f = setup();
   const handle = f.start();

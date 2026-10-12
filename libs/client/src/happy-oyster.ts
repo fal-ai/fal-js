@@ -312,6 +312,7 @@ function configureSdkTravel(
   engine: object,
   configured: Configured,
   operation: (name: string, input?: Message) => Promise<Message>,
+  signal: AbortSignal,
 ): void {
   const service = (
     engine as {
@@ -345,7 +346,15 @@ function configureSdkTravel(
     new HappyOysterError("Unsupported Happy Oyster SDK operation.", {
       code: "sdk_unavailable",
     });
-  service.get = async (path: string) => {
+  // SDK 0.1.4 treats a PAUSED poll during RTC reconnection as a new pause
+  // and never restores its local state when STREAMING arrives. After resume,
+  // wait briefly for a fresh provider status instead of returning that stale
+  // transition. Preserve actual terminal states and bound the wait.
+  let resumeUntil = 0;
+  service.get = async (
+    path: string,
+    options: { signal?: AbortSignal } = {},
+  ) => {
     const url = new URL(path, "https://happy-oyster.invalid");
     if (
       url.origin !== "https://happy-oyster.invalid" ||
@@ -353,7 +362,23 @@ function configureSdkTravel(
       url.searchParams.get("encryptedTravelId") !== travelId
     )
       throw invalid();
-    return operation("status");
+    while (true) {
+      active(signal);
+      if (options.signal?.aborted) throw closedError();
+      const result = await operation("status");
+      active(signal);
+      if (options.signal?.aborted) throw closedError();
+      if (
+        !resumeUntil ||
+        result.status !== "running" ||
+        result.rtcStatus !== "PAUSED" ||
+        Date.now() >= resumeUntil
+      ) {
+        resumeUntil = 0;
+        return result;
+      }
+      await delay(500, signal);
+    }
   };
   service.post = async (path: string, body: Message) => {
     if (path === "/openapi/v1/sdk/feature-gate")
@@ -361,10 +386,15 @@ function configureSdkTravel(
     if (body.encryptedTravelId !== travelId) throw invalid();
     switch (path) {
       case "/openapi/v1/travels/pause":
+        resumeUntil = 0;
         return operation("pause");
-      case "/openapi/v1/travels/resume":
-        return operation("resume");
+      case "/openapi/v1/travels/resume": {
+        const result = await operation("resume");
+        resumeUntil = Date.now() + 15_000;
+        return result;
+      }
       case "/openapi/v1/travels/end":
+        resumeUntil = 0;
         return operation("end");
       case "/openapi/v1/travels/rewind":
         return operation("rewind", { rewind_to_sec: body.rewindToSec });
@@ -816,42 +846,47 @@ export function happyOyster() {
           model: configured.model,
           logLevel: "none",
         } as SDKConfig);
-        configureSdkTravel(created, configured, async (name, input = {}) => {
-          if (name === "end") {
-            await request(
-              {
-                type: "travel_ended",
-                encrypted_travel_id: configured.travel.encrypted_travel_id,
-                completed,
-              },
-              "travel_released",
-              closing,
+        configureSdkTravel(
+          created,
+          configured,
+          async (name, input = {}) => {
+            if (name === "end") {
+              await request(
+                {
+                  type: "travel_ended",
+                  encrypted_travel_id: configured.travel.encrypted_travel_id,
+                  completed,
+                },
+                "travel_released",
+                closing,
+              );
+              return {
+                encryptedTravelId: configured.travel.encrypted_travel_id,
+                status: "completed",
+              };
+            }
+            if (closing) throw closedError();
+            const reply = await request(
+              { type: "travel_request", operation: name, ...input },
+              "travel_response",
             );
-            return {
-              encryptedTravelId: configured.travel.encrypted_travel_id,
-              status: "completed",
-            };
-          }
-          if (closing) throw closedError();
-          const reply = await request(
-            { type: "travel_request", operation: name, ...input },
-            "travel_response",
-          );
-          const data = reply.data as Message;
-          if (!data || typeof data !== "object")
-            throw new HappyOysterError("Invalid travel response.", {
-              code: "invalid",
-            });
-          // The runner publishes typed snake_case fields; the vendor expects camelCase.
-          return Object.fromEntries(
-            Object.entries(data).map(([key, value]) => [
-              key.replace(/_([a-z])/g, (_, letter: string) =>
-                letter.toUpperCase(),
-              ),
-              value,
-            ]),
-          );
-        });
+            const data = reply.data as Message;
+            if (!data || typeof data !== "object")
+              throw new HappyOysterError("Invalid travel response.", {
+                code: "invalid",
+              });
+            // The runner publishes typed snake_case fields; the vendor expects camelCase.
+            return Object.fromEntries(
+              Object.entries(data).map(([key, value]) => [
+                key.replace(/_([a-z])/g, (_, letter: string) =>
+                  letter.toUpperCase(),
+                ),
+                value,
+              ]),
+            );
+          },
+          context.signal,
+        );
         return created;
       });
 

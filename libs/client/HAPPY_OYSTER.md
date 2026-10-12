@@ -121,7 +121,10 @@ RTC credentials. No Alibaba HTTP token is returned, installed or renewed.
 The adapter replaces this SDK instance's backend `get` and `post` methods with
 allowlisted WMA operations, including status polling and the provider feature
 gate. Unknown paths and other travel IDs fail closed. The runner owns the travel
-ID and rejects control after release. There are no standalone status, pause,
+ID and rejects control after release. SDK 0.1.4 can latch onto a stale `PAUSED`
+status during resume even after media restarts. The transport waits up to 15 seconds
+for that transition to clear, returning actual provider data; terminal statuses
+pass through immediately, and close cancels the wait. There are no standalone status, pause,
 resume, rewind, instruction or end HTTP routes. Adventure commands continue over
 RTC directly; fal never transports the media.
 

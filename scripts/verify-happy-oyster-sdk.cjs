@@ -139,16 +139,21 @@ const { JSDOM } = req("jsdom");
     });
     const original = engine.backendService.startTravel;
     const operations = [];
-    configureSdkTravel(engine, configured, async (operation, input) => {
-      operations.push({ operation, input });
-      return {
-        enabled: true,
-        status: "running",
-        rtcStatus: "STREAMING",
-        accepted: true,
-        resumedAtSec: 4,
-      };
-    });
+    configureSdkTravel(
+      engine,
+      configured,
+      async (operation, input) => {
+        operations.push({ operation, input });
+        return {
+          enabled: true,
+          status: "running",
+          rtcStatus: "STREAMING",
+          accepted: true,
+          resumedAtSec: 4,
+        };
+      },
+      new AbortController().signal,
+    );
     assert.equal(engine.backendService.getAccessToken(), null);
     assert.notEqual(engine.backendService.startTravel, original);
     const player = engine.createTravel({
