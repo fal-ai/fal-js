@@ -22,7 +22,7 @@ describe("pollDelays", () => {
   const defaults: Required<PollBackoff> = {
     initial: 250,
     multiplier: 1.05,
-    maximum: 30_000,
+    maximum: 10_000,
     jitter: 0.2,
   };
   const noJitter = { ...defaults, jitter: 0 };
@@ -34,7 +34,7 @@ describe("pollDelays", () => {
   it("grows from initial up to maximum", () => {
     const delays = take(noJitter, 1000);
     expect(delays.slice(0, 3)).toEqual([250, 262.5, 275.625]);
-    expect(delays[999]).toBe(30_000);
+    expect(delays[999]).toBe(10_000);
   });
 
   it("keeps jitter within bounds", () => {
@@ -45,7 +45,7 @@ describe("pollDelays", () => {
       expect(delay).toBeLessThanOrEqual(300);
     }
     for (const delay of take({ ...defaults, multiplier: 2 }, 100)) {
-      expect(delay).toBeLessThanOrEqual(30_000);
+      expect(delay).toBeLessThanOrEqual(10_000);
     }
   });
 
@@ -55,7 +55,7 @@ describe("pollDelays", () => {
 
   it.each([
     { initial: 0 },
-    { initial: 40_000 },
+    { initial: 11_000 },
     { maximum: Infinity },
     { multiplier: 0.9 },
     { jitter: 1.5 },

@@ -45,7 +45,7 @@ export type PollBackoff = {
 const DEFAULT_POLL_BACKOFF: Required<PollBackoff> = {
   initial: 250,
   multiplier: 1.05,
-  maximum: 30_000,
+  maximum: 10_000,
   jitter: 0.2,
 };
 
@@ -100,7 +100,7 @@ type QueueModeOptions =
       pollInterval?: number;
       /**
        * Exponential backoff between status checks. Defaults to an initial
-       * delay of 250ms, growing by 1.05x per check with ±20% jitter, up to 30s.
+       * delay of 250ms, growing by 1.05x per check with ±20% jitter, up to 10s.
        * Resets when the status changes.
        * Ignored when `pollInterval` is set or `mode` is `streaming`.
        */
