@@ -124,7 +124,11 @@ gate. Unknown paths and other travel IDs fail closed. The runner owns the travel
 ID and rejects control after release. SDK 0.1.4 can latch onto a stale `PAUSED`
 status during resume even after media restarts. The transport waits up to 15 seconds
 for that transition to clear, returning actual provider data; terminal statuses
-pass through immediately, and close cancels the wait. There are no standalone status, pause,
+pass through immediately, and close cancels the wait. Before Directing resume or
+rewind, the adapter retires the previous RTC engine using the pinned SDK's
+instance `rtcSession.disconnect` hook. This avoids reusing a singleton while
+its old channel's termination events are still arriving. The hook is validated
+before playback; close during cleanup prevents the new join. There are no standalone status, pause,
 resume, rewind, instruction or end HTTP routes. Adventure commands continue over
 RTC directly; fal never transports the media.
 

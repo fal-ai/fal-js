@@ -69,6 +69,7 @@ function setup(mode: "adventure" | "directing" = "adventure") {
     sendInstruct: jest.fn(async () => undefined),
     pause: jest.fn(async () => undefined),
     resume: jest.fn(async () => undefined),
+    rtcSession: { disconnect: jest.fn(async () => undefined) },
     rewind: jest.fn(async () => ({ resumedAtSec: 0 })),
   };
   const engine = {
@@ -462,6 +463,10 @@ it("sends Directing instructions through the moderated fal endpoint", async () =
   await session.resume();
   await session.rewind(5);
   expect(f.travel.rewind).toHaveBeenCalledWith({ rewindToSec: 5 });
+  const resets = f.travel.rtcSession.disconnect.mock.invocationCallOrder;
+  expect(resets).toHaveLength(2);
+  expect(resets[0]).toBeLessThan(f.travel.resume.mock.invocationCallOrder[0]);
+  expect(resets[1]).toBeLessThan(f.travel.rewind.mock.invocationCallOrder[0]);
   await expect(session.rewind(-1)).rejects.toThrow("nonnegative");
   await expect(session.instruct(" ")).rejects.toThrow("1–2000");
   f.replies.travel_request = () => ({
@@ -487,6 +492,52 @@ it("never installs or renews an HTTP token", async () => {
   expect(HappyOysterEngine).toHaveBeenCalledWith(
     expect.not.objectContaining({ token: expect.anything() }),
   );
+  await handle.close();
+});
+
+it.each(["resume", "rewind"] as const)(
+  "retires RTC before %s and cancels a rejoin on close",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start();
+    const { session } = await handle.ready;
+    const cleanup = deferred<void>();
+    f.travel.rtcSession.disconnect.mockImplementation(() => cleanup.promise);
+    const pending = action === "resume" ? session.resume() : session.rewind(4);
+    const rejected = expect(pending).rejects.toThrow("closed");
+    await advanceTime(0);
+    expect(f.travel.rtcSession.disconnect).toHaveBeenCalledTimes(1);
+    expect(f.travel[action]).not.toHaveBeenCalled();
+    await handle.close();
+    cleanup.resolve();
+    await rejected;
+    await advanceTime(0);
+    expect(f.travel[action]).not.toHaveBeenCalled();
+  },
+);
+
+it("does not rejoin after RTC cleanup exceeds the control timeout", async () => {
+  const f = setup("directing");
+  const handle = f.start({ controlTimeoutMs: 50 });
+  const { session } = await handle.ready;
+  const cleanup = deferred<void>();
+  f.travel.rtcSession.disconnect.mockImplementation(() => cleanup.promise);
+  const pending = session.resume();
+  const rejected = expect(pending).rejects.toThrow("timed out");
+  await advanceTime(50);
+  await rejected;
+  cleanup.resolve();
+  await advanceTime(0);
+  expect(f.travel.resume).not.toHaveBeenCalled();
+  await handle.close();
+});
+
+it("checks the pinned SDK RTC cleanup hook before Directing playback", async () => {
+  const f = setup("directing");
+  delete (f.travel as { rtcSession?: unknown }).rtcSession;
+  const handle = f.start();
+  await expect(handle.ready).rejects.toThrow("cannot reset playback");
+  expect(f.travel.start).not.toHaveBeenCalled();
   await handle.close();
 });
 
@@ -524,39 +575,42 @@ it("routes SDK HTTP operations through the active WMA connection", async () => {
   ).rejects.toThrow("closed");
 });
 
-it("waits through stale PAUSED status after resume without changing provider data", async () => {
-  const f = setup("directing");
-  const handle = f.start();
-  await handle.ready;
-  const backend = f.engine.backendService;
-  await backend.post("/openapi/v1/travels/resume", {
-    encryptedTravelId: "travel",
-  });
-  let rtcStatus = "PAUSED";
-  f.replies.travel_request = () => ({
-    type: "travel_response",
-    data: { status: "running", rtc_status: rtcStatus },
-  });
-  const resolved = jest.fn();
-  const pending = backend
-    .get("/openapi/v1/travels/status?encryptedTravelId=travel")
-    .then(resolved);
-  await advanceTime(500);
-  expect(resolved).not.toHaveBeenCalled();
-  rtcStatus = "STREAMING";
-  await advanceTime(500);
-  await pending;
-  expect(resolved).toHaveBeenCalledWith({
-    status: "running",
-    rtcStatus: "STREAMING",
-  });
-  // A later real pause is never hidden by the old resume transition.
-  rtcStatus = "PAUSED";
-  await expect(
-    backend.get("/openapi/v1/travels/status?encryptedTravelId=travel"),
-  ).resolves.toMatchObject({ rtcStatus: "PAUSED" });
-  await handle.close();
-});
+it.each(["resume", "rewind"])(
+  "waits through stale PAUSED status after %s without changing provider data",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start();
+    await handle.ready;
+    const backend = f.engine.backendService;
+    await backend.post(`/openapi/v1/travels/${action}`, {
+      encryptedTravelId: "travel",
+    });
+    let rtcStatus = "PAUSED";
+    f.replies.travel_request = () => ({
+      type: "travel_response",
+      data: { status: "running", rtc_status: rtcStatus },
+    });
+    const resolved = jest.fn();
+    const pending = backend
+      .get("/openapi/v1/travels/status?encryptedTravelId=travel")
+      .then(resolved);
+    await advanceTime(500);
+    expect(resolved).not.toHaveBeenCalled();
+    rtcStatus = "STREAMING";
+    await advanceTime(500);
+    await pending;
+    expect(resolved).toHaveBeenCalledWith({
+      status: "running",
+      rtcStatus: "STREAMING",
+    });
+    // A later real pause is never hidden by the old resume transition.
+    rtcStatus = "PAUSED";
+    await expect(
+      backend.get("/openapi/v1/travels/status?encryptedTravelId=travel"),
+    ).resolves.toMatchObject({ rtcStatus: "PAUSED" });
+    await handle.close();
+  },
+);
 
 it("bounds the resume transition and immediately preserves terminal status", async () => {
   const f = setup("directing");

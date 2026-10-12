@@ -396,8 +396,13 @@ function configureSdkTravel(
       case "/openapi/v1/travels/end":
         resumeUntil = 0;
         return operation("end");
-      case "/openapi/v1/travels/rewind":
-        return operation("rewind", { rewind_to_sec: body.rewindToSec });
+      case "/openapi/v1/travels/rewind": {
+        const result = await operation("rewind", {
+          rewind_to_sec: body.rewindToSec,
+        });
+        resumeUntil = Date.now() + 15_000;
+        return result;
+      }
       case "/openapi/v1/travels/instruct":
         return operation("instruct", { content: body.content });
       default:
@@ -450,6 +455,18 @@ function configureSdkTravel(
       },
     };
   };
+}
+
+/** Retire SDK 0.1.4's shared RTC engine before a Directing rejoin. */
+function sdkRtcReset(player: object): () => Promise<void> {
+  const rtc = (player as { rtcSession?: { disconnect?: unknown } }).rtcSession;
+  if (!rtc || typeof rtc.disconnect !== "function")
+    throw new HappyOysterError(
+      "Happy Oyster SDK cannot reset playback. Install @happy-oyster/js-sdk@0.1.4.",
+      { code: "sdk_unavailable" },
+    );
+  const disconnect = rtc.disconnect as () => Promise<void>;
+  return () => disconnect.call(rtc);
 }
 
 function isRelease(command: Required<HappyOysterCommand>): boolean {
@@ -911,6 +928,7 @@ export function happyOyster() {
         }),
       );
       travel = player;
+      const resetRtc = mode === "directing" ? sdkRtcReset(player) : undefined;
       const setStatus = (status: TravelStatus) => {
         if (status === "idle" || closing) return;
         travelStatus = status;
@@ -990,6 +1008,25 @@ export function happyOyster() {
           context.signal,
         );
       }
+      async function rejoin(
+        action: "resume" | "rewind",
+        call: () => Promise<unknown>,
+      ): Promise<void> {
+        let allowJoin = true;
+        try {
+          await perform(action, async () => {
+            // Retire the old singleton before the SDK creates its next join.
+            await resetRtc!();
+            if (!allowJoin) throw closedError();
+            active(context.signal);
+            return call();
+          });
+        } finally {
+          // A bounded action may return before slow vendor cleanup settles.
+          // Never start a new join after its caller already saw a timeout.
+          allowJoin = false;
+        }
+      }
       let held: Required<HappyOysterCommand> = { ...RELEASE };
       return {
         worldId: options.worldId,
@@ -1035,7 +1072,7 @@ export function happyOyster() {
           return { accepted: result.accepted === true };
         },
         pause: () => perform("pause", () => player.pause()),
-        resume: () => perform("resume", () => player.resume()),
+        resume: () => rejoin("resume", () => player.resume()),
         rewind: (seconds) => {
           if (!Number.isFinite(seconds) || seconds < 0)
             return Promise.reject(
@@ -1043,7 +1080,7 @@ export function happyOyster() {
                 code: "invalid",
               }),
             );
-          return perform("rewind", () =>
+          return rejoin("rewind", () =>
             player.rewind({ rewindToSec: seconds }),
           );
         },

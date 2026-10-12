@@ -35,7 +35,7 @@ const { JSDOM } = req("jsdom");
     stdin: {
       contents:
         fs.readFileSync(path.join(sourceDir, "happy-oyster.ts"), "utf8") +
-        "\nexport { configureSdkTravel };",
+        "\nexport { configureSdkTravel, sdkRtcReset };",
       loader: "ts",
       resolveDir: sourceDir,
     },
@@ -57,7 +57,9 @@ const { JSDOM } = req("jsdom");
     outfile: path.join(output, "vendor.cjs"),
     logLevel: "silent",
   });
-  const { configureSdkTravel } = require(path.join(output, "adapter.cjs"));
+  const { configureSdkTravel, sdkRtcReset } = require(
+    path.join(output, "adapter.cjs"),
+  );
   const { HappyOysterEngine } = require(path.join(output, "vendor.cjs"));
   const fixtures = [
     {
@@ -160,6 +162,10 @@ const { JSDOM } = req("jsdom");
       ticket: configured.travel.encrypted_travel_id,
       videoElement: document.querySelector("video"),
     });
+    // Validate the pinned private RTC cleanup hook against the real SDK.
+    const resetRtc = sdkRtcReset(player);
+    await resetRtc();
+    assert.throws(() => sdkRtcReset({}), /cannot reset playback/);
     // Exercise the real vendor Travel.start pipeline; only media waiters/network are simulated.
     const waiter = () => ({
       promise: Promise.resolve(),
