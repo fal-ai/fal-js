@@ -125,6 +125,48 @@ describe("queue.subscribeToStatus polling", () => {
     expect(onQueueUpdate.mock.calls).toEqual([[inQueue], [inQueue], [completed]]);
   });
 
+  it.each([undefined, 500])(
+    "resets only on status changes with pollInterval %s",
+    async (pollInterval) => {
+      const statuses = [
+        { ...inQueue, queue_position: 2 },
+        inQueue,
+        { status: "IN_PROGRESS", request_id: "req_123", logs: [] },
+        {
+          status: "IN_PROGRESS",
+          request_id: "req_123",
+          logs: [{ message: "working" }],
+        },
+        { ...inQueue, queue_position: 0 },
+        { ...inQueue, queue_position: 0 },
+        completed,
+      ];
+      for (const status of statuses) {
+        dispatch.mockResolvedValueOnce(status);
+      }
+      const onQueueUpdate = jest.fn();
+      const result = subscribe({
+        pollInterval,
+        pollBackoff: { initial: 1000, multiplier: 2, jitter: 0 },
+        onQueueUpdate,
+      });
+      const expectedDelays =
+        pollInterval === undefined
+          ? [1000, 2000, 1000, 2000, 1000, 2000]
+          : Array(6).fill(pollInterval);
+      for (const delay of expectedDelays) {
+        await settle();
+        expect(lastDelay()).toBe(delay);
+        jest.runOnlyPendingTimers();
+      }
+
+      await expect(result).resolves.toEqual(completed);
+      expect(onQueueUpdate.mock.calls).toEqual(statuses.map((status) => [status]));
+      expect(scheduled).toHaveBeenCalledTimes(6);
+      expect(jest.getTimerCount()).toBe(0);
+    },
+  );
+
   it("uses a fixed pollInterval and ignores pollBackoff, even an invalid one", async () => {
     dispatch.mockResolvedValueOnce(inQueue).mockResolvedValueOnce(completed);
 

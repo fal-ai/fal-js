@@ -101,6 +101,7 @@ type QueueModeOptions =
       /**
        * Exponential backoff between status checks. Defaults to an initial
        * delay of 250ms, growing by 1.05x per check with ±20% jitter, up to 30s.
+       * Resets when the status changes.
        * Ignored when `pollInterval` is set or `mode` is `streaming`.
        */
       pollBackoff?: PollBackoff;
@@ -529,17 +530,25 @@ export const createQueueClient = ({
           "pollInterval" in options && typeof options.pollInterval === "number"
             ? options.pollInterval
             : undefined;
-        let nextDelay: () => number;
+        let nextDelay: (status: QueueStatus["status"]) => number;
         if (pollInterval !== undefined) {
           nextDelay = () => pollInterval;
         } else {
           try {
-            const delays = pollDelays(
-              resolvePollBackoff(
-                "pollBackoff" in options ? options.pollBackoff : undefined,
-              ),
+            const backoff = resolvePollBackoff(
+              "pollBackoff" in options ? options.pollBackoff : undefined,
             );
-            nextDelay = () => delays.next().value;
+            let delays = pollDelays(backoff);
+            let previousStatus: QueueStatus["status"] | undefined;
+            nextDelay = (status) => {
+              // Don't let a long queue wait slow completion detection once running.
+              // Completed resolves before this is called, without another sleep.
+              if (status !== previousStatus) {
+                delays = pollDelays(backoff);
+              }
+              previousStatus = status;
+              return delays.next().value;
+            };
           } catch (error) {
             reject(error);
             return;
@@ -602,7 +611,7 @@ export const createQueueClient = ({
               resolve(requestStatus);
               return;
             }
-            pollingTimeoutId = setTimeout(poll, nextDelay());
+            pollingTimeoutId = setTimeout(poll, nextDelay(requestStatus.status));
           } catch (error) {
             clearScheduledTasks();
             reject(error);
