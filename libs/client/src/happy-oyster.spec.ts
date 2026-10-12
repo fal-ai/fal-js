@@ -74,7 +74,13 @@ function setup(mode: "adventure" | "directing" = "adventure") {
   const engine = {
     createTravel: jest.fn(() => travel),
     updateToken: jest.fn(),
-    backendService: { apiBaseUrl: LEGACY_ROOT, startTravel: jest.fn() },
+    ensureSdkFeatureEnabled: jest.fn(),
+    backendService: {
+      apiBaseUrl: LEGACY_ROOT,
+      startTravel: jest.fn(),
+      get: jest.fn(),
+      post: jest.fn(),
+    },
   };
   (HappyOysterEngine as unknown as jest.Mock).mockImplementation(() => engine);
   const controlCleanup = jest.fn();
@@ -84,8 +90,7 @@ function setup(mode: "adventure" | "directing" = "adventure") {
         type: "configured",
         api_host: "example.maas.aliyuncs.com",
         model: `happyoyster-1.0-${mode}`,
-        token: "private-token",
-        token_expires_in: 120,
+        control_protocol: "fal-session-v1",
         world: { ...world, mode },
         travel: {
           encrypted_travel_id: "travel",
@@ -105,10 +110,9 @@ function setup(mode: "adventure" | "directing" = "adventure") {
           },
         },
       }),
-      refresh_token: () => ({
-        type: "token_refreshed",
-        token: "renewed-token",
-        token_expires_in: 120,
+      travel_request: () => ({
+        type: "travel_response",
+        data: { accepted: true, enabled: true, rtc_status: "STREAMING" },
       }),
       bind_travel: (message) => ({
         type: "travel_bound",
@@ -204,12 +208,11 @@ it("configures data-only WMA, binds the exact travel, and keeps credentials priv
   expect(HappyOysterEngine).toHaveBeenCalledWith({
     APIHost: "example.maas.aliyuncs.com",
     model: "happyoyster-1.0-adventure",
-    token: "private-token",
     logLevel: "none",
   });
   // The SDK request root follows the configured model, not the retired one.
   expect(f.engine.backendService.apiBaseUrl).toBe(
-    "https://example.maas.aliyuncs.com/api/v2/apps/happyoyster-1.0-adventure",
+    "https://happy-oyster.invalid",
   );
   expect(f.engine.createTravel).toHaveBeenCalledWith({
     ticket: "travel",
@@ -449,12 +452,11 @@ it("sends Directing instructions through the moderated fal endpoint", async () =
   const { session } = await handle.ready;
   expect(session.can("command")).toBe(false);
   await expect(session.instruct("Rain")).resolves.toEqual({ accepted: true });
-  expect(f.run).toHaveBeenLastCalledWith(
-    `${ID}/travels/instruct`,
-    expect.objectContaining({
-      input: { encrypted_travel_id: "travel", content: "Rain" },
-    }),
-  );
+  expect(f.send).toHaveBeenLastCalledWith({
+    type: "travel_request",
+    operation: "instruct",
+    content: "Rain",
+  });
   expect(f.travel.sendInstruct).not.toHaveBeenCalled();
   await session.pause();
   await session.resume();
@@ -462,149 +464,105 @@ it("sends Directing instructions through the moderated fal endpoint", async () =
   expect(f.travel.rewind).toHaveBeenCalledWith({ rewindToSec: 5 });
   await expect(session.rewind(-1)).rejects.toThrow("nonnegative");
   await expect(session.instruct(" ")).rejects.toThrow("1–2000");
-  f.run.mockRejectedValueOnce(
-    Object.assign(new Error("private-token"), {
-      status: 422,
-      body: { detail: [{ msg: "Content policy violation." }] },
-    }),
-  );
+  f.replies.travel_request = () => ({
+    type: "error",
+    code: "TRAVEL_REQUEST_REJECTED",
+    message: "Content policy violation.",
+  });
   const rejected = session.instruct("Rain again");
   await expect(rejected).rejects.toThrow("Content policy violation.");
-  await expect(rejected).rejects.toMatchObject({ code: "http", status: 422 });
+  await expect(rejected).rejects.toMatchObject({
+    code: "TRAVEL_REQUEST_REJECTED",
+  });
   await handle.close();
 });
 
-it("renews the partner token over WMA and cancels renewal when closed", async () => {
+it("never installs or renews an HTTP token", async () => {
   const f = setup();
   const handle = f.start();
   await handle.ready;
-  await advanceTime(89_000);
+  await advanceTime(240_000);
+  expect(f.engine.updateToken).not.toHaveBeenCalled();
   expect(f.sent()).not.toContain("refresh_token");
-  await advanceTime(1_000);
-  expect(f.sent()).toContain("refresh_token");
-  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
-  await advanceTime(90_000);
-  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(2);
-  expect(handle.state).toBe("live");
+  expect(HappyOysterEngine).toHaveBeenCalledWith(
+    expect.not.objectContaining({ token: expect.anything() }),
+  );
   await handle.close();
+});
+
+it("routes SDK HTTP operations through the active WMA connection", async () => {
+  const f = setup("directing");
+  const handle = f.start();
+  await handle.ready;
+  const backend = f.engine.backendService;
+  await expect(
+    backend.get("/openapi/v1/travels/status?encryptedTravelId=travel"),
+  ).resolves.toMatchObject({ rtcStatus: "STREAMING" });
+  await backend.post("/openapi/v1/travels/pause", {
+    encryptedTravelId: "travel",
+  });
+  await backend.post("/openapi/v1/travels/resume", {
+    encryptedTravelId: "travel",
+  });
+  await backend.post("/openapi/v1/travels/rewind", {
+    encryptedTravelId: "travel",
+    rewindToSec: 4,
+  });
+  await f.engine.ensureSdkFeatureEnabled();
+  expect(f.send).toHaveBeenCalledWith({
+    type: "travel_request",
+    operation: "rewind",
+    rewind_to_sec: 4,
+  });
+  expect(f.send).toHaveBeenCalledWith({
+    type: "travel_request",
+    operation: "feature_gate",
+  });
+  await handle.close();
+  await expect(
+    backend.get("/openapi/v1/travels/status?encryptedTravelId=travel"),
+  ).rejects.toThrow("closed");
+});
+
+it("rejects unexpected vendor routes and other travel identities", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  const backend = f.engine.backendService;
   const count = f.send.mock.calls.length;
-  await advanceTime(300_000);
-  expect(f.send).toHaveBeenCalledTimes(count);
-  expect(jest.getTimerCount()).toBe(0);
-});
-
-it("counts a delayed configure reply against the initial token lifetime", async () => {
-  const f = setup();
-  const configured = f.replies.configure({});
-  delete f.replies.configure;
-  const handle = f.start();
-  await advanceTime(1);
-  expect(f.sent()).toEqual(["configure"]);
-  await advanceTime(10_000);
-  f.receive(configured);
-  await handle.ready;
-  await advanceTime(80_000);
-  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
-  expect(handle.state).toBe("live");
-  await handle.close();
-  expect(jest.getTimerCount()).toBe(0);
-});
-
-it("retries a rejected renewal while the token is still valid", async () => {
-  const f = setup();
-  const handle = f.start();
-  await handle.ready;
-  f.replies.refresh_token = () => ({
-    type: "error",
-    code: "TOKEN_REFRESH_FAILED",
-    message: "Happy Oyster is temporarily unavailable. Try again.",
-    retryable: true,
-  });
-  await advanceTime(90_000);
-  expect(f.engine.updateToken).not.toHaveBeenCalled();
-  f.replies.refresh_token = () => ({
-    type: "token_refreshed",
-    token: "renewed-token",
-    token_expires_in: 120,
-  });
-  await advanceTime(5_000);
-  expect(f.engine.updateToken).toHaveBeenCalledWith("renewed-token");
-  expect(handle.state).toBe("live");
+  await expect(
+    backend.get("/openapi/v1/travels/status?encryptedTravelId=other"),
+  ).rejects.toThrow("Unsupported");
+  await expect(
+    backend.get(
+      "https://attacker.test/openapi/v1/travels/status?encryptedTravelId=travel",
+    ),
+  ).rejects.toThrow("Unsupported");
+  await expect(
+    backend.post("/api/v1/services/aigc/text-generation/generation", {
+      encryptedTravelId: "travel",
+      model: "qwen-turbo",
+    }),
+  ).rejects.toThrow("Unsupported");
+  await expect(
+    backend.post("/openapi/v1/travels/resume", { encryptedTravelId: "other" }),
+  ).rejects.toThrow("Unsupported");
+  expect(f.send.mock.calls.length).toBe(count);
   await handle.close();
 });
 
-it("closes an ambiguous renewal timeout before a late reply can extend its token deadline", async () => {
-  const f = setup();
-  delete f.replies.refresh_token;
-  const handle = f.start({ controlTimeoutMs: 1_000 });
-  await handle.ready;
-  const end = deferred<undefined>();
-  f.travel.end.mockReturnValue(end.promise);
-  await advanceTime(90_000);
-  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(1);
-
-  await advanceTime(1_000);
-  expect(handle.state).toBe("failed");
-  await advanceTime(5_000);
-  f.receive({
-    type: "token_refreshed",
-    token: "late-token",
-    token_expires_in: 120,
-  });
-  await advanceTime(120_000);
-  expect(f.engine.updateToken).not.toHaveBeenCalled();
-  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(1);
-  expect(f.sent()).not.toContain("travel_ended");
-  await handle.close();
-  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
-  expect(jest.getTimerCount()).toBe(0);
-  end.resolve(undefined);
-  await advanceTime(1);
-});
-
-it("does not replay an acknowledged bind after a startup renewal timeout", async () => {
-  const f = setup();
-  delete f.replies.refresh_token;
-  const gate = deferred<{ encryptedTravelId: string; mode: number }>();
-  f.travel.start.mockReturnValue(gate.promise);
-  const handle = f.start({ controlTimeoutMs: 1_000 });
-
-  await advanceTime(1);
-  await advanceTime(90_000);
-  expect(f.sent()).toEqual(["configure", "bind_travel", "refresh_token"]);
-  await advanceTime(1_000);
-  expect(handle.state).toBe("failed");
-  await expect(handle.ready).rejects.toThrow("control request timed out");
-  gate.resolve({ encryptedTravelId: "travel", mode: 1 });
-  await advanceTime(1_000);
-  f.receive({
-    type: "error",
-    code: "TOKEN_REFRESH_FAILED",
-    message: "The earlier renewal failed.",
-    retryable: true,
-  });
-  await handle.close();
-  expect(f.sent().filter((type) => type === "bind_travel")).toHaveLength(1);
-  expect(f.onError).toHaveBeenCalledTimes(1);
-  expect(f.travel.end).toHaveBeenCalledTimes(1);
-  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
-  expect(jest.getTimerCount()).toBe(0);
-});
-
-it("fails the session when the token expires without a renewal", async () => {
+it("honors the provider SDK feature gate through fal", async () => {
   const f = setup();
   const handle = f.start();
   await handle.ready;
-  f.replies.refresh_token = () => ({
-    type: "error",
-    code: "TOKEN_REFRESH_FAILED",
-    message: "secret response",
+  f.replies.travel_request = () => ({
+    type: "travel_response",
+    data: { enabled: false },
   });
-  await advanceTime(121_000);
-  expect(handle.state).toBe("failed");
+  await expect(f.engine.ensureSdkFeatureEnabled()).rejects.toThrow(
+    "disabled by the provider",
+  );
   await handle.close();
-  expect(f.travel.end).toHaveBeenCalledTimes(1);
-  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
 });
 
 it("waits for the matching bind acknowledgement before reporting live", async () => {
@@ -902,7 +860,7 @@ it("publishes the message names it exchanges", async () => {
   const types = new Set(f.sent());
   expect(
     HAPPY_OYSTER_MESSAGES.client.filter((type) => !types.has(type)),
-  ).toEqual(["refresh_token"]);
+  ).toEqual(["travel_request"]);
   expect(HAPPY_OYSTER_MESSAGES.server).toEqual(
     expect.arrayContaining(["configured", "travel_bound", "travel_released"]),
   );
