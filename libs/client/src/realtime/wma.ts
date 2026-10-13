@@ -48,6 +48,9 @@ const DEFAULT_STUN_URL = "stun:stun.l.google.com:19302";
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export type WmaControlMessage = object;
 
+/** A WebRTC media kind the browser should offer to receive from the model. */
+export type WmaReceiveTrackKind = "audio" | "video";
+
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaOptions {
   /**
@@ -55,6 +58,23 @@ export interface WmaOptions {
    * tracks preserve addTrack's `"sendrecv"` behavior. Pass an explicit direction for other flows.
    */
   direction?: RTCRtpTransceiverDirection;
+  /**
+   * Media tracks to receive from the model, in offer order.
+   *
+   * WebRTC answers cannot introduce media sections that were absent from the browser's offer, so
+   * output-only audio and audio-plus-video apps must declare their receive slots before offer
+   * creation. Repeating a kind requests multiple tracks of that kind; an empty array creates no
+   * receive transceivers and is suitable for send-only or data-channel-only sessions.
+   *
+   * When a local track has the same kind as a requested receive slot, one `sendrecv` transceiver is
+   * used for both directions. Remaining local tracks are `sendonly`, and remaining receive slots are
+   * `recvonly`.
+   *
+   * Omit this option to preserve the legacy behavior: local tracks use `direction` (defaulting to
+   * `sendrecv`), while a session without local tracks offers one `recvonly` video transceiver.
+   * Because this option derives directions per track, it cannot be combined with `direction`.
+   */
+  receive?: readonly WmaReceiveTrackKind[];
   /**
    * Media to send UP, on the same peer connection the output comes back on.
    *
@@ -579,6 +599,11 @@ export function wma(endpointId?: string) {
       if (options.direction === "stopped") {
         throw new Error('WMA direction cannot be "stopped".');
       }
+      if (options.receive !== undefined && options.direction !== undefined) {
+        throw new Error(
+          "WMA receive tracks cannot be combined with an explicit direction.",
+        );
+      }
       const iceServers = options.iceServers ?? (await fetchIceServers(context));
       const pc = new RTCPeerConnection({
         iceServers,
@@ -599,7 +624,30 @@ export function wma(endpointId?: string) {
       // A local track is added through a transceiver so the caller's requested direction reaches
       // SDP. Never add a second media transceiver for the same track.
       const localTracks = options.localStream?.getTracks() ?? [];
-      if (localTracks.length > 0) {
+      if (options.receive !== undefined) {
+        const unmatchedLocalTracks = [...localTracks];
+        for (const kind of options.receive) {
+          const localIndex = unmatchedLocalTracks.findIndex(
+            (track) => track.kind === kind,
+          );
+          if (localIndex === -1) {
+            pc.addTransceiver(kind, { direction: "recvonly" });
+            continue;
+          }
+
+          const [track] = unmatchedLocalTracks.splice(localIndex, 1);
+          pc.addTransceiver(track, {
+            direction: "sendrecv",
+            streams: [options.localStream!],
+          });
+        }
+        for (const track of unmatchedLocalTracks) {
+          pc.addTransceiver(track, {
+            direction: "sendonly",
+            streams: [options.localStream!],
+          });
+        }
+      } else if (localTracks.length > 0) {
         for (const track of localTracks) {
           pc.addTransceiver(track, {
             direction: options.direction ?? "sendrecv",
