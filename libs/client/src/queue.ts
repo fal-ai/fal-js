@@ -603,6 +603,7 @@ export const createQueueClient = ({
             if (options.onQueueUpdate) {
               options.onQueueUpdate(requestStatus);
             }
+            // onQueueUpdate may abort synchronously; don't schedule another poll after that.
             if (settled) {
               return;
             }
