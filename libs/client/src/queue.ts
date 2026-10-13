@@ -209,7 +209,8 @@ export type QueueStatusStreamOptions = QueueStatusOptions & {
   connectionMode?: StreamingConnectionMode;
 };
 
-// Queue operations benefit from more aggressive retry policies
+// Queue operations benefit from more aggressive retry policies. These are
+// defaults: options the user set on the client-level `retry` config win.
 const QUEUE_RETRY_CONFIG: Partial<RetryOptions> = {
   maxRetries: 3,
   baseDelay: 1000,
@@ -352,7 +353,7 @@ export const createQueueClient = ({
         config,
         options: {
           signal: options.abortSignal,
-          retry: QUEUE_RETRY_CONFIG,
+          retry: { ...QUEUE_RETRY_CONFIG, ...config.retryOverrides },
         },
       });
     },
@@ -372,7 +373,7 @@ export const createQueueClient = ({
         config,
         options: {
           signal: abortSignal,
-          retry: QUEUE_STATUS_RETRY_CONFIG,
+          retry: { ...QUEUE_STATUS_RETRY_CONFIG, ...config.retryOverrides },
         },
       });
     },
@@ -529,7 +530,7 @@ export const createQueueClient = ({
         },
         options: {
           signal: abortSignal,
-          retry: QUEUE_RETRY_CONFIG,
+          retry: { ...QUEUE_RETRY_CONFIG, ...config.retryOverrides },
         },
       });
     },
