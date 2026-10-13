@@ -362,7 +362,7 @@ function configureSdkTravel(
       url.searchParams.get("encryptedTravelId") !== travelId
     )
       throw invalid();
-    while (true) {
+    while (!signal.aborted) {
       active(signal);
       if (options.signal?.aborted) throw closedError();
       const result = await operation("status");
@@ -379,6 +379,7 @@ function configureSdkTravel(
       }
       await delay(500, signal);
     }
+    throw closedError();
   };
   service.post = async (path: string, body: Message) => {
     if (path === "/openapi/v1/sdk/feature-gate")
