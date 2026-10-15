@@ -991,11 +991,13 @@ export function happyOyster() {
       const liveTravelId = started.encryptedTravelId;
 
       let rejoining = false;
+      let playbackActionPending = false;
       const can = (action: HappyOysterAction) =>
         !closing &&
         !context.signal.aborted &&
         bound &&
         !rejoining &&
+        !playbackActionPending &&
         (mode === "adventure" ? action === "command" : action !== "command") &&
         player.can(actions[action]);
       const unavailable = (action: HappyOysterAction) =>
@@ -1007,12 +1009,24 @@ export function happyOyster() {
         call: () => Promise<unknown>,
       ): Promise<void> {
         if (!can(action)) throw unavailable(action);
-        await within(
-          Promise.resolve().then(call),
-          controlTimeout,
-          `Happy Oyster ${action}`,
-          context.signal,
-        );
+        playbackActionPending = action !== "command";
+        try {
+          await within(
+            Promise.resolve().then(call),
+            controlTimeout,
+            `Happy Oyster ${action}`,
+            context.signal,
+          );
+        } catch (error) {
+          if (error instanceof HappyOysterError && error.code === "timeout") {
+            // SDK work may still finish later. Retire this session instead of
+            // allowing another action to race an ambiguous timed-out operation.
+            void context.fail(`Happy Oyster ${action} timed out.`);
+          }
+          throw error;
+        } finally {
+          playbackActionPending = false;
+        }
       }
       async function rejoin(
         action: "resume" | "rewind",
@@ -1083,16 +1097,7 @@ export function happyOyster() {
             if (isRelease(command)) return;
             throw unavailable("command");
           }
-          try {
-            await perform("command", () => sendCommand(command));
-          } catch (error) {
-            if (error instanceof HappyOysterError && error.code === "timeout") {
-              // A stalled SDK send cannot be cancelled. End playback rather
-              // than let queued input execute after the caller saw a timeout.
-              void context.fail("Happy Oyster command timed out.");
-            }
-            throw error;
-          }
+          await perform("command", () => sendCommand(command));
           if (held === command && can("command") && !isRelease(command)) {
             // The partner model applies one command per generation step, so a
             // held control is re-sent until it changes.

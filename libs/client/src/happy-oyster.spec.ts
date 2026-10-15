@@ -1192,6 +1192,46 @@ it("ends playback instead of sending queued input after a timeout", async () => 
   expect(jest.getTimerCount()).toBe(0);
 });
 
+it.each(["pause", "resume", "rewind"] as const)(
+  "terminates a %s timeout instead of allowing late action ordering",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start({ controlTimeoutMs: 50 });
+    const { session } = await handle.ready;
+    const result = deferred<{ resumedAtSec: number }>();
+    f.travel[action].mockImplementation(() => result.promise);
+    const pending = action === "rewind" ? session.rewind(4) : session[action]();
+    const rejected = expect(pending).rejects.toThrow("timed out");
+    await advanceTime(50);
+    await rejected;
+    const stateAfterTimeout = handle.state;
+    const retry = expect(session.pause()).rejects.toThrow("unavailable");
+    result.resolve({ resumedAtSec: 4 });
+    await retry;
+    await handle.close();
+    expect(stateAfterTimeout).toBe("failed");
+    expect(f.travel.end).toHaveBeenCalledTimes(1);
+  },
+);
+
+it("rejects Directing controls while pause is pending", async () => {
+  const f = setup("directing");
+  const handle = f.start();
+  const { session } = await handle.ready;
+  const result = deferred<undefined>();
+  f.travel.pause.mockReturnValue(result.promise);
+  const pause = session.pause();
+  await advanceTime(0);
+  const available = session.can("resume");
+  const rejected = expect(session.resume()).rejects.toThrow("unavailable");
+  result.resolve(undefined);
+  await pause;
+  await rejected;
+  await handle.close();
+  expect(available).toBe(false);
+  expect(f.travel.resume).not.toHaveBeenCalled();
+});
+
 it("contains synchronous failures while repeating a held command", async () => {
   const f = setup();
   const handle = f.start();
