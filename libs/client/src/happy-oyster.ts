@@ -990,10 +990,12 @@ export function happyOyster() {
       active(context.signal);
       const liveTravelId = started.encryptedTravelId;
 
+      let rejoining = false;
       const can = (action: HappyOysterAction) =>
         !closing &&
         !context.signal.aborted &&
         bound &&
+        !(rejoining && (action === "resume" || action === "rewind")) &&
         (mode === "adventure" ? action === "command" : action !== "command") &&
         player.can(actions[action]);
       const unavailable = (action: HappyOysterAction) =>
@@ -1016,26 +1018,37 @@ export function happyOyster() {
         action: "resume" | "rewind",
         call: () => Promise<unknown>,
       ): Promise<void> {
+        if (!can(action)) throw unavailable(action);
+        rejoining = true;
         let allowJoin = true;
+        let resetStarted = false;
         try {
-          await perform(action, async () => {
-            // Retire the old singleton before the SDK creates its next join.
-            await resetRtc!();
-            if (!allowJoin) throw closedError();
-            active(context.signal);
-            return call();
-          });
+          await within(
+            Promise.resolve().then(async () => {
+              active(context.signal);
+              // Retire the old singleton before the SDK creates its next join.
+              resetStarted = true;
+              await resetRtc!();
+              if (!allowJoin) throw closedError();
+              active(context.signal);
+              return call();
+            }),
+            controlTimeout,
+            `Happy Oyster ${action}`,
+            context.signal,
+          );
         } catch (error) {
-          if (error instanceof HappyOysterError && error.code === "timeout") {
-            // Racing the SDK promise does not cancel it. End the travel to abort
-            // its runtime action and polling, and reject further user actions.
-            void context.fail(`Happy Oyster ${action} timed out.`);
+          if (resetStarted) {
+            // Playback may already be disconnected. End the session on every
+            // failure, abort vendor work and prevent retries on a broken player.
+            void context.fail(`Happy Oyster ${action} failed after RTC reset.`);
           }
           throw error;
         } finally {
           // A bounded action may return before slow vendor cleanup settles.
           // Never start a new join after its caller already saw a timeout.
           allowJoin = false;
+          rejoining = false;
         }
       }
       let held: Required<HappyOysterCommand> = { ...RELEASE };

@@ -569,6 +569,51 @@ it.each(["resume", "rewind"] as const)(
   },
 );
 
+it.each(["resume", "rewind"] as const)(
+  "fails the session after a post-reset %s rejection",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start();
+    const { session } = await handle.ready;
+    f.travel[action].mockRejectedValue(new Error("provider rejected"));
+    const pending = action === "resume" ? session.resume() : session.rewind(4);
+    await expect(pending).rejects.toThrow("failed");
+    await handle.close();
+    expect(f.travel.rtcSession.disconnect).toHaveBeenCalledTimes(1);
+    expect(handle.state).toBe("failed");
+    expect(session.can(action)).toBe(false);
+    expect(f.travel.end).toHaveBeenCalledTimes(1);
+  },
+);
+
+it.each(["resume", "rewind"] as const)(
+  "rejects overlapping rejoins while %s is pending",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start();
+    const { session } = await handle.ready;
+    const result = deferred<{ resumedAtSec: number }>();
+    f.travel[action].mockImplementation(() => result.promise);
+    const pending = action === "resume" ? session.resume() : session.rewind(4);
+    await advanceTime(0);
+    const availableDuringJoin = [session.can("resume"), session.can("rewind")];
+    const second = session.resume();
+    const third = session.rewind(4);
+    const rejected = [
+      expect(second).rejects.toThrow("unavailable"),
+      expect(third).rejects.toThrow("unavailable"),
+    ];
+    await advanceTime(0);
+    result.resolve({ resumedAtSec: 4 });
+    await pending;
+    await Promise.all(rejected);
+    const resetCount = f.travel.rtcSession.disconnect.mock.calls.length;
+    await handle.close();
+    expect(availableDuringJoin).toEqual([false, false]);
+    expect(resetCount).toBe(1);
+  },
+);
+
 it("checks the pinned SDK RTC cleanup hook before Directing playback", async () => {
   const f = setup("directing");
   delete (f.travel as { rtcSession?: unknown }).rtcSession;
