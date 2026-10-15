@@ -1050,6 +1050,35 @@ it("rejects Directing controls while pause is pending", async () => {
   expect(f.travel.resume).not.toHaveBeenCalled();
 });
 
+it("guards and times out stalled instructions", async () => {
+  const f = setup("directing");
+  const handle = f.start({ controlTimeoutMs: 50 });
+  const { session } = await handle.ready;
+  const response = deferred<{
+    data: { accepted: boolean };
+    requestId: string;
+  }>();
+  f.run.mockReturnValueOnce(response.promise);
+  let failure: Error | undefined;
+  const pending = session.instruct("Rain").catch((error) => {
+    failure = error;
+  });
+  await advanceTime(0);
+  const availableDuringInstruction = [
+    session.can("instruct"),
+    session.can("pause"),
+  ];
+  await advanceTime(50);
+  const stateAfterTimeout = handle.state;
+  response.resolve({ data: { accepted: true }, requestId: "request" });
+  await pending;
+  await handle.close();
+  expect(availableDuringInstruction).toEqual([false, false]);
+  expect(stateAfterTimeout).toBe("failed");
+  expect(failure?.message).toContain("timed out");
+  expect(f.travel.end).toHaveBeenCalledTimes(1);
+});
+
 it("contains synchronous failures while repeating a held command", async () => {
   const f = setup();
   const handle = f.start();

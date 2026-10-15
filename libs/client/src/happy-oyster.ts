@@ -1011,12 +1011,15 @@ export function happyOyster() {
               "Instruction must contain 1–2000 characters.",
               { code: "invalid" },
             );
-          if (!can("instruct")) throw unavailable("instruct");
-          const result = await run<{ accepted?: boolean }>(
-            "/travels/instruct",
-            { encrypted_travel_id: liveTravelId, content },
-          );
-          return { accepted: result.accepted === true };
+          let accepted = false;
+          await perform("instruct", async () => {
+            const result = await run<{ accepted?: boolean }>(
+              "/travels/instruct",
+              { encrypted_travel_id: liveTravelId, content },
+            );
+            accepted = result.accepted === true;
+          });
+          return { accepted };
         },
         pause: () => perform("pause", () => player.pause()),
         resume: () => perform("resume", () => player.resume()),
