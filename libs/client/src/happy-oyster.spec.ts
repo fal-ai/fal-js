@@ -510,6 +510,45 @@ it("counts a delayed configure reply against the initial token lifetime", async 
   expect(jest.getTimerCount()).toBe(0);
 });
 
+it("fails an already-expired renewal before applying it to the SDK", async () => {
+  const f = setup();
+  delete f.replies.refresh_token;
+  const handle = f.start();
+  await handle.ready;
+  await advanceTime(90_000);
+  await advanceTime(10_000);
+  f.receive({
+    type: "token_refreshed",
+    token: "expired-renewal",
+    token_expires_in: 5,
+  });
+  await advanceTime(1);
+  expect(f.engine.updateToken).not.toHaveBeenCalled();
+  expect(handle.state).toBe("failed");
+  await advanceTime(100_000);
+  expect(f.sent().filter((type) => type === "refresh_token")).toHaveLength(1);
+  await handle.close();
+  expect(f.travel.end).toHaveBeenCalledTimes(1);
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it("keeps the current expiry deadline if the SDK rejects renewed credentials", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  f.engine.updateToken.mockImplementation(() => {
+    throw new Error("SDK update failed");
+  });
+  await advanceTime(90_000);
+  expect(handle.state).toBe("live");
+  await advanceTime(30_000);
+  expect(handle.state).toBe("failed");
+  await handle.close();
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("retries a rejected renewal while the token is still valid", async () => {
   const f = setup();
   const handle = f.start();

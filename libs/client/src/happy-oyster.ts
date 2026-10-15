@@ -775,18 +775,22 @@ export function happyOyster() {
         return created;
       });
 
-      function scheduleRefresh(receivedAt: number, expiresIn: number) {
+      function tokenDeadline(requestedAt: number, expiresIn: number) {
         positive(expiresIn, "Token lifetime");
-        clearTimeout(expiryTimer);
-        clearTimeout(refreshTimer);
-        const deadline = receivedAt + expiresIn * 1000;
+        const deadline = requestedAt + expiresIn * 1000;
         if (deadline <= Date.now())
           throw new HappyOysterError(
-            "Happy Oyster token expired during setup.",
+            "Happy Oyster token has already expired.",
             {
               code: "token",
             },
           );
+        return deadline;
+      }
+
+      function scheduleRefresh(deadline: number, expiresIn: number) {
+        clearTimeout(expiryTimer);
+        clearTimeout(refreshTimer);
         expiryTimer = setTimeout(() => {
           void context.fail("Happy Oyster token expired.");
         }, deadline - Date.now());
@@ -798,9 +802,21 @@ export function happyOyster() {
               "token_refreshed",
             )) as unknown as TokenRefreshed;
             if (closing) return;
-            if (!fresh.token) throw new Error("Missing renewed token.");
+            let renewedDeadline: number;
+            try {
+              if (!fresh.token) throw new Error("Missing renewed token.");
+              renewedDeadline = tokenDeadline(
+                refreshedAt,
+                fresh.token_expires_in,
+              );
+            } catch {
+              void context.fail(
+                "Happy Oyster returned expired or invalid renewed credentials.",
+              );
+              return;
+            }
             engine.updateToken(fresh.token);
-            scheduleRefresh(refreshedAt, fresh.token_expires_in);
+            scheduleRefresh(renewedDeadline, fresh.token_expires_in);
           } catch {
             // Retry while the current token is still valid; expiry fails the session.
             if (!closing && !controlTimedOut)
@@ -815,7 +831,10 @@ export function happyOyster() {
           ),
         );
       }
-      scheduleRefresh(configuredAt, configured.token_expires_in);
+      scheduleRefresh(
+        tokenDeadline(configuredAt, configured.token_expires_in),
+        configured.token_expires_in,
+      );
 
       const bind = (id: string): Promise<void> => {
         binding ??= request(
