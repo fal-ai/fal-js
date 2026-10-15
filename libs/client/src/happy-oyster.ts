@@ -1053,6 +1053,19 @@ export function happyOyster() {
       }
       let held: Required<HappyOysterCommand> = { ...RELEASE };
       let repeatPending = false;
+      let commandQueue: Promise<unknown> = Promise.resolve();
+      function sendCommand(
+        command: Required<HappyOysterCommand>,
+      ): Promise<unknown> {
+        const sending = commandQueue.then(() => {
+          active(context.signal);
+          // Superseded queued input must not reactivate an older hold.
+          if (held !== command) return;
+          return player.sendCommand(command);
+        });
+        commandQueue = sending.catch(() => undefined);
+        return sending;
+      }
       return {
         worldId: options.worldId,
         travelId: liveTravelId,
@@ -1070,7 +1083,16 @@ export function happyOyster() {
             if (isRelease(command)) return;
             throw unavailable("command");
           }
-          await perform("command", () => player.sendCommand(command));
+          try {
+            await perform("command", () => sendCommand(command));
+          } catch (error) {
+            if (error instanceof HappyOysterError && error.code === "timeout") {
+              // A stalled SDK send cannot be cancelled. End playback rather
+              // than let queued input execute after the caller saw a timeout.
+              void context.fail("Happy Oyster command timed out.");
+            }
+            throw error;
+          }
           if (held === command && can("command") && !isRelease(command)) {
             // The partner model applies one command per generation step, so a
             // held control is re-sent until it changes.
@@ -1079,7 +1101,7 @@ export function happyOyster() {
               if (repeatPending) return;
               repeatPending = true;
               void Promise.resolve()
-                .then(() => player.sendCommand(held))
+                .then(() => sendCommand(held))
                 .catch(() => undefined)
                 .finally(() => {
                   repeatPending = false;
