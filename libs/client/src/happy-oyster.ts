@@ -995,7 +995,7 @@ export function happyOyster() {
         !closing &&
         !context.signal.aborted &&
         bound &&
-        !(rejoining && (action === "resume" || action === "rewind")) &&
+        !rejoining &&
         (mode === "adventure" ? action === "command" : action !== "command") &&
         player.can(actions[action]);
       const unavailable = (action: HappyOysterAction) =>

@@ -614,6 +614,33 @@ it.each(["resume", "rewind"] as const)(
   },
 );
 
+it.each(["resume", "rewind"] as const)(
+  "blocks Directing controls for the full %s reset-and-join",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start();
+    const { session } = await handle.ready;
+    const reset = deferred<void>();
+    f.travel.rtcSession.disconnect.mockReturnValue(reset.promise);
+    const pending = action === "resume" ? session.resume() : session.rewind(4);
+    await advanceTime(0);
+    const availableDuringReset = [
+      session.can("pause"),
+      session.can("instruct"),
+    ];
+    const checks = Promise.all([
+      expect(session.pause()).rejects.toThrow("unavailable"),
+      expect(session.instruct("Rain")).rejects.toThrow("unavailable"),
+    ]);
+    reset.resolve();
+    await pending;
+    await checks;
+    await handle.close();
+    expect(availableDuringReset).toEqual([false, false]);
+    expect(f.travel.pause).not.toHaveBeenCalled();
+  },
+);
+
 it("checks the pinned SDK RTC cleanup hook before Directing playback", async () => {
   const f = setup("directing");
   delete (f.travel as { rtcSession?: unknown }).rtcSession;
