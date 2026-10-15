@@ -586,7 +586,13 @@ export function happyOyster() {
         stopHold();
         pending?.reject(closedError());
         pending = undefined;
-        unsubscribe.splice(0).forEach((off) => off());
+        for (const off of unsubscribe.splice(0)) {
+          try {
+            off();
+          } catch {
+            // One vendor disposer must not prevent playback/billing teardown.
+          }
+        }
         try {
           if (travel) {
             ending ??= Promise.resolve().then(() => travel?.end());
@@ -954,7 +960,8 @@ export function happyOyster() {
             if (isRelease(command)) return;
             throw unavailable("command");
           }
-          if (!isRelease(command)) {
+          await perform("command", () => player.sendCommand(command));
+          if (held === command && can("command") && !isRelease(command)) {
             // The partner model applies one command per generation step, so a
             // held control is re-sent until it changes.
             holdTimer = setInterval(() => {
@@ -964,7 +971,6 @@ export function happyOyster() {
                 .catch(() => undefined);
             }, COMMAND_REPEAT_MS);
           }
-          await perform("command", () => player.sendCommand(command));
         },
         instruct: async (content) => {
           if (!content.trim() || content.length > 2000)

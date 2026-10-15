@@ -906,6 +906,48 @@ it("bounds stalled partner cleanup and falls back to disconnect on a lost releas
   await advanceTime(1);
 });
 
+it("finishes teardown even when a vendor listener disposer throws", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  const listenerCount =
+    f.travel.on.mock.calls.length + f.travel.onError.mock.calls.length;
+  f.off.mockImplementationOnce(() => {
+    throw new Error("disposer failed");
+  });
+  await handle.close();
+  expect(f.off).toHaveBeenCalledTimes(listenerCount);
+  expect(f.travel.end).toHaveBeenCalledTimes(1);
+  expect(f.sent()).toContain("travel_ended");
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  const next = setup().start();
+  await next.ready;
+  await next.close();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it.each(["reject", "timeout"])(
+  "does not repeat a command when its initial send ends in %s",
+  async (failure) => {
+    const f = setup();
+    const handle = f.start({ controlTimeoutMs: 50 });
+    const { session } = await handle.ready;
+    const send = deferred<undefined>();
+    f.travel.sendCommand.mockReturnValue(send.promise);
+    const pending = session.command({ translation: "Front" });
+    const rejected = expect(pending).rejects.toThrow();
+    await advanceTime(0);
+    if (failure === "reject") send.reject(new Error("send failed"));
+    await advanceTime(50);
+    await rejected;
+    await advanceTime(200);
+    expect(f.travel.sendCommand).toHaveBeenCalledTimes(1);
+    send.resolve(undefined);
+    await handle.close();
+    expect(jest.getTimerCount()).toBe(0);
+  },
+);
+
 it("contains synchronous failures while repeating a held command", async () => {
   const f = setup();
   const handle = f.start();
