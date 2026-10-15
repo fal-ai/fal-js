@@ -532,6 +532,43 @@ it("does not rejoin after RTC cleanup exceeds the control timeout", async () => 
   await handle.close();
 });
 
+it.each(["resume", "rewind"] as const)(
+  "fails the session when an in-flight %s exceeds its timeout",
+  async (action) => {
+    const f = setup("directing");
+    const handle = f.start({ controlTimeoutMs: 50 });
+    const { session } = await handle.ready;
+    const backend = f.engine.backendService;
+    const reconnected = jest.fn();
+    let rtcStatus = "PAUSED";
+    f.replies.travel_request = () => ({
+      type: "travel_response",
+      data: { status: "running", rtc_status: rtcStatus },
+    });
+    f.travel[action].mockImplementation(async () => {
+      await backend.post(`/openapi/v1/travels/${action}`, {
+        encryptedTravelId: "travel",
+      });
+      await backend.get("/openapi/v1/travels/status?encryptedTravelId=travel");
+      reconnected();
+      return { resumedAtSec: 4 };
+    });
+    const pending = action === "resume" ? session.resume() : session.rewind(4);
+    const rejected = expect(pending).rejects.toThrow("timed out");
+    await advanceTime(50);
+    await rejected;
+    rtcStatus = "STREAMING";
+    await advanceTime(500);
+    await handle.close();
+    expect(reconnected).not.toHaveBeenCalled();
+    expect(handle.state).toBe("failed");
+    expect(session.can(action)).toBe(false);
+    await expect(session.resume()).rejects.toThrow("unavailable");
+    expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+  },
+);
+
 it("checks the pinned SDK RTC cleanup hook before Directing playback", async () => {
   const f = setup("directing");
   delete (f.travel as { rtcSession?: unknown }).rtcSession;
@@ -928,6 +965,21 @@ it("derives all HTTP and control routes from a private deployment root", async (
     ),
   ).toBe(true);
   await handle.close();
+});
+
+it("releases the travel once when SDK end uses the backend adapter", async () => {
+  const f = setup();
+  const handle = f.start();
+  await handle.ready;
+  f.travel.end.mockImplementation(async () => {
+    await f.engine.backendService.post("/openapi/v1/travels/end", {
+      encryptedTravelId: "travel",
+    });
+  });
+  await handle.close();
+  expect(f.sent().filter((type) => type === "travel_ended")).toHaveLength(1);
+  expect(f.controlCleanup).toHaveBeenCalledTimes(1);
+  expect(jest.getTimerCount()).toBe(0);
 });
 
 it("still releases the server binding when partner cleanup throws synchronously", async () => {

@@ -544,6 +544,7 @@ export function happyOyster() {
       let travelId: string | undefined;
       let binding: Promise<void> | undefined;
       let bound = false;
+      let releasing: Promise<Message> | undefined;
       let closing = false;
       let controlTimedOut = false;
       let completed = false;
@@ -668,6 +669,18 @@ export function happyOyster() {
         return run;
       }
 
+      function releaseTravel(id: string): Promise<Message> {
+        // SDK end and our fallback teardown share one request, including when
+        // vendor cleanup outlives its bounded wait. Disconnect is the fallback
+        // if release fails; never queue a duplicate on this uncorrelated channel.
+        releasing ??= request(
+          { type: "travel_ended", encrypted_travel_id: id, completed },
+          "travel_released",
+          closing,
+        );
+        return releasing;
+      }
+
       function stopHold() {
         clearInterval(holdTimer);
         holdTimer = undefined;
@@ -706,15 +719,7 @@ export function happyOyster() {
           }
           if (binding) await binding.catch(() => undefined);
           if (bound && travelId && control && !controlTimedOut) {
-            await request(
-              {
-                type: "travel_ended",
-                encrypted_travel_id: travelId,
-                completed,
-              },
-              "travel_released",
-              true,
-            ).catch(() => undefined);
+            await releaseTravel(travelId).catch(() => undefined);
           }
         } finally {
           try {
@@ -869,15 +874,7 @@ export function happyOyster() {
           configured,
           async (name, input = {}) => {
             if (name === "end") {
-              await request(
-                {
-                  type: "travel_ended",
-                  encrypted_travel_id: configured.travel.encrypted_travel_id,
-                  completed,
-                },
-                "travel_released",
-                closing,
-              );
+              await releaseTravel(configured.travel.encrypted_travel_id);
               return {
                 encryptedTravelId: configured.travel.encrypted_travel_id,
                 status: "completed",
@@ -1022,6 +1019,13 @@ export function happyOyster() {
             active(context.signal);
             return call();
           });
+        } catch (error) {
+          if (error instanceof HappyOysterError && error.code === "timeout") {
+            // Racing the SDK promise does not cancel it. End the travel to abort
+            // its runtime action and polling, and reject further user actions.
+            void context.fail(`Happy Oyster ${action} timed out.`);
+          }
+          throw error;
         } finally {
           // A bounded action may return before slow vendor cleanup settles.
           // Never start a new join after its caller already saw a timeout.
