@@ -407,7 +407,7 @@ it("holds Adventure commands until they are replaced or released", async () => {
     rotation: "None",
     interaction: "None",
   });
-  await advanceTime(160);
+  for (let tick = 0; tick < 3; tick++) await advanceTime(50);
   expect(f.travel.sendCommand.mock.calls.length).toBeGreaterThanOrEqual(4);
   await session.command({});
   const calls = f.travel.sendCommand.mock.calls.length;
@@ -1058,6 +1058,26 @@ it.each(["reject", "timeout"])(
   },
 );
 
+it("keeps only one held-command repeat in flight", async () => {
+  const f = setup();
+  const handle = f.start();
+  const { session } = await handle.ready;
+  await session.command({ translation: "Front" });
+  const repeat = deferred<undefined>();
+  f.travel.sendCommand.mockReturnValue(repeat.promise);
+  await advanceTime(50);
+  await advanceTime(250);
+  const sendsWhilePending = f.travel.sendCommand.mock.calls.length;
+  repeat.resolve(undefined);
+  await advanceTime(0);
+  await advanceTime(50);
+  const sendsAfterSettled = f.travel.sendCommand.mock.calls.length;
+  await handle.close();
+  expect(sendsWhilePending).toBe(2);
+  expect(sendsAfterSettled).toBe(3);
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("contains synchronous failures while repeating a held command", async () => {
   const f = setup();
   const handle = f.start();
@@ -1066,7 +1086,8 @@ it("contains synchronous failures while repeating a held command", async () => {
   f.travel.sendCommand.mockImplementation(() => {
     throw new Error("private-token");
   });
-  await expect(advanceTime(100)).resolves.toBeUndefined();
+  await expect(advanceTime(50)).resolves.toBeUndefined();
+  await expect(advanceTime(50)).resolves.toBeUndefined();
   expect(f.travel.sendCommand).toHaveBeenCalledTimes(3);
   await handle.close();
   expect(jest.getTimerCount()).toBe(0);

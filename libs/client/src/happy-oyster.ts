@@ -1039,6 +1039,7 @@ export function happyOyster() {
         }
       }
       let held: Required<HappyOysterCommand> = { ...RELEASE };
+      let repeatPending = false;
       return {
         worldId: options.worldId,
         travelId: liveTravelId,
@@ -1062,9 +1063,14 @@ export function happyOyster() {
             // held control is re-sent until it changes.
             holdTimer = setInterval(() => {
               if (!can("command")) return stopHold();
+              if (repeatPending) return;
+              repeatPending = true;
               void Promise.resolve()
                 .then(() => player.sendCommand(held))
-                .catch(() => undefined);
+                .catch(() => undefined)
+                .finally(() => {
+                  repeatPending = false;
+                });
             }, COMMAND_REPEAT_MS);
           }
         },
