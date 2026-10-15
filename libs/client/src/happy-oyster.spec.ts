@@ -968,6 +968,48 @@ it("keeps only one held-command repeat in flight", async () => {
   expect(jest.getTimerCount()).toBe(0);
 });
 
+it("sends release after an outstanding movement repeat settles", async () => {
+  const f = setup();
+  const handle = f.start();
+  const { session } = await handle.ready;
+  await session.command({ translation: "Front" });
+  const repeat = deferred<undefined>();
+  f.travel.sendCommand.mockImplementationOnce(() => repeat.promise);
+  await advanceTime(50);
+  const release = session.command({});
+  await advanceTime(0);
+  const countBeforeRepeatSettled = f.travel.sendCommand.mock.calls.length;
+  repeat.resolve(undefined);
+  await release;
+  expect(f.travel.sendCommand).toHaveBeenLastCalledWith({
+    translation: "None",
+    rotation: "None",
+    interaction: "None",
+  });
+  await handle.close();
+  expect(countBeforeRepeatSettled).toBe(2);
+});
+
+it("ends playback instead of sending queued input after a timeout", async () => {
+  const f = setup();
+  const handle = f.start({ controlTimeoutMs: 50 });
+  const { session } = await handle.ready;
+  await session.command({ translation: "Front" });
+  const repeat = deferred<undefined>();
+  f.travel.sendCommand.mockImplementationOnce(() => repeat.promise);
+  await advanceTime(50);
+  const release = session.command({});
+  const rejected = expect(release).rejects.toThrow("timed out");
+  await advanceTime(50);
+  await rejected;
+  repeat.resolve(undefined);
+  await advanceTime(0);
+  await handle.close();
+  expect(handle.state).toBe("failed");
+  expect(f.travel.sendCommand).toHaveBeenCalledTimes(2);
+  expect(jest.getTimerCount()).toBe(0);
+});
+
 it("contains synchronous failures while repeating a held command", async () => {
   const f = setup();
   const handle = f.start();
