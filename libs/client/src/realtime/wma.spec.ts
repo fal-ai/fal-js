@@ -158,6 +158,91 @@ describe("wma", () => {
     );
   });
 
+  it.each([
+    ["/game/start-session", "game/start-session"],
+    ["/", "/"],
+    ["/connect", "connect"],
+  ])(
+    "uses explicit session route %s for ICE and negotiation",
+    async (sessionPath, forwardedPath) => {
+      install();
+      const calls: Array<{ url: string; body: unknown }> = [];
+      const context = fakeExtensionContext({
+        endpointId: "me/my-world",
+        fetch: async (url: string, init?: RequestInit) => {
+          calls.push({ url, body: JSON.parse(String(init?.body)) });
+          return new Response(
+            JSON.stringify(
+              url.endsWith("/ice")
+                ? { ice_servers: [{ urls: "stun:example" }] }
+                : { session_id: "s", sdp: "answer", type: "answer" },
+            ),
+          );
+        },
+      });
+      expect(wma.supportsSessionPath).toBe(true);
+      const session = await wma().open(context, {
+        sessionPath,
+      });
+      expect(calls).toEqual([
+        {
+          url: "https://wma.fal.run/v2/ice",
+          body: { app_id: "me/my-world", session_path: forwardedPath },
+        },
+        {
+          url: "https://wma.fal.run/v2/session",
+          body: {
+            app_id: "me/my-world",
+            session_path: forwardedPath,
+            sdp: "local-offer",
+            type: "offer",
+          },
+        },
+      ]);
+      await session.close();
+    },
+  );
+
+  it.each([
+    "",
+    "//other.test/path",
+    "../connect",
+    "game/../connect",
+    "game/%2fconnect",
+    "game//connect",
+    "game/connect?x=1",
+    "game/connect#x",
+    "game/connect/",
+    "game\\connect",
+  ])(
+    "rejects invalid route %s before network or peer creation",
+    async (sessionPath) => {
+      const { peer } = install();
+      const fetch = jest.fn();
+      await expect(
+        wma().open(fakeExtensionContext({ fetch }), { sessionPath }),
+      ).rejects.toThrow("sessionPath");
+      expect(fetch).not.toHaveBeenCalled();
+      expect(peer.createOffer).not.toHaveBeenCalled();
+    },
+  );
+
+  it("never falls back to the default session route on an older bridge", async () => {
+    install();
+    const fetch = jest.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response("not found", { status: 404 }),
+    );
+    await expect(
+      wma().open(fakeExtensionContext({ fetch }), {
+        sessionPath: "/game/start-session",
+        iceServers: [],
+      }),
+    ).rejects.toThrow();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe("https://wma.fal.run/v2/session");
+  });
+
   it("falls back to an app-local /ice route when bridge ICE is unavailable", async () => {
     const { peer } = install();
     const events: unknown[] = [];
