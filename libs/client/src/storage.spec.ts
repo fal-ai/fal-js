@@ -217,29 +217,32 @@ describe("multipart upload", () => {
     expect(attemptsByPart.size).toBe(1);
   });
 
-  it("retries a transient part failure and completes the upload", async () => {
-    let attemptsForPart2 = 0;
-    const fetchImpl = jest.fn(async (url: string) => {
-      if (url.endsWith("/complete?token=t")) {
-        return jsonResponse({ ok: true });
-      }
-      const partNumber = partNumberOf(url);
-      if (partNumber === 2) {
-        attemptsForPart2++;
-        if (attemptsForPart2 === 1) {
-          return jsonResponse({ message: "Slow down" }, { status: 429 });
+  it.each([false, true])(
+    "retries a transient part failure (missing retry status config: %s)",
+    async (missingStatuses) => {
+      let attemptsForPart2 = 0;
+      const fetchImpl = jest.fn(async (url: string) => {
+        if (url.endsWith("/complete?token=t")) {
+          return jsonResponse({ ok: true });
         }
-      }
-      return jsonResponse({ partNumber, etag: `"etag-${partNumber}"` });
-    }) as unknown as typeof fetch;
+        const partNumber = partNumberOf(url);
+        if (partNumber === 2) {
+          attemptsForPart2++;
+          if (attemptsForPart2 === 1) {
+            return jsonResponse({ message: "Slow down" }, { status: 429 });
+          }
+        }
+        return jsonResponse({ partNumber, etag: `"etag-${partNumber}"` });
+      }) as unknown as typeof fetch;
 
-    const storage = createStorageClient({
-      config: createConfigWith(fetchImpl),
-    });
+      const config = createConfigWith(fetchImpl);
+      if (missingStatuses) config.retry.retryableStatusCodes = undefined;
+      const storage = createStorageClient({ config });
 
-    await expect(storage.upload(largeFile)).resolves.toBe(FILE_URL);
-    expect(attemptsForPart2).toBe(2);
-  });
+      await expect(storage.upload(largeFile)).resolves.toBe(FILE_URL);
+      expect(attemptsForPart2).toBe(2);
+    },
+  );
 
   it("reports progress that totals exactly the file size", async () => {
     const fetchImpl = jest.fn(async (url: string) => {
