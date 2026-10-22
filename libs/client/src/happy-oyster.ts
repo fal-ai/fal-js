@@ -59,10 +59,10 @@ export const ADVENTURE_INTERACTIONS = [
  * that a deployment's AsyncAPI contract publishes them before connecting.
  */
 export const HAPPY_OYSTER_MESSAGES = {
-  client: ["configure", "refresh_token", "bind_travel", "travel_ended"],
+  client: ["configure", "travel_request", "bind_travel", "travel_ended"],
   server: [
     "configured",
-    "token_refreshed",
+    "travel_response",
     "travel_bound",
     "travel_released",
     "error",
@@ -153,8 +153,7 @@ type Message = Record<string, unknown>;
 type Configured = {
   api_host: string;
   model: string;
-  token: string;
-  token_expires_in: number;
+  control_protocol: "fal-session-v1";
   world: HappyOysterWorld;
   travel: {
     encrypted_travel_id: string;
@@ -179,7 +178,6 @@ type Configured = {
     };
   };
 };
-type TokenRefreshed = { token: string; token_expires_in: number };
 
 const actions = {
   command: "sendCommand",
@@ -198,7 +196,6 @@ const CLEANUP_TIMEOUT_MS = 5_000;
 const WORLD_POLL_MS = 2_000;
 /** Held commands are re-sent at the partner reference client's cadence. */
 const COMMAND_REPEAT_MS = 50;
-const TOKEN_RETRY_MS = 5_000;
 const HOST_PATTERN = /^[a-z0-9.-]+(:\d+)?$/i;
 /** The partner SDK shares one RTC engine across players in a browser page. */
 let activePlaybackLease: object | undefined;
@@ -311,22 +308,118 @@ function requestError(path: string, error: unknown): HappyOysterError {
 }
 
 /** Route SDK 0.1.4 to the configured model and join its runner-created travel. */
-function configureSdkTravel(engine: object, configured: Configured): void {
+function configureSdkTravel(
+  engine: object,
+  configured: Configured,
+  operation: (name: string, input?: Message) => Promise<Message>,
+  signal: AbortSignal,
+): void {
   const service = (
     engine as {
-      backendService?: { apiBaseUrl?: unknown; startTravel?: unknown };
+      backendService?: {
+        apiBaseUrl?: unknown;
+        startTravel?: unknown;
+        get?: unknown;
+        post?: unknown;
+      };
+      ensureSdkFeatureEnabled?: unknown;
     }
   ).backendService;
   if (
     !service ||
     typeof service.apiBaseUrl !== "string" ||
-    typeof service.startTravel !== "function"
+    typeof service.startTravel !== "function" ||
+    typeof service.get !== "function" ||
+    typeof service.post !== "function" ||
+    typeof (engine as { ensureSdkFeatureEnabled?: unknown })
+      .ensureSdkFeatureEnabled !== "function"
   )
     throw new HappyOysterError(
       "Happy Oyster SDK cannot join a runner-created travel. Install @happy-oyster/js-sdk@0.1.4.",
       { code: "sdk_unavailable" },
     );
-  service.apiBaseUrl = `https://${configured.api_host}/api/v2/apps/${encodeURIComponent(configured.model)}`;
+  // No usable HTTP credential enters the SDK. All backend IO is replaced
+  // on this instance; RTC media and commands keep the vendor transport.
+  service.apiBaseUrl = "https://happy-oyster.invalid";
+  const travelId = configured.travel.encrypted_travel_id;
+  const invalid = () =>
+    new HappyOysterError("Unsupported Happy Oyster SDK operation.", {
+      code: "sdk_unavailable",
+    });
+  // SDK 0.1.4 treats a PAUSED poll during RTC reconnection as a new pause
+  // and never restores its local state when STREAMING arrives. After resume,
+  // wait briefly for a fresh provider status instead of returning that stale
+  // transition. Preserve actual terminal states and bound the wait.
+  let resumeUntil = 0;
+  service.get = async (
+    path: string,
+    options: { signal?: AbortSignal } = {},
+  ) => {
+    const url = new URL(path, "https://happy-oyster.invalid");
+    if (
+      url.origin !== "https://happy-oyster.invalid" ||
+      url.pathname !== "/openapi/v1/travels/status" ||
+      url.searchParams.get("encryptedTravelId") !== travelId
+    )
+      throw invalid();
+    while (!signal.aborted) {
+      active(signal);
+      if (options.signal?.aborted) throw closedError();
+      const result = await operation("status");
+      active(signal);
+      if (options.signal?.aborted) throw closedError();
+      if (
+        !resumeUntil ||
+        result.status !== "running" ||
+        result.rtcStatus !== "PAUSED" ||
+        Date.now() >= resumeUntil
+      ) {
+        resumeUntil = 0;
+        return result;
+      }
+      await delay(500, signal);
+    }
+    throw closedError();
+  };
+  service.post = async (path: string, body: Message) => {
+    if (path === "/openapi/v1/sdk/feature-gate")
+      return operation("feature_gate");
+    if (body.encryptedTravelId !== travelId) throw invalid();
+    switch (path) {
+      case "/openapi/v1/travels/pause":
+        resumeUntil = 0;
+        return operation("pause");
+      case "/openapi/v1/travels/resume": {
+        const result = await operation("resume");
+        resumeUntil = Date.now() + 15_000;
+        return result;
+      }
+      case "/openapi/v1/travels/end":
+        resumeUntil = 0;
+        return operation("end");
+      case "/openapi/v1/travels/rewind": {
+        const result = await operation("rewind", {
+          rewind_to_sec: body.rewindToSec,
+        });
+        resumeUntil = Date.now() + 15_000;
+        return result;
+      }
+      case "/openapi/v1/travels/instruct":
+        return operation("instruct", { content: body.content });
+      default:
+        throw invalid();
+    }
+  };
+  (
+    engine as { ensureSdkFeatureEnabled: () => Promise<void> }
+  ).ensureSdkFeatureEnabled = async () => {
+    const gate = await operation("feature_gate");
+    if (gate.enabled === false)
+      throw new HappyOysterError(
+        "Happy Oyster SDK is disabled by the provider.",
+        { code: "sdk_unavailable" },
+      );
+  };
   // SDK 0.1.4 has no public existing-travel API. Its private entry hook
   // supplies the runner snapshot without a second, browser-side exchange.
   let joined = false;
@@ -363,6 +456,18 @@ function configureSdkTravel(engine: object, configured: Configured): void {
       },
     };
   };
+}
+
+/** Retire SDK 0.1.4's shared RTC engine before a Directing rejoin. */
+function sdkRtcReset(player: object): () => Promise<void> {
+  const rtc = (player as { rtcSession?: { disconnect?: unknown } }).rtcSession;
+  if (!rtc || typeof rtc.disconnect !== "function")
+    throw new HappyOysterError(
+      "Happy Oyster SDK cannot reset playback. Install @happy-oyster/js-sdk@0.1.4.",
+      { code: "sdk_unavailable" },
+    );
+  const disconnect = rtc.disconnect as () => Promise<void>;
+  return () => disconnect.call(rtc);
 }
 
 function isRelease(command: Required<HappyOysterCommand>): boolean {
@@ -439,6 +544,7 @@ export function happyOyster() {
       let travelId: string | undefined;
       let binding: Promise<void> | undefined;
       let bound = false;
+      let releasing: Promise<Message> | undefined;
       let closing = false;
       let controlTimedOut = false;
       let completed = false;
@@ -447,8 +553,6 @@ export function happyOyster() {
       let endSettled = false;
       let controlCleanupComplete = false;
       let travelStatus: HappyOysterTravelStatus = "prepare";
-      let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-      let expiryTimer: ReturnType<typeof setTimeout> | undefined;
       let holdTimer: ReturnType<typeof setInterval> | undefined;
       const controlController = new AbortController();
       const controlCleanups: Array<() => void | Promise<void>> = [];
@@ -493,7 +597,7 @@ export function happyOyster() {
         ) {
           pending.resolve(message);
         }
-        // configured/token_refreshed carry credentials: never publish them to
+        // configured carries RTC credentials: never publish it to
         // onData or diagnostics.
       }
 
@@ -565,6 +669,18 @@ export function happyOyster() {
         return run;
       }
 
+      function releaseTravel(id: string): Promise<Message> {
+        // SDK end and our fallback teardown share one request, including when
+        // vendor cleanup outlives its bounded wait. Disconnect is the fallback
+        // if release fails; never queue a duplicate on this uncorrelated channel.
+        releasing ??= request(
+          { type: "travel_ended", encrypted_travel_id: id, completed },
+          "travel_released",
+          closing,
+        );
+        return releasing;
+      }
+
       function stopHold() {
         clearInterval(holdTimer);
         holdTimer = undefined;
@@ -581,8 +697,6 @@ export function happyOyster() {
 
       context.addCleanup(async () => {
         closing = true;
-        clearTimeout(refreshTimer);
-        clearTimeout(expiryTimer);
         stopHold();
         pending?.reject(closedError());
         pending = undefined;
@@ -611,15 +725,7 @@ export function happyOyster() {
           }
           if (binding) await binding.catch(() => undefined);
           if (bound && travelId && control && !controlTimedOut) {
-            await request(
-              {
-                type: "travel_ended",
-                encrypted_travel_id: travelId,
-                completed,
-              },
-              "travel_released",
-              true,
-            ).catch(() => undefined);
+            await releaseTravel(travelId).catch(() => undefined);
           }
         } finally {
           try {
@@ -732,10 +838,7 @@ export function happyOyster() {
       );
       active(context.signal);
       context.diagnostic({ kind: "progress", phase: "configuring" });
-      // Billing starts once the app answers with credentials.
-      // Count the request's latency against the token lifetime, as we do
-      // for renewal; receipt of a delayed reply does not mint a new token.
-      const configuredAt = Date.now();
+      // Billing starts when the runner grants the RTC snapshot.
       const configured = (await request(
         {
           type: "configure",
@@ -755,11 +858,7 @@ export function happyOyster() {
         !configured.travel.rtc_config?.channel_id ||
         !configured.travel.rtc_config?.user_id ||
         !configured.travel.rtc_config?.token ||
-        !configured.token ||
-        !(
-          Number.isFinite(configured.token_expires_in) &&
-          configured.token_expires_in > 0
-        ) ||
+        configured.control_protocol !== "fal-session-v1" ||
         !configured.model ||
         !HOST_PATTERN.test(configured.api_host ?? "") ||
         configured.world?.encrypted_world_id !== options.worldId ||
@@ -774,73 +873,43 @@ export function happyOyster() {
         const created = new sdk.HappyOysterEngine({
           APIHost: configured.api_host,
           model: configured.model,
-          token: configured.token,
           logLevel: "none",
         } as SDKConfig);
-        configureSdkTravel(created, configured);
+        configureSdkTravel(
+          created,
+          configured,
+          async (name, input = {}) => {
+            if (name === "end") {
+              await releaseTravel(configured.travel.encrypted_travel_id);
+              return {
+                encryptedTravelId: configured.travel.encrypted_travel_id,
+                status: "completed",
+              };
+            }
+            if (closing) throw closedError();
+            const reply = await request(
+              { type: "travel_request", operation: name, ...input },
+              "travel_response",
+            );
+            const data = reply.data as Message;
+            if (!data || typeof data !== "object")
+              throw new HappyOysterError("Invalid travel response.", {
+                code: "invalid",
+              });
+            // The runner publishes typed snake_case fields; the vendor expects camelCase.
+            return Object.fromEntries(
+              Object.entries(data).map(([key, value]) => [
+                key.replace(/_([a-z])/g, (_, letter: string) =>
+                  letter.toUpperCase(),
+                ),
+                value,
+              ]),
+            );
+          },
+          context.signal,
+        );
         return created;
       });
-
-      function tokenDeadline(requestedAt: number, expiresIn: number) {
-        positive(expiresIn, "Token lifetime");
-        const deadline = requestedAt + expiresIn * 1000;
-        if (deadline <= Date.now())
-          throw new HappyOysterError(
-            "Happy Oyster token has already expired.",
-            {
-              code: "token",
-            },
-          );
-        return deadline;
-      }
-
-      function scheduleRefresh(deadline: number, expiresIn: number) {
-        clearTimeout(expiryTimer);
-        clearTimeout(refreshTimer);
-        expiryTimer = setTimeout(() => {
-          void context.fail("Happy Oyster token expired.");
-        }, deadline - Date.now());
-        const refresh = async () => {
-          try {
-            const refreshedAt = Date.now();
-            const fresh = (await request(
-              { type: "refresh_token" },
-              "token_refreshed",
-            )) as unknown as TokenRefreshed;
-            if (closing) return;
-            let renewedDeadline: number;
-            try {
-              if (!fresh.token) throw new Error("Missing renewed token.");
-              renewedDeadline = tokenDeadline(
-                refreshedAt,
-                fresh.token_expires_in,
-              );
-            } catch {
-              void context.fail(
-                "Happy Oyster returned expired or invalid renewed credentials.",
-              );
-              return;
-            }
-            engine.updateToken(fresh.token);
-            scheduleRefresh(renewedDeadline, fresh.token_expires_in);
-          } catch {
-            // Retry while the current token is still valid; expiry fails the session.
-            if (!closing && !controlTimedOut)
-              refreshTimer = setTimeout(refresh, TOKEN_RETRY_MS);
-          }
-        };
-        refreshTimer = setTimeout(
-          refresh,
-          Math.max(
-            1,
-            deadline - Date.now() - Math.min(30_000, expiresIn * 250),
-          ),
-        );
-      }
-      scheduleRefresh(
-        tokenDeadline(configuredAt, configured.token_expires_in),
-        configured.token_expires_in,
-      );
 
       const bind = (id: string): Promise<void> => {
         binding ??= request(
@@ -863,6 +932,7 @@ export function happyOyster() {
         }),
       );
       travel = player;
+      const resetRtc = mode === "directing" ? sdkRtcReset(player) : undefined;
       const setStatus = (status: TravelStatus) => {
         if (status === "idle" || closing) return;
         travelStatus = status;
@@ -920,11 +990,13 @@ export function happyOyster() {
       active(context.signal);
       const liveTravelId = started.encryptedTravelId;
 
+      let rejoining = false;
       let playbackActionPending = false;
       const can = (action: HappyOysterAction) =>
         !closing &&
         !context.signal.aborted &&
         bound &&
+        !rejoining &&
         !playbackActionPending &&
         (mode === "adventure" ? action === "command" : action !== "command") &&
         player.can(actions[action]);
@@ -954,6 +1026,43 @@ export function happyOyster() {
           throw error;
         } finally {
           playbackActionPending = false;
+        }
+      }
+      async function rejoin(
+        action: "resume" | "rewind",
+        call: () => Promise<unknown>,
+      ): Promise<void> {
+        if (!can(action)) throw unavailable(action);
+        rejoining = true;
+        let allowJoin = true;
+        let resetStarted = false;
+        try {
+          await within(
+            Promise.resolve().then(async () => {
+              active(context.signal);
+              // Retire the old singleton before the SDK creates its next join.
+              resetStarted = true;
+              await resetRtc!();
+              if (!allowJoin) throw closedError();
+              active(context.signal);
+              return call();
+            }),
+            controlTimeout,
+            `Happy Oyster ${action}`,
+            context.signal,
+          );
+        } catch (error) {
+          if (resetStarted) {
+            // Playback may already be disconnected. End the session on every
+            // failure, abort vendor work and prevent retries on a broken player.
+            void context.fail(`Happy Oyster ${action} failed after RTC reset.`);
+          }
+          throw error;
+        } finally {
+          // A bounded action may return before slow vendor cleanup settles.
+          // Never start a new join after its caller already saw a timeout.
+          allowJoin = false;
+          rejoining = false;
         }
       }
       let held: Required<HappyOysterCommand> = { ...RELEASE };
@@ -1013,16 +1122,17 @@ export function happyOyster() {
             );
           let accepted = false;
           await perform("instruct", async () => {
-            const result = await run<{ accepted?: boolean }>(
-              "/travels/instruct",
-              { encrypted_travel_id: liveTravelId, content },
+            const reply = await request(
+              { type: "travel_request", operation: "instruct", content },
+              "travel_response",
             );
+            const result = reply.data as { accepted?: boolean };
             accepted = result.accepted === true;
           });
           return { accepted };
         },
         pause: () => perform("pause", () => player.pause()),
-        resume: () => perform("resume", () => player.resume()),
+        resume: () => rejoin("resume", () => player.resume()),
         rewind: (seconds) => {
           if (!Number.isFinite(seconds) || seconds < 0)
             return Promise.reject(
@@ -1030,7 +1140,7 @@ export function happyOyster() {
                 code: "invalid",
               }),
             );
-          return perform("rewind", () =>
+          return rejoin("rewind", () =>
             player.rewind({ rewindToSec: seconds }),
           );
         },
