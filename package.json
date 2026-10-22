@@ -4,6 +4,7 @@
   "license": "MIT",
   "packageManager": "npm@11.15.0",
   "engines": {
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1",
     "npm": ">=11.15.0"
   },
   "scripts": {
