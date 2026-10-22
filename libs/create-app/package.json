@@ -6,6 +6,9 @@
   "license": "MIT",
   "main": "src/index.js",
   "bin": "src/index.js",
+  "engines": {
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
+  },
   "keywords": [
     "fal",
     "next",

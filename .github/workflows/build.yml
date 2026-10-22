@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: "24"
+          node-version-file: .node-version
           cache: "npm"
       - name: "Set npm version"
         run: npm install -g npm@11.15.0
@@ -30,3 +30,7 @@ jobs:
         run: npx nx affected --target=test --base=remotes/origin/${{ github.base_ref }}
       - name: Build
         run: npx nx affected --target=build --prod --base=remotes/origin/${{ github.base_ref }}
+      - name: Verify Node and installer CA trust
+        run: |
+          npx nx build create-app
+          node tooling/check-tls.mjs
