@@ -14,8 +14,14 @@ package download happens before this generator can run.
 The generator installs with npm under that same Node executable. It writes the
 runtime requirement and npm version into the generated project and updates its
 Node version file. It no longer selects an arbitrary Bun or Yarn from PATH.
-Git and npm use temporary CA stores that remove the affected eMudhra/AAA roots,
-retain other roots and configured private CAs, and keep certificate verification
-enabled. The temporary files are removed after generation. Git must support
+Git uses a temporary CA store that remove the affected eMudhra/AAA roots,
+retain system roots, other roots and configured private CAs, and keep certificate verification
+enabled. The temporary files are removed after generation. npm retains its own CA configuration, including inline `.npmrc` CAs, under the
+fixed Node runtime. Git must support
 explicit CA file/directory settings; native or managed trust outside these
 clients must be verified separately.
+
+For a manual network check, build `create-app` and run
+`node tooling/check-tls.mjs` from the repository root. It checks Node defaults
+and the generated Git CA file against both affected chain families and a
+legitimate HTTPS site. These external hosts are not required by PR CI.

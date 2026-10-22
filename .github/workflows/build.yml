@@ -32,7 +32,3 @@ jobs:
         run: npx nx affected --target=test --base=remotes/origin/${{ github.base_ref }}
       - name: Build
         run: npx nx affected --target=build --prod --base=remotes/origin/${{ github.base_ref }}
-      - name: Verify Node and installer CA trust
-        run: |
-          npx nx build create-app
-          node tooling/check-tls.mjs

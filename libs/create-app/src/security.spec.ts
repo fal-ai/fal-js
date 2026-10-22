@@ -42,14 +42,10 @@ describe("create-app runtime and installer trust", () => {
     ]);
     expect(() => cleanCertificates(["invalid certificate"])).toThrow();
   });
-  it("builds exclusive native/Git/npm stores and cleans up", () => {
+  it("builds an exclusive Git store and cleans up", () => {
     const security = createInstallSecurity();
     try {
-      for (const file of [
-        security.gitCA,
-        security.npmCA,
-        security.env.SSL_CERT_FILE,
-      ]) {
+      for (const file of [security.gitCA]) {
         const certs = fs
           .readFileSync(file, "utf8")
           .match(
@@ -67,7 +63,6 @@ describe("create-app runtime and installer trust", () => {
       }
       expect(fs.readdirSync(security.empty)).toEqual([]);
       expect(security.env.GIT_SSL_NO_VERIFY).toBe("false");
-      expect(security.env.npm_config_strict_ssl).toBe("true");
       expect(security.npmCli).toMatch(/npm-cli\.js$/);
     } finally {
       security.dispose();
@@ -93,11 +88,7 @@ describe("create-app runtime and installer trust", () => {
       npm_config_strict_ssl: "false",
     });
     try {
-      for (const file of [
-        security.gitCA,
-        security.npmCA,
-        security.env.SSL_CERT_FILE,
-      ]) {
+      for (const file of [security.gitCA]) {
         expect(fs.readFileSync(file, "utf8")).toContain(
           new X509Certificate(fixture).toString(),
         );
@@ -107,7 +98,29 @@ describe("create-app runtime and installer trust", () => {
           );
       }
       expect(security.env.GIT_SSL_NO_VERIFY).toBe("false");
-      expect(security.env.npm_config_strict_ssl).toBe("true");
+    } finally {
+      security.dispose();
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
+  it("leaves npm inline CA configuration intact and ignores missing CA directories", () => {
+    const directory = fs.mkdtempSync(
+      path.join(os.tmpdir(), "fal-create-app-links-"),
+    );
+    fs.symlinkSync(
+      path.join(directory, "deleted.pem"),
+      path.join(directory, "dangling.pem"),
+    );
+    const security = createInstallSecurity({
+      ...process.env,
+      SSL_CERT_DIR: `${directory}${path.delimiter}${directory}/missing`,
+      npm_config_ca: "custom-inline-ca",
+    });
+    try {
+      expect(security.env.npm_config_ca).toBe("custom-inline-ca");
+      expect(security.env.npm_config_cafile).toBe(
+        process.env.npm_config_cafile,
+      );
     } finally {
       security.dispose();
       fs.rmSync(directory, { recursive: true, force: true });

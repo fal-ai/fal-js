@@ -122,18 +122,9 @@ async function main() {
     spinner.text = "";
     const startCommand = "npm run dev";
     spinner.text = "Installing dependencies";
-    await execa(
-      process.execPath,
-      [
-        security.npmCli,
-        "install",
-        "--verbose",
-        "--cafile",
-        security.npmCA,
-        "--strict-ssl=true",
-      ],
-      { env: security.env },
-    ).pipeStdout(process.stdout);
+    await execa(process.execPath, [security.npmCli, "install", "--verbose"], {
+      env: security.env,
+    }).pipeStdout(process.stdout);
     spinner.text = "";
 
     spinner.stop();

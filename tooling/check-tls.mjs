@@ -35,7 +35,6 @@ try {
   for (const [label, file] of [
     ["Node default", undefined],
     ["Git CA fixture", security.gitCA],
-    ["npm CA fixture", security.npmCA],
   ]) {
     const ca = file && fs.readFileSync(file);
     for (const url of bad) {

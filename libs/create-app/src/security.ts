@@ -56,13 +56,14 @@ export function cleanCertificates(certificates: readonly string[]): string[] {
 }
 
 function certificatesInFile(filename: string, required = true): string[] {
-  const data = fs.readFileSync(filename);
-  const pem = data
-    .toString("utf8")
-    .match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g);
-  if (pem) return pem;
   try {
-    return [new X509Certificate(data).toString()];
+    const data = fs.readFileSync(filename);
+    const pem = data
+      .toString("utf8")
+      .match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g);
+    return pem
+      ? pem.map((value) => new X509Certificate(value).toString())
+      : [new X509Certificate(data).toString()];
   } catch (error) {
     if (required) throw new Error(`Invalid CA file: ${filename}`);
     return [];
@@ -81,6 +82,7 @@ function configuredCertificates(
     for (const directory of (env[key] ?? "")
       .split(path.delimiter)
       .filter(Boolean)) {
+      if (!fs.existsSync(directory)) continue;
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
         if (entry.isFile() || entry.isSymbolicLink())
           certificates.push(
@@ -118,10 +120,11 @@ export function resolveNpmCli(env: NodeJS.ProcessEnv = process.env): string {
 export function createInstallSecurity(env: NodeJS.ProcessEnv = process.env) {
   requireFixedNode();
   const api = tls as typeof tls & {
-    getCACertificates(type: "default"): string[];
+    getCACertificates(type: "default" | "system"): string[];
   };
   const base = [
     ...api.getCACertificates("default"),
+    ...api.getCACertificates("system"),
     ...configuredCertificates(
       env,
       ["SSL_CERT_FILE", "NODE_EXTRA_CA_CERTS"],
@@ -135,12 +138,7 @@ export function createInstallSecurity(env: NodeJS.ProcessEnv = process.env) {
       "utf8",
     ),
   ).version;
-  // Read local configuration before overriding it; neither command downloads data.
-  const npmCAFile = execFileSync(
-    process.execPath,
-    [npmCli, "config", "get", "cafile"],
-    { env, encoding: "utf8" },
-  ).trim();
+  // Preserve the Git configuration before overriding its CA file.
   let gitCAFile = "";
   try {
     gitCAFile = execFileSync(
@@ -173,7 +171,6 @@ export function createInstallSecurity(env: NodeJS.ProcessEnv = process.env) {
       });
       return filename;
     };
-    const nativeCA = store("native.pem", []);
     const gitCA = store("git.pem", [
       ...configuredCertificates(
         env,
@@ -182,35 +179,19 @@ export function createInstallSecurity(env: NodeJS.ProcessEnv = process.env) {
       ),
       ...(gitCAFile ? certificatesInFile(gitCAFile) : []),
     ]);
-    const npmCA = store("npm.pem", [
-      ...configuredCertificates(
-        env,
-        ["npm_config_cafile", "NPM_CONFIG_CAFILE"],
-        [],
-      ),
-      ...(npmCAFile && npmCAFile !== "null"
-        ? certificatesInFile(npmCAFile)
-        : []),
-    ]);
     return {
       npmCli,
       npmVersion,
-      npmCA,
       gitCA,
       empty,
       env: {
         ...env,
         PATH: `${path.dirname(process.execPath)}${path.delimiter}${env.PATH ?? ""}`,
         NODE_TLS_REJECT_UNAUTHORIZED: "1",
-        SSL_CERT_FILE: nativeCA,
-        SSL_CERT_DIR: empty,
-        CURL_CA_BUNDLE: nativeCA,
         GIT_SSL_CAINFO: gitCA,
         GIT_SSL_CAPATH: empty,
         GIT_SSL_NO_VERIFY: "false",
-        npm_config_cafile: npmCA,
-        npm_config_strict_ssl: "true",
-      },
+      } as NodeJS.ProcessEnv,
       dispose: () => fs.rmSync(directory, { recursive: true, force: true }),
     };
   } catch (error) {
