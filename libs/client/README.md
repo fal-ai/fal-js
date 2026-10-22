@@ -1,3 +1,5 @@
+<!-- cspell:ignore falrun -->
+
 # fal.ai JavaScript/TypeScript client library
 
 ![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=%40fal-ai%2Fclient&style=flat-square)
@@ -382,16 +384,20 @@ Known limitations:
 
 The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
 
+## Happy Oyster
+
+The opt-in `@fal-ai/client/happy-oyster` entrypoint manages Happy Oyster playback.
+Install its optional peer with `npm install @happy-oyster/js-sdk@0.1.4` when using
+this extension. See [the Happy Oyster guide](./HAPPY_OYSTER.md) for setup and lifecycle details.
+
 ### Server runtime certificate update
 
 Server applications must use fixed Node: `22.23.4+` on Node 22, `24.22.1+` on
-Node 24, or `26.12.1+` on Node 26, and restart every running process. The package
-engine range records this requirement. Updating the SDK alone does not replace
-a host runtime or its trust store. Browser applications use browser trust.
+Node 24, or `26.12.1+` on Node 26. Restart every process after the update.
+Updating this SDK does not replace the host runtime or its trust store.
+Browser applications use browser trust.
 
-Check custom `fetch` implementations separately. Native libraries, Bun, embedded
-browsers, and explicit CA overrides can use a different trust store. Confirm
-that the actual deployed client rejects both affected eMudhra/AAA chain families
-with certificate-validation errors and still accepts legitimate HTTPS. An HTTP
-error or timeout is not proof of certificate rejection. Managed hosts must
-confirm the running runtime and trust configuration.
+Check custom `fetch` implementations and explicit CA overrides separately.
+Confirm that the deployed client rejects both affected eMudhra/AAA certificate
+chains with certificate-validation errors and still accepts legitimate HTTPS.
+HTTP errors and timeouts do not prove certificate rejection.

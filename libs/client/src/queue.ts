@@ -28,83 +28,18 @@ export type QueueStatusSubscriptionOptions = QueueStatusOptions &
 
 type TimeoutId = ReturnType<typeof setTimeout> | undefined;
 
-/**
- * Exponential backoff between queue status checks. All times are in milliseconds.
- * The delay starts at `initial` and grows by `multiplier` after each unfinished
- * check, capped at `maximum`. Each delay is varied by ±`jitter` and capped again.
- * Requires `0 < initial <= maximum < Infinity`, `multiplier >= 1` and `0 <= jitter <= 1`.
- */
-export type PollBackoff = {
-  initial?: number;
-  multiplier?: number;
-  maximum?: number;
-  /** Fraction of random variation applied to each delay, e.g. `0.2` for ±20%. */
-  jitter?: number;
-};
-
-const DEFAULT_POLL_BACKOFF: Required<PollBackoff> = {
-  initial: 250,
-  multiplier: 1.05,
-  maximum: 10_000,
-  jitter: 0.2,
-};
-
-export function resolvePollBackoff(
-  backoff: PollBackoff | undefined,
-): Required<PollBackoff> {
-  // Per-field `??` so an explicitly undefined field still takes the default.
-  const resolved = {
-    initial: backoff?.initial ?? DEFAULT_POLL_BACKOFF.initial,
-    multiplier: backoff?.multiplier ?? DEFAULT_POLL_BACKOFF.multiplier,
-    maximum: backoff?.maximum ?? DEFAULT_POLL_BACKOFF.maximum,
-    jitter: backoff?.jitter ?? DEFAULT_POLL_BACKOFF.jitter,
-  };
-  if (
-    !(
-      resolved.initial > 0 &&
-      resolved.initial <= resolved.maximum &&
-      Number.isFinite(resolved.maximum)
-    )
-  ) {
-    throw new Error("pollBackoff requires 0 < initial <= maximum < Infinity");
-  }
-  if (!(resolved.multiplier >= 1)) {
-    throw new Error("pollBackoff requires multiplier >= 1");
-  }
-  if (!(resolved.jitter >= 0 && resolved.jitter <= 1)) {
-    throw new Error("pollBackoff requires 0 <= jitter <= 1");
-  }
-  return resolved;
-}
-
-export function* pollDelays(
-  backoff: Required<PollBackoff>,
-): Generator<number, never> {
-  let base = backoff.initial;
-  while (true) {
-    const factor = 1 - backoff.jitter + Math.random() * 2 * backoff.jitter;
-    yield Math.min(backoff.maximum, base * factor);
-    base = Math.min(backoff.maximum, base * backoff.multiplier);
-  }
-}
+const DEFAULT_POLL_INTERVAL = 500;
 
 type QueueModeOptions =
   | {
       mode?: "polling";
       /**
-       * Fixed delay (in milliseconds) between status checks. If not provided,
-       * the delay follows `pollBackoff`.
+       * The interval (in milliseconds) at which to poll for updates.
+       * If not provided, a default value of `500` will be used.
        *
        * This value is ignored if `mode` is set to `streaming`.
        */
       pollInterval?: number;
-      /**
-       * Exponential backoff between status checks. Defaults to an initial
-       * delay of 250ms, growing by 1.05x per check with ±20% jitter, up to 10s.
-       * Resets when the status changes.
-       * Ignored when `pollInterval` is set or `mode` is `streaming`.
-       */
-      pollBackoff?: PollBackoff;
     }
   | {
       mode: "streaming";
@@ -124,7 +59,7 @@ type QueueCommonSubscribeOptions = {
    * **Note:** Streaming is currently experimental and once stable, it will
    * be the default mode.
    *
-   * @see pollInterval, pollBackoff
+   * @see pollInterval
    */
   mode?: "polling" | "streaming";
 
@@ -164,7 +99,7 @@ type QueueCommonSubscribeOptions = {
    * before processing starts (includes queue wait, retries, and routing).
    * Does not apply once the application begins processing.
    *
-   * This will be sent as the `x-fal-request-start-timeout` header.
+   * This will be sent as the `x-fal-request-timeout` header.
    */
   startTimeout?: number;
 
@@ -187,7 +122,7 @@ type QueueCommonSubscribeOptions = {
    * Note: `priority`, `hint`, `startTimeout`, `tags`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
-   *  - `x-fal-request-start-timeout`
+   *  - `x-fal-request-timeout`
    *  - `x-fal-tags`
    *  - `x-fal-object-lifecycle-preference`
    */
@@ -229,7 +164,7 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * before processing starts (includes queue wait, retries, and routing).
    * Does not apply once the application begins processing.
    *
-   * This will be sent as the `x-fal-request-start-timeout` header.
+   * This will be sent as the `x-fal-request-timeout` header.
    */
   startTimeout?: number;
 
@@ -239,7 +174,7 @@ export type SubmitOptions<Input> = RunOptions<Input> & {
    * Note: `priority`, `hint`, `startTimeout`, `tags`, and `objectLifecycle` will override the following headers:
    *  - `x-fal-queue-priority`
    *  - `x-fal-runner-hint`
-   *  - `x-fal-request-start-timeout`
+   *  - `x-fal-request-timeout`
    *  - `x-fal-tags`
    *  - `x-fal-object-lifecycle-preference`
    */
@@ -525,39 +460,14 @@ export const createQueueClient = ({
       // default to polling until status streaming is stable and faster
       return new Promise<CompletedQueueStatus>((resolve, reject) => {
         let pollingTimeoutId: TimeoutId;
-        let settled = false;
+        // type resolution isn't great in this case, so check for its presence
+        // and and type so the typechecker behaves as expected
         const pollInterval =
           "pollInterval" in options && typeof options.pollInterval === "number"
-            ? options.pollInterval
-            : undefined;
-        let nextDelay: (status: QueueStatus["status"]) => number;
-        if (pollInterval !== undefined) {
-          nextDelay = () => pollInterval;
-        } else {
-          try {
-            const backoff = resolvePollBackoff(
-              "pollBackoff" in options ? options.pollBackoff : undefined,
-            );
-            let delays = pollDelays(backoff);
-            let previousStatus: QueueStatus["status"] | undefined;
-            nextDelay = (status) => {
-              // Don't let a long queue wait slow completion detection once running.
-              // Completed resolves before this is called, without another sleep.
-              if (status !== previousStatus) {
-                delays = pollDelays(backoff);
-              }
-              previousStatus = status;
-              return delays.next().value;
-            };
-          } catch (error) {
-            reject(error);
-            return;
-          }
-        }
+            ? (options.pollInterval ?? DEFAULT_POLL_INTERVAL)
+            : DEFAULT_POLL_INTERVAL;
 
         const clearScheduledTasks = () => {
-          settled = true;
-          options.abortSignal?.removeEventListener("abort", handleAbort);
           if (timeoutId) {
             clearTimeout(timeoutId);
           }
@@ -565,20 +475,6 @@ export const createQueueClient = ({
             clearTimeout(pollingTimeoutId);
           }
         };
-        const handleAbort = () => {
-          clearScheduledTasks();
-          const reason = options.abortSignal?.reason;
-          reject(
-            reason === undefined
-              ? new DOMException("Status polling aborted", "AbortError")
-              : reason,
-          );
-        };
-        if (options.abortSignal?.aborted) {
-          handleAbort();
-          return;
-        }
-        options.abortSignal?.addEventListener("abort", handleAbort, { once: true });
         if (timeout) {
           timeoutId = setTimeout(() => {
             clearScheduledTasks();
@@ -597,22 +493,15 @@ export const createQueueClient = ({
               logs: options.logs ?? false,
               abortSignal: options.abortSignal,
             });
-            if (settled) {
-              return;
-            }
             if (options.onQueueUpdate) {
               options.onQueueUpdate(requestStatus);
-            }
-            // onQueueUpdate may abort synchronously; don't schedule another poll after that.
-            if (settled) {
-              return;
             }
             if (requestStatus.status === "COMPLETED") {
               clearScheduledTasks();
               resolve(requestStatus);
               return;
             }
-            pollingTimeoutId = setTimeout(poll, nextDelay(requestStatus.status));
+            pollingTimeoutId = setTimeout(poll, pollInterval);
           } catch (error) {
             clearScheduledTasks();
             reject(error);
