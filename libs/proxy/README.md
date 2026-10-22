@@ -127,3 +127,12 @@ backup domains do not need to be in `allowedUrlPatterns`.
 ## More information
 
 For a deeper dive into the proxy library and its capabilities, explore the [official documentation](https://fal.ai/docs).
+
+### Server runtime certificate update
+
+Run proxy hosts on fixed Node: `22.23.4+` on Node 22, `24.22.1+` on Node 24, or
+`26.12.1+` on Node 26. Redeploy and restart existing processes. Package engine
+requirements do not update the deployed runtime. Check explicit CA overrides,
+custom fetch clients, and managed runtime trust separately; confirm both affected
+eMudhra/AAA chain families fail certificate validation while legitimate HTTPS
+continues to work.

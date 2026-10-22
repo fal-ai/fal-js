@@ -384,6 +384,20 @@ Known limitations:
 
 The client library offers a plethora of features designed to simplify your journey with `fal.ai`. Dive into the [official documentation](https://fal.ai/docs) for a comprehensive guide.
 
+### Server runtime certificate update
+
+Server applications must use fixed Node: `22.23.4+` on Node 22, `24.22.1+` on
+Node 24, or `26.12.1+` on Node 26, and restart every running process. The package
+engine range records this requirement. Updating the SDK alone does not replace
+a host runtime or its trust store. Browser applications use browser trust.
+
+Check custom `fetch` implementations separately. Native libraries, Bun, embedded
+browsers, and explicit CA overrides can use a different trust store. Confirm
+that the actual deployed client rejects both affected eMudhra/AAA chain families
+with certificate-validation errors and still accepts legitimate HTTPS. An HTTP
+error or timeout is not proof of certificate rejection. Managed hosts must
+confirm the running runtime and trust configuration.
+
 ## Happy Oyster
 
 The opt-in `@fal-ai/client/happy-oyster` entrypoint manages Happy Oyster playback.
