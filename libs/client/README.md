@@ -1,3 +1,5 @@
+<!-- cspell:ignore falrun -->
+
 # fal.ai JavaScript/TypeScript client library
 
 ![@fal-ai/client npm package](https://img.shields.io/npm/v/@fal-ai/client?color=%237527D7&label=%40fal-ai%2Fclient&style=flat-square)
@@ -395,3 +397,9 @@ that the actual deployed client rejects both affected eMudhra/AAA chain families
 with certificate-validation errors and still accepts legitimate HTTPS. An HTTP
 error or timeout is not proof of certificate rejection. Managed hosts must
 confirm the running runtime and trust configuration.
+
+## Happy Oyster
+
+The opt-in `@fal-ai/client/happy-oyster` entrypoint manages Happy Oyster playback.
+Install its optional peer with `npm install @happy-oyster/js-sdk@0.1.4` when using
+this extension. See [the Happy Oyster guide](./HAPPY_OYSTER.md) for setup and lifecycle details.
