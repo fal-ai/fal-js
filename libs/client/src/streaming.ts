@@ -216,6 +216,7 @@ export class FalStream<Input, Output> {
             body: input && method !== "get" ? JSON.stringify(input) : undefined,
             signal: this.abortController.signal,
           },
+          { allowRetry: this.config.retry.maxRetries > 0 },
         );
         this._requestId = response.headers.get("x-fal-request-id");
         return await this.handleResponse(response);

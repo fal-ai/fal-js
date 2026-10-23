@@ -69,12 +69,18 @@ export async function fetchWithBackupDomain(
   fetch: typeof globalThis.fetch,
   url: string,
   init: RequestInit,
+  options: { allowRetry?: boolean } = {},
 ): Promise<Response> {
   try {
     return await fetch(url, init);
   } catch (error) {
     const backup = getBackupUrl(url);
-    if (!backup || init.signal?.aborted || !isConnectionError(error)) {
+    if (
+      options.allowRetry === false ||
+      !backup ||
+      init.signal?.aborted ||
+      !isConnectionError(error)
+    ) {
       throw error;
     }
     try {
