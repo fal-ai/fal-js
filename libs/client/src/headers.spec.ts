@@ -109,6 +109,24 @@ describe("headers utilities", () => {
       );
     });
 
+    it("should throw for reserved values", () => {
+      expect(() => validateTagsHeader({ team: "*" })).toThrow(
+        'Tag value for "team" is reserved',
+      );
+      expect(() => validateTagsHeader({ team: " (all) " })).toThrow(
+        'Tag value for "team" is reserved',
+      );
+      expect(() => validateTagsHeader({ team: "()" })).toThrow(
+        'Tag value for "team" is reserved',
+      );
+    });
+
+    it("should allow values that only partially look reserved", () => {
+      expect(
+        validateTagsHeader({ a: "(", b: "(x", c: "x)", d: "a*", e: "x(y)" }),
+      ).toBe("a=(,b=(x,c=x),d=a*,e=x(y)");
+    });
+
     it("should throw for values with commas or control characters", () => {
       expect(() => validateTagsHeader({ team: "design,growth" })).toThrow(
         'Tag value for "team" must be printable ASCII without commas',

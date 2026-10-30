@@ -104,6 +104,16 @@ const TAG_VALUE_PATTERN = /^[\x20-\x2b\x2d-\x7e]*$/;
 const RESERVED_TAG_KEY_PREFIX = "fal.";
 
 /**
+ * Values that are `*` or wrapped in parentheses are reserved for fal.
+ */
+function isReservedTagValue(value: string): boolean {
+  return (
+    value === "*" ||
+    (value.length >= 2 && value.startsWith("(") && value.endsWith(")"))
+  );
+}
+
+/**
  * Validates the tags and serializes them into the packed `X-Fal-Tags` header
  * value, i.e. a comma-separated list of `key=value` pairs.
  *
@@ -153,6 +163,11 @@ export function validateTagsHeader(tags: Record<string, string>): string {
     if (value.length > MAX_TAG_VALUE_LENGTH) {
       throw new Error(
         `Tag value for "${rawKey}" must be at most ${MAX_TAG_VALUE_LENGTH} characters`,
+      );
+    }
+    if (isReservedTagValue(value)) {
+      throw new Error(
+        `Tag value for "${rawKey}" is reserved ("*" or wrapped in parentheses)`,
       );
     }
     size += key.length + value.length;
