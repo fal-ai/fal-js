@@ -54,7 +54,8 @@ export type RunOptions<Input> = {
    * and values are limited (at most 10 pairs, 1 KB in total).
    *
    * Values cannot contain commas, which separate pairs. Surrounding whitespace
-   * is stripped from keys and values before they are recorded.
+   * is stripped from keys and values before they are recorded. Keys starting
+   * with `fal.` and values that are `*` or wrapped in parentheses are reserved.
    *
    * This will be sent as a single packed `x-fal-tags` header. Realtime
    * requests are WebSocket-based and carry no headers, so they cannot be
