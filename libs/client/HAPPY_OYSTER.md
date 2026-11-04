@@ -5,7 +5,7 @@ Experimental browser adapter for the fal Happy Oyster WMA app
 and send controls; they do not need to import or initialize Alibaba's player
 themselves.
 
-This runner-created-travel protocol requires `@fal-ai/client` 1.11.0-alpha.6 or later. It is not
+This credential-free HTTP control protocol requires `@fal-ai/client` 1.11.0-alpha.7 and the matching registry runner. Earlier token-based alpha clients are incompatible. It is not
 published yet. Do not use it against the legacy REST-only
 `alibaba/happy-oyster` app.
 
@@ -79,8 +79,7 @@ held, because the model applies one command per generation step. Send
 `command({})` on key release, blur, or when leaving the controls.
 
 Directing sessions expose `instruct(text)`, `pause()`, `resume()`, and
-`rewind(seconds)`. Instructions go through the app's `/travels/instruct`
-endpoint so fal moderates them; the rest drive the partner player. Rewind takes
+`rewind(seconds)`. All HTTP controls run through the active billed WMA session; fal moderates instructions. The partner player still manages local playback state. Rewind takes
 an absolute position in seconds. Use `session.can(action)` before enabling a
 control: availability depends on both mode and the player's current state.
 Calls that are unavailable reject.
@@ -117,16 +116,25 @@ separate player contexts. If vendor cleanup exceeds the bounded close wait,
 cleanup settles. Wait and retry, reload the page, or use another tab if it
 stalls; allowing another player sooner could let old cleanup disconnect it.
 
-The partner token is renewed over the WMA connection before it expires, and an
-explicit rejected renewal is retried while the token is still valid; expiry
-fails the session. A control acknowledgement timeout fails and disconnects the
-session: the protocol has no request IDs, so a late reply cannot safely be
-assigned to another request. Timed-out channels accept no further replies or
-requests; disconnect cleanup ends any bound travel on the server. Initial and
-renewed token deadlines include credential request latency. Credentials are
-kept inside the adapter rather than exposed through
-its data/diagnostic callbacks. Billing is per session second from
-configuration to release, handled by the app.
+The runner supplies `control_protocol: "fal-session-v1"` and only the travel's
+RTC credentials. No Alibaba HTTP token is returned, installed or renewed.
+The adapter replaces this SDK instance's backend `get` and `post` methods with
+allowlisted WMA operations, including status polling and the provider feature
+gate. Unknown paths and other travel IDs fail closed. The runner owns the travel
+ID and rejects control after release. SDK 0.1.4 can latch onto a stale `PAUSED`
+status during resume even after media restarts. The transport waits up to 15 seconds
+for that transition to clear, returning actual provider data; terminal statuses
+pass through immediately, and close cancels the wait. Before Directing resume or
+rewind, the adapter retires the previous RTC engine using the pinned SDK's
+instance `rtcSession.disconnect` hook. This avoids reusing a singleton while
+its old channel's termination events are still arriving. The hook is validated
+before playback; close during cleanup prevents the new join. There are no standalone status, pause,
+resume, rewind, instruction or end HTTP routes. Adventure commands continue over
+RTC directly; fal never transports the media.
+
+A control acknowledgement timeout fails and disconnects the session because
+replies have no correlation IDs. RTC credentials stay out of public data and
+diagnostic callbacks. Session billing runs from configuration until release.
 
 `close()` cancels pending work, removes listeners and timers, ends partner
 playback, requests server-side travel release, and closes WMA. Both partner
@@ -135,9 +143,9 @@ cleanup is the fallback. World generation is a separate durable operation;
 closing a session does not delete the world.
 
 The player SDK is loaded lazily on opening a session. `@happy-oyster/js-sdk`
-0.1.x ignores its documented `model` option, so the adapter points the SDK's
-request root at the model the app returns; SDK builds that honor `model` are
-left untouched. This wrapper is MIT licensed;
+0.1.4 has no public HTTP transport injection API, so the instance-level private
+backend hooks are pinned and validated. The fallback request root is deliberately
+invalid; authenticated operations must use the WMA adapter. This wrapper is MIT licensed;
 `@happy-oyster/js-sdk` is a separately licensed Alibaba optional peer dependency.
 Only Happy Oyster users install it. Neither the client root nor other realtime
 entrypoints load it. Importing `@fal-ai/client/happy-oyster` is safe without it;
@@ -157,7 +165,7 @@ node scripts/verify-happy-oyster-package.cjs
 ```
 
 Tests exercise the real fal realtime lifecycle with mocked partner playback and
-WMA transport, including cancellation, binding, token renewal, held commands,
+WMA transport, including cancellation, binding, session-bound HTTP controls, held commands,
 and cleanup. They do not validate live Alibaba playback, account entitlements,
 or billing.
 
@@ -165,3 +173,5 @@ The client build is CommonJS, while Alibaba's SDK exposes only an ESM import.
 `happy-oyster-sdk.cjs` is copied unchanged into the package to preserve native
 dynamic `import()` and keep SDK loading lazy. The packed consumer check covers
 both a missing peer and an installed peer with an import-only export.
+
+Run `node scripts/verify-happy-oyster-sdk.cjs` to exercise the real pinned SDK startup and HTTP hooks in both modes with simulated media and no paid network calls.
