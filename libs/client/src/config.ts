@@ -114,7 +114,8 @@ export type Config = {
   retry?: Partial<RetryOptions>;
 };
 
-export type RequiredConfig = Required<Config>;
+// createConfig fills every retry field from DEFAULT_RETRY_OPTIONS.
+export type RequiredConfig = Required<Config> & { retry: RetryOptions };
 
 /**
  * Checks if the required FAL environment variables are set.

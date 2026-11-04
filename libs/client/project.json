@@ -12,7 +12,17 @@
         "tsConfig": "libs/client/tsconfig.lib.json",
         "packageJson": "libs/client/package.json",
         "main": "libs/client/src/index.ts",
-        "assets": ["LICENSE", "CODE_OF_CONDUCT.md", "libs/client/README.md"]
+        "assets": [
+          "LICENSE",
+          "CODE_OF_CONDUCT.md",
+          "libs/client/README.md",
+          "libs/client/HAPPY_OYSTER.md",
+          {
+            "input": "libs/client/src",
+            "glob": "happy-oyster-sdk.*",
+            "output": "src"
+          }
+        ]
       }
     },
     "lint": {
