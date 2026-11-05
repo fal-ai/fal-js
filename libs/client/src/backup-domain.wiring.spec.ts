@@ -2,11 +2,11 @@ import { createFalClient } from "./client";
 import { createConfig } from "./config";
 import { dispatchRequest } from "./request";
 
-function connectionError(): TypeError {
+function connectionError(code = "ECONNREFUSED", syscall?: string): TypeError {
   return Object.assign(new TypeError("fetch failed"), {
-    cause: Object.assign(new Error("connect ECONNREFUSED"), {
-      code: "ECONNREFUSED",
-      syscall: "connect",
+    cause: Object.assign(new Error(`${syscall ?? "connect"} ${code}`), {
+      code,
+      ...(syscall && { syscall }),
     }),
   });
 }
@@ -26,7 +26,7 @@ describe("backup domain wiring", () => {
     const config = createConfig({
       credentials: "test-key",
       fetch,
-      retry: { maxRetries: 0 },
+      retry: { maxRetries: 1 },
     });
 
     await expect(
@@ -64,5 +64,74 @@ describe("backup domain wiring", () => {
       "https://fal.run/fal-ai/x/stream?fal_jwt_token=tok",
       "https://falrun.com/fal-ai/x/stream?fal_jwt_token=tok",
     ]);
+  });
+
+  it("client-mode streaming does not fall back when retries are disabled", async () => {
+    const fetch = jest.fn().mockRejectedValueOnce(connectionError());
+    const client = createFalClient({ fetch, retry: { maxRetries: 0 } });
+
+    const stream = await client.stream("fal-ai/x", {
+      input: { prompt: "hi" },
+      connectionMode: "client",
+      tokenProvider: async () => "tok",
+    });
+
+    await expect(stream.done()).rejects.toThrow("fetch failed");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the backup host for submissions by default", async () => {
+    const fetch = jest
+      .fn()
+      .mockRejectedValueOnce(connectionError())
+      .mockResolvedValueOnce(jsonResponse({ request_id: "req_2" }));
+    const client = createFalClient({ credentials: "test-key", fetch });
+
+    const result = await client.queue.submit("fal-ai/x", {
+      input: { prompt: "hi" },
+    });
+
+    expect(result.request_id).toBe("req_2");
+    expect(fetch.mock.calls.map((call) => call[0])).toEqual([
+      "https://queue.fal.run/fal-ai/x",
+      "https://queue.falrun.com/fal-ai/x",
+    ]);
+  });
+
+  it("does not re-issue a failed submission when retries are disabled", async () => {
+    const error = connectionError("ETIMEDOUT");
+    const fetch = jest
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValue(jsonResponse({ request_id: "req_2" }));
+    const client = createFalClient({
+      credentials: "test-key",
+      fetch,
+      retry: { maxRetries: 0, enableJitter: false },
+    });
+
+    await expect(
+      client.queue.submit("fal-ai/x", { input: { prompt: "hi" } }),
+    ).rejects.toBe(error);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe("https://queue.fal.run/fal-ai/x");
+  });
+
+  it("does not retry a post-connect transport failure when retries are disabled", async () => {
+    const error = connectionError("ECONNRESET", "read");
+    const fetch = jest
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValue(jsonResponse({ request_id: "req_2" }));
+    const client = createFalClient({
+      credentials: "test-key",
+      fetch,
+      retry: { maxRetries: 0, enableJitter: false },
+    });
+
+    await expect(
+      client.queue.submit("fal-ai/x", { input: { prompt: "hi" } }),
+    ).rejects.toBe(error);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

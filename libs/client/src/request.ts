@@ -76,20 +76,27 @@ export async function dispatchRequest<Input, Output>(
       retry: _,
       ...requestInit
     } = options;
-    const response = await fetchWithBackupDomain(fetch, url, {
-      ...requestInit,
-      method,
-      headers: {
-        ...requestHeaders,
-        ...(requestInit.headers ?? {}),
+    const response = await fetchWithBackupDomain(
+      fetch,
+      url,
+      {
+        ...requestInit,
+        method,
+        headers: {
+          ...requestHeaders,
+          ...(requestInit.headers ?? {}),
+        },
+        ...(!isCloudflareWorkers && { mode: "cors" }),
+        signal: options.signal,
+        body:
+          method.toLowerCase() !== "get" && input
+            ? JSON.stringify(input)
+            : undefined,
       },
-      ...(!isCloudflareWorkers && { mode: "cors" }),
-      signal: options.signal,
-      body:
-        method.toLowerCase() !== "get" && input
-          ? JSON.stringify(input)
-          : undefined,
-    });
+      // A disabled retry policy bounds re-issues of any kind: a request that
+      // must not be retried must not be replayed on the backup host either.
+      { allowRetry: retryOptions.maxRetries > 0 },
+    );
     const handleResponse = customResponseHandler ?? responseHandler;
     return await handleResponse(response);
   };
