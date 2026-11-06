@@ -62,6 +62,14 @@ export type WmaControlMessage = object;
 /** @experimental The `fal.realtime.open()` extension API is experimental and may change in a minor release. */
 export interface WmaOptions {
   /**
+   * App-relative negotiation route, for example `/game/start-session`.
+   * Omit to use `/start-session`. Explicit routes require the bridge's v2 API;
+   * they never fall back to another handler on an older bridge. Keep endpointId
+   * as the application (including any public namespace alias).
+   */
+  sessionPath?: string;
+
+  /**
    * How long to wait for the WMA bridge to acquire a runner and return its SDP answer.
    *
    * By default there is no client-side deadline, so an application may wait for capacity. The
@@ -203,6 +211,7 @@ export interface WmaConnectionInfo {
  */
 async function fetchIceServers(
   context: RealtimeExtensionContext,
+  sessionPath?: string,
 ): Promise<RTCIceServer[]> {
   const controller = new AbortController();
   const abortDiscovery = () => controller.abort(context.signal.reason);
@@ -216,12 +225,18 @@ async function fetchIceServers(
     ICE_DISCOVERY_TIMEOUT_MS,
   );
   try {
-    const response = await context.fetch(`${WMA_URL}/ice`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ app_id: context.endpointId }),
-    });
+    const response = await context.fetch(
+      `${WMA_URL}${sessionPath === undefined ? "" : "/v2"}/ice`,
+      {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app_id: context.endpointId,
+          session_path: sessionPath,
+        }),
+      },
+    );
     if (!response.ok) {
       // Drain before throwing: the kernel releases this request's signal bookkeeping when the
       // body is consumed, and a fallback session that outlives a failed bridge probe must not
@@ -617,6 +632,27 @@ export function wma(endpointId?: string) {
     id: "fal/wma",
     defaultEndpoint: endpointId,
     async open(context, options) {
+      const sessionPath =
+        options.sessionPath === "/"
+          ? "/"
+          : options.sessionPath?.replace(/^\//, "");
+      if (
+        sessionPath !== undefined &&
+        sessionPath !== "/" &&
+        (!sessionPath ||
+          sessionPath.length > 1024 ||
+          !sessionPath
+            .split("/")
+            .every(
+              (part) =>
+                /^[A-Za-z0-9_.-]+$/.test(part) && part !== "." && part !== "..",
+            ))
+      ) {
+        throw new Error(
+          "WMA sessionPath must be an app-relative path without query, fragment, or traversal segments.",
+        );
+      }
+
       if (
         options.negotiationTimeoutMs != null &&
         (!Number.isFinite(options.negotiationTimeoutMs) ||
@@ -635,7 +671,8 @@ export function wma(endpointId?: string) {
         );
       }
       const receive = options.receive?.map(normalizeWmaReceiveTrack);
-      const iceServers = options.iceServers ?? (await fetchIceServers(context));
+      const iceServers =
+        options.iceServers ?? (await fetchIceServers(context, sessionPath));
       const pc = new RTCPeerConnection({
         iceServers,
         iceTransportPolicy: options.iceTransportPolicy,
@@ -1013,16 +1050,20 @@ export function wma(endpointId?: string) {
           // Auth comes from the client's configured credentials rather than a pasted key. The child
           // signal preserves caller cancellation. Applications that want a bounded capacity wait
           // can opt into negotiationTimeoutMs; by default the bridge may wait for a runner.
-          const response = await context.fetch(`${WMA_URL}/session`, {
-            method: "POST",
-            signal: sessionController.signal,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              app_id: context.endpointId,
-              sdp: gathered.sdp,
-              type: gathered.type,
-            }),
-          });
+          const response = await context.fetch(
+            `${WMA_URL}${sessionPath === undefined ? "" : "/v2"}/session`,
+            {
+              method: "POST",
+              signal: sessionController.signal,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                app_id: context.endpointId,
+                session_path: sessionPath,
+                sdp: gathered.sdp,
+                type: gathered.type,
+              }),
+            },
+          );
           if (!response.ok) throw new Error(await readErrorMessage(response));
           answer = (await response.json()) as typeof answer;
         } finally {
@@ -1276,3 +1317,6 @@ export function wma(endpointId?: string) {
  * No `send`, no message schema, no key handling. An interactive world model is the same
  * call plus `onData` and `send({ type: "keys", pressed, activated })`.
  */
+
+/** Allows consumers to fail closed when an older client cannot select a session route. */
+wma.supportsSessionPath = true as const;

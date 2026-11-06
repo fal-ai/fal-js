@@ -149,6 +149,29 @@ An extension that _does_ own a closed set of endpoints can add an optional
 starts. It is a guard, not a router; most protocols have no such set and should
 omit it.
 
+### Multiple WMA session routes
+
+Keep the application identity separate from its negotiation route:
+
+```ts
+const session = fal.realtime.open(wma("my-owner/my-model"), {
+  sessionPath: "/game/start-session",
+  receive: ["video"],
+});
+```
+
+Omitting `sessionPath` preserves the default `/start-session` handler. An explicit
+path, including `/` for an app-root handler, requires the bridge's v2 session and
+ICE endpoints. The client never retries another session handler if the selected
+route is unavailable. Paths cannot contain query strings, fragments, encoded
+separators or traversal segments. The app's existing `/ice` endpoint remains the
+fallback for app-managed ICE.
+
+Use each route's published media and control-message contract. Sharing a
+machine does not mean the handlers accept the same messages. Integrations that
+support older client versions can check `wma.supportsSessionPath === true` before
+opening a custom route.
+
 ### Optional WMA receive preferences
 
 The existing `receive: ["video", "audio"]` syntax keeps browser defaults.
