@@ -1,7 +1,11 @@
 import { getRestApiUrl, RequiredConfig } from "./config";
 import { dispatchRequest } from "./request";
 import { ApiError } from "./response";
-import { calculateBackoffDelay, isRetryableError } from "./retry";
+import {
+  calculateBackoffDelay,
+  DEFAULT_RETRY_OPTIONS,
+  isRetryableError,
+} from "./retry";
 import { isPlainObject, sleep } from "./utils";
 
 type ObjectExpiration =
@@ -381,7 +385,14 @@ async function uploadPart(
   config: RequiredConfig,
   maxAttempts: number,
 ): Promise<MultipartObject> {
-  const { fetch, responseHandler, retry } = config;
+  const { fetch, responseHandler } = config;
+  const {
+    retryableStatusCodes = DEFAULT_RETRY_OPTIONS.retryableStatusCodes,
+    baseDelay = DEFAULT_RETRY_OPTIONS.baseDelay,
+    maxDelay = DEFAULT_RETRY_OPTIONS.maxDelay,
+    backoffMultiplier = DEFAULT_RETRY_OPTIONS.backoffMultiplier,
+    enableJitter = DEFAULT_RETRY_OPTIONS.enableJitter,
+  } = config.retry;
   const attempts = Math.max(1, maxAttempts);
   let lastError: unknown;
 
@@ -405,17 +416,17 @@ async function uploadPart(
       lastError = error;
       if (
         attempt === attempts - 1 ||
-        !isRetryableError(error, retry.retryableStatusCodes)
+        !isRetryableError(error, retryableStatusCodes)
       ) {
         break;
       }
       await sleep(
         calculateBackoffDelay(
           attempt,
-          retry.baseDelay,
-          retry.maxDelay,
-          retry.backoffMultiplier,
-          retry.enableJitter,
+          baseDelay,
+          maxDelay,
+          backoffMultiplier,
+          enableJitter,
         ),
       );
     }

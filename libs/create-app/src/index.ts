@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
-import { input } from "@inquirer/prompts";
-import select from "@inquirer/select";
+import { input, select } from "@inquirer/prompts";
 import chalk from "chalk";
-import childProcess from "child_process";
 import { Command } from "commander";
-import { execa, execaCommand } from "execa";
+import { execa } from "execa";
 import fs from "fs";
 import open from "open";
 import ora from "ora";
 import path from "path";
+import {
+  createInstallSecurity,
+  FIXED_NODE_RANGE,
+  requireFixedNode,
+} from "./security.js";
 
 const program = new Command();
 const log = console.log;
@@ -21,7 +24,9 @@ async function main() {
   const spinner = ora({
     text: "Creating codebase",
   });
+  let security: ReturnType<typeof createInstallSecurity> | undefined;
   try {
+    requireFixedNode();
     const kebabRegez = /^([a-z]+)(-[a-z0-9]+)*$/;
 
     program
@@ -77,11 +82,35 @@ async function main() {
     log(`\nInitializing project. \n`);
 
     spinner.start();
-    await execa("git", ["clone", repoUrl, appName]);
+    security = createInstallSecurity();
+    await execa(
+      "git",
+      [
+        "-c",
+        "http.sslVerify=true",
+        "-c",
+        "http.schannelUseSSLCAInfo=true",
+        "-c",
+        `http.sslCAInfo=${security.gitCA}`,
+        "-c",
+        `http.sslCAPath=${security.empty}`,
+        "clone",
+        repoUrl,
+        appName,
+      ],
+      { env: security.env },
+    );
 
     let packageJson = fs.readFileSync(`${appName}/package.json`, "utf8");
     const packageObj = JSON.parse(packageJson);
     packageObj.name = appName;
+    packageObj.engines = { ...packageObj.engines, node: FIXED_NODE_RANGE };
+    packageObj.packageManager = `npm@${security.npmVersion}`;
+    if (packageObj.volta?.node) packageObj.volta.node = process.versions.node;
+    fs.writeFileSync(`${appName}/.node-version`, `${process.versions.node}\n`);
+    if (fs.existsSync(`${appName}/.nvmrc`)) {
+      fs.writeFileSync(`${appName}/.nvmrc`, `${process.versions.node}\n`);
+    }
     packageJson = JSON.stringify(packageObj, null, 2);
     fs.writeFileSync(`${appName}/package.json`, packageJson);
     fs.writeFileSync(`${appName}/.env.local`, envs);
@@ -91,23 +120,12 @@ async function main() {
     await execa("git", ["init"]);
 
     spinner.text = "";
-    let startCommand = "";
-
-    if (isBunInstalled()) {
-      spinner.text = "Installing dependencies";
-      await execaCommand("bun install").pipeStdout(process.stdout);
-      spinner.text = "";
-      startCommand = "bun dev";
-      console.log("\n");
-    } else if (isYarnInstalled()) {
-      await execaCommand("yarn").pipeStdout(process.stdout);
-      startCommand = "yarn dev";
-    } else {
-      spinner.text = "Installing dependencies";
-      await execa("npm", ["install", "--verbose"]).pipeStdout(process.stdout);
-      spinner.text = "";
-      startCommand = "npm run dev";
-    }
+    const startCommand = "npm run dev";
+    spinner.text = "Installing dependencies";
+    await execa(process.execPath, [security.npmCli, "install", "--verbose"], {
+      env: security.env,
+    }).pipeStdout(process.stdout);
+    spinner.text = "";
 
     spinner.stop();
     await execa("git", ["add", "."]);
@@ -126,29 +144,12 @@ async function main() {
     );
   } catch (err) {
     log("\n");
-    if (err.exitCode == 128) {
-      log("Error: directory already exists.");
-    }
+    log(err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
     spinner.stop();
+  } finally {
+    security?.dispose();
   }
 }
 
 main();
-
-function isYarnInstalled() {
-  try {
-    childProcess.execSync("yarn --version");
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isBunInstalled() {
-  try {
-    childProcess.execSync("bun --version");
-    return true;
-  } catch (err) {
-    return false;
-  }
-}

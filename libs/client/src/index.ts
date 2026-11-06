@@ -15,7 +15,7 @@ export type {
   RequestMiddleware,
   RequestProxyConfig,
 } from "./middleware";
-export type { QueueClient } from "./queue";
+export type { PollBackoff, QueueClient } from "./queue";
 export type {
   RealtimeClient,
   RealtimeConnection,

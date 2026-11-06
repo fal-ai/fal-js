@@ -1,3 +1,4 @@
+import { fetchWithBackupDomain } from "./backup-domain";
 import {
   applyProxyConfig,
   createUrlMatcher,
@@ -265,7 +266,7 @@ export async function handleRequest<ResponseType>(
 
   const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
-  const res = await fetch(targetUrl, {
+  const res = await fetchWithBackupDomain(fetch, targetUrl, {
     method: behavior.method,
     headers: {
       ...headers,
