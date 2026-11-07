@@ -9,4 +9,5 @@ export type * from "./library";
 export type { AgentProjectDocumentImport } from "./projects";
 export { isAgentStopped, isAgentTerminal } from "./response";
 export type * from "./skills";
+export type * from "./templates";
 export * from "./types";

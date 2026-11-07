@@ -9,6 +9,7 @@ import { agentResponseView, isAgentStopped } from "./response";
 import { createAgentSettingsClient } from "./settings";
 import { createAgentSkillsClient } from "./skills";
 import { agentEvents } from "./stream";
+import { createAgentTemplatesClient } from "./templates";
 import {
   createAgentTransport,
   mutationKey,
@@ -67,6 +68,7 @@ export interface AgentResponsesClient {
 export interface AgentClient {
   readonly skills: ReturnType<typeof createAgentSkillsClient>;
   readonly library: ReturnType<typeof createAgentLibraryClient>;
+  readonly templates: ReturnType<typeof createAgentTemplatesClient>;
   readonly queue: ReturnType<typeof createAgentQueueClient>["queue"];
   readonly runs: ReturnType<typeof createAgentQueueClient>["runs"];
   readonly models: ReturnType<typeof createAgentSettingsClient>["models"];
@@ -390,6 +392,7 @@ export function createAgentClient(config: RequiredConfig): AgentClient {
     responses,
     projects: createAgentProjectsClient(request, config),
     library: createAgentLibraryClient(request),
+    templates: createAgentTemplatesClient(request),
     ...createAgentSettingsClient(request),
     ...createAgentQueueClient(request),
     async run(input, options = {}) {

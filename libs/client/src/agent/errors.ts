@@ -7,6 +7,11 @@ export class AgentRequestError extends Error {
   readonly idempotencyKey?: string;
   readonly lastResponse?: AgentResponseView;
   readonly status?: number;
+  /** Stable server error code, such as `idempotency_key_in_use`. */
+  readonly code?: string;
+  readonly reason?: string;
+  /** Server hint for when a retry with the same key can succeed. */
+  readonly retryAfterSeconds?: number;
 
   constructor(
     cause: unknown,
@@ -41,6 +46,19 @@ export class AgentRequestError extends Error {
       cause && typeof cause === "object" && "status" in cause
         ? (cause as { status: number }).status
         : undefined;
+    const field = (name: string) =>
+      detail && typeof detail === "object" && name in detail
+        ? (detail as Record<string, unknown>)[name]
+        : undefined;
+    const code = field("code");
+    const reason = field("reason");
+    const retryAfter = field("retry_after_seconds");
+    // Helpers rewrap transport errors to add context; keep the server fields.
+    const inner = cause instanceof AgentRequestError ? cause : undefined;
+    this.code = typeof code === "string" ? code : inner?.code;
+    this.reason = typeof reason === "string" ? reason : inner?.reason;
+    this.retryAfterSeconds =
+      typeof retryAfter === "number" ? retryAfter : inner?.retryAfterSeconds;
   }
 }
 
