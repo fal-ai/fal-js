@@ -32,6 +32,25 @@ it("lists with an encoded query and retrieves by an encoded id", async () => {
   );
 });
 
+it("lists shared templates and saves one by an encoded id", async () => {
+  const fetch = jest
+    .fn()
+    .mockImplementation(() => Promise.resolve(json({ items: [] })));
+  const templates = setup(fetch);
+  await templates.listShared({ query: "ads" });
+  await templates.saveShared("tpl/1");
+  const list = new URL(fetch.mock.calls[0][0]);
+  expect(list.pathname).toBe("/api/agent-v2/sdk/agent/templates/shared");
+  expect(JSON.parse(list.searchParams.get("input") ?? "")).toEqual({
+    query: "ads",
+  });
+  const [url, init] = fetch.mock.calls[1];
+  expect(url).toBe(
+    "https://fal.ai/api/agent-v2/sdk/agent/templates/shared/tpl%2F1/save",
+  );
+  expect(init.method).toBe("POST");
+});
+
 it("runs with the given idempotency key and returns the Agent response", async () => {
   const fetch = jest.fn().mockResolvedValueOnce(
     json(

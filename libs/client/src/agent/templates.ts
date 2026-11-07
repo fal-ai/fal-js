@@ -36,6 +36,18 @@ export interface AgentTemplatePage {
   hasAudio: boolean;
 }
 
+/** A template another account shared with this team or its organization. */
+export interface AgentSharedTemplateSummary
+  extends Omit<AgentTemplateSummary, "description"> {
+  /** The account already has a copy. `saveShared` returns it. */
+  saved: boolean;
+}
+
+export interface AgentSharedTemplatePage
+  extends Omit<AgentTemplatePage, "items"> {
+  items: AgentSharedTemplateSummary[];
+}
+
 export interface AgentTemplateQuery {
   query?: string;
   useCase?:
@@ -94,17 +106,37 @@ export interface AgentTemplateRunInput {
   inputs?: Record<string, AgentJson>;
 }
 
-/** The account's own saved Agent templates. Shared and Explore templates are not listed. */
+/**
+ * The account's own saved Agent templates. Templates shared with a team run
+ * after `saveShared` copies them into the account. Explore templates are not
+ * listed.
+ */
 export function createAgentTemplatesClient(
   request: ReturnType<typeof createAgentTransport>,
 ) {
   const templates = "/agent/templates";
   const read = <T>(url: string, options: AgentResourceOptions = {}) =>
     request<T>("GET", url, undefined, options);
+  const page = (path: string, query: AgentTemplateQuery) =>
+    `${path}?${new URLSearchParams({ input: JSON.stringify(query) })}`;
   return {
     list: (query: AgentTemplateQuery = {}, options?: AgentResourceOptions) =>
-      read<AgentTemplatePage>(
-        `${templates}?${new URLSearchParams({ input: JSON.stringify(query) })}`,
+      read<AgentTemplatePage>(page(templates, query), options),
+    /** Templates shared with this team or its organization. Empty for a personal key. */
+    listShared: (
+      query: AgentTemplateQuery = {},
+      options?: AgentResourceOptions,
+    ) =>
+      read<AgentSharedTemplatePage>(
+        page(`${templates}/shared`, query),
+        options,
+      ),
+    /** Copies a shared template into the account, or returns the existing copy. Run the copy's `id`. */
+    saveShared: (id: string, options: AgentResourceOptions = {}) =>
+      request<AgentTemplate>(
+        "POST",
+        `${templates}/shared/${segment(id)}/save`,
+        {},
         options,
       ),
     retrieve: (id: string, options?: AgentResourceOptions) =>
