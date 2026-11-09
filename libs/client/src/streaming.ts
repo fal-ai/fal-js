@@ -113,7 +113,6 @@ export class FalStream<Input, Output> {
 
   // local state
   private currentData: Output | undefined = undefined;
-  private lastEventTimestamp = 0;
   private streamClosed = false;
   private _requestId: string | null = null;
   private donePromise: Promise<Output>;
@@ -146,6 +145,7 @@ export class FalStream<Input, Output> {
         );
       }
       this.signal.addEventListener("abort", () => {
+        this.streamClosed = true;
         resolve(this.currentData ?? ({} as Output));
       });
       this.on("done", (data) => {
@@ -271,29 +271,11 @@ export class FalStream<Input, Output> {
     const isEventStream = (
       response.headers.get("content-type") ?? ""
     ).startsWith(CONTENT_TYPE_EVENT_STREAM);
-    // any response that is not a text/event-stream will be handled as a binary stream
-    if (!isEventStream) {
-      const reader = body.getReader();
-      const emitRawChunk = () => {
-        reader.read().then(({ done, value }) => {
-          if (done) {
-            this.emit("done", this.currentData);
-            return;
-          }
-          this.buffer.push(value as Output);
-          this.currentData = value as Output;
-          this.emit("data", value);
-          emitRawChunk();
-        });
-      };
-      emitRawChunk();
-      return;
-    }
-
     const decoder = new TextDecoder("utf-8");
-    const reader = response.body.getReader();
+    const reader = body.getReader();
 
     const parser = createParser((event) => {
+      if (this.streamClosed || this.signal.aborted) return;
       if (event.type === "event") {
         const data = event.data;
 
@@ -304,7 +286,9 @@ export class FalStream<Input, Output> {
           this.emit("data", parsedData);
 
           // also emit 'message'for backwards compatibility
-          this.emit("message" as any, parsedData);
+          if (!this.streamClosed && !this.signal.aborted) {
+            this.emit("message" as any, parsedData);
+          }
         } catch (e) {
           this.emit("error", e);
         }
@@ -312,33 +296,62 @@ export class FalStream<Input, Output> {
     });
 
     const timeout = this.options.timeout ?? EVENT_STREAM_TIMEOUT;
-
-    const readPartialResponse = async () => {
-      const { value, done } = await reader.read();
-      this.lastEventTimestamp = Date.now();
-
-      parser.feed(decoder.decode(value));
-
-      if (Date.now() - this.lastEventTimestamp > timeout) {
-        this.emit(
-          "error",
-          new ApiError({
-            message: `Event stream timed out after ${(timeout / 1000).toFixed(0)} seconds with no messages.`,
-            status: 408,
-            requestId: this._requestId || undefined,
-          }),
+    let completed = false;
+    try {
+      while (!this.streamClosed && !this.signal.aborted) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        let stopReading = () => undefined;
+        const interrupted = new Promise<ReadableStreamReadResult<Uint8Array>>(
+          (resolve, reject) => {
+            stopReading = () => resolve({ done: true, value: undefined });
+            this.signal.addEventListener("abort", stopReading, { once: true });
+            if (Number.isFinite(timeout)) {
+              timer = setTimeout(
+                () =>
+                  reject(
+                    new ApiError({
+                      message: `Event stream timed out after ${(timeout / 1000).toFixed(0)} seconds with no messages.`,
+                      status: 408,
+                      requestId: this._requestId || undefined,
+                    }),
+                  ),
+                timeout,
+              );
+            }
+          },
         );
-      }
+        const { value, done } = await Promise.race([
+          reader.read(),
+          interrupted,
+        ]).finally(() => {
+          clearTimeout(timer);
+          this.signal.removeEventListener("abort", stopReading);
+        });
+        if (this.streamClosed || this.signal.aborted) break;
 
-      if (!done) {
-        readPartialResponse().catch(this.handleError);
-      } else {
-        this.emit("done", this.currentData);
+        if (isEventStream) {
+          parser.feed(decoder.decode(value));
+        } else if (!done) {
+          this.buffer.push(value as Output);
+          this.currentData = value as Output;
+          this.emit("data", value);
+        }
+        if (this.streamClosed || this.signal.aborted) break;
+        if (done) {
+          completed = true;
+          this.emit("done", this.currentData);
+        }
       }
-    };
-
-    readPartialResponse().catch(this.handleError);
-    return;
+    } catch (error) {
+      // Settle the stream before cancellation can resolve done() with partial data.
+      this.handleError(error);
+    } finally {
+      if (!completed) {
+        this.abortController.abort();
+        await reader.cancel().catch(() => undefined);
+      }
+      reader.releaseLock();
+    }
   };
 
   private handleError = (error: any) => {
@@ -346,7 +359,11 @@ export class FalStream<Input, Output> {
     // it means the user called abort() and we should not emit an error
     // as it's expected behavior
     // See note on: https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
-    if (error.name === "AbortError" || this.signal.aborted) {
+    if (
+      this.streamClosed ||
+      error.name === "AbortError" ||
+      this.signal.aborted
+    ) {
       return;
     }
     const apiError =
@@ -376,11 +393,10 @@ export class FalStream<Input, Output> {
   };
 
   async *[Symbol.asyncIterator]() {
-    let running = true;
-    const stopAsyncIterator = () => (running = false);
-    this.on("error", stopAsyncIterator);
-    this.on("done", stopAsyncIterator);
-    while (running || this.buffer.length > 0) {
+    while (
+      (!this.streamClosed && !this.signal.aborted) ||
+      this.buffer.length > 0
+    ) {
       const data = this.buffer.shift();
       if (data) {
         yield data;
