@@ -124,6 +124,9 @@ export async function dispatchRequest<Input, Output>(
   throw lastError;
 }
 
+// A single hostname label, so the subdomain cannot change the URL's host.
+const SUBDOMAIN_REGEX = /^[a-z0-9-]+$/i;
+
 /**
  * Builds the final url to run the function based on its `id` or alias and
  * a the options from `RunOptions<Input>`.
@@ -157,6 +160,9 @@ export function buildUrl<Input>(
   }
 
   const appId = ensureEndpointIdFormat(id);
+  if (options.subdomain && !SUBDOMAIN_REGEX.test(options.subdomain)) {
+    throw new Error(`Invalid subdomain: ${options.subdomain}`);
+  }
   const subdomain = options.subdomain ? `${options.subdomain}.` : "";
   const url = `https://${subdomain}fal.run/${appId}/${path}`;
   return `${url.replace(/\/$/, "")}${queryParams}`;

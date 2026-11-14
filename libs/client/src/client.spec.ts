@@ -6,6 +6,25 @@ describe("The function test suite", () => {
     const url = buildUrl(alias);
     expect(url).toMatch(`fal.run/${alias}`);
   });
+
+  it("should build the URL with a subdomain", () => {
+    const url = buildUrl("fal-ai/text-to-image", { subdomain: "queue" });
+    expect(url).toBe("https://queue.fal.run/fal-ai/text-to-image");
+  });
+
+  it.each([
+    "other.example#",
+    "other.example/",
+    "other.example?",
+    "user@other.example",
+    "other.example:443",
+    ".queue",
+    "a..b",
+  ])("should reject the subdomain %p", (subdomain) => {
+    expect(() => buildUrl("fal-ai/text-to-image", { subdomain })).toThrow(
+      "Invalid subdomain",
+    );
+  });
 });
 
 jest.mock("./request", () => {
