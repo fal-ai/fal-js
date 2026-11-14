@@ -95,10 +95,13 @@ async function main() {
         "-c",
         `http.sslCAPath=${security.empty}`,
         "clone",
+        "--depth",
+        "1",
         repoUrl,
         appName,
       ],
-      { env: security.env },
+      // extendEnv:false keeps a parent GIT_SSL_NO_VERIFY from disabling verification.
+      { env: security.env, extendEnv: false },
     );
 
     let packageJson = fs.readFileSync(`${appName}/package.json`, "utf8");

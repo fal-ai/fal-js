@@ -62,7 +62,7 @@ describe("create-app runtime and installer trust", () => {
           );
       }
       expect(fs.readdirSync(security.empty)).toEqual([]);
-      expect(security.env.GIT_SSL_NO_VERIFY).toBe("false");
+      expect(security.env.GIT_SSL_NO_VERIFY).toBeUndefined();
       expect(security.npmCli).toMatch(/npm-cli\.js$/);
     } finally {
       security.dispose();
@@ -97,7 +97,7 @@ describe("create-app runtime and installer trust", () => {
             new X509Certificate(bad).toString(),
           );
       }
-      expect(security.env.GIT_SSL_NO_VERIFY).toBe("false");
+      expect(security.env.GIT_SSL_NO_VERIFY).toBeUndefined();
     } finally {
       security.dispose();
       fs.rmSync(directory, { recursive: true, force: true });

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import https from "node:https";
 import { createInstallSecurity } from "../dist/libs/create-app/src/security.js";
@@ -48,6 +49,24 @@ try {
     assert.equal(await request("https://example.com/", ca), 200);
     console.log(`PASS ${label}: legitimate HTTPS`);
   }
+  // Git itself must reject an untrusted certificate, not just Node's HTTPS client.
+  const badGitHost = "https://self-signed.badssl.com/x.git";
+  let gitError = "";
+  try {
+    execFileSync("git", ["ls-remote", badGitHost], {
+      env: security.env,
+      stdio: ["ignore", "ignore", "pipe"],
+      timeout: 60000,
+    });
+  } catch (error) {
+    gitError = String(error.stderr ?? error);
+  }
+  assert.match(
+    gitError,
+    /certificate|ssl|verify/i,
+    `Git must reject ${badGitHost} with a certificate error, got: ${gitError}`,
+  );
+  console.log(`PASS Git: rejected ${badGitHost}`);
   console.log(
     `Node ${process.versions.node}; npm ${security.npmVersion}; npm executable ${security.npmCli}`,
   );
