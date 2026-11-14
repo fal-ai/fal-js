@@ -179,19 +179,21 @@ export function createInstallSecurity(env: NodeJS.ProcessEnv = process.env) {
       ),
       ...(gitCAFile ? certificatesInFile(gitCAFile) : []),
     ]);
+    const childEnv: NodeJS.ProcessEnv = {
+      ...env,
+      PATH: `${path.dirname(process.execPath)}${path.delimiter}${env.PATH ?? ""}`,
+      NODE_TLS_REJECT_UNAUTHORIZED: "1",
+      GIT_SSL_CAINFO: gitCA,
+      GIT_SSL_CAPATH: empty,
+    };
+    // Any value of GIT_SSL_NO_VERIFY disables git's TLS verification, so drop it.
+    delete childEnv.GIT_SSL_NO_VERIFY;
     return {
       npmCli,
       npmVersion,
       gitCA,
       empty,
-      env: {
-        ...env,
-        PATH: `${path.dirname(process.execPath)}${path.delimiter}${env.PATH ?? ""}`,
-        NODE_TLS_REJECT_UNAUTHORIZED: "1",
-        GIT_SSL_CAINFO: gitCA,
-        GIT_SSL_CAPATH: empty,
-        GIT_SSL_NO_VERIFY: "false",
-      } as NodeJS.ProcessEnv,
+      env: childEnv,
       dispose: () => fs.rmSync(directory, { recursive: true, force: true }),
     };
   } catch (error) {
