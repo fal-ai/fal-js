@@ -5,6 +5,7 @@ import {
   DEFAULT_ALLOWED_URL_PATTERNS,
   type ProxyConfig,
 } from "./config";
+import { getProxyUserAgent } from "./runtime";
 import type { HeaderValue, ProxyBehavior } from "./types";
 import { singleHeaderValue } from "./utils";
 
@@ -264,7 +265,7 @@ export async function handleRequest<ResponseType>(
     }
   });
 
-  const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
+  const proxyUserAgent = getProxyUserAgent(behavior.id);
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
   const res = await fetchWithBackupDomain(fetch, targetUrl, {
     method: behavior.method,
