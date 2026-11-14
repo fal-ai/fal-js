@@ -258,6 +258,100 @@ describe("queue.subscribeToStatus polling", () => {
   });
 });
 
+describe("queue.subscribeToStatus streaming timeout", () => {
+  const completed = { status: "COMPLETED", request_id: "req_123" };
+  const config = createConfig({ credentials: "test-key" });
+  const storage: StorageClient = {
+    upload: jest.fn(),
+    transformInput: jest.fn(),
+  };
+
+  // Minimal stand-in for FalStream: done() settles via finish/fail, and abort()
+  // resolves it with the last data, like the real stream does.
+  const fakeStream = () => {
+    let finish!: (value: unknown) => void;
+    let fail!: (error: unknown) => void;
+    const done = new Promise((resolve, reject) => {
+      finish = resolve;
+      fail = reject;
+    });
+    return {
+      stream: {
+        on: jest.fn(),
+        done: () => done,
+        abort: jest.fn(() => finish({})),
+      },
+      finish,
+      fail,
+    };
+  };
+
+  const setup = () => {
+    const queue = createQueueClient({ config, storage });
+    const fake = fakeStream();
+    jest
+      .spyOn(queue, "streamStatus")
+      .mockResolvedValue(
+        fake.stream as unknown as Awaited<
+          ReturnType<typeof queue.streamStatus>
+        >,
+      );
+    const cancel = jest.spyOn(queue, "cancel").mockResolvedValue(undefined);
+    const result = queue.subscribeToStatus("fal-ai/test", {
+      requestId: "req_123",
+      mode: "streaming",
+      timeout: 5_000,
+    });
+    return { fake, cancel, result };
+  };
+  const settle = () => new Promise(setImmediate);
+
+  beforeEach(() => {
+    jest.useFakeTimers({ doNotFake: ["setImmediate"] });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+
+  it("rejects with the timeout error instead of resolving with partial data", async () => {
+    const { fake, cancel, result } = setup();
+    await settle();
+
+    expect(() => jest.advanceTimersByTime(5_000)).not.toThrow();
+
+    await expect(result).rejects.toThrow(
+      "Client timed out waiting for the request to complete after 5000ms",
+    );
+    expect(fake.stream.abort).toHaveBeenCalledTimes(1);
+    expect(cancel).toHaveBeenCalledWith("fal-ai/test", {
+      requestId: "req_123",
+    });
+  });
+
+  it("clears the timeout when the stream fails", async () => {
+    const { fake, cancel, result } = setup();
+    await settle();
+    const streamError = new Error("stream failed");
+    fake.fail(streamError);
+
+    await expect(result).rejects.toBe(streamError);
+    expect(jest.getTimerCount()).toBe(0);
+    expect(() => jest.advanceTimersByTime(5_000)).not.toThrow();
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it("resolves and clears the timeout when the stream completes", async () => {
+    const { fake, result } = setup();
+    await settle();
+    fake.finish(completed);
+
+    await expect(result).resolves.toEqual(completed);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+});
+
 describe("queue.submit headers", () => {
   const config: RequiredConfig = createConfig({
     credentials: "test-key",

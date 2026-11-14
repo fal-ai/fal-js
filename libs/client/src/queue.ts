@@ -490,17 +490,14 @@ export const createQueueClient = ({
               : undefined,
         });
         const logs: RequestLog[] = [];
+        let timedOut = false;
         if (timeout) {
           timeoutId = setTimeout(() => {
+            timedOut = true;
+            // Aborting resolves `status.done()` below, which then rejects with
+            // the same timeout error as polling.
             status.abort();
             ref.cancel(endpointId, { requestId }).catch(handleCancelError);
-            // TODO this error cannot bubble up to the user since it's thrown in
-            // a closure in the global scope due to setTimeout behavior.
-            // User will get a platform error instead. We should find a way to
-            // make this behavior aligned with polling.
-            throw new Error(
-              `Client timed out waiting for the request to complete after ${timeout}ms`,
-            );
           }, timeout);
         }
         status.on("data", (data: QueueStatus) => {
@@ -516,11 +513,19 @@ export const createQueueClient = ({
             options.onQueueUpdate("logs" in data ? { ...data, logs } : data);
           }
         });
-        const doneStatus = await status.done();
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+        try {
+          const doneStatus = await status.done();
+          if (timedOut) {
+            throw new Error(
+              `Client timed out waiting for the request to complete after ${timeout}ms`,
+            );
+          }
+          return doneStatus as CompletedQueueStatus;
+        } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
         }
-        return doneStatus as CompletedQueueStatus;
       }
       // default to polling until status streaming is stable and faster
       return new Promise<CompletedQueueStatus>((resolve, reject) => {
