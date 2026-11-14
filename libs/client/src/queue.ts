@@ -490,18 +490,20 @@ export const createQueueClient = ({
               : undefined,
         });
         const logs: RequestLog[] = [];
+        let timedOut: Promise<never> | undefined;
         if (timeout) {
-          timeoutId = setTimeout(() => {
-            status.abort();
-            ref.cancel(endpointId, { requestId }).catch(handleCancelError);
-            // TODO this error cannot bubble up to the user since it's thrown in
-            // a closure in the global scope due to setTimeout behavior.
-            // User will get a platform error instead. We should find a way to
-            // make this behavior aligned with polling.
-            throw new Error(
-              `Client timed out waiting for the request to complete after ${timeout}ms`,
-            );
-          }, timeout);
+          timedOut = new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(() => {
+              // Reject before aborting: abort resolves status.done().
+              reject(
+                new Error(
+                  `Client timed out waiting for the request to complete after ${timeout}ms`,
+                ),
+              );
+              status.abort();
+              ref.cancel(endpointId, { requestId }).catch(handleCancelError);
+            }, timeout);
+          });
         }
         status.on("data", (data: QueueStatus) => {
           if (options.onQueueUpdate) {
@@ -516,11 +518,14 @@ export const createQueueClient = ({
             options.onQueueUpdate("logs" in data ? { ...data, logs } : data);
           }
         });
-        const doneStatus = await status.done();
-        if (timeoutId) {
+        try {
+          const doneStatus = await (timedOut
+            ? Promise.race([status.done(), timedOut])
+            : status.done());
+          return doneStatus as CompletedQueueStatus;
+        } finally {
           clearTimeout(timeoutId);
         }
-        return doneStatus as CompletedQueueStatus;
       }
       // default to polling until status streaming is stable and faster
       return new Promise<CompletedQueueStatus>((resolve, reject) => {
