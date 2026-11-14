@@ -27,11 +27,19 @@ const INVALID_SUBDOMAINS = [
   "evil.example\n",
   "evil.example ",
   "evil.example%2f",
+  "evil_example",
+  "[::1]",
+];
+
+// Not well-formed host names, but made only of host name characters: they are let through
+// because they cannot move the request off fal.run.
+const MALFORMED_SUBDOMAINS = [
   "-queue",
   "queue-",
   "queue.",
   ".queue",
   "a..b",
+  ".",
   "a".repeat(64),
 ];
 
@@ -67,6 +75,19 @@ describe("buildUrl", () => {
       /Invalid subdomain/,
     );
   });
+
+  it.each(MALFORMED_SUBDOMAINS)(
+    "keeps the malformed subdomain %j under fal.run",
+    (subdomain) => {
+      const { protocol, hostname, port, pathname } = new URL(
+        buildUrl("fal-ai/flux", { subdomain }),
+      );
+      expect(protocol).toBe("https:");
+      expect(port).toBe("");
+      expect(hostname.endsWith(".fal.run")).toBe(true);
+      expect(pathname).toBe("/fal-ai/flux");
+    },
+  );
 
   it("rejects subdomains that are not strings", () => {
     for (const subdomain of [["evil.example/"], { toString: () => "x/" }, 1]) {

@@ -127,10 +127,10 @@ export async function dispatchRequest<Input, Output>(
   throw lastError;
 }
 
-// One or more DNS labels. Any other character could end the URL authority early and point the
-// request at a different host.
-const SUBDOMAIN_PATTERN =
-  /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+// Host name characters only. Any other character could end the URL authority early and point
+// the request at a different host. This does not check that the value is a well-formed host
+// name: a malformed one still resolves under fal.run, or fails the fal URL check in buildUrl.
+const SUBDOMAIN_PATTERN = /^[a-z0-9.-]+$/i;
 
 function resolveSubdomainPrefix(subdomain: unknown): string {
   if (!subdomain) {
