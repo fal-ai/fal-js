@@ -148,14 +148,11 @@ type QueueCommonSubscribeOptions = {
 
   /**
    * The timeout (in milliseconds) for the request. If the request is not
-   * completed within this time, the subscription will be cancelled.
+   * completed within this time, the subscription rejects with a timeout error.
    *
-   * Keep in mind that although the client resolves the function on a timeout,
-   * and will try to cancel the request on the server, the server might not be
-   * able to cancel the request if it's already running.
-   *
-   * Note: currently, the timeout is not enforced and the default is `undefined`.
-   * This behavior might change in the future.
+   * The client also tries to cancel the request on the server, but the server
+   * might not be able to cancel it if it's already running. Defaults to
+   * `undefined` (no timeout).
    */
   timeout?: number;
 
@@ -481,6 +478,13 @@ export const createQueueClient = ({
         // still want to reject the promise and consider the client call canceled.
       };
       if (options.mode === "streaming") {
+        const abortSignal = options.abortSignal;
+        const abortReason = () =>
+          abortSignal?.reason ??
+          new DOMException("Status streaming aborted", "AbortError");
+        if (abortSignal?.aborted) {
+          throw abortReason();
+        }
         const status = await ref.streamStatus(endpointId, {
           requestId,
           logs: options.logs,
@@ -490,18 +494,34 @@ export const createQueueClient = ({
               : undefined,
         });
         const logs: RequestLog[] = [];
+        const races: Promise<never>[] = [];
+        let onAbort: (() => void) | undefined;
+        if (abortSignal) {
+          races.push(
+            new Promise<never>((_, reject) => {
+              onAbort = () => {
+                // Reject before aborting the stream: abort resolves status.done().
+                reject(abortReason());
+                status.abort();
+              };
+              abortSignal.addEventListener("abort", onAbort, { once: true });
+            }),
+          );
+        }
         if (timeout) {
-          timeoutId = setTimeout(() => {
-            status.abort();
-            ref.cancel(endpointId, { requestId }).catch(handleCancelError);
-            // TODO this error cannot bubble up to the user since it's thrown in
-            // a closure in the global scope due to setTimeout behavior.
-            // User will get a platform error instead. We should find a way to
-            // make this behavior aligned with polling.
-            throw new Error(
-              `Client timed out waiting for the request to complete after ${timeout}ms`,
-            );
-          }, timeout);
+          races.push(
+            new Promise<never>((_, reject) => {
+              timeoutId = setTimeout(() => {
+                reject(
+                  new Error(
+                    `Client timed out waiting for the request to complete after ${timeout}ms`,
+                  ),
+                );
+                status.abort();
+                ref.cancel(endpointId, { requestId }).catch(handleCancelError);
+              }, timeout);
+            }),
+          );
         }
         status.on("data", (data: QueueStatus) => {
           if (options.onQueueUpdate) {
@@ -516,11 +536,17 @@ export const createQueueClient = ({
             options.onQueueUpdate("logs" in data ? { ...data, logs } : data);
           }
         });
-        const doneStatus = await status.done();
-        if (timeoutId) {
+        try {
+          const doneStatus = await (races.length > 0
+            ? Promise.race([status.done(), ...races])
+            : status.done());
+          return doneStatus as CompletedQueueStatus;
+        } finally {
           clearTimeout(timeoutId);
+          if (onAbort) {
+            abortSignal?.removeEventListener("abort", onAbort);
+          }
         }
-        return doneStatus as CompletedQueueStatus;
       }
       // default to polling until status streaming is stable and faster
       return new Promise<CompletedQueueStatus>((resolve, reject) => {
