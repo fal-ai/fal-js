@@ -63,8 +63,12 @@ export interface ProxyConfig {
   serviceHosts?: string[];
 
   /**
-   * Endpoint patterns (glob-style) that are allowed to be called via POST requests.
+   * Endpoint patterns (glob-style) that are allowed to be called, whatever the HTTP method.
    * The endpoint is the path portion of the URL without the leading slash.
+   *
+   * Queue request routes (status, result and cancel) address the app as `<owner>/<alias>`
+   * without the endpoint path, so they are allowed when a pattern covers that app:
+   * `fal-ai/flux/dev` also allows `fal-ai/flux/requests/<id>/status`.
    *
    * For example, for `https://fal.run/fal-ai/flux/dev`, the endpoint is `fal-ai/flux/dev`.
    *
@@ -129,7 +133,8 @@ export async function fallbackToFalKey(
 export async function isAuthorizationHeaderPresent(
   behavior: ProxyBehavior<unknown>,
 ): Promise<boolean> {
-  return behavior.getHeader("authorization") !== null;
+  // Adapters report a missing header as either `null` or `undefined`.
+  return singleHeaderValue(behavior.getHeader("authorization")) !== undefined;
 }
 
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
