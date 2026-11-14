@@ -284,14 +284,19 @@ describe("queue.subscribeToStatus streaming", () => {
     };
   };
 
-  const subscribe = (stream: ReturnType<typeof fakeStream>) => {
+  const subscribe = (
+    stream: ReturnType<typeof fakeStream>,
+    overrides: { timeout?: number; abortSignal?: AbortSignal } = {
+      timeout: 1000,
+    },
+  ) => {
     const queue = createQueueClient({ config, storage });
     jest.spyOn(queue, "streamStatus").mockResolvedValue(stream as never);
     const cancel = jest.spyOn(queue, "cancel").mockResolvedValue();
     const result = queue.subscribeToStatus("fal-ai/test", {
       requestId: "req_123",
       mode: "streaming",
-      timeout: 1000,
+      ...overrides,
     });
     return { result, cancel };
   };
@@ -330,6 +335,40 @@ describe("queue.subscribeToStatus streaming", () => {
     stream.complete(completed);
 
     await expect(result).resolves.toEqual(completed);
+    expect(cancel).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it("rejects without opening the stream when the signal is already aborted", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const queue = createQueueClient({ config, storage });
+    const streamStatus = jest.spyOn(queue, "streamStatus");
+
+    await expect(
+      queue.subscribeToStatus("fal-ai/test", {
+        requestId: "req_123",
+        mode: "streaming",
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(streamStatus).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it("rejects with the abort reason when aborted while streaming", async () => {
+    const controller = new AbortController();
+    const { result, cancel } = subscribe(fakeStream(), {
+      abortSignal: controller.signal,
+    });
+    const reason = new Error("navigated away");
+    const assertion = expect(result).rejects.toBe(reason);
+    await settle();
+
+    controller.abort(reason);
+
+    await assertion;
+    // Abort stops watching; it does not cancel the request on the server.
     expect(cancel).not.toHaveBeenCalled();
     expect(jest.getTimerCount()).toBe(0);
   });

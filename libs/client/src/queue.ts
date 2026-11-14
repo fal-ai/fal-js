@@ -478,6 +478,13 @@ export const createQueueClient = ({
         // still want to reject the promise and consider the client call canceled.
       };
       if (options.mode === "streaming") {
+        const abortSignal = options.abortSignal;
+        const abortReason = () =>
+          abortSignal?.reason ??
+          new DOMException("Status streaming aborted", "AbortError");
+        if (abortSignal?.aborted) {
+          throw abortReason();
+        }
         const status = await ref.streamStatus(endpointId, {
           requestId,
           logs: options.logs,
@@ -487,20 +494,34 @@ export const createQueueClient = ({
               : undefined,
         });
         const logs: RequestLog[] = [];
-        let timedOut: Promise<never> | undefined;
+        const races: Promise<never>[] = [];
+        let onAbort: (() => void) | undefined;
+        if (abortSignal) {
+          races.push(
+            new Promise<never>((_, reject) => {
+              onAbort = () => {
+                // Reject before aborting the stream: abort resolves status.done().
+                reject(abortReason());
+                status.abort();
+              };
+              abortSignal.addEventListener("abort", onAbort, { once: true });
+            }),
+          );
+        }
         if (timeout) {
-          timedOut = new Promise<never>((_, reject) => {
-            timeoutId = setTimeout(() => {
-              // Reject before aborting: abort resolves status.done().
-              reject(
-                new Error(
-                  `Client timed out waiting for the request to complete after ${timeout}ms`,
-                ),
-              );
-              status.abort();
-              ref.cancel(endpointId, { requestId }).catch(handleCancelError);
-            }, timeout);
-          });
+          races.push(
+            new Promise<never>((_, reject) => {
+              timeoutId = setTimeout(() => {
+                reject(
+                  new Error(
+                    `Client timed out waiting for the request to complete after ${timeout}ms`,
+                  ),
+                );
+                status.abort();
+                ref.cancel(endpointId, { requestId }).catch(handleCancelError);
+              }, timeout);
+            }),
+          );
         }
         status.on("data", (data: QueueStatus) => {
           if (options.onQueueUpdate) {
@@ -516,12 +537,15 @@ export const createQueueClient = ({
           }
         });
         try {
-          const doneStatus = await (timedOut
-            ? Promise.race([status.done(), timedOut])
+          const doneStatus = await (races.length > 0
+            ? Promise.race([status.done(), ...races])
             : status.done());
           return doneStatus as CompletedQueueStatus;
         } finally {
           clearTimeout(timeoutId);
+          if (onAbort) {
+            abortSignal?.removeEventListener("abort", onAbort);
+          }
         }
       }
       // default to polling until status streaming is stable and faster
