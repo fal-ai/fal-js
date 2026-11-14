@@ -60,9 +60,12 @@ export async function dispatchRequest<Input, Output>(
       url: targetUrl,
       headers: params.headers,
     });
-    const authHeader = credentials
-      ? { Authorization: `Key ${credentials}` }
-      : {};
+    // Credentials only travel with requests addressed to a fal host. The check is on the
+    // request's own target, before any middleware (such as the proxy) changes where it is sent.
+    const authHeader =
+      credentials && isValidUrl(targetUrl)
+        ? { Authorization: `Key ${credentials}` }
+        : {};
     const requestHeaders = {
       ...authHeader,
       Accept: "application/json",
@@ -124,6 +127,24 @@ export async function dispatchRequest<Input, Output>(
   throw lastError;
 }
 
+// Host name characters only. Any other character could end the URL authority early and point
+// the request at a different host. This does not check that the value is a well-formed host
+// name: a malformed one still resolves under fal.run, or fails the fal URL check in buildUrl.
+const SUBDOMAIN_PATTERN = /^[a-z0-9.-]+$/i;
+
+function resolveSubdomainPrefix(subdomain: unknown): string {
+  if (!subdomain) {
+    return "";
+  }
+  if (typeof subdomain !== "string" || !SUBDOMAIN_PATTERN.test(subdomain)) {
+    throw new Error(
+      `Invalid subdomain: ${JSON.stringify(subdomain)}. ` +
+        "It must be a host name made of letters, digits, hyphens and dots, e.g. `queue`.",
+    );
+  }
+  return `${subdomain}.`;
+}
+
 /**
  * Builds the final url to run the function based on its `id` or alias and
  * a the options from `RunOptions<Input>`.
@@ -157,7 +178,14 @@ export function buildUrl<Input>(
   }
 
   const appId = ensureEndpointIdFormat(id);
-  const subdomain = options.subdomain ? `${options.subdomain}.` : "";
+  const subdomain = resolveSubdomainPrefix(options.subdomain);
   const url = `https://${subdomain}fal.run/${appId}/${path}`;
-  return `${url.replace(/\/$/, "")}${queryParams}`;
+  const result = `${url.replace(/\/$/, "")}${queryParams}`;
+  // Whatever went into the pieces above, the outcome must still be a fal URL.
+  if (!isValidUrl(result)) {
+    throw new Error(
+      `Invalid endpoint: ${id}. It does not resolve to a fal URL.`,
+    );
+  }
+  return result;
 }
