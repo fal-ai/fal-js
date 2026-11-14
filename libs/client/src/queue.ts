@@ -148,14 +148,11 @@ type QueueCommonSubscribeOptions = {
 
   /**
    * The timeout (in milliseconds) for the request. If the request is not
-   * completed within this time, the subscription will be cancelled.
+   * completed within this time, the subscription rejects with a timeout error.
    *
-   * Keep in mind that although the client resolves the function on a timeout,
-   * and will try to cancel the request on the server, the server might not be
-   * able to cancel the request if it's already running.
-   *
-   * Note: currently, the timeout is not enforced and the default is `undefined`.
-   * This behavior might change in the future.
+   * The client also tries to cancel the request on the server, but the server
+   * might not be able to cancel it if it's already running. Defaults to
+   * `undefined` (no timeout).
    */
   timeout?: number;
 
