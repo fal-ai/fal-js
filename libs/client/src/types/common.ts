@@ -66,9 +66,9 @@ export type RunOptions<Input> = {
 
 export type UrlOptions = {
   /**
-   * If `true`, the function will use the queue to run the function
-   * asynchronously and return the result in a separate call. This
-   * influences how the URL is built.
+   * The `fal.run` subdomain the request is sent to, e.g. `queue`. It must be
+   * a host name made of letters, digits, hyphens and dots; any other value
+   * is rejected.
    */
   readonly subdomain?: string;
 
