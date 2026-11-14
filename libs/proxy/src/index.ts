@@ -93,6 +93,64 @@ function appIdFromRequestBody(body: string | undefined): string | undefined {
 }
 
 /**
+ * Parses the target URL and applies the checks every target must pass before the allowlists run.
+ *
+ * @param value the raw `x-fal-target-url` header value.
+ * @returns the parsed URL, or `undefined` when the target must be refused.
+ */
+function parseTargetUrl(value: string): URL | undefined {
+  let target: URL;
+  try {
+    target = new URL(value);
+  } catch {
+    return undefined;
+  }
+  // Credentials only ever travel over TLS, and never to a URL carrying its own userinfo.
+  if (target.protocol !== "https:" || target.username || target.password) {
+    return undefined;
+  }
+  // The URL parser resolves dot segments but keeps encoded separators, so `a/..%2fb` would be
+  // matched here as a child of `a` while a decoding upstream could route it elsewhere.
+  if (/%(?:2f|5c)/i.test(target.pathname)) {
+    return undefined;
+  }
+  return target;
+}
+
+// Queue routes scoped to a single request. They address the app as `<owner>/<alias>` (plus an
+// optional namespace) regardless of the endpoint path the request was submitted to.
+const QUEUE_REQUEST_PATH =
+  /^((?:(?:workflows|comfy)\/)?[^/]+\/[^/]+)\/requests\/[^/]+(?:\/(?:status|status\/stream|cancel))?$/;
+
+/**
+ * Checks if a queue request route (status, result, cancel) belongs to an app that the allowed
+ * endpoint patterns cover. Since these routes drop the endpoint path, a pattern is compared by
+ * its leading segments: `fal-ai/flux/dev` covers the requests of `fal-ai/flux`.
+ */
+function isAllowedQueueRequest(endpoint: string, patterns: string[]): boolean {
+  const app = QUEUE_REQUEST_PATH.exec(endpoint)?.[1];
+  if (!app) {
+    return false;
+  }
+  const depth = app.split("/").length;
+  return patterns.some((pattern) => {
+    const segments = pattern.split("/");
+    const globstar = segments.findIndex((segment) => segment.includes("**"));
+    const end = globstar >= 0 && globstar < depth ? globstar + 1 : depth;
+    return createUrlMatcher([segments.slice(0, end).join("/")])(app);
+  });
+}
+
+// Upstream response headers handed back to the caller. Everything else is dropped: the upstream
+// must not set cookies, caching, CORS or content policy on the origin that hosts the proxy.
+const FORWARDED_RESPONSE_HEADERS = new Set(["content-type", "retry-after"]);
+
+function isForwardedResponseHeader(name: string): boolean {
+  const key = name.toLowerCase();
+  return FORWARDED_RESPONSE_HEADERS.has(key) || key.startsWith("x-fal-");
+}
+
+/**
  * Checks if the URL is on the fal.ai domain or any of its subdomains.
  * @param targetUrl the full URL including scheme.
  * @returns true if the URL is on *.fal.ai domain.
@@ -140,8 +198,6 @@ function getFalKey(): string | undefined {
   }
   return undefined;
 }
-
-const EXCLUDED_HEADERS = ["content-length", "content-encoding"];
 
 /**
  * A request handler that proxies the request to the fal API
@@ -193,7 +249,10 @@ export async function handleRequest<ResponseType>(
       (await resolvedConfig.isAuthenticated?.(behaviorWithCachedBody)) ??
       false)());
 
-  const target = new URL(targetUrl);
+  const target = parseTargetUrl(targetUrl);
+  if (!target) {
+    return behavior.respondWith(400, "Invalid request");
+  }
   const serviceHosts = new Set(
     (resolvedConfig.serviceHosts ?? ["wma.fal.run"]).map((host) =>
       host.toLowerCase(),
@@ -236,10 +295,15 @@ export async function handleRequest<ResponseType>(
         return behavior.respondWith(400, "Invalid request");
       }
     }
-  } else if (method === "POST" && !isFalAiDomain(targetUrl)) {
-    // Normal app-serving URLs keep the existing path-based endpoint check.
-    const endpoint = getEndpoint(targetUrl);
-    if (!isAllowedEndpoint(endpoint, resolvedConfig.allowedEndpoints ?? [])) {
+  } else if (!isFalAiDomain(target.href)) {
+    // Normal app-serving URLs use the path-based endpoint check, whatever the method. Queue
+    // request routes do not carry the endpoint path, so they are checked by the app they address.
+    const endpoint = getEndpoint(target.href);
+    const allowedEndpoints = resolvedConfig.allowedEndpoints ?? [];
+    const isAllowed =
+      isAllowedEndpoint(endpoint, allowedEndpoints) ||
+      (method !== "POST" && isAllowedQueueRequest(endpoint, allowedEndpoints));
+    if (!isAllowed) {
       return behavior.respondWith(400, "Invalid request");
     }
   }
@@ -266,8 +330,11 @@ export async function handleRequest<ResponseType>(
 
   const proxyUserAgent = `@fal-ai/server-proxy/${behavior.id}`;
   const userAgent = singleHeaderValue(behavior.getHeader("user-agent"));
-  const res = await fetchWithBackupDomain(fetch, targetUrl, {
+  const res = await fetchWithBackupDomain(fetch, target.href, {
     method: behavior.method,
+    // A redirect location is upstream-controlled: following it would fetch an unvalidated URL
+    // from this server's network, with the credentials attached when it stays on the same origin.
+    redirect: "manual",
     headers: {
       ...headers,
       authorization,
@@ -282,14 +349,33 @@ export async function handleRequest<ResponseType>(
         : await readRequestBody(),
   });
 
-  // copy headers from fal to the proxied response
+  if (
+    res.type === "opaqueredirect" ||
+    (res.status >= 300 && res.status < 400 && res.status !== 304)
+  ) {
+    await res.body?.cancel();
+    return behavior.respondWith(502, "Bad gateway");
+  }
+
+  // Rebuild the response so every adapter, including the ones that pass the upstream response
+  // straight through, only exposes the forwarded headers.
+  const responseHeaders = new Headers();
   res.headers.forEach((value, key) => {
-    if (!EXCLUDED_HEADERS.includes(key.toLowerCase())) {
-      behavior.sendHeader(key, value);
+    if (isForwardedResponseHeader(key)) {
+      responseHeaders.set(key, value);
     }
   });
+  responseHeaders.set("cache-control", "no-store");
+  responseHeaders.set("x-content-type-options", "nosniff");
+  responseHeaders.forEach((value, key) => behavior.sendHeader(key, value));
 
-  return behavior.sendResponse(res);
+  return behavior.sendResponse(
+    new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: responseHeaders,
+    }),
+  );
 }
 
 export function fromHeaders(
