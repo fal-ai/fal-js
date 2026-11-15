@@ -114,7 +114,15 @@ export type Config = {
   retry?: Partial<RetryOptions>;
 };
 
-export type RequiredConfig = Required<Config>;
+export type RequiredConfig = Required<Config> & {
+  /**
+   * The `retry` options exactly as provided to {@link createConfig}, before
+   * defaults were applied. Call sites that layer their own retry defaults
+   * (e.g. the queue client) merge these explicit choices on top, so a user's
+   * `maxRetries: 0` is honored instead of overridden.
+   */
+  retryOverrides?: Partial<RetryOptions>;
+};
 
 /**
  * Checks if the required FAL environment variables are set.
@@ -169,6 +177,7 @@ export function createConfig(config: Config): RequiredConfig {
       ...DEFAULT_RETRY_OPTIONS,
       ...(config.retry || {}),
     },
+    retryOverrides: { ...(config.retry || {}) },
   } as RequiredConfig;
   if (config.proxyUrl) {
     const proxy =
