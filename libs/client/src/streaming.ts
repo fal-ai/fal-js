@@ -317,7 +317,7 @@ export class FalStream<Input, Output> {
       const { value, done } = await reader.read();
       this.lastEventTimestamp = Date.now();
 
-      parser.feed(decoder.decode(value));
+      parser.feed(decoder.decode(value, { stream: !done }));
 
       if (Date.now() - this.lastEventTimestamp > timeout) {
         this.emit(
