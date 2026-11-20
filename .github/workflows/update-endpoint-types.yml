@@ -45,7 +45,10 @@ jobs:
             --location \
             --retry 3 \
             --retry-delay 5 \
+            --request POST \
             --header "Authorization: Bearer ${TYPES_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data '{"language":"typescript","ignoreErrors":true}' \
             --output "${TARGET_FILE}" \
             "${TYPES_URL}" 2>/dev/null; then
             echo "::error::Could not fetch endpoint types."
@@ -58,6 +61,10 @@ jobs:
           fi
           if ! grep -q "export type" "${TARGET_FILE}"; then
             echo "::error::Fetched file does not look like endpoint type definitions."
+            exit 1
+          fi
+          if grep -q "export type EndpointTypeMap = {};" "${TARGET_FILE}"; then
+            echo "::error::Fetched endpoint type map is empty."
             exit 1
           fi
 
