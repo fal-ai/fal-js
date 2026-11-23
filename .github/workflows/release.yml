@@ -25,12 +25,15 @@ on:
         default: true
 
 permissions:
-  id-token: write # Required for npm trusted publishing (OIDC)
   contents: read
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.tag-info.outputs.package }}
+      version: ${{ steps.tag-info.outputs.version }}
+      npm_tag: ${{ steps.tag-info.outputs.npm_tag }}
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -41,7 +44,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
-          registry-url: "https://registry.npmjs.org"
 
       - name: "Set npm version"
         run: npm install -g npm@11.15.0
@@ -53,14 +55,18 @@ jobs:
 
       - name: Extract package info
         id: tag-info
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PACKAGE: ${{ inputs.package }}
+          INPUT_VERSION: ${{ inputs.version }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             # Manual trigger
-            PACKAGE_NAME="${{ inputs.package }}"
-            VERSION="${{ inputs.version }}"
+            PACKAGE_NAME="$INPUT_PACKAGE"
+            VERSION="$INPUT_VERSION"
           else
             # Tag trigger
-            TAG_NAME=${{ github.ref_name }}
             PACKAGE_NAME=${TAG_NAME%-v*}
             VERSION=${TAG_NAME##*-v}
           fi
@@ -77,18 +83,62 @@ jobs:
           echo "npm_tag=$NPM_TAG" >> $GITHUB_OUTPUT
 
       - name: Build package
-        run: npx nx build ${{ steps.tag-info.outputs.package }} --prod
+        env:
+          PACKAGE_NAME: ${{ steps.tag-info.outputs.package }}
+        run: npx nx build "$PACKAGE_NAME" --prod
 
       - name: Verify package version
+        env:
+          PACKAGE_NAME: ${{ steps.tag-info.outputs.package }}
+          VERSION: ${{ steps.tag-info.outputs.version }}
         run: |
-          PACKAGE_JSON_VERSION=$(node -p "require('./dist/libs/${{ steps.tag-info.outputs.package }}/package.json').version")
-          if [ "$PACKAGE_JSON_VERSION" != "${{ steps.tag-info.outputs.version }}" ]; then
-            echo "Package version ($PACKAGE_JSON_VERSION) does not match tag version (${{ steps.tag-info.outputs.version }})"
+          PACKAGE_JSON_VERSION=$(node -p "require('./dist/libs/$PACKAGE_NAME/package.json').version")
+          if [ "$PACKAGE_JSON_VERSION" != "$VERSION" ]; then
+            echo "Package version ($PACKAGE_JSON_VERSION) does not match tag version ($VERSION)"
             exit 1
           fi
 
+      - name: Upload package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: package
+          path: dist/libs/${{ steps.tag-info.outputs.package }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for npm trusted publishing (OIDC)
+      contents: read
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+
+      - name: "Set npm version"
+        run: npm install -g npm@11.15.0
+
+      - name: Download package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: package
+          path: package
+
       - name: Publish package
+        working-directory: package
+        env:
+          PACKAGE_NAME: ${{ needs.build.outputs.package }}
+          VERSION: ${{ needs.build.outputs.version }}
+          NPM_TAG: ${{ needs.build.outputs.npm_tag }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
         run: |
-          echo "Publishing ${{ steps.tag-info.outputs.package }}@${{ steps.tag-info.outputs.version }} with tag ${{ steps.tag-info.outputs.npm_tag }}"
-          cd dist/libs/${{ steps.tag-info.outputs.package }}
-          npm stage publish --access public --tag ${{ steps.tag-info.outputs.npm_tag }} ${{ inputs.dry_run && '--dry-run' || '' }}
+          echo "Publishing $PACKAGE_NAME@$VERSION with tag $NPM_TAG"
+          npm stage publish --access public --tag "$NPM_TAG" $DRY_RUN
